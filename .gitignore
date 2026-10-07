@@ -1,0 +1,9 @@
+dist/
+.runtime/
+node_modules/
+__pycache__/
+test-results/
+*.log
+.env*
+*.pem
+*.key

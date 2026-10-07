@@ -1,0 +1,23 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const root = path.resolve(import.meta.dirname, '..');
+const dist = path.join(root,'dist');
+// Only replace this project's generated dist directory.
+if (path.dirname(dist) !== root || path.basename(dist) !== 'dist') throw new Error('Unsafe build target');
+await fs.rm(dist,{recursive:true,force:true});
+await fs.mkdir(dist,{recursive:true});
+await fs.cp(path.join(root,'public'),dist,{recursive:true});
+await fs.cp(path.join(root,'src'),path.join(dist,'src'),{recursive:true});
+await fs.copyFile(path.join(root,'index.html'),path.join(dist,'index.html'));
+await fs.writeFile(path.join(dist,'.nojekyll'),'');
+const core=['./','./index.html','./src/app.js','./src/styles.css','./src/learning.js','./src/media.js','./data/curriculum.json','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/phone-qr.png','./illustrations/garden.svg'];
+const hash=crypto.createHash('sha256');
+for (const f of core.slice(1)) hash.update(await fs.readFile(path.join(dist,f)));
+let sw=await fs.readFile(path.join(root,'sw.template.js'),'utf8');
+hash.update(sw);
+const version=hash.digest('hex').slice(0,12);
+sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
+await fs.writeFile(path.join(dist,'sw.js'),sw);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.0.0',build:version}));
+console.log('Built English Sprout 1.0.0 · '+version);

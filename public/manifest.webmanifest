@@ -1,0 +1,10 @@
+{
+  "id": "./", "name": "英语小芽 · 亲子英语练习", "short_name": "英语小芽",
+  "description": "每天一个生活短句，听、说与间隔复习。",
+  "lang": "zh-CN", "start_url": "./", "scope": "./", "display": "standalone",
+  "background_color": "#fcf9f2", "theme_color": "#fcf9f2",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

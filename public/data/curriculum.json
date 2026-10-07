@@ -1,0 +1,3199 @@
+{
+  "version": "1.0",
+  "themes": [
+    {
+      "id": "hello",
+      "name": "打招呼",
+      "icon": "👋",
+      "color": "#E7A457"
+    },
+    {
+      "id": "needs",
+      "name": "说出需要",
+      "icon": "🥤",
+      "color": "#6EB8AE"
+    },
+    {
+      "id": "feelings",
+      "name": "我的感受",
+      "icon": "💛",
+      "color": "#D8B349"
+    },
+    {
+      "id": "meals",
+      "name": "一起吃饭",
+      "icon": "🍎",
+      "color": "#E98B78"
+    },
+    {
+      "id": "care",
+      "name": "每天照顾自己",
+      "icon": "🪥",
+      "color": "#83B7DC"
+    },
+    {
+      "id": "dress",
+      "name": "穿衣出门",
+      "icon": "👟",
+      "color": "#BD9DC8"
+    },
+    {
+      "id": "play",
+      "name": "一起玩吧",
+      "icon": "⚽",
+      "color": "#7EBA86"
+    },
+    {
+      "id": "tidy",
+      "name": "整理小能手",
+      "icon": "🧺",
+      "color": "#BD9A78"
+    },
+    {
+      "id": "outside",
+      "name": "出门走一走",
+      "icon": "🌳",
+      "color": "#84AE77"
+    },
+    {
+      "id": "family",
+      "name": "家里的时光",
+      "icon": "🏠",
+      "color": "#E8AD8F"
+    },
+    {
+      "id": "explore",
+      "name": "发现小世界",
+      "icon": "🔎",
+      "color": "#75B9C4"
+    },
+    {
+      "id": "kindness",
+      "name": "友好地相处",
+      "icon": "🤝",
+      "color": "#CFA7B9"
+    }
+  ],
+  "lessons": [
+    {
+      "id": "hello-01",
+      "theme": "hello",
+      "english": "Hello, everyone.",
+      "chinese": "大家好。",
+      "scene": "早上遇见家人或小伙伴",
+      "parentTip": "可以回应：Hello!（你好！）",
+      "action": "向家里的人挥挥手，说这句话。",
+      "emoji": "👋",
+      "choices": [
+        {
+          "label": "大家好。",
+          "emoji": "👋"
+        },
+        {
+          "label": "我愿意尝一点。",
+          "emoji": "🍴"
+        },
+        {
+          "label": "把积木捡起来。",
+          "emoji": "🧱"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/hello-01.mp3"
+    },
+    {
+      "id": "hello-02",
+      "theme": "hello",
+      "english": "Good morning.",
+      "chinese": "早上好。",
+      "scene": "起床后和家人打招呼",
+      "parentTip": "可以回应：Good morning!（早上好！）",
+      "action": "起床后看着家人的眼睛，说声早上好。",
+      "emoji": "🌤️",
+      "choices": [
+        {
+          "label": "这个很好吃。",
+          "emoji": "😋"
+        },
+        {
+          "label": "早上好。",
+          "emoji": "🌤️"
+        },
+        {
+          "label": "把书放回去。",
+          "emoji": "📚"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/hello-02.mp3"
+    },
+    {
+      "id": "hello-03",
+      "theme": "hello",
+      "english": "Good night.",
+      "chinese": "晚安。",
+      "scene": "睡觉前和家人道晚安",
+      "parentTip": "可以回应：Good night!（晚安！）",
+      "action": "抱一抱玩偶，再向家人道晚安。",
+      "emoji": "🌙",
+      "choices": [
+        {
+          "label": "可以给我一些牛奶吗？",
+          "emoji": "🥛"
+        },
+        {
+          "label": "我找到它了。",
+          "emoji": "🔎"
+        },
+        {
+          "label": "晚安。",
+          "emoji": "🌙"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/hello-03.mp3"
+    },
+    {
+      "id": "hello-04",
+      "theme": "hello",
+      "english": "See you later.",
+      "chinese": "一会儿见。",
+      "scene": "短暂分开时和家人告别",
+      "parentTip": "可以回应：Bye!（再见！）",
+      "action": "假装去另一个房间，挥手说一会儿见。",
+      "emoji": "🚪",
+      "choices": [
+        {
+          "label": "一会儿见。",
+          "emoji": "🚪"
+        },
+        {
+          "label": "刷刷牙。",
+          "emoji": "🪥"
+        },
+        {
+          "label": "我找不到它。",
+          "emoji": "🧐"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/hello-04.mp3"
+    },
+    {
+      "id": "hello-05",
+      "theme": "hello",
+      "english": "Thank you.",
+      "chinese": "谢谢你。",
+      "scene": "收到帮助或别人递来的东西",
+      "parentTip": "可以回应：You're welcome.（不客气。）",
+      "action": "请家人递来一支笔，接过后说谢谢。",
+      "emoji": "🎁",
+      "choices": [
+        {
+          "label": "我们洗洗脸吧。",
+          "emoji": "🧖"
+        },
+        {
+          "label": "谢谢你。",
+          "emoji": "🎁"
+        },
+        {
+          "label": "这是你的。",
+          "emoji": "🎁"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/hello-05.mp3"
+    },
+    {
+      "id": "hello-06",
+      "theme": "hello",
+      "english": "You're welcome.",
+      "chinese": "不客气。",
+      "scene": "别人向自己道谢后回应",
+      "parentTip": "家长先说：Thank you.（谢谢你。）",
+      "action": "把一件小东西递给家人，听到谢谢后回应。",
+      "emoji": "😊",
+      "choices": [
+        {
+          "label": "该洗澡了。",
+          "emoji": "🛁"
+        },
+        {
+          "label": "这是我的。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "不客气。",
+          "emoji": "😊"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/hello-06.mp3"
+    },
+    {
+      "id": "hello-07",
+      "theme": "hello",
+      "english": "I'm sorry.",
+      "chinese": "对不起。",
+      "scene": "不小心打扰别人后表达歉意",
+      "parentTip": "可以回应：That's okay.（没关系。）",
+      "action": "用玩偶演出不小心碰倒积木，再道歉并扶好。",
+      "emoji": "🧸",
+      "choices": [
+        {
+          "label": "对不起。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "闭上眼睛。",
+          "emoji": "🙈"
+        },
+        {
+          "label": "我们都做完了。",
+          "emoji": "✅"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/hello-07.mp3"
+    },
+    {
+      "id": "hello-08",
+      "theme": "hello",
+      "english": "That's okay.",
+      "chinese": "没关系。",
+      "scene": "别人为小失误道歉时回应",
+      "parentTip": "家长先说：I'm sorry.（对不起。）",
+      "action": "让玩偶轻轻碰到你，道歉后试着回应。",
+      "emoji": "💚",
+      "choices": [
+        {
+          "label": "张开嘴巴。",
+          "emoji": "👄"
+        },
+        {
+          "label": "没关系。",
+          "emoji": "💚"
+        },
+        {
+          "label": "牵着我的手。",
+          "emoji": "🤝"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/hello-08.mp3"
+    },
+    {
+      "id": "hello-09",
+      "theme": "hello",
+      "english": "Excuse me.",
+      "chinese": "打扰一下。",
+      "scene": "想礼貌地引起别人注意",
+      "parentTip": "可以回应：Yes?（怎么啦？）",
+      "action": "家人假装看书，先礼貌地引起对方注意。",
+      "emoji": "🙋",
+      "choices": [
+        {
+          "label": "用一张纸巾。",
+          "emoji": "🧻"
+        },
+        {
+          "label": "待在我身边。",
+          "emoji": "👣"
+        },
+        {
+          "label": "打扰一下。",
+          "emoji": "🙋"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/hello-09.mp3"
+    },
+    {
+      "id": "hello-10",
+      "theme": "hello",
+      "english": "Nice to meet you.",
+      "chinese": "很高兴认识你。",
+      "scene": "第一次认识新的朋友",
+      "parentTip": "可以回应：You too!（我也是！）",
+      "action": "给新玩偶打个招呼，介绍自己认识它。",
+      "emoji": "🤗",
+      "choices": [
+        {
+          "label": "很高兴认识你。",
+          "emoji": "🤗"
+        },
+        {
+          "label": "捂住嘴巴。",
+          "emoji": "💪"
+        },
+        {
+          "label": "停下来，看一看。",
+          "emoji": "🛑"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/hello-10.mp3"
+    },
+    {
+      "id": "needs-01",
+      "theme": "needs",
+      "english": "I need water.",
+      "chinese": "我需要水。",
+      "scene": "活动后想喝水",
+      "parentTip": "可以回应：Here you go.（给你。）",
+      "action": "拿着空杯子，向家人说出需要。",
+      "emoji": "🥤",
+      "choices": [
+        {
+          "label": "我们擦干手吧。",
+          "emoji": "🧺"
+        },
+        {
+          "label": "我需要水。",
+          "emoji": "🥤"
+        },
+        {
+          "label": "我们在这里等吧。",
+          "emoji": "🚏"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/needs-01.mp3"
+    },
+    {
+      "id": "needs-02",
+      "theme": "needs",
+      "english": "I'm hungry.",
+      "chinese": "我饿了。",
+      "scene": "快到吃饭时间时表达饥饿",
+      "parentTip": "可以回应：Let's eat.（我们吃饭吧。）",
+      "action": "摸摸肚子，告诉家人自己的需要。",
+      "emoji": "🍽️",
+      "choices": [
+        {
+          "label": "该睡觉了。",
+          "emoji": "🛏️"
+        },
+        {
+          "label": "请慢慢走。",
+          "emoji": "🐢"
+        },
+        {
+          "label": "我饿了。",
+          "emoji": "🍽️"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/needs-02.mp3"
+    },
+    {
+      "id": "needs-03",
+      "theme": "needs",
+      "english": "I'm full.",
+      "chinese": "我吃饱了。",
+      "scene": "吃饱后告诉照顾自己的人",
+      "parentTip": "可以回应：Okay.（好的。）不要要求继续吃。",
+      "action": "在一顿饭结束时，按真实感受说这句话。",
+      "emoji": "😋",
+      "choices": [
+        {
+          "label": "我吃饱了。",
+          "emoji": "😋"
+        },
+        {
+          "label": "做个好梦。",
+          "emoji": "💤"
+        },
+        {
+          "label": "小心脚下。",
+          "emoji": "👟"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/needs-03.mp3"
+    },
+    {
+      "id": "needs-04",
+      "theme": "needs",
+      "english": "I need the toilet.",
+      "chinese": "我需要上厕所。",
+      "scene": "需要去卫生间时及时表达",
+      "parentTip": "可以回应：Let's go.（我们走吧。）",
+      "action": "指一指卫生间方向，练习清楚地说出需要。",
+      "emoji": "🚻",
+      "choices": [
+        {
+          "label": "穿上鞋子。",
+          "emoji": "👟"
+        },
+        {
+          "label": "我需要上厕所。",
+          "emoji": "🚻"
+        },
+        {
+          "label": "别碰那个。",
+          "emoji": "✋"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/needs-04.mp3"
+    },
+    {
+      "id": "needs-05",
+      "theme": "needs",
+      "english": "I need a break.",
+      "chinese": "我需要休息一下。",
+      "scene": "玩累了或练习累了",
+      "parentTip": "可以回应：Of course.（当然可以。）",
+      "action": "轻轻坐下，告诉家人自己想休息。",
+      "emoji": "🪑",
+      "choices": [
+        {
+          "label": "脱下鞋子。",
+          "emoji": "🥿"
+        },
+        {
+          "label": "外面下雨了。",
+          "emoji": "🌧️"
+        },
+        {
+          "label": "我需要休息一下。",
+          "emoji": "🪑"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/needs-05.mp3"
+    },
+    {
+      "id": "needs-06",
+      "theme": "needs",
+      "english": "I'm hot.",
+      "chinese": "我觉得热。",
+      "scene": "天气热或活动后觉得热",
+      "parentTip": "可以回应：Let's rest.（我们休息吧。）",
+      "action": "假装用手扇风，说一说感受。",
+      "emoji": "☀️",
+      "choices": [
+        {
+          "label": "我觉得热。",
+          "emoji": "☀️"
+        },
+        {
+          "label": "我的帽子在哪里？",
+          "emoji": "🧢"
+        },
+        {
+          "label": "我们回家吧。",
+          "emoji": "🏠"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/needs-06.mp3"
+    },
+    {
+      "id": "needs-07",
+      "theme": "needs",
+      "english": "I'm cold.",
+      "chinese": "我觉得冷。",
+      "scene": "风大或衣服不够暖时",
+      "parentTip": "可以回应：Here's your coat.（你的外套在这里。）",
+      "action": "抱抱胳膊，告诉家人自己觉得冷。",
+      "emoji": "🧥",
+      "choices": [
+        {
+          "label": "这是我的外套。",
+          "emoji": "🧥"
+        },
+        {
+          "label": "我觉得冷。",
+          "emoji": "🧥"
+        },
+        {
+          "label": "待在我能看见你的地方。",
+          "emoji": "👀"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/needs-07.mp3"
+    },
+    {
+      "id": "needs-08",
+      "theme": "needs",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "scene": "遇到自己暂时做不到的事",
+      "parentTip": "可以回应：Of course.（当然可以。）",
+      "action": "拿一个没扣好的小扣子，请家人帮忙。",
+      "emoji": "🆘",
+      "choices": [
+        {
+          "label": "请帮我拉上拉链。",
+          "emoji": "🤏"
+        },
+        {
+          "label": "请过来。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "请帮帮我。",
+          "emoji": "🆘"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/needs-08.mp3"
+    },
+    {
+      "id": "needs-09",
+      "theme": "needs",
+      "english": "More, please.",
+      "chinese": "请再给我一点。",
+      "scene": "还想要一点食物或材料",
+      "parentTip": "可以回应：Here you go.（给你。）",
+      "action": "用积木当点心，请家人再给一块。",
+      "emoji": "➕",
+      "choices": [
+        {
+          "label": "请再给我一点。",
+          "emoji": "➕"
+        },
+        {
+          "label": "我的袜子湿了。",
+          "emoji": "🧦"
+        },
+        {
+          "label": "看看我。",
+          "emoji": "👀"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/needs-09.mp3"
+    },
+    {
+      "id": "needs-10",
+      "theme": "needs",
+      "english": "That's enough, thank you.",
+      "chinese": "够了，谢谢。",
+      "scene": "已经拿到足够的东西",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "家人逐个递积木，够用时礼貌地说停。",
+      "emoji": "✋",
+      "choices": [
+        {
+          "label": "我可以自己做。",
+          "emoji": "💪"
+        },
+        {
+          "label": "够了，谢谢。",
+          "emoji": "✋"
+        },
+        {
+          "label": "请听我说。",
+          "emoji": "👂"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/needs-10.mp3"
+    },
+    {
+      "id": "feelings-01",
+      "theme": "feelings",
+      "english": "I'm happy.",
+      "chinese": "我很开心。",
+      "scene": "分享让自己高兴的时刻",
+      "parentTip": "可以回应：Me too!（我也是！）",
+      "action": "想一件今天开心的事，边微笑边说。",
+      "emoji": "😄",
+      "choices": [
+        {
+          "label": "这些太小了。",
+          "emoji": "📏"
+        },
+        {
+          "label": "我爱你。",
+          "emoji": "❤️"
+        },
+        {
+          "label": "我很开心。",
+          "emoji": "😄"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/feelings-01.mp3"
+    },
+    {
+      "id": "feelings-02",
+      "theme": "feelings",
+      "english": "I'm sad.",
+      "chinese": "我很难过。",
+      "scene": "希望家人知道自己的难过",
+      "parentTip": "可以回应：I'm here.（我在这里。）",
+      "action": "用玩偶演出难过的表情，帮它说出感受。",
+      "emoji": "😢",
+      "choices": [
+        {
+          "label": "我很难过。",
+          "emoji": "😢"
+        },
+        {
+          "label": "我们穿好衣服吧。",
+          "emoji": "👕"
+        },
+        {
+          "label": "我们看一本书吧。",
+          "emoji": "📖"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/feelings-02.mp3"
+    },
+    {
+      "id": "feelings-03",
+      "theme": "feelings",
+      "english": "I'm tired.",
+      "chinese": "我累了。",
+      "scene": "活动后或晚上觉得疲倦",
+      "parentTip": "可以回应：Let's rest.（我们休息吧。）",
+      "action": "伸个懒腰，坐下来表达感受。",
+      "emoji": "🥱",
+      "choices": [
+        {
+          "label": "我准备好出发了。",
+          "emoji": "🎒"
+        },
+        {
+          "label": "我累了。",
+          "emoji": "🥱"
+        },
+        {
+          "label": "给我讲个故事。",
+          "emoji": "📚"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/feelings-03.mp3"
+    },
+    {
+      "id": "feelings-04",
+      "theme": "feelings",
+      "english": "I'm scared.",
+      "chinese": "我害怕。",
+      "scene": "遇到陌生声音或不安的事",
+      "parentTip": "可以回应：I'm here.（我在这里。）",
+      "action": "让玩偶听到假装的雷声，替它说出感受。",
+      "emoji": "🫣",
+      "choices": [
+        {
+          "label": "我们一起玩吧。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "你能陪我玩吗？",
+          "emoji": "🧩"
+        },
+        {
+          "label": "我害怕。",
+          "emoji": "🫣"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/feelings-04.mp3"
+    },
+    {
+      "id": "feelings-05",
+      "theme": "feelings",
+      "english": "I'm excited.",
+      "chinese": "我很兴奋。",
+      "scene": "期待去公园或喜欢的活动",
+      "parentTip": "可以回应：Me too!（我也是！）",
+      "action": "想象马上要去最喜欢的地方，做开心的动作。",
+      "emoji": "🤩",
+      "choices": [
+        {
+          "label": "我很兴奋。",
+          "emoji": "🤩"
+        },
+        {
+          "label": "轮到我了。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "你在做什么？",
+          "emoji": "💭"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/feelings-05.mp3"
+    },
+    {
+      "id": "feelings-06",
+      "theme": "feelings",
+      "english": "My tummy hurts.",
+      "chinese": "我肚子疼。",
+      "scene": "肚子不舒服时告诉家人",
+      "parentTip": "可以回应：Show me.（指给我看。）真实不适时先照顾孩子。",
+      "action": "轻轻指肚子，用玩偶练习向大人求助。",
+      "emoji": "🤕",
+      "choices": [
+        {
+          "label": "轮到你了。",
+          "emoji": "👉"
+        },
+        {
+          "label": "我肚子疼。",
+          "emoji": "🤕"
+        },
+        {
+          "label": "我在画画。",
+          "emoji": "🖍️"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/feelings-06.mp3"
+    },
+    {
+      "id": "feelings-07",
+      "theme": "feelings",
+      "english": "Are you okay?",
+      "chinese": "你还好吗？",
+      "scene": "关心身边的人",
+      "parentTip": "可以回应：I'm okay.（我没事。）",
+      "action": "让玩偶坐下休息，问一问它的感受。",
+      "emoji": "💬",
+      "choices": [
+        {
+          "label": "滚一滚球。",
+          "emoji": "⚽"
+        },
+        {
+          "label": "我们给奶奶打电话吧。",
+          "emoji": "📞"
+        },
+        {
+          "label": "你还好吗？",
+          "emoji": "💬"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/feelings-07.mp3"
+    },
+    {
+      "id": "feelings-08",
+      "theme": "feelings",
+      "english": "I feel better.",
+      "chinese": "我感觉好些了。",
+      "scene": "休息或获得安慰后",
+      "parentTip": "可以回应：That's good.（那就好。）",
+      "action": "玩偶休息一下后，替它告诉家人。",
+      "emoji": "🌈",
+      "choices": [
+        {
+          "label": "我感觉好些了。",
+          "emoji": "🌈"
+        },
+        {
+          "label": "接住球。",
+          "emoji": "🏐"
+        },
+        {
+          "label": "这是什么？",
+          "emoji": "🔎"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/feelings-08.mp3"
+    },
+    {
+      "id": "feelings-09",
+      "theme": "feelings",
+      "english": "I need a hug.",
+      "chinese": "我想要一个拥抱。",
+      "scene": "想得到家人的安慰",
+      "parentTip": "可以回应：Of course.（当然可以。）拥抱以孩子愿意为准。",
+      "action": "愿意时张开双臂，向家人表达需要。",
+      "emoji": "🫂",
+      "choices": [
+        {
+          "label": "我们搭一座塔吧。",
+          "emoji": "🧱"
+        },
+        {
+          "label": "我想要一个拥抱。",
+          "emoji": "🫂"
+        },
+        {
+          "label": "这是一只猫。",
+          "emoji": "🐱"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/feelings-09.mp3"
+    },
+    {
+      "id": "feelings-10",
+      "theme": "feelings",
+      "english": "Let's take a breath.",
+      "chinese": "我们深呼吸一下。",
+      "scene": "想慢下来、平静一下",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "和家人一起缓慢吸气、呼气一次。",
+      "emoji": "🌬️",
+      "choices": [
+        {
+          "label": "我能和你们一起玩吗？",
+          "emoji": "🙌"
+        },
+        {
+          "label": "看那只小鸟。",
+          "emoji": "🐦"
+        },
+        {
+          "label": "我们深呼吸一下。",
+          "emoji": "🌬️"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/feelings-10.mp3"
+    },
+    {
+      "id": "meals-01",
+      "theme": "meals",
+      "english": "Let's eat.",
+      "chinese": "我们吃饭吧。",
+      "scene": "饭菜准备好时",
+      "parentTip": "可以回应：Okay!（好呀！）",
+      "action": "摆好玩具餐具，邀请家人一起吃饭。",
+      "emoji": "🍚",
+      "choices": [
+        {
+          "label": "我们吃饭吧。",
+          "emoji": "🍚"
+        },
+        {
+          "label": "我们再试一次吧。",
+          "emoji": "🔄"
+        },
+        {
+          "label": "它是什么颜色的？",
+          "emoji": "🎨"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/meals-01.mp3"
+    },
+    {
+      "id": "meals-02",
+      "theme": "meals",
+      "english": "Wash your hands.",
+      "chinese": "洗洗手。",
+      "scene": "吃东西前提醒洗手",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "饭前和家人一起洗手，配合这句话。",
+      "emoji": "🫧",
+      "choices": [
+        {
+          "label": "我做到了。",
+          "emoji": "⭐"
+        },
+        {
+          "label": "洗洗手。",
+          "emoji": "🫧"
+        },
+        {
+          "label": "它是红色的。",
+          "emoji": "🔴"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/meals-02.mp3"
+    },
+    {
+      "id": "meals-03",
+      "theme": "meals",
+      "english": "Sit down, please.",
+      "chinese": "请坐下。",
+      "scene": "邀请家人或朋友入座",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "拉好椅子，邀请玩偶或家人坐下。",
+      "emoji": "🪑",
+      "choices": [
+        {
+          "label": "刚才真好玩。",
+          "emoji": "🎉"
+        },
+        {
+          "label": "这里有几个？",
+          "emoji": "🔢"
+        },
+        {
+          "label": "请坐下。",
+          "emoji": "🪑"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/meals-03.mp3"
+    },
+    {
+      "id": "meals-04",
+      "theme": "meals",
+      "english": "Pass the spoon, please.",
+      "chinese": "请把勺子递给我。",
+      "scene": "吃饭时需要勺子",
+      "parentTip": "可以回应：Here you go.（给你。）",
+      "action": "把勺子放在家人附近，练习礼貌地请求。",
+      "emoji": "🥄",
+      "choices": [
+        {
+          "label": "请把勺子递给我。",
+          "emoji": "🥄"
+        },
+        {
+          "label": "把它放进盒子里。",
+          "emoji": "📦"
+        },
+        {
+          "label": "有两个。",
+          "emoji": "✌️"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/meals-04.mp3"
+    },
+    {
+      "id": "meals-05",
+      "theme": "meals",
+      "english": "I like apples.",
+      "chinese": "我喜欢苹果。",
+      "scene": "谈论喜欢的食物",
+      "parentTip": "可以回应：Me too!（我也是！）",
+      "action": "指着苹果或苹果图片，说出自己的喜好。",
+      "emoji": "🍎",
+      "choices": [
+        {
+          "label": "这个应该放在哪里？",
+          "emoji": "❓"
+        },
+        {
+          "label": "我喜欢苹果。",
+          "emoji": "🍎"
+        },
+        {
+          "label": "它很大。",
+          "emoji": "🐘"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/meals-05.mp3"
+    },
+    {
+      "id": "meals-06",
+      "theme": "meals",
+      "english": "No, thank you.",
+      "chinese": "不用了，谢谢。",
+      "scene": "礼貌拒绝不需要的食物",
+      "parentTip": "可以回应：Okay.（好的。）尊重孩子的拒绝。",
+      "action": "家人递来一份假想点心，练习礼貌地拒绝。",
+      "emoji": "🙅",
+      "choices": [
+        {
+          "label": "我们收拾一下吧。",
+          "emoji": "🧺"
+        },
+        {
+          "label": "它很小。",
+          "emoji": "🐭"
+        },
+        {
+          "label": "不用了，谢谢。",
+          "emoji": "🙅"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/meals-06.mp3"
+    },
+    {
+      "id": "meals-07",
+      "theme": "meals",
+      "english": "It's too hot.",
+      "chinese": "这个太烫了。",
+      "scene": "食物或饮品还很烫",
+      "parentTip": "可以回应：Let's wait.（我们等一等。）",
+      "action": "用空杯子演出等待饮品放凉，不接触热水。",
+      "emoji": "♨️",
+      "choices": [
+        {
+          "label": "这个太烫了。",
+          "emoji": "♨️"
+        },
+        {
+          "label": "把积木捡起来。",
+          "emoji": "🧱"
+        },
+        {
+          "label": "我听到狗叫。",
+          "emoji": "🐶"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/meals-07.mp3"
+    },
+    {
+      "id": "meals-08",
+      "theme": "meals",
+      "english": "I'll try a little.",
+      "chinese": "我愿意尝一点。",
+      "scene": "愿意尝试一种新食物",
+      "parentTip": "可以回应：Okay.（好的。）不强迫尝试。",
+      "action": "指着一种愿意尝的食物，先说再尝一点。",
+      "emoji": "🍴",
+      "choices": [
+        {
+          "label": "把书放回去。",
+          "emoji": "📚"
+        },
+        {
+          "label": "我愿意尝一点。",
+          "emoji": "🍴"
+        },
+        {
+          "label": "我们一起分享吧。",
+          "emoji": "🤝"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/meals-08.mp3"
+    },
+    {
+      "id": "meals-09",
+      "theme": "meals",
+      "english": "This tastes good.",
+      "chinese": "这个很好吃。",
+      "scene": "吃到自己喜欢的味道",
+      "parentTip": "可以回应：I'm glad.（我很高兴。）",
+      "action": "吃饭时找到喜欢的一口，说说味道。",
+      "emoji": "😋",
+      "choices": [
+        {
+          "label": "我找到它了。",
+          "emoji": "🔎"
+        },
+        {
+          "label": "你先来。",
+          "emoji": "👉"
+        },
+        {
+          "label": "这个很好吃。",
+          "emoji": "😋"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/meals-09.mp3"
+    },
+    {
+      "id": "meals-10",
+      "theme": "meals",
+      "english": "May I have some milk?",
+      "chinese": "可以给我一些牛奶吗？",
+      "scene": "想礼貌地要一点牛奶",
+      "parentTip": "可以回应：Here you go.（给你。）可用空杯子演练。",
+      "action": "拿一个杯子，请家人给自己倒假想的牛奶。",
+      "emoji": "🥛",
+      "choices": [
+        {
+          "label": "可以给我一些牛奶吗？",
+          "emoji": "🥛"
+        },
+        {
+          "label": "我找不到它。",
+          "emoji": "🧐"
+        },
+        {
+          "label": "可以轮到我了吗？",
+          "emoji": "🙋"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/meals-10.mp3"
+    },
+    {
+      "id": "care-01",
+      "theme": "care",
+      "english": "Brush your teeth.",
+      "chinese": "刷刷牙。",
+      "scene": "早晚刷牙的时候",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "拿好牙刷，在刷牙前和家人说这句话。",
+      "emoji": "🪥",
+      "choices": [
+        {
+          "label": "这是你的。",
+          "emoji": "🎁"
+        },
+        {
+          "label": "刷刷牙。",
+          "emoji": "🪥"
+        },
+        {
+          "label": "请把它还给我。",
+          "emoji": "🫴"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/care-01.mp3"
+    },
+    {
+      "id": "care-02",
+      "theme": "care",
+      "english": "Let's wash our faces.",
+      "chinese": "我们洗洗脸吧。",
+      "scene": "起床后或洗漱时",
+      "parentTip": "可以回应：Let's go.（走吧。）",
+      "action": "拿着小毛巾，邀请家人一起洗脸。",
+      "emoji": "🧖",
+      "choices": [
+        {
+          "label": "这是我的。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "请停下来。",
+          "emoji": "✋"
+        },
+        {
+          "label": "我们洗洗脸吧。",
+          "emoji": "🧖"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/care-02.mp3"
+    },
+    {
+      "id": "care-03",
+      "theme": "care",
+      "english": "Time for a bath.",
+      "chinese": "该洗澡了。",
+      "scene": "准备洗澡时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "给玩偶准备一条毛巾，提醒它该洗澡了。",
+      "emoji": "🛁",
+      "choices": [
+        {
+          "label": "该洗澡了。",
+          "emoji": "🛁"
+        },
+        {
+          "label": "我们都做完了。",
+          "emoji": "✅"
+        },
+        {
+          "label": "我不喜欢那样。",
+          "emoji": "🙅"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/care-03.mp3"
+    },
+    {
+      "id": "care-04",
+      "theme": "care",
+      "english": "Close your eyes.",
+      "chinese": "闭上眼睛。",
+      "scene": "洗脸或玩猜物游戏时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "在安全位置坐好，闭眼再睁眼，轮流发指令。",
+      "emoji": "🙈",
+      "choices": [
+        {
+          "label": "牵着我的手。",
+          "emoji": "🤝"
+        },
+        {
+          "label": "闭上眼睛。",
+          "emoji": "🙈"
+        },
+        {
+          "label": "我们一起做吧。",
+          "emoji": "🧩"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/care-04.mp3"
+    },
+    {
+      "id": "care-05",
+      "theme": "care",
+      "english": "Open your mouth.",
+      "chinese": "张开嘴巴。",
+      "scene": "家人检查牙齿时",
+      "parentTip": "可以回应：Like this?（这样吗？）",
+      "action": "对着镜子轻轻张嘴，玩一个表情游戏。",
+      "emoji": "👄",
+      "choices": [
+        {
+          "label": "待在我身边。",
+          "emoji": "👣"
+        },
+        {
+          "label": "做得好！",
+          "emoji": "👏"
+        },
+        {
+          "label": "张开嘴巴。",
+          "emoji": "👄"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/care-05.mp3"
+    },
+    {
+      "id": "care-06",
+      "theme": "care",
+      "english": "Use a tissue.",
+      "chinese": "用一张纸巾。",
+      "scene": "需要擦鼻子或擦嘴时",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "把纸巾递给玩偶，提醒它怎么做。",
+      "emoji": "🧻",
+      "choices": [
+        {
+          "label": "用一张纸巾。",
+          "emoji": "🧻"
+        },
+        {
+          "label": "停下来，看一看。",
+          "emoji": "🛑"
+        },
+        {
+          "label": "你可以做到的。",
+          "emoji": "💪"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/care-06.mp3"
+    },
+    {
+      "id": "care-07",
+      "theme": "care",
+      "english": "Cover your mouth.",
+      "chinese": "捂住嘴巴。",
+      "scene": "咳嗽或打喷嚏时",
+      "parentTip": "可以回应：Okay.（好的。）演示用纸巾或肘部遮挡。",
+      "action": "假装咳嗽，用弯曲的手肘遮挡嘴鼻。",
+      "emoji": "💪",
+      "choices": [
+        {
+          "label": "我们在这里等吧。",
+          "emoji": "🚏"
+        },
+        {
+          "label": "捂住嘴巴。",
+          "emoji": "💪"
+        },
+        {
+          "label": "我来帮你。",
+          "emoji": "💛"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/care-07.mp3"
+    },
+    {
+      "id": "care-08",
+      "theme": "care",
+      "english": "Let's dry our hands.",
+      "chinese": "我们擦干手吧。",
+      "scene": "洗手以后",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "洗完手，和家人一起用自己的毛巾擦干。",
+      "emoji": "🧺",
+      "choices": [
+        {
+          "label": "请慢慢走。",
+          "emoji": "🐢"
+        },
+        {
+          "label": "大家好。",
+          "emoji": "👋"
+        },
+        {
+          "label": "我们擦干手吧。",
+          "emoji": "🧺"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/care-08.mp3"
+    },
+    {
+      "id": "care-09",
+      "theme": "care",
+      "english": "Time for bed.",
+      "chinese": "该睡觉了。",
+      "scene": "晚上的睡前准备",
+      "parentTip": "可以回应：Good night.（晚安。）",
+      "action": "把玩偶放到小床上，轻声提醒它。",
+      "emoji": "🛏️",
+      "choices": [
+        {
+          "label": "该睡觉了。",
+          "emoji": "🛏️"
+        },
+        {
+          "label": "小心脚下。",
+          "emoji": "👟"
+        },
+        {
+          "label": "早上好。",
+          "emoji": "🌤️"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/care-09.mp3"
+    },
+    {
+      "id": "care-10",
+      "theme": "care",
+      "english": "Sweet dreams.",
+      "chinese": "做个好梦。",
+      "scene": "睡前送给家人的祝福",
+      "parentTip": "可以回应：You too.（你也是。）",
+      "action": "给玩偶盖好小被子，送它一句祝福。",
+      "emoji": "💤",
+      "choices": [
+        {
+          "label": "别碰那个。",
+          "emoji": "✋"
+        },
+        {
+          "label": "做个好梦。",
+          "emoji": "💤"
+        },
+        {
+          "label": "晚安。",
+          "emoji": "🌙"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/care-10.mp3"
+    },
+    {
+      "id": "dress-01",
+      "theme": "dress",
+      "english": "Put on your shoes.",
+      "chinese": "穿上鞋子。",
+      "scene": "准备出门时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "拿出自己的鞋子，听到句子后试着穿好。",
+      "emoji": "👟",
+      "choices": [
+        {
+          "label": "外面下雨了。",
+          "emoji": "🌧️"
+        },
+        {
+          "label": "一会儿见。",
+          "emoji": "🚪"
+        },
+        {
+          "label": "穿上鞋子。",
+          "emoji": "👟"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/dress-01.mp3"
+    },
+    {
+      "id": "dress-02",
+      "theme": "dress",
+      "english": "Take off your shoes.",
+      "chinese": "脱下鞋子。",
+      "scene": "回家换鞋时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "回家后和家人说这句话，再脱鞋。",
+      "emoji": "🥿",
+      "choices": [
+        {
+          "label": "脱下鞋子。",
+          "emoji": "🥿"
+        },
+        {
+          "label": "我们回家吧。",
+          "emoji": "🏠"
+        },
+        {
+          "label": "谢谢你。",
+          "emoji": "🎁"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/dress-02.mp3"
+    },
+    {
+      "id": "dress-03",
+      "theme": "dress",
+      "english": "Where's my hat?",
+      "chinese": "我的帽子在哪里？",
+      "scene": "出门前找帽子",
+      "parentTip": "可以回应：Here it is.（在这里。）",
+      "action": "把帽子藏在看得见的地方，轮流找一找。",
+      "emoji": "🧢",
+      "choices": [
+        {
+          "label": "待在我能看见你的地方。",
+          "emoji": "👀"
+        },
+        {
+          "label": "我的帽子在哪里？",
+          "emoji": "🧢"
+        },
+        {
+          "label": "不客气。",
+          "emoji": "😊"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/dress-03.mp3"
+    },
+    {
+      "id": "dress-04",
+      "theme": "dress",
+      "english": "This is my coat.",
+      "chinese": "这是我的外套。",
+      "scene": "辨认自己的衣服",
+      "parentTip": "可以回应：Yes, it is.（是的。）",
+      "action": "在几件衣服里找到自己的外套并指给家人看。",
+      "emoji": "🧥",
+      "choices": [
+        {
+          "label": "请过来。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "对不起。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "这是我的外套。",
+          "emoji": "🧥"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/dress-04.mp3"
+    },
+    {
+      "id": "dress-05",
+      "theme": "dress",
+      "english": "Zip it up, please.",
+      "chinese": "请帮我拉上拉链。",
+      "scene": "需要别人帮忙拉拉链",
+      "parentTip": "可以回应：Of course.（当然可以。）",
+      "action": "指着外套拉链，请家人帮忙拉好。",
+      "emoji": "🤏",
+      "choices": [
+        {
+          "label": "请帮我拉上拉链。",
+          "emoji": "🤏"
+        },
+        {
+          "label": "看看我。",
+          "emoji": "👀"
+        },
+        {
+          "label": "没关系。",
+          "emoji": "💚"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/dress-05.mp3"
+    },
+    {
+      "id": "dress-06",
+      "theme": "dress",
+      "english": "My socks are wet.",
+      "chinese": "我的袜子湿了。",
+      "scene": "袜子弄湿后想换一双",
+      "parentTip": "可以回应：Let's change them.（我们换一双吧。）",
+      "action": "用玩偶假装踩到水，告诉家人需要换袜子。",
+      "emoji": "🧦",
+      "choices": [
+        {
+          "label": "请听我说。",
+          "emoji": "👂"
+        },
+        {
+          "label": "我的袜子湿了。",
+          "emoji": "🧦"
+        },
+        {
+          "label": "打扰一下。",
+          "emoji": "🙋"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/dress-06.mp3"
+    },
+    {
+      "id": "dress-07",
+      "theme": "dress",
+      "english": "I can do it.",
+      "chinese": "我可以自己做。",
+      "scene": "愿意自己完成穿衣动作",
+      "parentTip": "可以回应：Take your time.（慢慢来。）",
+      "action": "选择一件自己会做的小事，先说再试。",
+      "emoji": "💪",
+      "choices": [
+        {
+          "label": "我爱你。",
+          "emoji": "❤️"
+        },
+        {
+          "label": "很高兴认识你。",
+          "emoji": "🤗"
+        },
+        {
+          "label": "我可以自己做。",
+          "emoji": "💪"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/dress-07.mp3"
+    },
+    {
+      "id": "dress-08",
+      "theme": "dress",
+      "english": "These are too small.",
+      "chinese": "这些太小了。",
+      "scene": "鞋子或袜子不合适时",
+      "parentTip": "可以回应：Let's try these.（我们试试这些。）",
+      "action": "拿两双大小不同的玩具鞋，替玩偶挑选。",
+      "emoji": "📏",
+      "choices": [
+        {
+          "label": "这些太小了。",
+          "emoji": "📏"
+        },
+        {
+          "label": "我们看一本书吧。",
+          "emoji": "📖"
+        },
+        {
+          "label": "我需要水。",
+          "emoji": "🥤"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/dress-08.mp3"
+    },
+    {
+      "id": "dress-09",
+      "theme": "dress",
+      "english": "Let's get dressed.",
+      "chinese": "我们穿好衣服吧。",
+      "scene": "起床后准备穿衣服",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "给玩偶选一件衣服，一边说一边帮它穿好。",
+      "emoji": "👕",
+      "choices": [
+        {
+          "label": "给我讲个故事。",
+          "emoji": "📚"
+        },
+        {
+          "label": "我们穿好衣服吧。",
+          "emoji": "👕"
+        },
+        {
+          "label": "我饿了。",
+          "emoji": "🍽️"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/dress-09.mp3"
+    },
+    {
+      "id": "dress-10",
+      "theme": "dress",
+      "english": "I'm ready to go.",
+      "chinese": "我准备好出发了。",
+      "scene": "穿戴整齐、准备出门",
+      "parentTip": "可以回应：Let's go!（走吧！）",
+      "action": "检查鞋子和帽子，准备好后告诉家人。",
+      "emoji": "🎒",
+      "choices": [
+        {
+          "label": "你能陪我玩吗？",
+          "emoji": "🧩"
+        },
+        {
+          "label": "我吃饱了。",
+          "emoji": "😋"
+        },
+        {
+          "label": "我准备好出发了。",
+          "emoji": "🎒"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/dress-10.mp3"
+    },
+    {
+      "id": "play-01",
+      "theme": "play",
+      "english": "Let's play together.",
+      "chinese": "我们一起玩吧。",
+      "scene": "邀请别人一起玩",
+      "parentTip": "可以回应：Okay!（好呀！）",
+      "action": "选一个简单玩具，邀请家人一起玩。",
+      "emoji": "🧸",
+      "choices": [
+        {
+          "label": "我们一起玩吧。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "你在做什么？",
+          "emoji": "💭"
+        },
+        {
+          "label": "我需要上厕所。",
+          "emoji": "🚻"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/play-01.mp3"
+    },
+    {
+      "id": "play-02",
+      "theme": "play",
+      "english": "It's my turn.",
+      "chinese": "轮到我了。",
+      "scene": "轮流游戏中提醒自己的回合",
+      "parentTip": "可以回应：Go ahead.（来吧。）",
+      "action": "和家人轮流放积木，轮到自己时说出来。",
+      "emoji": "🙋",
+      "choices": [
+        {
+          "label": "我在画画。",
+          "emoji": "🖍️"
+        },
+        {
+          "label": "轮到我了。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "我需要休息一下。",
+          "emoji": "🪑"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/play-02.mp3"
+    },
+    {
+      "id": "play-03",
+      "theme": "play",
+      "english": "It's your turn.",
+      "chinese": "轮到你了。",
+      "scene": "把游戏回合交给别人",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "放完一块积木，把下一次机会交给家人。",
+      "emoji": "👉",
+      "choices": [
+        {
+          "label": "我们给奶奶打电话吧。",
+          "emoji": "📞"
+        },
+        {
+          "label": "我觉得热。",
+          "emoji": "☀️"
+        },
+        {
+          "label": "轮到你了。",
+          "emoji": "👉"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/play-03.mp3"
+    },
+    {
+      "id": "play-04",
+      "theme": "play",
+      "english": "Roll the ball.",
+      "chinese": "滚一滚球。",
+      "scene": "玩地面传球游戏",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "和家人面对面坐下，在地面滚软球。",
+      "emoji": "⚽",
+      "choices": [
+        {
+          "label": "滚一滚球。",
+          "emoji": "⚽"
+        },
+        {
+          "label": "这是什么？",
+          "emoji": "🔎"
+        },
+        {
+          "label": "我觉得冷。",
+          "emoji": "🧥"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/play-04.mp3"
+    },
+    {
+      "id": "play-05",
+      "theme": "play",
+      "english": "Catch the ball.",
+      "chinese": "接住球。",
+      "scene": "玩接球游戏",
+      "parentTip": "可以回应：Got it!（接住啦！）",
+      "action": "在安全空间近距离传软球，说完再轻轻传。",
+      "emoji": "🏐",
+      "choices": [
+        {
+          "label": "这是一只猫。",
+          "emoji": "🐱"
+        },
+        {
+          "label": "接住球。",
+          "emoji": "🏐"
+        },
+        {
+          "label": "请帮帮我。",
+          "emoji": "🆘"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/play-05.mp3"
+    },
+    {
+      "id": "play-06",
+      "theme": "play",
+      "english": "Let's build a tower.",
+      "chinese": "我们搭一座塔吧。",
+      "scene": "准备玩积木",
+      "parentTip": "可以回应：Let's do it.（开始吧。）",
+      "action": "和家人轮流叠积木，看能搭多高。",
+      "emoji": "🧱",
+      "choices": [
+        {
+          "label": "看那只小鸟。",
+          "emoji": "🐦"
+        },
+        {
+          "label": "请再给我一点。",
+          "emoji": "➕"
+        },
+        {
+          "label": "我们搭一座塔吧。",
+          "emoji": "🧱"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/play-06.mp3"
+    },
+    {
+      "id": "play-07",
+      "theme": "play",
+      "english": "Can I join you?",
+      "chinese": "我能和你们一起玩吗？",
+      "scene": "想加入别人的游戏",
+      "parentTip": "可以回应：Of course.（当然可以。）",
+      "action": "家人先和玩偶玩，孩子练习发出加入请求。",
+      "emoji": "🙌",
+      "choices": [
+        {
+          "label": "我能和你们一起玩吗？",
+          "emoji": "🙌"
+        },
+        {
+          "label": "它是什么颜色的？",
+          "emoji": "🎨"
+        },
+        {
+          "label": "够了，谢谢。",
+          "emoji": "✋"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/play-07.mp3"
+    },
+    {
+      "id": "play-08",
+      "theme": "play",
+      "english": "Let's try again.",
+      "chinese": "我们再试一次吧。",
+      "scene": "游戏没成功，想再挑战",
+      "parentTip": "可以回应：Okay!（好呀！）",
+      "action": "把倒下的积木重新搭起来，再试一次。",
+      "emoji": "🔄",
+      "choices": [
+        {
+          "label": "它是红色的。",
+          "emoji": "🔴"
+        },
+        {
+          "label": "我们再试一次吧。",
+          "emoji": "🔄"
+        },
+        {
+          "label": "我很开心。",
+          "emoji": "😄"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/play-08.mp3"
+    },
+    {
+      "id": "play-09",
+      "theme": "play",
+      "english": "I did it.",
+      "chinese": "我做到了。",
+      "scene": "完成一件有挑战的小事",
+      "parentTip": "可以回应：Well done!（做得好！）",
+      "action": "完成一个小拼图或小动作，再说出成就感。",
+      "emoji": "⭐",
+      "choices": [
+        {
+          "label": "这里有几个？",
+          "emoji": "🔢"
+        },
+        {
+          "label": "我很难过。",
+          "emoji": "😢"
+        },
+        {
+          "label": "我做到了。",
+          "emoji": "⭐"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/play-09.mp3"
+    },
+    {
+      "id": "play-10",
+      "theme": "play",
+      "english": "That was fun.",
+      "chinese": "刚才真好玩。",
+      "scene": "游戏结束后分享感受",
+      "parentTip": "可以回应：It was!（是呀！）",
+      "action": "一起玩完一分钟，告诉家人自己的感受。",
+      "emoji": "🎉",
+      "choices": [
+        {
+          "label": "刚才真好玩。",
+          "emoji": "🎉"
+        },
+        {
+          "label": "有两个。",
+          "emoji": "✌️"
+        },
+        {
+          "label": "我累了。",
+          "emoji": "🥱"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/play-10.mp3"
+    },
+    {
+      "id": "tidy-01",
+      "theme": "tidy",
+      "english": "Put it in the box.",
+      "chinese": "把它放进盒子里。",
+      "scene": "收好玩具或小物品",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "拿一个玩具，听到句子后放进收纳盒。",
+      "emoji": "📦",
+      "choices": [
+        {
+          "label": "它很大。",
+          "emoji": "🐘"
+        },
+        {
+          "label": "把它放进盒子里。",
+          "emoji": "📦"
+        },
+        {
+          "label": "我害怕。",
+          "emoji": "🫣"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/tidy-01.mp3"
+    },
+    {
+      "id": "tidy-02",
+      "theme": "tidy",
+      "english": "Where does this go?",
+      "chinese": "这个应该放在哪里？",
+      "scene": "不知道物品放在哪里时",
+      "parentTip": "可以回应：In the box.（在盒子里。）",
+      "action": "拿着一本书或玩具，请家人指一指位置。",
+      "emoji": "❓",
+      "choices": [
+        {
+          "label": "它很小。",
+          "emoji": "🐭"
+        },
+        {
+          "label": "我很兴奋。",
+          "emoji": "🤩"
+        },
+        {
+          "label": "这个应该放在哪里？",
+          "emoji": "❓"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/tidy-02.mp3"
+    },
+    {
+      "id": "tidy-03",
+      "theme": "tidy",
+      "english": "Let's tidy up.",
+      "chinese": "我们收拾一下吧。",
+      "scene": "玩完后一起整理",
+      "parentTip": "可以回应：Okay!（好呀！）",
+      "action": "和家人各收好三件玩具，一起完成整理。",
+      "emoji": "🧺",
+      "choices": [
+        {
+          "label": "我们收拾一下吧。",
+          "emoji": "🧺"
+        },
+        {
+          "label": "我听到狗叫。",
+          "emoji": "🐶"
+        },
+        {
+          "label": "我肚子疼。",
+          "emoji": "🤕"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/tidy-03.mp3"
+    },
+    {
+      "id": "tidy-04",
+      "theme": "tidy",
+      "english": "Pick up the blocks.",
+      "chinese": "把积木捡起来。",
+      "scene": "地上有散落的积木",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "指一指地上的积木，再把它们捡起来。",
+      "emoji": "🧱",
+      "choices": [
+        {
+          "label": "我们一起分享吧。",
+          "emoji": "🤝"
+        },
+        {
+          "label": "把积木捡起来。",
+          "emoji": "🧱"
+        },
+        {
+          "label": "你还好吗？",
+          "emoji": "💬"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/tidy-04.mp3"
+    },
+    {
+      "id": "tidy-05",
+      "theme": "tidy",
+      "english": "Put the book back.",
+      "chinese": "把书放回去。",
+      "scene": "看完一本书以后",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "找到书原来的位置，把书轻轻放回去。",
+      "emoji": "📚",
+      "choices": [
+        {
+          "label": "你先来。",
+          "emoji": "👉"
+        },
+        {
+          "label": "我感觉好些了。",
+          "emoji": "🌈"
+        },
+        {
+          "label": "把书放回去。",
+          "emoji": "📚"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/tidy-05.mp3"
+    },
+    {
+      "id": "tidy-06",
+      "theme": "tidy",
+      "english": "I found it.",
+      "chinese": "我找到它了。",
+      "scene": "找到刚才寻找的东西",
+      "parentTip": "可以回应：Great!（太好了！）",
+      "action": "玩一个简单找物游戏，找到后告诉家人。",
+      "emoji": "🔎",
+      "choices": [
+        {
+          "label": "我找到它了。",
+          "emoji": "🔎"
+        },
+        {
+          "label": "可以轮到我了吗？",
+          "emoji": "🙋"
+        },
+        {
+          "label": "我想要一个拥抱。",
+          "emoji": "🫂"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/tidy-06.mp3"
+    },
+    {
+      "id": "tidy-07",
+      "theme": "tidy",
+      "english": "I can't find it.",
+      "chinese": "我找不到它。",
+      "scene": "需要家人一起寻找物品",
+      "parentTip": "可以回应：Let's look.（我们找找。）",
+      "action": "请家人把玩具放在附近，找不到时主动表达。",
+      "emoji": "🧐",
+      "choices": [
+        {
+          "label": "请把它还给我。",
+          "emoji": "🫴"
+        },
+        {
+          "label": "我找不到它。",
+          "emoji": "🧐"
+        },
+        {
+          "label": "我们深呼吸一下。",
+          "emoji": "🌬️"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/tidy-07.mp3"
+    },
+    {
+      "id": "tidy-08",
+      "theme": "tidy",
+      "english": "This is yours.",
+      "chinese": "这是你的。",
+      "scene": "把别人的物品归还",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "找一件属于家人的物品，递给对方并说明。",
+      "emoji": "🎁",
+      "choices": [
+        {
+          "label": "请停下来。",
+          "emoji": "✋"
+        },
+        {
+          "label": "我们吃饭吧。",
+          "emoji": "🍚"
+        },
+        {
+          "label": "这是你的。",
+          "emoji": "🎁"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/tidy-08.mp3"
+    },
+    {
+      "id": "tidy-09",
+      "theme": "tidy",
+      "english": "This is mine.",
+      "chinese": "这是我的。",
+      "scene": "辨认属于自己的东西",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "把自己的杯子和家人的杯子放一起，指出自己的。",
+      "emoji": "🧸",
+      "choices": [
+        {
+          "label": "这是我的。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "我不喜欢那样。",
+          "emoji": "🙅"
+        },
+        {
+          "label": "洗洗手。",
+          "emoji": "🫧"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/tidy-09.mp3"
+    },
+    {
+      "id": "tidy-10",
+      "theme": "tidy",
+      "english": "We're all done.",
+      "chinese": "我们都做完了。",
+      "scene": "共同完成整理或小任务",
+      "parentTip": "可以回应：Great work!（做得好！）",
+      "action": "一起收好玩具后，看看整洁的地方并说出来。",
+      "emoji": "✅",
+      "choices": [
+        {
+          "label": "我们一起做吧。",
+          "emoji": "🧩"
+        },
+        {
+          "label": "我们都做完了。",
+          "emoji": "✅"
+        },
+        {
+          "label": "请坐下。",
+          "emoji": "🪑"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/tidy-10.mp3"
+    },
+    {
+      "id": "outside-01",
+      "theme": "outside",
+      "english": "Hold my hand.",
+      "chinese": "牵着我的手。",
+      "scene": "和家人一起外出时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "和家人手牵手走几步，轮流说这句话。",
+      "emoji": "🤝",
+      "choices": [
+        {
+          "label": "做得好！",
+          "emoji": "👏"
+        },
+        {
+          "label": "请把勺子递给我。",
+          "emoji": "🥄"
+        },
+        {
+          "label": "牵着我的手。",
+          "emoji": "🤝"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/outside-01.mp3"
+    },
+    {
+      "id": "outside-02",
+      "theme": "outside",
+      "english": "Stay close to me.",
+      "chinese": "待在我身边。",
+      "scene": "在外面提醒同伴不要走远",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "在家里排成小队走一走，保持靠近。",
+      "emoji": "👣",
+      "choices": [
+        {
+          "label": "待在我身边。",
+          "emoji": "👣"
+        },
+        {
+          "label": "你可以做到的。",
+          "emoji": "💪"
+        },
+        {
+          "label": "我喜欢苹果。",
+          "emoji": "🍎"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/outside-02.mp3"
+    },
+    {
+      "id": "outside-03",
+      "theme": "outside",
+      "english": "Stop and look.",
+      "chinese": "停下来，看一看。",
+      "scene": "需要先停步观察时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "在家玩走走停停，听到句子就停下观察。",
+      "emoji": "🛑",
+      "choices": [
+        {
+          "label": "我来帮你。",
+          "emoji": "💛"
+        },
+        {
+          "label": "停下来，看一看。",
+          "emoji": "🛑"
+        },
+        {
+          "label": "不用了，谢谢。",
+          "emoji": "🙅"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/outside-03.mp3"
+    },
+    {
+      "id": "outside-04",
+      "theme": "outside",
+      "english": "Let's wait here.",
+      "chinese": "我们在这里等吧。",
+      "scene": "和家人等车或等朋友",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "在家选一个位置，假装一起等公交车。",
+      "emoji": "🚏",
+      "choices": [
+        {
+          "label": "大家好。",
+          "emoji": "👋"
+        },
+        {
+          "label": "这个太烫了。",
+          "emoji": "♨️"
+        },
+        {
+          "label": "我们在这里等吧。",
+          "emoji": "🚏"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/outside-04.mp3"
+    },
+    {
+      "id": "outside-05",
+      "theme": "outside",
+      "english": "Walk slowly, please.",
+      "chinese": "请慢慢走。",
+      "scene": "走路需要放慢速度时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "和家人一起把步子放慢，走到房间另一边。",
+      "emoji": "🐢",
+      "choices": [
+        {
+          "label": "请慢慢走。",
+          "emoji": "🐢"
+        },
+        {
+          "label": "早上好。",
+          "emoji": "🌤️"
+        },
+        {
+          "label": "我愿意尝一点。",
+          "emoji": "🍴"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/outside-05.mp3"
+    },
+    {
+      "id": "outside-06",
+      "theme": "outside",
+      "english": "Watch your step.",
+      "chinese": "小心脚下。",
+      "scene": "遇到台阶或不平的地方",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "用地面的纸条假装台阶，慢慢跨过去。",
+      "emoji": "👟",
+      "choices": [
+        {
+          "label": "晚安。",
+          "emoji": "🌙"
+        },
+        {
+          "label": "小心脚下。",
+          "emoji": "👟"
+        },
+        {
+          "label": "这个很好吃。",
+          "emoji": "😋"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/outside-06.mp3"
+    },
+    {
+      "id": "outside-07",
+      "theme": "outside",
+      "english": "Don't touch that.",
+      "chinese": "别碰那个。",
+      "scene": "提醒不要触碰某样东西",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "用普通玩具演练，听到提醒就把手收回来。",
+      "emoji": "✋",
+      "choices": [
+        {
+          "label": "一会儿见。",
+          "emoji": "🚪"
+        },
+        {
+          "label": "可以给我一些牛奶吗？",
+          "emoji": "🥛"
+        },
+        {
+          "label": "别碰那个。",
+          "emoji": "✋"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/outside-07.mp3"
+    },
+    {
+      "id": "outside-08",
+      "theme": "outside",
+      "english": "It's raining outside.",
+      "chinese": "外面下雨了。",
+      "scene": "看见窗外下雨时",
+      "parentTip": "可以回应：Let's stay in.（我们待在屋里吧。）",
+      "action": "看一看雨天图片，指着窗外说一说。",
+      "emoji": "🌧️",
+      "choices": [
+        {
+          "label": "外面下雨了。",
+          "emoji": "🌧️"
+        },
+        {
+          "label": "谢谢你。",
+          "emoji": "🎁"
+        },
+        {
+          "label": "刷刷牙。",
+          "emoji": "🪥"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/outside-08.mp3"
+    },
+    {
+      "id": "outside-09",
+      "theme": "outside",
+      "english": "Let's go home.",
+      "chinese": "我们回家吧。",
+      "scene": "活动结束准备回家",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "和玩偶结束一次假装的公园旅行，再回家。",
+      "emoji": "🏠",
+      "choices": [
+        {
+          "label": "不客气。",
+          "emoji": "😊"
+        },
+        {
+          "label": "我们回家吧。",
+          "emoji": "🏠"
+        },
+        {
+          "label": "我们洗洗脸吧。",
+          "emoji": "🧖"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/outside-09.mp3"
+    },
+    {
+      "id": "outside-10",
+      "theme": "outside",
+      "english": "Stay where I can see you.",
+      "chinese": "待在我能看见你的地方。",
+      "scene": "和家人外出活动时",
+      "parentTip": "可以回应：Okay.（好的。）",
+      "action": "在家让玩偶待在视线内，说明应该待在哪里。",
+      "emoji": "👀",
+      "choices": [
+        {
+          "label": "对不起。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "该洗澡了。",
+          "emoji": "🛁"
+        },
+        {
+          "label": "待在我能看见你的地方。",
+          "emoji": "👀"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/outside-10.mp3"
+    },
+    {
+      "id": "family-01",
+      "theme": "family",
+      "english": "Come here, please.",
+      "chinese": "请过来。",
+      "scene": "邀请家人来到自己身边",
+      "parentTip": "可以回应：I'm coming.（我来了。）",
+      "action": "站在房间一边，礼貌地请家人走过来。",
+      "emoji": "🙋",
+      "choices": [
+        {
+          "label": "请过来。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "没关系。",
+          "emoji": "💚"
+        },
+        {
+          "label": "闭上眼睛。",
+          "emoji": "🙈"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/family-01.mp3"
+    },
+    {
+      "id": "family-02",
+      "theme": "family",
+      "english": "Look at me.",
+      "chinese": "看看我。",
+      "scene": "想让家人注意自己的动作",
+      "parentTip": "可以回应：I'm looking.（我在看。）",
+      "action": "摆一个有趣的姿势，请家人看自己。",
+      "emoji": "👀",
+      "choices": [
+        {
+          "label": "打扰一下。",
+          "emoji": "🙋"
+        },
+        {
+          "label": "看看我。",
+          "emoji": "👀"
+        },
+        {
+          "label": "张开嘴巴。",
+          "emoji": "👄"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/family-02.mp3"
+    },
+    {
+      "id": "family-03",
+      "theme": "family",
+      "english": "Listen to me, please.",
+      "chinese": "请听我说。",
+      "scene": "想让别人听自己的话",
+      "parentTip": "可以回应：I'm listening.（我在听。）",
+      "action": "准备分享一件小事前，礼貌地吸引家人注意。",
+      "emoji": "👂",
+      "choices": [
+        {
+          "label": "很高兴认识你。",
+          "emoji": "🤗"
+        },
+        {
+          "label": "用一张纸巾。",
+          "emoji": "🧻"
+        },
+        {
+          "label": "请听我说。",
+          "emoji": "👂"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/family-03.mp3"
+    },
+    {
+      "id": "family-04",
+      "theme": "family",
+      "english": "I love you.",
+      "chinese": "我爱你。",
+      "scene": "向家人表达爱意",
+      "parentTip": "可以回应：I love you too.（我也爱你。）",
+      "action": "用自己喜欢的方式向家人表达爱意。",
+      "emoji": "❤️",
+      "choices": [
+        {
+          "label": "我爱你。",
+          "emoji": "❤️"
+        },
+        {
+          "label": "我需要水。",
+          "emoji": "🥤"
+        },
+        {
+          "label": "捂住嘴巴。",
+          "emoji": "💪"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/family-04.mp3"
+    },
+    {
+      "id": "family-05",
+      "theme": "family",
+      "english": "Let's read a book.",
+      "chinese": "我们看一本书吧。",
+      "scene": "想和家人一起阅读",
+      "parentTip": "可以回应：Good idea!（好主意！）",
+      "action": "选一本喜欢的绘本，邀请家人一起翻看。",
+      "emoji": "📖",
+      "choices": [
+        {
+          "label": "我饿了。",
+          "emoji": "🍽️"
+        },
+        {
+          "label": "我们看一本书吧。",
+          "emoji": "📖"
+        },
+        {
+          "label": "我们擦干手吧。",
+          "emoji": "🧺"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/family-05.mp3"
+    },
+    {
+      "id": "family-06",
+      "theme": "family",
+      "english": "Tell me a story.",
+      "chinese": "给我讲个故事。",
+      "scene": "想听家人讲故事",
+      "parentTip": "可以回应：Of course.（当然可以。）",
+      "action": "抱着玩偶，邀请家人讲一个很短的小故事。",
+      "emoji": "📚",
+      "choices": [
+        {
+          "label": "我吃饱了。",
+          "emoji": "😋"
+        },
+        {
+          "label": "该睡觉了。",
+          "emoji": "🛏️"
+        },
+        {
+          "label": "给我讲个故事。",
+          "emoji": "📚"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/family-06.mp3"
+    },
+    {
+      "id": "family-07",
+      "theme": "family",
+      "english": "Can you play with me?",
+      "chinese": "你能陪我玩吗？",
+      "scene": "想邀请家人陪自己玩",
+      "parentTip": "可以回应：Yes, I can.（可以呀。）",
+      "action": "拿一个玩具，礼貌地邀请家人加入。",
+      "emoji": "🧩",
+      "choices": [
+        {
+          "label": "你能陪我玩吗？",
+          "emoji": "🧩"
+        },
+        {
+          "label": "我需要上厕所。",
+          "emoji": "🚻"
+        },
+        {
+          "label": "做个好梦。",
+          "emoji": "💤"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/family-07.mp3"
+    },
+    {
+      "id": "family-08",
+      "theme": "family",
+      "english": "What are you doing?",
+      "chinese": "你在做什么？",
+      "scene": "对家人的活动感到好奇",
+      "parentTip": "可以回应：I'm reading.（我在看书。）",
+      "action": "家人做一个简单动作，孩子提问后听回答。",
+      "emoji": "💭",
+      "choices": [
+        {
+          "label": "我需要休息一下。",
+          "emoji": "🪑"
+        },
+        {
+          "label": "你在做什么？",
+          "emoji": "💭"
+        },
+        {
+          "label": "穿上鞋子。",
+          "emoji": "👟"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/family-08.mp3"
+    },
+    {
+      "id": "family-09",
+      "theme": "family",
+      "english": "I'm drawing a picture.",
+      "chinese": "我在画画。",
+      "scene": "别人问自己正在做什么",
+      "parentTip": "家长先问：What are you doing?（你在做什么？）",
+      "action": "拿纸笔画几笔，告诉家人自己正在做的事。",
+      "emoji": "🖍️",
+      "choices": [
+        {
+          "label": "我觉得热。",
+          "emoji": "☀️"
+        },
+        {
+          "label": "脱下鞋子。",
+          "emoji": "🥿"
+        },
+        {
+          "label": "我在画画。",
+          "emoji": "🖍️"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/family-09.mp3"
+    },
+    {
+      "id": "family-10",
+      "theme": "family",
+      "english": "Let's call Grandma.",
+      "chinese": "我们给奶奶打电话吧。",
+      "scene": "想联系奶奶或外婆时",
+      "parentTip": "可以回应：Good idea!（好主意！）Grandma 也可以指外婆。",
+      "action": "用玩具电话邀请家人一起假装打电话。",
+      "emoji": "📞",
+      "choices": [
+        {
+          "label": "我们给奶奶打电话吧。",
+          "emoji": "📞"
+        },
+        {
+          "label": "我觉得冷。",
+          "emoji": "🧥"
+        },
+        {
+          "label": "我的帽子在哪里？",
+          "emoji": "🧢"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/family-10.mp3"
+    },
+    {
+      "id": "explore-01",
+      "theme": "explore",
+      "english": "What's this?",
+      "chinese": "这是什么？",
+      "scene": "看见不认识的物品",
+      "parentTip": "可以回应：It's a ball.（这是一个球。）",
+      "action": "拿一个小物品，请家人告诉自己它是什么。",
+      "emoji": "🔎",
+      "choices": [
+        {
+          "label": "请帮帮我。",
+          "emoji": "🆘"
+        },
+        {
+          "label": "这是什么？",
+          "emoji": "🔎"
+        },
+        {
+          "label": "这是我的外套。",
+          "emoji": "🧥"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/explore-01.mp3"
+    },
+    {
+      "id": "explore-02",
+      "theme": "explore",
+      "english": "It's a cat.",
+      "chinese": "这是一只猫。",
+      "scene": "看到猫或猫的图片",
+      "parentTip": "可以回应：Yes!（是呀！）",
+      "action": "在绘本里找到一只猫，指着它说出来。",
+      "emoji": "🐱",
+      "choices": [
+        {
+          "label": "请再给我一点。",
+          "emoji": "➕"
+        },
+        {
+          "label": "请帮我拉上拉链。",
+          "emoji": "🤏"
+        },
+        {
+          "label": "这是一只猫。",
+          "emoji": "🐱"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/explore-02.mp3"
+    },
+    {
+      "id": "explore-03",
+      "theme": "explore",
+      "english": "Look at the bird.",
+      "chinese": "看那只小鸟。",
+      "scene": "想分享发现的小鸟",
+      "parentTip": "可以回应：I see it.（我看见了。）",
+      "action": "在窗外或图片里找到小鸟，邀请家人看。",
+      "emoji": "🐦",
+      "choices": [
+        {
+          "label": "看那只小鸟。",
+          "emoji": "🐦"
+        },
+        {
+          "label": "够了，谢谢。",
+          "emoji": "✋"
+        },
+        {
+          "label": "我的袜子湿了。",
+          "emoji": "🧦"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/explore-03.mp3"
+    },
+    {
+      "id": "explore-04",
+      "theme": "explore",
+      "english": "What color is it?",
+      "chinese": "它是什么颜色的？",
+      "scene": "一起观察物品的颜色",
+      "parentTip": "可以回应：It's red.（它是红色的。）",
+      "action": "拿一块彩色积木，问问家人它的颜色。",
+      "emoji": "🎨",
+      "choices": [
+        {
+          "label": "我很开心。",
+          "emoji": "😄"
+        },
+        {
+          "label": "它是什么颜色的？",
+          "emoji": "🎨"
+        },
+        {
+          "label": "我可以自己做。",
+          "emoji": "💪"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/explore-04.mp3"
+    },
+    {
+      "id": "explore-05",
+      "theme": "explore",
+      "english": "It's red.",
+      "chinese": "它是红色的。",
+      "scene": "回答物品的颜色",
+      "parentTip": "家长先问：What color is it?（它是什么颜色的？）",
+      "action": "找一个红色物品，指着它回答。",
+      "emoji": "🔴",
+      "choices": [
+        {
+          "label": "我很难过。",
+          "emoji": "😢"
+        },
+        {
+          "label": "这些太小了。",
+          "emoji": "📏"
+        },
+        {
+          "label": "它是红色的。",
+          "emoji": "🔴"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/explore-05.mp3"
+    },
+    {
+      "id": "explore-06",
+      "theme": "explore",
+      "english": "How many are there?",
+      "chinese": "这里有几个？",
+      "scene": "一起数一数物品",
+      "parentTip": "可以回应：There are two.（有两个。）",
+      "action": "摆两块积木，先提问，再用手指一起数。",
+      "emoji": "🔢",
+      "choices": [
+        {
+          "label": "这里有几个？",
+          "emoji": "🔢"
+        },
+        {
+          "label": "我累了。",
+          "emoji": "🥱"
+        },
+        {
+          "label": "我们穿好衣服吧。",
+          "emoji": "👕"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/explore-06.mp3"
+    },
+    {
+      "id": "explore-07",
+      "theme": "explore",
+      "english": "There are two.",
+      "chinese": "有两个。",
+      "scene": "数出两件东西时回答",
+      "parentTip": "家长先问：How many are there?（有几个？）",
+      "action": "把两个玩具摆在一起，数完后说出答案。",
+      "emoji": "✌️",
+      "choices": [
+        {
+          "label": "我害怕。",
+          "emoji": "🫣"
+        },
+        {
+          "label": "有两个。",
+          "emoji": "✌️"
+        },
+        {
+          "label": "我准备好出发了。",
+          "emoji": "🎒"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/explore-07.mp3"
+    },
+    {
+      "id": "explore-08",
+      "theme": "explore",
+      "english": "It's big.",
+      "chinese": "它很大。",
+      "scene": "观察一个较大的物品",
+      "parentTip": "可以回应：Yes, it is.（是的。）",
+      "action": "摆出大小两个球，指着较大的那个说。",
+      "emoji": "🐘",
+      "choices": [
+        {
+          "label": "我很兴奋。",
+          "emoji": "🤩"
+        },
+        {
+          "label": "我们一起玩吧。",
+          "emoji": "🧸"
+        },
+        {
+          "label": "它很大。",
+          "emoji": "🐘"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/explore-08.mp3"
+    },
+    {
+      "id": "explore-09",
+      "theme": "explore",
+      "english": "It's small.",
+      "chinese": "它很小。",
+      "scene": "观察一个较小的物品",
+      "parentTip": "可以回应：Yes, it is.（是的。）",
+      "action": "摆出大小两个玩具，指着较小的那个说。",
+      "emoji": "🐭",
+      "choices": [
+        {
+          "label": "它很小。",
+          "emoji": "🐭"
+        },
+        {
+          "label": "我肚子疼。",
+          "emoji": "🤕"
+        },
+        {
+          "label": "轮到我了。",
+          "emoji": "🙋"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/explore-09.mp3"
+    },
+    {
+      "id": "explore-10",
+      "theme": "explore",
+      "english": "I hear a dog.",
+      "chinese": "我听到狗叫。",
+      "scene": "听见狗叫或模仿的声音",
+      "parentTip": "可以回应：Me too!（我也是！）",
+      "action": "家人模仿小狗叫，孩子说出听到了什么。",
+      "emoji": "🐶",
+      "choices": [
+        {
+          "label": "你还好吗？",
+          "emoji": "💬"
+        },
+        {
+          "label": "我听到狗叫。",
+          "emoji": "🐶"
+        },
+        {
+          "label": "轮到你了。",
+          "emoji": "👉"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/explore-10.mp3"
+    },
+    {
+      "id": "kindness-01",
+      "theme": "kindness",
+      "english": "Let's share.",
+      "chinese": "我们一起分享吧。",
+      "scene": "想和别人分享玩具或材料",
+      "parentTip": "可以回应：Okay!（好呀！）",
+      "action": "拿出愿意分享的积木，分一些给家人。",
+      "emoji": "🤝",
+      "choices": [
+        {
+          "label": "我感觉好些了。",
+          "emoji": "🌈"
+        },
+        {
+          "label": "滚一滚球。",
+          "emoji": "⚽"
+        },
+        {
+          "label": "我们一起分享吧。",
+          "emoji": "🤝"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/kindness-01.mp3"
+    },
+    {
+      "id": "kindness-02",
+      "theme": "kindness",
+      "english": "You go first.",
+      "chinese": "你先来。",
+      "scene": "愿意让别人先开始",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "玩轮流画画的游戏，让家人先画第一笔。",
+      "emoji": "👉",
+      "choices": [
+        {
+          "label": "你先来。",
+          "emoji": "👉"
+        },
+        {
+          "label": "我想要一个拥抱。",
+          "emoji": "🫂"
+        },
+        {
+          "label": "接住球。",
+          "emoji": "🏐"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/kindness-02.mp3"
+    },
+    {
+      "id": "kindness-03",
+      "theme": "kindness",
+      "english": "Can I have a turn?",
+      "chinese": "可以轮到我了吗？",
+      "scene": "希望轮流使用玩具时",
+      "parentTip": "可以回应：Here you go.（给你。）",
+      "action": "和家人轮流玩一个玩具，练习礼貌请求。",
+      "emoji": "🙋",
+      "choices": [
+        {
+          "label": "我们深呼吸一下。",
+          "emoji": "🌬️"
+        },
+        {
+          "label": "可以轮到我了吗？",
+          "emoji": "🙋"
+        },
+        {
+          "label": "我们搭一座塔吧。",
+          "emoji": "🧱"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/kindness-03.mp3"
+    },
+    {
+      "id": "kindness-04",
+      "theme": "kindness",
+      "english": "Please give it back.",
+      "chinese": "请把它还给我。",
+      "scene": "希望别人归还自己的东西",
+      "parentTip": "可以回应：Here you go.（给你。）",
+      "action": "把玩具暂借给家人，稍后礼貌地请对方归还。",
+      "emoji": "🫴",
+      "choices": [
+        {
+          "label": "我们吃饭吧。",
+          "emoji": "🍚"
+        },
+        {
+          "label": "我能和你们一起玩吗？",
+          "emoji": "🙌"
+        },
+        {
+          "label": "请把它还给我。",
+          "emoji": "🫴"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/kindness-04.mp3"
+    },
+    {
+      "id": "kindness-05",
+      "theme": "kindness",
+      "english": "Please stop.",
+      "chinese": "请停下来。",
+      "scene": "不喜欢某个动作或游戏时",
+      "parentTip": "可以回应：Okay.（好的。）听到后马上尊重并停止。",
+      "action": "和家人玩拍手游戏，任何人说停就马上停。",
+      "emoji": "✋",
+      "choices": [
+        {
+          "label": "请停下来。",
+          "emoji": "✋"
+        },
+        {
+          "label": "洗洗手。",
+          "emoji": "🫧"
+        },
+        {
+          "label": "我们再试一次吧。",
+          "emoji": "🔄"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/kindness-05.mp3"
+    },
+    {
+      "id": "kindness-06",
+      "theme": "kindness",
+      "english": "I don't like that.",
+      "chinese": "我不喜欢那样。",
+      "scene": "表达自己的界限和不喜欢",
+      "parentTip": "可以回应：Okay.（好的。）不要求孩子勉强接受。",
+      "action": "用玩偶演出不喜欢被抢玩具，替它表达。",
+      "emoji": "🙅",
+      "choices": [
+        {
+          "label": "请坐下。",
+          "emoji": "🪑"
+        },
+        {
+          "label": "我不喜欢那样。",
+          "emoji": "🙅"
+        },
+        {
+          "label": "我做到了。",
+          "emoji": "⭐"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/kindness-06.mp3"
+    },
+    {
+      "id": "kindness-07",
+      "theme": "kindness",
+      "english": "Let's do it together.",
+      "chinese": "我们一起做吧。",
+      "scene": "邀请别人合作完成任务",
+      "parentTip": "可以回应：Good idea!（好主意！）",
+      "action": "和家人一起搬一个空盒子或完成小拼图。",
+      "emoji": "🧩",
+      "choices": [
+        {
+          "label": "请把勺子递给我。",
+          "emoji": "🥄"
+        },
+        {
+          "label": "刚才真好玩。",
+          "emoji": "🎉"
+        },
+        {
+          "label": "我们一起做吧。",
+          "emoji": "🧩"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/kindness-07.mp3"
+    },
+    {
+      "id": "kindness-08",
+      "theme": "kindness",
+      "english": "Good job!",
+      "chinese": "做得好！",
+      "scene": "看到别人努力完成一件事",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "家人完成一个小任务后，给对方具体的鼓励。",
+      "emoji": "👏",
+      "choices": [
+        {
+          "label": "做得好！",
+          "emoji": "👏"
+        },
+        {
+          "label": "我喜欢苹果。",
+          "emoji": "🍎"
+        },
+        {
+          "label": "把它放进盒子里。",
+          "emoji": "📦"
+        }
+      ],
+      "answerIndex": 0,
+      "audio": "audio/kindness-08.mp3"
+    },
+    {
+      "id": "kindness-09",
+      "theme": "kindness",
+      "english": "You can do it.",
+      "chinese": "你可以做到的。",
+      "scene": "鼓励正在尝试的人",
+      "parentTip": "可以回应：I'll try.（我试试。）不要求必须成功。",
+      "action": "玩偶准备搭积木，给它一句鼓励。",
+      "emoji": "💪",
+      "choices": [
+        {
+          "label": "不用了，谢谢。",
+          "emoji": "🙅"
+        },
+        {
+          "label": "你可以做到的。",
+          "emoji": "💪"
+        },
+        {
+          "label": "这个应该放在哪里？",
+          "emoji": "❓"
+        }
+      ],
+      "answerIndex": 1,
+      "audio": "audio/kindness-09.mp3"
+    },
+    {
+      "id": "kindness-10",
+      "theme": "kindness",
+      "english": "I'll help you.",
+      "chinese": "我来帮你。",
+      "scene": "愿意帮助别人完成小事",
+      "parentTip": "可以回应：Thank you.（谢谢。）",
+      "action": "看到家人整理东西，主动帮忙拿一件轻物品。",
+      "emoji": "💛",
+      "choices": [
+        {
+          "label": "这个太烫了。",
+          "emoji": "♨️"
+        },
+        {
+          "label": "我们收拾一下吧。",
+          "emoji": "🧺"
+        },
+        {
+          "label": "我来帮你。",
+          "emoji": "💛"
+        }
+      ],
+      "answerIndex": 2,
+      "audio": "audio/kindness-10.mp3"
+    }
+  ]
+}

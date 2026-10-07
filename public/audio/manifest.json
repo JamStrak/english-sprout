@@ -1,0 +1,1164 @@
+{
+    "version":  "1.0",
+    "source":  "Local Windows System.Speech.Synthesis.SpeechSynthesizer; no external API",
+    "encoder":  "FFmpeg loudnorm I=-20 TP=-1.5 LRA=7; libmp3lame, mono, 24000 Hz, 48 kbps",
+    "englishVoice":  "Microsoft Zira Desktop",
+    "chineseVoice":  "Microsoft Huihui Desktop",
+    "lessons":  120,
+    "uiPrompts":  8,
+    "totalBytes":  1674644,
+    "clips":  [
+                  {
+                      "file":  "public/audio/hello-01.mp3",
+                      "text":  "Hello, everyone.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.489,
+                      "bytes":  15626,
+                      "sha256":  "35d0935c7dcb17ef39619bac8d2d9f79d2459f53450c7d5ce9937a47a3fe7355"
+                  },
+                  {
+                      "file":  "public/audio/hello-02.mp3",
+                      "text":  "Good morning.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.669,
+                      "bytes":  10727,
+                      "sha256":  "e021f0f0aab2dd455a2376b89e1e514e552fb145b6806f6ed189e629422e783c"
+                  },
+                  {
+                      "file":  "public/audio/hello-03.mp3",
+                      "text":  "Good night.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.594,
+                      "bytes":  10293,
+                      "sha256":  "156cc8b057e570fdd668669a8c951635b85b033561c83cd8202a169935004b31"
+                  },
+                  {
+                      "file":  "public/audio/hello-04.mp3",
+                      "text":  "See you later.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.814,
+                      "bytes":  11592,
+                      "sha256":  "79e2649f603172080e366f4761c7c9f9f9fb715f718f9bb624decea26f246f9b"
+                  },
+                  {
+                      "file":  "public/audio/hello-05.mp3",
+                      "text":  "Thank you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.564,
+                      "bytes":  10148,
+                      "sha256":  "136f1580b8a212f8e641cc1dee5fda98dce9a6a10ca84899a657ff031210d3cd"
+                  },
+                  {
+                      "file":  "public/audio/hello-06.mp3",
+                      "text":  "You\u0027re welcome.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.814,
+                      "bytes":  11593,
+                      "sha256":  "de94682f2505f16df537124348871db3fd1ef7181b73a3d8c2b9bd9adb07ede3"
+                  },
+                  {
+                      "file":  "public/audio/hello-07.mp3",
+                      "text":  "I\u0027m sorry.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.674,
+                      "bytes":  10724,
+                      "sha256":  "a7fadbba817f3b0908b68148c39a46d5e99306038f3dcf8d9e1d25be36be206f"
+                  },
+                  {
+                      "file":  "public/audio/hello-08.mp3",
+                      "text":  "That\u0027s okay.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.73,
+                      "bytes":  11158,
+                      "sha256":  "a64d4facb1b9030f47dd574a45d18f08c34137b9e924840068f123a69b7ff290"
+                  },
+                  {
+                      "file":  "public/audio/hello-09.mp3",
+                      "text":  "Excuse me.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.789,
+                      "bytes":  11444,
+                      "sha256":  "d4cedf357644a37cf7369fdaf404d9fce8fc829c703487d72e2954b8fef326aa"
+                  },
+                  {
+                      "file":  "public/audio/hello-10.mp3",
+                      "text":  "Nice to meet you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.929,
+                      "bytes":  12315,
+                      "sha256":  "e5199fbf3cbe13c2fc13f4bcdd266397e83bd5b6e54bb32d1d9a128f53a80355"
+                  },
+                  {
+                      "file":  "public/audio/needs-01.mp3",
+                      "text":  "I need water.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.754,
+                      "bytes":  11303,
+                      "sha256":  "31f978b0f6afe7fec0adf3a5cad8bc9024d3ff8d31d4e2c4b2924f5b6042f0c9"
+                  },
+                  {
+                      "file":  "public/audio/needs-02.mp3",
+                      "text":  "I\u0027m hungry.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.689,
+                      "bytes":  10869,
+                      "sha256":  "0cd9a5eade16a6701746a51c035cb4398d1b33b957bfb2843a7a9c4740c97eb1"
+                  },
+                  {
+                      "file":  "public/audio/needs-03.mp3",
+                      "text":  "I\u0027m full.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.61,
+                      "bytes":  10435,
+                      "sha256":  "aeba24a1358ede25147494dbd09efec533971d12d86332028e1a5f9e180ea5a0"
+                  },
+                  {
+                      "file":  "public/audio/needs-04.mp3",
+                      "text":  "I need the toilet.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.954,
+                      "bytes":  12460,
+                      "sha256":  "fb9ec5d11295bd54e89f7e3d3849412d166b027c194b6f3281ab2c32808d6dc6"
+                  },
+                  {
+                      "file":  "public/audio/needs-05.mp3",
+                      "text":  "I need a break.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.854,
+                      "bytes":  11881,
+                      "sha256":  "bff92df21880fde8d2c4ec2938eb9f0d667226d7c1483259b76d3fed9de3566e"
+                  },
+                  {
+                      "file":  "public/audio/needs-06.mp3",
+                      "text":  "I\u0027m hot.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.564,
+                      "bytes":  10146,
+                      "sha256":  "ebcf878684a944eacf150ac598fecfe17d9b0aeaf6ef6c2a8803842c6fb63538"
+                  },
+                  {
+                      "file":  "public/audio/needs-07.mp3",
+                      "text":  "I\u0027m cold.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.634,
+                      "bytes":  10579,
+                      "sha256":  "a6d3ab3e126796c1c1baaf209dc7bff55bd94d1dc3f5e06c6efeef8ea1b540eb"
+                  },
+                  {
+                      "file":  "public/audio/needs-08.mp3",
+                      "text":  "Help me, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.554,
+                      "bytes":  16058,
+                      "sha256":  "ac46c617327e0feca80acfad62805a73e238d8230761f39758d181e052a3ccaa"
+                  },
+                  {
+                      "file":  "public/audio/needs-09.mp3",
+                      "text":  "More, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.384,
+                      "bytes":  15047,
+                      "sha256":  "45e06a7fe840657fa89dc2ec9a4274a1a7a4b20fa972f3921bd9e498eb2a8781"
+                  },
+                  {
+                      "file":  "public/audio/needs-10.mp3",
+                      "text":  "That\u0027s enough, thank you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.759,
+                      "bytes":  17219,
+                      "sha256":  "54b2e80b7b223ef0d80cd3ab4943ab778ffc808b33d33a2aa6858a0f6c75534e"
+                  },
+                  {
+                      "file":  "public/audio/feelings-01.mp3",
+                      "text":  "I\u0027m happy.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.594,
+                      "bytes":  10292,
+                      "sha256":  "27ac5fab24ef5000b78b5e21c223492e8bc9db81d2adeb342b1dadd7d45e70d2"
+                  },
+                  {
+                      "file":  "public/audio/feelings-02.mp3",
+                      "text":  "I\u0027m sad.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.634,
+                      "bytes":  10578,
+                      "sha256":  "6cefc6636bcedc89f9a6f800cb53f280f560865103747a524df9a65e65a9bd9e"
+                  },
+                  {
+                      "file":  "public/audio/feelings-03.mp3",
+                      "text":  "I\u0027m tired.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.689,
+                      "bytes":  10868,
+                      "sha256":  "13c121ffac1fd84b35d7a26bae6ead613b91d5355a843daae9dac9d70b9a1e5d"
+                  },
+                  {
+                      "file":  "public/audio/feelings-04.mp3",
+                      "text":  "I\u0027m scared.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.669,
+                      "bytes":  10725,
+                      "sha256":  "389a771bad757a091c4b71d76d492c77d026d1036f9bc887cb4fc8008b4d4b59"
+                  },
+                  {
+                      "file":  "public/audio/feelings-05.mp3",
+                      "text":  "I\u0027m excited.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.709,
+                      "bytes":  11014,
+                      "sha256":  "e637a3729c35699f51fb1eb795153c47005d47620b65e3c5a408da5ba916341f"
+                  },
+                  {
+                      "file":  "public/audio/feelings-06.mp3",
+                      "text":  "My tummy hurts.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.094,
+                      "bytes":  13321,
+                      "sha256":  "750733077c5214b41caa9a2f27d9cd0315ab08bafb37263063358781543a1642"
+                  },
+                  {
+                      "file":  "public/audio/feelings-07.mp3",
+                      "text":  "Are you okay?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.754,
+                      "bytes":  11303,
+                      "sha256":  "c80efa2c067138ddeba8d7eae782df1628ffeeee088d3a49323282d542d80259"
+                  },
+                  {
+                      "file":  "public/audio/feelings-08.mp3",
+                      "text":  "I feel better.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.826,
+                      "bytes":  11736,
+                      "sha256":  "4ce0d182e95b2bbb39ea8ab5be7d695fd35b284f872813bdc3c45e4d5a822b88"
+                  },
+                  {
+                      "file":  "public/audio/feelings-09.mp3",
+                      "text":  "I need a hug.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.794,
+                      "bytes":  11447,
+                      "sha256":  "4b4051a48b157188f820ede37db5c64795658d5130e52f6d19758ac338bc53a8"
+                  },
+                  {
+                      "file":  "public/audio/feelings-10.mp3",
+                      "text":  "Let\u0027s take a breath.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.066,
+                      "bytes":  13182,
+                      "sha256":  "f317a24b26a279f4a5e5db4f0d4facfa000318c03f099c44b13fbd0e773c9d71"
+                  },
+                  {
+                      "file":  "public/audio/meals-01.mp3",
+                      "text":  "Let\u0027s eat.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.539,
+                      "bytes":  10004,
+                      "sha256":  "138214c7b30c8410e297bfe0d90a08be669edc9ed9b345f4f6d45c7cf4221d37"
+                  },
+                  {
+                      "file":  "public/audio/meals-02.mp3",
+                      "text":  "Wash your hands.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.034,
+                      "bytes":  12890,
+                      "sha256":  "2a4f4e49c63fad3b7558737293e7a9fad5f6bc9402e8ca287692c2bbd433cdf3"
+                  },
+                  {
+                      "file":  "public/audio/meals-03.mp3",
+                      "text":  "Sit down, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.774,
+                      "bytes":  17355,
+                      "sha256":  "5ac6e61facbbeec0e43dcdf63a24770bd3c45473c43ffdcdb05f76ab557d2ebb"
+                  },
+                  {
+                      "file":  "public/audio/meals-04.mp3",
+                      "text":  "Pass the spoon, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.909,
+                      "bytes":  18225,
+                      "sha256":  "65deec05322fd2008f161c15e9b279478628daf5cbf77bfe5a5cf9c362447301"
+                  },
+                  {
+                      "file":  "public/audio/meals-05.mp3",
+                      "text":  "I like apples.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.909,
+                      "bytes":  12168,
+                      "sha256":  "9f397da18d15bd5552ce11ea861d9272de14d01611ca3b3377f4121a6dc33cd3"
+                  },
+                  {
+                      "file":  "public/audio/meals-06.mp3",
+                      "text":  "No, thank you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.306,
+                      "bytes":  14616,
+                      "sha256":  "bf3ef6054c53db0b65255a8f351df973b858d5de3cee98b003b29c6170162326"
+                  },
+                  {
+                      "file":  "public/audio/meals-07.mp3",
+                      "text":  "It\u0027s too hot.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.894,
+                      "bytes":  12023,
+                      "sha256":  "46207c389dcd8760c8936aefdd72f3cce5ecd6df1f72836da9698a84134fa65a"
+                  },
+                  {
+                      "file":  "public/audio/meals-08.mp3",
+                      "text":  "I\u0027ll try a little.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.964,
+                      "bytes":  12460,
+                      "sha256":  "f68581521b44c85aee9ca2b8d5c73677607a8a8a72cad4b43459bd131b15c6a9"
+                  },
+                  {
+                      "file":  "public/audio/meals-09.mp3",
+                      "text":  "This tastes good.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.994,
+                      "bytes":  12747,
+                      "sha256":  "18633ce182c38623108444a21307762a936ab33d44497d73f9d6d321a9c229bf"
+                  },
+                  {
+                      "file":  "public/audio/meals-10.mp3",
+                      "text":  "May I have some milk?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.224,
+                      "bytes":  14047,
+                      "sha256":  "f6b0738e8bad14267d4a13c6778bedc6c2be0832fd42e4e3ee380eba0315c2b5"
+                  },
+                  {
+                      "file":  "public/audio/care-01.mp3",
+                      "text":  "Brush your teeth.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.919,
+                      "bytes":  12171,
+                      "sha256":  "38a7268e3c48c00550ed1e7b96de1ee92e75c6c2afe7e5dec9ffbe7af474fc56"
+                  },
+                  {
+                      "file":  "public/audio/care-02.mp3",
+                      "text":  "Let\u0027s wash our faces.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.45,
+                      "bytes":  15487,
+                      "sha256":  "28f61a3cb81c73a0e57e5d1bbbdfe7036dbd912533f61c60d9a66910311ccfc6"
+                  },
+                  {
+                      "file":  "public/audio/care-03.mp3",
+                      "text":  "Time for a bath.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.964,
+                      "bytes":  12458,
+                      "sha256":  "598281c3f641f5b31319b809720419b7ae0f608e16b409cc23be052114ee66ea"
+                  },
+                  {
+                      "file":  "public/audio/care-04.mp3",
+                      "text":  "Close your eyes.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.964,
+                      "bytes":  12458,
+                      "sha256":  "53f7756a5c70373a57cf7b6a5e9ece70c17bc8eeaddebc2cdef3ce198bd28d8f"
+                  },
+                  {
+                      "file":  "public/audio/care-05.mp3",
+                      "text":  "Open your mouth.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.859,
+                      "bytes":  11882,
+                      "sha256":  "6f3ba005f00444c03494da69311ae91f8cc7a78ea15969d82822dcb249d717d3"
+                  },
+                  {
+                      "file":  "public/audio/care-06.mp3",
+                      "text":  "Use a tissue.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.859,
+                      "bytes":  11879,
+                      "sha256":  "c9425f2bf2fd7915685bbf3300c9fd12148d724bc37cebc14173aabc1cb70bff"
+                  },
+                  {
+                      "file":  "public/audio/care-07.mp3",
+                      "text":  "Cover your mouth.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.904,
+                      "bytes":  12171,
+                      "sha256":  "c867f9203c53b6a4efbfefa8e4bfa4269e74f9725161c8984e2c38d69cd30385"
+                  },
+                  {
+                      "file":  "public/audio/care-08.mp3",
+                      "text":  "Let\u0027s dry our hands.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.384,
+                      "bytes":  15054,
+                      "sha256":  "e87c33de751d2328a70f1e3b0b0349fc06a9e5c5efa4020c17b6ec4a2923af8f"
+                  },
+                  {
+                      "file":  "public/audio/care-09.mp3",
+                      "text":  "Time for bed.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.839,
+                      "bytes":  11735,
+                      "sha256":  "b23a126be62893603c9e11169def105ffcb587865fba651399aaaf7aed20eaea"
+                  },
+                  {
+                      "file":  "public/audio/care-10.mp3",
+                      "text":  "Sweet dreams.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.004,
+                      "bytes":  12743,
+                      "sha256":  "d5e8e2195062588ac63ee71dc9822c968e0a5c0efcc31674a6c9ce2a31300537"
+                  },
+                  {
+                      "file":  "public/audio/dress-01.mp3",
+                      "text":  "Put on your shoes.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.034,
+                      "bytes":  12892,
+                      "sha256":  "91fb94bfd2c34d2ff255b447bb0e7ec25cfedc383142999babbad25cf9759410"
+                  },
+                  {
+                      "file":  "public/audio/dress-02.mp3",
+                      "text":  "Take off your shoes.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.174,
+                      "bytes":  13758,
+                      "sha256":  "d876a66d420a5110a86f038f7ac2cf2da1678b010ecfafb03494424ab24fa10b"
+                  },
+                  {
+                      "file":  "public/audio/dress-03.mp3",
+                      "text":  "Where\u0027s my hat?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.909,
+                      "bytes":  12169,
+                      "sha256":  "e54378b197582621d66d38587782bff1147ce7e535c168ef9b7823af49c0bb5b"
+                  },
+                  {
+                      "file":  "public/audio/dress-04.mp3",
+                      "text":  "This is my coat.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.974,
+                      "bytes":  12602,
+                      "sha256":  "af9b39a08719aa39b2d11e28de909edc9693b32f3ec11cd079533916dd20f7b6"
+                  },
+                  {
+                      "file":  "public/audio/dress-05.mp3",
+                      "text":  "Zip it up, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.666,
+                      "bytes":  16780,
+                      "sha256":  "dfbd636db90321588198433b0152ee5bcc485b7df6771dcd1a00a271f4b5ce38"
+                  },
+                  {
+                      "file":  "public/audio/dress-06.mp3",
+                      "text":  "My socks are wet.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.169,
+                      "bytes":  13755,
+                      "sha256":  "f7087432e922391fe95bc8415eab50d8a4871438c5943d46880101fa33c81bbc"
+                  },
+                  {
+                      "file":  "public/audio/dress-07.mp3",
+                      "text":  "I can do it.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.679,
+                      "bytes":  10726,
+                      "sha256":  "38c5f85262fa0f7a1c7f377047dfff6615ac0505b36bd4d67ac7d84fd47aacbc"
+                  },
+                  {
+                      "file":  "public/audio/dress-08.mp3",
+                      "text":  "These are too small.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.099,
+                      "bytes":  13326,
+                      "sha256":  "ed2cb1738f9b778909c7426a06beac060a90c4871d6f32efbe044a6b012e8069"
+                  },
+                  {
+                      "file":  "public/audio/dress-09.mp3",
+                      "text":  "Let\u0027s get dressed.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.039,
+                      "bytes":  12892,
+                      "sha256":  "545aee1eca64d3524d181dd3e78d57e4ea67a45727d69702c37277bc3ec933d7"
+                  },
+                  {
+                      "file":  "public/audio/dress-10.mp3",
+                      "text":  "I\u0027m ready to go.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.844,
+                      "bytes":  11738,
+                      "sha256":  "4e4a22d78a32b41051d19a0d39c0e3337f85c8a8e4d7447c652178e30c24fd6c"
+                  },
+                  {
+                      "file":  "public/audio/play-01.mp3",
+                      "text":  "Let\u0027s play together.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.09,
+                      "bytes":  13326,
+                      "sha256":  "bdd3246408cf6731b9f76ff3a6c331b98ff084e71904577eb9b17c7a41a9b682"
+                  },
+                  {
+                      "file":  "public/audio/play-02.mp3",
+                      "text":  "It\u0027s my turn.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.829,
+                      "bytes":  11735,
+                      "sha256":  "b6418aeabf3e14b44c791fac82984e1a028359c5b4160281a0cf5bf6f0bbc4a9"
+                  },
+                  {
+                      "file":  "public/audio/play-03.mp3",
+                      "text":  "It\u0027s your turn.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.789,
+                      "bytes":  11449,
+                      "sha256":  "3412d25a30c0fc2403977efe9d3e896cc606039e083e26e85bc75ef6d6b525fc"
+                  },
+                  {
+                      "file":  "public/audio/play-04.mp3",
+                      "text":  "Roll the ball.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.739,
+                      "bytes":  11160,
+                      "sha256":  "53aff0fb8594847073d4aa8761e5d16f4185311d34ff21959d2a4743adae8fbd"
+                  },
+                  {
+                      "file":  "public/audio/play-05.mp3",
+                      "text":  "Catch the ball.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.784,
+                      "bytes":  11449,
+                      "sha256":  "4fc56fec19364fb3aa86749a120c442474ee043831eababb09730f479edf8c2c"
+                  },
+                  {
+                      "file":  "public/audio/play-06.mp3",
+                      "text":  "Let\u0027s build a tower.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.039,
+                      "bytes":  12894,
+                      "sha256":  "72ea54c196414936ea158a92b0e3efb4967b48d052024c7b8bf413043da4141b"
+                  },
+                  {
+                      "file":  "public/audio/play-07.mp3",
+                      "text":  "Can I join you?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.946,
+                      "bytes":  12457,
+                      "sha256":  "ebe31f199db7c3a9acbd8c65cf815222229bff3e7eaf03aa67b74554a5a5e127"
+                  },
+                  {
+                      "file":  "public/audio/play-08.mp3",
+                      "text":  "Let\u0027s try again.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.999,
+                      "bytes":  12746,
+                      "sha256":  "8bc2a4cd5c7ab8bf7cd37e9a06b1be85f214b33c8d41bc2ce1be443482cb3b33"
+                  },
+                  {
+                      "file":  "public/audio/play-09.mp3",
+                      "text":  "I did it.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.529,
+                      "bytes":  9859,
+                      "sha256":  "9434e92dd84337039943c7d5a5718c622ff23eb7850e08910c2dea6e428c438b"
+                  },
+                  {
+                      "file":  "public/audio/play-10.mp3",
+                      "text":  "That was fun.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.749,
+                      "bytes":  11159,
+                      "sha256":  "95fb5f2461808e72c2c726137c4c3aedfd9872fad1e31c0c4596cdca53b249bf"
+                  },
+                  {
+                      "file":  "public/audio/tidy-01.mp3",
+                      "text":  "Put it in the box.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.004,
+                      "bytes":  12748,
+                      "sha256":  "7c27a38a65704917acfcaeb986886b68ff4de5ef1e8fd8fb3bef884f16e35d18"
+                  },
+                  {
+                      "file":  "public/audio/tidy-02.mp3",
+                      "text":  "Where does this go?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.946,
+                      "bytes":  12461,
+                      "sha256":  "ec7f213170a48f08634e61099625224eabcec18052690ff808c43aa498969ad3"
+                  },
+                  {
+                      "file":  "public/audio/tidy-03.mp3",
+                      "text":  "Let\u0027s tidy up.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.959,
+                      "bytes":  12456,
+                      "sha256":  "0f96b3164141391700d29e3b2a5fd705a4db86affbaa45589b1866af8111c437"
+                  },
+                  {
+                      "file":  "public/audio/tidy-04.mp3",
+                      "text":  "Pick up the blocks.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.129,
+                      "bytes":  13469,
+                      "sha256":  "69889a291a9e9a1c32a7e13d2bf12eef80dcac211a956fa37da3350a3cccd7c4"
+                  },
+                  {
+                      "file":  "public/audio/tidy-05.mp3",
+                      "text":  "Put the book back.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.934,
+                      "bytes":  12316,
+                      "sha256":  "ab67077cb6403a3aaa2926f93ff90b8520cce98786d2d98ab6f4cee82e468cb9"
+                  },
+                  {
+                      "file":  "public/audio/tidy-06.mp3",
+                      "text":  "I found it.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.739,
+                      "bytes":  11157,
+                      "sha256":  "cb91fec850cfbbfa73c2a263aabf6ba8a628112dd67dd33036225ad3fe08fe10"
+                  },
+                  {
+                      "file":  "public/audio/tidy-07.mp3",
+                      "text":  "I can\u0027t find it.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.044,
+                      "bytes":  13034,
+                      "sha256":  "690bfb2a2b6aad9d69538429d4c30506e4551aedaf7c8ebbcd15f3504a64af3b"
+                  },
+                  {
+                      "file":  "public/audio/tidy-08.mp3",
+                      "text":  "This is yours.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.899,
+                      "bytes":  12168,
+                      "sha256":  "6b6201c6b64d87d0164db1c76cbdd307e6b1469faba58ea6cae29cda95bfd7f4"
+                  },
+                  {
+                      "file":  "public/audio/tidy-09.mp3",
+                      "text":  "This is mine.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.744,
+                      "bytes":  11159,
+                      "sha256":  "bb32ea55fa7618ad5ae056c231a759da40aca742cdfb6c5b5bdae75fedf40b0b"
+                  },
+                  {
+                      "file":  "public/audio/tidy-10.mp3",
+                      "text":  "We\u0027re all done.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.769,
+                      "bytes":  11305,
+                      "sha256":  "8510b05416cb4150243ac4a39a61f97ce40236eff37d59ea103a13c0a4a89b94"
+                  },
+                  {
+                      "file":  "public/audio/outside-01.mp3",
+                      "text":  "Hold my hand.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.949,
+                      "bytes":  12455,
+                      "sha256":  "96cc350becfa05a7d4269f6ee8d245a712d4a1eeac7ff7c30ac2dbe49f12b251"
+                  },
+                  {
+                      "file":  "public/audio/outside-02.mp3",
+                      "text":  "Stay close to me.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.054,
+                      "bytes":  13035,
+                      "sha256":  "de283f4bffbaeb1329c71c93b5bfdf9dfe616a12d8102a35e634e5415e98f6dc"
+                  },
+                  {
+                      "file":  "public/audio/outside-03.mp3",
+                      "text":  "Stop and look.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.946,
+                      "bytes":  12456,
+                      "sha256":  "03e6d9d6e5b913a935b50d30ec45b3c66f227a465e288e0182466029d1cccbf1"
+                  },
+                  {
+                      "file":  "public/audio/outside-04.mp3",
+                      "text":  "Let\u0027s wait here.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.874,
+                      "bytes":  12026,
+                      "sha256":  "7699186a5eb7d81faaeed2ed36ec3fbcfaa1c7885fd45e43feffc9b64b10e8ee"
+                  },
+                  {
+                      "file":  "public/audio/outside-05.mp3",
+                      "text":  "Walk slowly, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.81,
+                      "bytes":  17646,
+                      "sha256":  "b47cdfa53299bb422ec72c9ce52ab85d41e34f349185db31ea5fbdfbd08bd36f"
+                  },
+                  {
+                      "file":  "public/audio/outside-06.mp3",
+                      "text":  "Watch your step.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.924,
+                      "bytes":  12314,
+                      "sha256":  "50bc0b766da8419391db1c462041f7ff3ae1833e69f2e596806db92ab5afc75c"
+                  },
+                  {
+                      "file":  "public/audio/outside-07.mp3",
+                      "text":  "Don\u0027t touch that.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.904,
+                      "bytes":  12171,
+                      "sha256":  "1aeb25b12f47b8db854d5e97f5c6655105d6ca62ce7734f624450ffa9b1b5279"
+                  },
+                  {
+                      "file":  "public/audio/outside-08.mp3",
+                      "text":  "It\u0027s raining outside.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.21,
+                      "bytes":  14047,
+                      "sha256":  "9cbdfdc2d29ec19f8397a364b10c3affdbbf1a403988ce4a5865a5a21f0a0104"
+                  },
+                  {
+                      "file":  "public/audio/outside-09.mp3",
+                      "text":  "Let\u0027s go home.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.899,
+                      "bytes":  12168,
+                      "sha256":  "e055b404c3dea01d78215aa65c2ec0a59cf64e21f6fd244d9c999b3bf2922e00"
+                  },
+                  {
+                      "file":  "public/audio/outside-10.mp3",
+                      "text":  "Stay where I can see you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.404,
+                      "bytes":  15203,
+                      "sha256":  "b2cf04ef313996ccbb1e290f2037fc968052e9bc9205466a3f35803ef83f854a"
+                  },
+                  {
+                      "file":  "public/audio/family-01.mp3",
+                      "text":  "Come here, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.564,
+                      "bytes":  16060,
+                      "sha256":  "cd192af491db0c53dc7ac54c86b9f5a4b6d68cc7d395ffe56f670cb98083b383"
+                  },
+                  {
+                      "file":  "public/audio/family-02.mp3",
+                      "text":  "Look at me.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.594,
+                      "bytes":  10293,
+                      "sha256":  "1536cb36d428a19870cea07d587fad6566f2c7dd25d40950ea0fcca7e2e24639"
+                  },
+                  {
+                      "file":  "public/audio/family-03.mp3",
+                      "text":  "Listen to me, please.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.769,
+                      "bytes":  17359,
+                      "sha256":  "7e8dc4dae30c10343d0de66ea711ce223fc94090f0b95eb415bdd680988520d2"
+                  },
+                  {
+                      "file":  "public/audio/family-04.mp3",
+                      "text":  "I love you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.654,
+                      "bytes":  10581,
+                      "sha256":  "f80165ee66e3fd38a9af28a7586cd26c34ba143139379ff3108c8c54a90ca176"
+                  },
+                  {
+                      "file":  "public/audio/family-05.mp3",
+                      "text":  "Let\u0027s read a book.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.889,
+                      "bytes":  12028,
+                      "sha256":  "d01c19eec55dc0515495403c4f46d541f2470cebca4baa6e3068e361770cba4b"
+                  },
+                  {
+                      "file":  "public/audio/family-06.mp3",
+                      "text":  "Tell me a story.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.946,
+                      "bytes":  12458,
+                      "sha256":  "15bd3817d8193a9350821c99fef6b774d2d959a17451c4f261036c7b359202ad"
+                  },
+                  {
+                      "file":  "public/audio/family-07.mp3",
+                      "text":  "Can you play with me?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.069,
+                      "bytes":  13183,
+                      "sha256":  "6888f1b6bd5ff3d097ad913ade109c755fb13957952d10f6da7b2941ed2731f1"
+                  },
+                  {
+                      "file":  "public/audio/family-08.mp3",
+                      "text":  "What are you doing?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.904,
+                      "bytes":  12173,
+                      "sha256":  "e85024736a2b8ebe36be9e6437794c85b0969c4d94bfa58fe3bec46650858703"
+                  },
+                  {
+                      "file":  "public/audio/family-09.mp3",
+                      "text":  "I\u0027m drawing a picture.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.194,
+                      "bytes":  13904,
+                      "sha256":  "ef6ca35a481cb3fa9cd7db398eca6781f85bd0fa9a04915de4d9f3f2dd1dd5c2"
+                  },
+                  {
+                      "file":  "public/audio/family-10.mp3",
+                      "text":  "Let\u0027s call Grandma.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.104,
+                      "bytes":  13325,
+                      "sha256":  "a5e85304b6cb161d03acd28647888f8d1ab53d8c078fdb04f96a74deb62e8749"
+                  },
+                  {
+                      "file":  "public/audio/explore-01.mp3",
+                      "text":  "What\u0027s this?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.689,
+                      "bytes":  10870,
+                      "sha256":  "e3fd407f7fd35a3a06d4940ef2f7b95abe576141bbaf471a0e52acba891b9b62"
+                  },
+                  {
+                      "file":  "public/audio/explore-02.mp3",
+                      "text":  "It\u0027s a cat.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.659,
+                      "bytes":  10725,
+                      "sha256":  "45f3db9a2fc6e331a7697defadaea46bce236907f5e9a28d935c944d1072a5d7"
+                  },
+                  {
+                      "file":  "public/audio/explore-03.mp3",
+                      "text":  "Look at the bird.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.789,
+                      "bytes":  11451,
+                      "sha256":  "77238d2e5a53f8d0284a06af0dac709412ae36a684ee6bc30fa7a2cb09efdbeb"
+                  },
+                  {
+                      "file":  "public/audio/explore-04.mp3",
+                      "text":  "What color is it?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.869,
+                      "bytes":  11883,
+                      "sha256":  "83ecdc612d18c9f4aae9c24aa5a37d7eb2713e2a862dd5fecd2540352354a7ab"
+                  },
+                  {
+                      "file":  "public/audio/explore-05.mp3",
+                      "text":  "It\u0027s red.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.569,
+                      "bytes":  10147,
+                      "sha256":  "e58749bab56d84b4f44a139dd6ca33ed180a44988c953197aee9c5ee899055ba"
+                  },
+                  {
+                      "file":  "public/audio/explore-06.mp3",
+                      "text":  "How many are there?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.974,
+                      "bytes":  12605,
+                      "sha256":  "2af254d2bdf730056fd8538d13c8c385f1f208a92b1710aa18e230386591dfb7"
+                  },
+                  {
+                      "file":  "public/audio/explore-07.mp3",
+                      "text":  "There are two.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.594,
+                      "bytes":  10296,
+                      "sha256":  "74c1f5da7c99a2da90499e67f4cd054f3f0f982622f0061fc8045abeb1dc19c8"
+                  },
+                  {
+                      "file":  "public/audio/explore-08.mp3",
+                      "text":  "It\u0027s big.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.594,
+                      "bytes":  10291,
+                      "sha256":  "813bfca7462aa5a21e17a925b316b4cfdc1f40676a4f723de6f84b1bc3241355"
+                  },
+                  {
+                      "file":  "public/audio/explore-09.mp3",
+                      "text":  "It\u0027s small.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.689,
+                      "bytes":  10869,
+                      "sha256":  "4e0b0eacfaa234c8cb3b9aeefe116a80036434c9e106ca1cec027f69f5d1611a"
+                  },
+                  {
+                      "file":  "public/audio/explore-10.mp3",
+                      "text":  "I hear a dog.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.834,
+                      "bytes":  11735,
+                      "sha256":  "184ad3175da5cc95f46ceddd480dbac5fa401f31c4ebf99b385aef95aed9e032"
+                  },
+                  {
+                      "file":  "public/audio/kindness-01.mp3",
+                      "text":  "Let\u0027s share.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.669,
+                      "bytes":  10726,
+                      "sha256":  "e0c568f871fe0c03c36b44ba7325589a15d1418f08afe5f9b7681b1848b8e8c4"
+                  },
+                  {
+                      "file":  "public/audio/kindness-02.mp3",
+                      "text":  "You go first.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.994,
+                      "bytes":  12743,
+                      "sha256":  "dd8c8e773626a8203ac3871fdb41e12e98dbc1a07c39fd8e99d313d56922f8ab"
+                  },
+                  {
+                      "file":  "public/audio/kindness-03.mp3",
+                      "text":  "Can I have a turn?",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.004,
+                      "bytes":  12748,
+                      "sha256":  "f23941ce7d6518a05da3641895cac55eae8bb0b1b5dca3bd2dd1dccfb6f5e156"
+                  },
+                  {
+                      "file":  "public/audio/kindness-04.mp3",
+                      "text":  "Please give it back.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.059,
+                      "bytes":  13038,
+                      "sha256":  "e54b681c520398dc69dd5adb2124de1db557c25bfc0da1086717c8bc9050dc56"
+                  },
+                  {
+                      "file":  "public/audio/kindness-05.mp3",
+                      "text":  "Please stop.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.789,
+                      "bytes":  11446,
+                      "sha256":  "84e1898283c056c533b5ea0c662118b761f4701845ed7711258bceab765e2b33"
+                  },
+                  {
+                      "file":  "public/audio/kindness-06.mp3",
+                      "text":  "I don\u0027t like that.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.009,
+                      "bytes":  12748,
+                      "sha256":  "d86f11923ceb24112b8052ccc66fa8c4a90a8da54651174cbd71143e5e10cdbe"
+                  },
+                  {
+                      "file":  "public/audio/kindness-07.mp3",
+                      "text":  "Let\u0027s do it together.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  2.119,
+                      "bytes":  13471,
+                      "sha256":  "ca9e5ef57920e67946a96b67b9ceb82117a513f0f1fcb315f325877ca533f738"
+                  },
+                  {
+                      "file":  "public/audio/kindness-08.mp3",
+                      "text":  "Good job!",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.544,
+                      "bytes":  10003,
+                      "sha256":  "3e8d3f9c0e4d107139c0cf05e20adaa6ff11936fa21e69497e5f94554e4dbf87"
+                  },
+                  {
+                      "file":  "public/audio/kindness-09.mp3",
+                      "text":  "You can do it.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.706,
+                      "bytes":  11016,
+                      "sha256":  "0edea821d99b763cb68dfd03e800e147621584e899d1a9216c2f3d7ebfce4334"
+                  },
+                  {
+                      "file":  "public/audio/kindness-10.mp3",
+                      "text":  "I\u0027ll help you.",
+                      "voice":  "Microsoft Zira Desktop",
+                      "rate":  -1,
+                      "seconds":  1.73,
+                      "bytes":  11160,
+                      "sha256":  "1705b2774191585efaf9408a75ba11fa4cdaa8a179c94b2e8d5cf45681e6da8f"
+                  },
+                  {
+                      "file":  "public/audio/ui/listen.mp3",
+                      "text":  "听一听，然后跟着说。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  3.154,
+                      "bytes":  19673,
+                      "sha256":  "64f92f96abe307815cf1de8c8b714937ff8f38d6a0697d40d38a8685370c18a6"
+                  },
+                  {
+                      "file":  "public/audio/ui/choose.mp3",
+                      "text":  "听一听，选一选。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  2.729,
+                      "bytes":  17075,
+                      "sha256":  "cbb5913553bca762e1dd4db47bfd30522a049dc6b94edb7c351258f936641988"
+                  },
+                  {
+                      "file":  "public/audio/ui/speak.mp3",
+                      "text":  "轮到你啦！试着说一说。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  3.594,
+                      "bytes":  22268,
+                      "sha256":  "644abd52740c7137c831c0ddf6f821cfbf79618e2d7a4fae10ae61081711635c"
+                  },
+                  {
+                      "file":  "public/audio/ui/reveal.mp3",
+                      "text":  "想不起来也没关系，我们再听一次。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  4.338,
+                      "bytes":  26747,
+                      "sha256":  "dc48786f02f8054ff7455ee130ac93b424d860bf0ba01d43f842f045001e79b2"
+                  },
+                  {
+                      "file":  "public/audio/ui/complete.mp3",
+                      "text":  "今天的小练习完成啦！在生活里也试着说一说吧。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  6.017,
+                      "bytes":  36845,
+                      "sha256":  "7edb411247392c69e618880870d3f8d3de6e27aa6974cc71e93be796fca75e77"
+                  },
+                  {
+                      "file":  "public/audio/ui/review.mp3",
+                      "text":  "还记得怎么说吗？",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  2.204,
+                      "bytes":  13907,
+                      "sha256":  "ca4d2ff2a4744cc814da6ddc2132de6a4cb3e803bc43287aa5389bfaa8599091"
+                  },
+                  {
+                      "file":  "public/audio/ui/record.mp3",
+                      "text":  "点一下小话筒，录下你的声音。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  3.868,
+                      "bytes":  24005,
+                      "sha256":  "03d1471d4e928cd1ab35b8b6bbf1f896db0d07c55e52aea06779fb27b01c725a"
+                  },
+                  {
+                      "file":  "public/audio/ui/welcome.mp3",
+                      "text":  "每天一句，一起让英语小芽长大吧。",
+                      "voice":  "Microsoft Huihui Desktop",
+                      "rate":  0,
+                      "seconds":  4.443,
+                      "bytes":  27467,
+                      "sha256":  "dfaae7b66d78bdfb9dc810b2173e61cfcb238519b014557b549203414d062b54"
+                  }
+              ]
+}
