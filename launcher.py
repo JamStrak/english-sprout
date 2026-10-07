@@ -6,6 +6,7 @@ Ordinary use: double-click 启动英语小芽.vbs. No third-party Python package
 from __future__ import annotations
 
 import ctypes
+import argparse
 import hashlib
 import json
 import mimetypes
@@ -214,12 +215,15 @@ def show_error(message: str):
         print(message, file=sys.stderr)
 
 
-def main():
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="英语小芽本机预览")
+    parser.add_argument("--no-browser", action="store_true", help="仅启动或复用服务，不自动打开浏览器（维护用）")
+    args = parser.parse_args(argv)
     server = None
     try:
         port, server, thread = start_or_reuse(ROOT)
         url = f"http://{HOST}:{port}/"
-        if not webbrowser.open(url):
+        if not args.no_browser and not webbrowser.open(url):
             show_error(f"英语小芽已启动，但未能自动打开浏览器。\n请用浏览器打开：{url}")
         if thread is not None:
             thread.join()

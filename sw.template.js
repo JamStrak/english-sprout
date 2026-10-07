@@ -15,7 +15,9 @@ self.addEventListener('fetch',event=>{
   const isAudio=u.pathname.includes('/audio/');
   event.respondWith((async()=>{
     let cache,found;
-    try{cache=await caches.open(isAudio?AUDIO:CACHE);found=await cache.match(event.request,{ignoreSearch:true});}catch{}
+    // The CDN varies by Accept-Encoding. Media range requests may use identity
+    // while prefetch uses gzip/br; the cached body is the same decoded MP3.
+    try{cache=await caches.open(isAudio?AUDIO:CACHE);found=await cache.match(event.request,{ignoreSearch:true,ignoreVary:isAudio});}catch{}
     if(found){
       // iOS media can request a byte range even for fully cached short MP3s.
       const range=isAudio&&event.request.headers.get('range');

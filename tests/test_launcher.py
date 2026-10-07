@@ -7,6 +7,7 @@ import socket
 import tempfile
 import threading
 import unittest
+from unittest.mock import Mock, patch
 import urllib.error
 import urllib.request
 
@@ -64,6 +65,21 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(actual_port, port)
         self.assertIsNone(server)
         self.assertIsNone(thread)
+
+    def test_no_browser_when_reusing_instance(self):
+        with patch.object(launcher, "start_or_reuse", return_value=(24736, None, None)) as start, patch.object(launcher.webbrowser, "open") as browser:
+            launcher.main(["--no-browser"])
+        start.assert_called_once_with(launcher.ROOT)
+        browser.assert_not_called()
+
+    def test_no_browser_when_starting_instance(self):
+        server, thread = Mock(), Mock()
+        with patch.object(launcher, "start_or_reuse", return_value=(24737, server, thread)), patch.object(launcher.webbrowser, "open") as browser:
+            launcher.main(["--no-browser"])
+        browser.assert_not_called()
+        thread.join.assert_called_once_with()
+        server.shutdown.assert_called_once_with()
+        server.server_close.assert_called_once_with()
 
     def test_different_project_is_not_reused(self):
         port = self.start()
