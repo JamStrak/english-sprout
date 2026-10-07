@@ -4,7 +4,7 @@
 
 ## 使用
 
-在线入口（部署完成后生效）：**https://jamstrak.github.io/english-sprout/**
+在线入口：**https://jamstrak.github.io/english-sprout/**
 
 - 手机：用 Safari / Chrome / Edge 打开网址，可添加到主屏幕。
 - 离线：打开「家长」→「保存全部离线声音」。第一次需要联网，完成后可断网练习。浏览器可能清理缓存，需要时重新保存。
@@ -34,7 +34,7 @@ python -m unittest discover -s tests -p "test_launcher.py"
 python launcher.py --no-browser
 ```
 
-浏览器自动化需 Playwright 与 Edge，见 `tests/browser.cjs`。本地预览端口从 24736 开始，自动复用本工程已有实例；冲突时换空闲端口，只发布 dist，不公开项目源码或用户目录。
+浏览器自动化需 Playwright 与 Edge，见 `tests/browser.cjs`；其他开发电脑可用 `PLAYWRIGHT_MODULE` 指定 Playwright 模块路径，`TEST_URL` 可切换到正式网址。本地预览端口从 24736 开始，自动复用本工程已有实例；冲突时换空闲端口，只发布 dist，不公开项目源码或用户目录。不同端口属于不同浏览器存储位置，长期使用优先保持在线网址不变。
 
 推送 main 后 GitHub Actions 运行单元测试、构建并发布 Pages。发布包只包含 dist。语音维护脚本使用 Windows System.Speech 与 FFmpeg；普通使用无需这些组件。
 

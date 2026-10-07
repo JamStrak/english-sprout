@@ -2,7 +2,7 @@
 
 验证日期：2026-10-08。实际运行 Microsoft Edge Chromium / Playwright，地址 https://jamstrak.github.io/english-sprout/。
 
-结果：25 项通过，1 项失败。
+结果：26 项通过，0 项失败。
 
 - **PASS** Desktop home renders, 120 lessons available, no horizontal overflow
 - **PASS** Real bundled home audio plays with finite duration
@@ -22,8 +22,7 @@
 - **PASS** Import requires confirmation; cancel preserves state and confirm restores
 - **PASS** Reset cancel preserves progress; confirmed reset can be restored from export
 - **PASS** Next local calendar day schedules exactly one new sentence plus due review
-- **FAIL** All 128 bundled audio files cache and play after offline reload
-  - page.waitForFunction: Timeout 8000ms exceeded.
+- **PASS** All 128 bundled audio files cache and play after offline reload
 - **PASS** App reports no uncaught JavaScript errors
 - **PASS** Mobile 390px home and navigation fit without overflow
 - **PASS** Mobile 390px lesson, quiz and speaking fit without overflow

@@ -122,6 +122,14 @@ async function waitSW(p){await p.evaluate(()=>navigator.serviceWorker.ready);awa
   await test('All 128 bundled audio files cache and play after offline reload',async()=>{
     await go(p,'parent');await waitSW(p);await p.locator('#offline-audio').click();await p.waitForFunction(()=>document.querySelector('#offline-status')?.textContent.includes('所有短句与引导声音已保存'),null,{timeout:30000});
     const count=await p.evaluate(async()=>{const cache=await caches.open('english-sprout-audio-v1');return(await cache.keys()).filter(r=>r.url.endsWith('.mp3')).length;});assert.equal(count,128);
+    // Reproduce CDN Vary: Accept-Encoding mismatch between prefetch and media.
+    await p.evaluate(async()=>{
+      const cache=await caches.open('english-sprout-audio-v1');
+      const url=new URL('./audio/kindness-10.mp3',document.baseURI).href;
+      const response=await cache.match(url,{ignoreVary:true});
+      const bytes=await response.arrayBuffer();await cache.delete(url,{ignoreVary:true});
+      await cache.put(new Request(url,{headers:{'Accept-Encoding':'qa-prefetch-variant'}}),new Response(bytes,{headers:{'Content-Type':'audio/mpeg','Vary':'Accept-Encoding'}}));
+    });
     await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('#offline-audio').waitFor();await go(p,'library');await p.locator('[data-preview="kindness-10"]').click();const event=await audio(p,'[data-listen="normal"]');assert.match(event.src,/kindness-10/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
     const range=await p.evaluate(async()=>{const r=await fetch('./audio/kindness-10.mp3',{headers:{Range:'bytes=0-127'}});return{status:r.status,range:r.headers.get('Content-Range'),length:(await r.arrayBuffer()).byteLength};});assert.equal(range.status,206);assert.equal(range.length,128);assert.match(range.range,/^bytes 0-127\//);
     await c.setOffline(false);return {cachedMP3:count,offlinePlay:event,range};
