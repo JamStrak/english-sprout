@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "themes": [
     {
       "id": "hello",
@@ -416,7 +416,7 @@
     {
       "id": "needs-04",
       "theme": "needs",
-      "english": "I need the toilet.",
+      "english": "I need to use the bathroom.",
       "chinese": "我需要上厕所。",
       "scene": "需要去卫生间时及时表达",
       "parentTip": "可以回应：Let's go.（我们走吧。）",
@@ -832,7 +832,7 @@
     {
       "id": "feelings-10",
       "theme": "feelings",
-      "english": "Let's take a breath.",
+      "english": "Let's take a deep breath.",
       "chinese": "我们深呼吸一下。",
       "scene": "想慢下来、平静一下",
       "parentTip": "可以回应：Okay.（好的。）",
@@ -1482,7 +1482,7 @@
     {
       "id": "dress-05",
       "theme": "dress",
-      "english": "Zip it up, please.",
+      "english": "Can you zip this up, please?",
       "chinese": "请帮我拉上拉链。",
       "scene": "需要别人帮忙拉拉链",
       "parentTip": "可以回应：Of course.（当然可以。）",
@@ -1950,7 +1950,7 @@
     {
       "id": "tidy-03",
       "theme": "tidy",
-      "english": "Let's tidy up.",
+      "english": "Let's clean up.",
       "chinese": "我们收拾一下吧。",
       "scene": "玩完后一起整理",
       "parentTip": "可以回应：Okay!（好呀！）",
@@ -2577,7 +2577,7 @@
       "english": "Can you play with me?",
       "chinese": "你能陪我玩吗？",
       "scene": "想邀请家人陪自己玩",
-      "parentTip": "可以回应：Yes, I can.（可以呀。）",
+      "parentTip": "可以回应：Sure! Let's play.（好呀！我们一起玩吧。）",
       "action": "拿一个玩具，礼貌地邀请家人加入。",
       "emoji": "🧩",
       "choices": [

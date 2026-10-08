@@ -1,6 +1,6 @@
 const PREFIX='english-sprout-core-';
 const CACHE=PREFIX+'__BUILD_ID__';
-const AUDIO='english-sprout-audio-v1';
+const AUDIO='english-sprout-audio-v3';
 const CORE=__CORE_FILES__;
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE))));
 self.addEventListener('message',event=>{if(event.data==='ACTIVATE_UPDATE')self.skipWaiting();});

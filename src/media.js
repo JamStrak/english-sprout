@@ -6,7 +6,7 @@ export async function playFile(file,slow=false){
   player=audio;
   audio.playbackRate=slow?.8:1;
   audio.preservesPitch=true;
-  try{await audio.play();return audio;}catch(e){if(player===audio)player=null;throw e;}
+  try{await audio.play();return audio;}catch(e){if(player!==audio)return;player=null;throw e;}
 }
 let activeRecording=null,clipURL=null,recordGeneration=0;
 export function recordingSupported(){return !!(window.isSecureContext&&navigator.mediaDevices?.getUserMedia&&window.MediaRecorder);}
@@ -70,7 +70,7 @@ export function clearRecording(){
 }
 export async function cacheAllAudio(files,onProgress){
   if(!('caches' in window))throw new Error('这个浏览器暂不支持离线保存，请使用新版 Safari、Chrome 或 Edge。');
-  const cache=await caches.open('english-sprout-audio-v1');let done=0;let cursor=0;
+  const cache=await caches.open('english-sprout-audio-v3');let done=0;let cursor=0;
   const unique=[...new Set(files)];
   await Promise.all(Array.from({length:3},async()=>{
     while(cursor<unique.length){
@@ -82,7 +82,7 @@ export async function cacheAllAudio(files,onProgress){
 }
 export async function cachedAudioCount(files){
   if(!('caches' in window))return 0;
-  const cache=await caches.open('english-sprout-audio-v1');
+  const cache=await caches.open('english-sprout-audio-v3');
   const results=await Promise.all(files.map(f=>cache.match(new URL(f,document.baseURI).href)));
   return results.filter(Boolean).length;
 }

@@ -1,13 +1,16 @@
 import test, { beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { startRecording, stopRecording, clearRecording, recordingSupported } from '../src/media.js';
+import { playFile, stopAudio, startRecording, stopRecording, clearRecording, recordingSupported } from '../src/media.js';
+import { VOICE_STORAGE_KEY, readVoicePreference, saveVoicePreference, voiceAudioPath, englishAudioFiles } from '../src/voices.js';
 
 const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
 const originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
 const originalRecorder = Object.getOwnPropertyDescriptor(globalThis, 'MediaRecorder');
+const originalAudio = Object.getOwnPropertyDescriptor(globalThis, 'Audio');
+const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
 const originalCreateURL = URL.createObjectURL;
 const originalRevokeURL = URL.revokeObjectURL;
-let instances, blobs, revoked, streams, constructorFailure, startFailure;
+let instances, blobs, revoked, streams, constructorFailure, startFailure, audioInstances, audioPlayResult;
 
 function stream() {
   const tracks = [{ stops: 0, stop() { this.stops += 1; } }];
@@ -28,6 +31,13 @@ function restoreGlobal(name, descriptor) {
 beforeEach(() => {
   instances = []; blobs = new Map(); revoked = []; streams = [];
   constructorFailure = false; startFailure = false;
+  audioInstances = []; audioPlayResult = null;
+  Object.defineProperty(globalThis, 'document', { configurable: true, value: { baseURI: 'https://example.test/english-sprout/' } });
+  Object.defineProperty(globalThis, 'Audio', { configurable: true, value: class {
+    constructor(url) { this.src = String(url); this.paused = true; audioInstances.push(this); }
+    play() { this.paused = false; return audioPlayResult ? audioPlayResult(this) : Promise.resolve(); }
+    pause() { this.paused = true; }
+  } });
   const Recorder = class {
     static isTypeSupported() { return true; }
     constructor(input, options) {
@@ -54,12 +64,52 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  stopAudio();
   clearRecording();
   URL.createObjectURL = originalCreateURL;
   URL.revokeObjectURL = originalRevokeURL;
   restoreGlobal('navigator', originalNavigator);
   restoreGlobal('window', originalWindow);
   restoreGlobal('MediaRecorder', originalRecorder);
+  restoreGlobal('Audio', originalAudio);
+  restoreGlobal('document', originalDocument);
+});
+
+test('English voice paths map both complete courses without altering guidance or local recordings', () => {
+  const lessons = Array.from({length:120}, (_, i) => ({audio:`audio/lesson-${i + 1}.mp3`}));
+  const files = englishAudioFiles(lessons);
+  assert.equal(files.length, 240); assert.equal(new Set(files).size, 240);
+  assert.equal(voiceAudioPath('audio/hello-01.mp3', 'aiden'), 'audio/hello-01.mp3');
+  assert.equal(voiceAudioPath('audio/hello-01.mp3', 'ryan'), 'audio/ryan/hello-01.mp3');
+  assert.equal(voiceAudioPath('audio/hello-01.mp3', 'unknown'), 'audio/hello-01.mp3');
+  for (const path of ['audio/ui/listen.mp3', 'blob:local-recording', 'audio/ryan/hello-01.mp3']) assert.equal(voiceAudioPath(path, 'ryan'), path);
+});
+
+test('Voice preference is separate from learning state and safely defaults when storage is unavailable', () => {
+  const data = new Map([['english-sprout-state-v1', 'unchanged-progress']]);
+  const storage = {getItem:key=>data.get(key), setItem:(key,value)=>data.set(key,value)};
+  assert.equal(readVoicePreference(storage), 'aiden'); assert.equal(saveVoicePreference('ryan', storage), true);
+  assert.equal(readVoicePreference(storage), 'ryan'); assert.equal(data.get('english-sprout-state-v1'), 'unchanged-progress');
+  data.set(VOICE_STORAGE_KEY, 'corrupt'); assert.equal(readVoicePreference(storage), 'aiden');
+  const blocked = {getItem(){throw new Error('blocked');},setItem(){throw new Error('blocked');}};
+  assert.equal(readVoicePreference(blocked), 'aiden'); assert.equal(saveVoicePreference('ryan', blocked), false);
+});
+
+test('Voice playback preserves pitch and stops the previous sample without mapping recorded blobs', async () => {
+  await playFile(voiceAudioPath('audio/hello-01.mp3', 'aiden'));
+  const aiden = audioInstances[0]; assert.equal(aiden.src, 'https://example.test/english-sprout/audio/hello-01.mp3'); assert.equal(aiden.playbackRate, 1);
+  await playFile(voiceAudioPath('audio/hello-01.mp3', 'ryan'), true);
+  const ryan = audioInstances[1]; assert.equal(aiden.paused, true); assert.equal(ryan.src, 'https://example.test/english-sprout/audio/ryan/hello-01.mp3'); assert.equal(ryan.playbackRate, 0.8); assert.equal(ryan.preservesPitch, true);
+  await playFile('blob:local-recording'); assert.equal(ryan.paused, true); assert.equal(audioInstances[2].src, 'blob:local-recording');
+});
+
+test('Switching voice during pending playback ignores only the interrupted sample failure', async () => {
+  const interrupted = deferred(); audioPlayResult = () => interrupted.promise;
+  const first = playFile('audio/hello-01.mp3'); audioPlayResult = null;
+  await playFile('audio/ryan/hello-01.mp3'); interrupted.reject(new DOMException('Playback interrupted', 'AbortError')); await first;
+  assert.equal(audioInstances[0].paused, true); assert.equal(audioInstances[1].paused, false);
+  audioPlayResult = () => Promise.reject(new Error('Missing audio'));
+  await assert.rejects(playFile('audio/missing.mp3'), /Missing audio/);
 });
 
 test('normal stop releases microphone immediately, returns only recorded audio and clear revokes it', async () => {

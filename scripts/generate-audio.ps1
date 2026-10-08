@@ -1,12 +1,11 @@
 ﻿#requires -Version 5.1
 <#
-Offline-only build utility. Requires Windows System.Speech and FFmpeg/FFprobe.
+Chinese guidance maintenance utility. English is built by generate-neural-audio.py.
 Run: powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-audio.ps1
-Rebuilds only the MP3 files named by the curriculum and the eight UI prompts.
+Rebuilds Chinese UI prompts only and preserves the existing English manifest entries.
 #>
 param(
     [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
-    [string]$EnglishVoice = 'Microsoft Zira Desktop',
     [string]$ChineseVoice = 'Microsoft Huihui Desktop'
 )
 
@@ -22,12 +21,16 @@ $uiRoot = Join-Path $audioRoot 'ui'
 [IO.Directory]::CreateDirectory($uiRoot) | Out-Null
 $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
 $available = @($synth.GetInstalledVoices() | ForEach-Object { $_.VoiceInfo.Name })
-foreach ($name in @($EnglishVoice, $ChineseVoice)) {
+foreach ($name in @($ChineseVoice)) {
     if ($available -notcontains $name) {
         throw "Required local voice is missing: $name. Installed voices: $($available -join ', ')"
     }
 }
 $records = [System.Collections.Generic.List[object]]::new()
+$manifestPath = Join-Path $audioRoot 'manifest.json'
+if (-not (Test-Path -LiteralPath $manifestPath)) { throw 'An existing audio manifest is required. Build English course audio first.' }
+$manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach ($clip in $manifest.clips) { if (-not $clip.file.StartsWith('public/audio/ui/')) { $records.Add($clip) } }
 
 function Write-SpokenClip {
     param([string]$Text, [string]$Destination, [string]$Voice, [int]$Rate)
@@ -62,16 +65,6 @@ function Write-SpokenClip {
 }
 
 try {
-    $count = 0
-    foreach ($lesson in $curriculum.lessons) {
-        if ($lesson.id -notmatch '^[a-z]+-[0-9]{2}$' -or $lesson.audio -ne "audio/$($lesson.id).mp3") {
-            throw "Invalid or unexpected curriculum audio path for lesson $($lesson.id)"
-        }
-        $destination = Join-Path $audioRoot "$($lesson.id).mp3"
-        Write-SpokenClip -Text $lesson.english -Destination $destination -Voice $EnglishVoice -Rate -1
-        $count++
-        if ($count % 10 -eq 0) { Write-Output "English audio: $count / $($curriculum.lessons.Count)" }
-    }
     $prompts = [ordered]@{
         listen = '听一听，然后跟着说。'
         choose = '听一听，选一选。'
@@ -81,23 +74,20 @@ try {
         review = '还记得怎么说吗？'
         record = '点一下小话筒，录下你的声音。'
         welcome = '每天一句，一起让英语小芽长大吧。'
+        'try-again' = '没关系，再听一次，找一找。'
+        'well-done' = '找到了，真棒！现在轮到你开口啦。'
+        checkup = '来玩记忆小游戏。看图片想一想，这句话怎么说呢？'
     }
     foreach ($item in $prompts.GetEnumerator()) {
         Write-SpokenClip -Text $item.Value -Destination (Join-Path $uiRoot "$($item.Key).mp3") -Voice $ChineseVoice -Rate 0
     }
-    $manifest = [ordered]@{
-        version = '1.0'
-        source = 'Local Windows System.Speech.Synthesis.SpeechSynthesizer; no external API'
-        encoder = 'FFmpeg loudnorm I=-20 TP=-1.5 LRA=7; libmp3lame, mono, 24000 Hz, 48 kbps'
-        englishVoice = $EnglishVoice
-        chineseVoice = $ChineseVoice
-        lessons = $curriculum.lessons.Count
-        uiPrompts = $prompts.Count
-        totalBytes = ($records | Measure-Object -Property bytes -Sum).Sum
-        clips = $records
-    }
+    $manifest.version = $curriculum.version
+    $manifest.chineseVoice = $ChineseVoice
+    $manifest.uiPrompts = $prompts.Count
+    $manifest.totalBytes = ($records | Measure-Object -Property bytes -Sum).Sum
+    $manifest.clips = @($records)
     $manifestJson = $manifest | ConvertTo-Json -Depth 5
     [IO.File]::WriteAllText((Join-Path $audioRoot 'manifest.json'), $manifestJson, (New-Object Text.UTF8Encoding($false)))
-    Write-Output "Built $($records.Count) local audio clips; $($manifest.totalBytes) bytes total."
+    Write-Output "Rebuilt $($prompts.Count) Chinese prompts; English audio preserved; $($manifest.totalBytes) bytes total."
 }
 finally { $synth.Dispose() }

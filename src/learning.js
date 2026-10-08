@@ -1,4 +1,5 @@
 /** Local-first learning state. Dates are local calendar labels, never UTC days. */
+import {createGarden,validateGarden} from './garden.js';
 export const REVIEW_INTERVALS = Object.freeze([1, 3, 7, 14, 30, 60, 90]);
 const RATINGS = new Set(['again', 'help', 'good']);
 const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -68,6 +69,8 @@ export function createState(today = dayKey()) {
     settings: { nickname: '小芽', dailyReviews: 5 },
     cards: {},
     days: {},
+    checkups: {},
+    garden: createGarden(),
   };
 }
 
@@ -83,6 +86,8 @@ function cloneState(state) {
       reviewed: [...entry.reviewed],
       results: entry.results.map((result) => ({ ...result })),
     }])),
+    checkups: Object.fromEntries(Object.entries(state.checkups||{}).map(([day, results])=>[day,results.map(result=>({...result}))])),
+    garden: state.garden?{version:state.garden.version,actions:state.garden.actions.map(action=>({...action}))}:createGarden(),
   };
 }
 
@@ -95,8 +100,54 @@ function allDueIds(state, ids, today) {
   const order = new Map(ids.map((id, index) => [id, index]));
   return ids.filter((id) => {
     const card = Object.hasOwn(state.cards, id) ? state.cards[id] : null;
-    return card && card.due <= today && card.lastReviewed < today;
-  }).sort((a, b) => state.cards[a].due.localeCompare(state.cards[b].due) || order.get(a) - order.get(b));
+    return card && effectiveDue(state,id,card) <= today && card.lastReviewed < today;
+  }).sort((a, b) => effectiveDue(state,a,state.cards[a]).localeCompare(effectiveDue(state,b,state.cards[b])) || order.get(a) - order.get(b));
+}
+
+// A difficult checkup adds an earlier retrieval opportunity, never a longer interval.
+function effectiveDue(state,id,card){
+  let due=card.due;
+  for(const [date,results] of Object.entries(state.checkups||{})){
+    if(date<card.lastReviewed)continue;
+    if(results.some(r=>r.lessonId===id&&(!r.meaning||r.spoken!=='good'))){const retry=addDays(date,1);if(retry<due)due=retry;}
+  }
+  return due;
+}
+
+function introductionDates(state){
+  const dates={};
+  for(const [date,entry] of Object.entries(state.days))for(const result of entry.results)if(result.isNew)dates[result.lessonId]=date;
+  return dates;
+}
+
+/** Brief weekly checkup: delayed recognition and parent-observed recall stay distinct. */
+export function getCheckupPlan(state,lessons,today=dayKey()){
+  dateParts(today);
+  const dates=Object.keys(state.checkups||{}).filter(d=>d<=today).sort();
+  const lastDate=dates.at(-1)||null;
+  const nextDate=addDays(lastDate||state.startedAt,7);
+  const introduced=introductionDates(state),order=new Map(lessonIds(lessons).map((id,i)=>[id,i]));
+  const candidates=[...order.keys()].filter(id=>state.cards[id]&&introduced[id]&&introduced[id]<=addDays(today,-3)&&state.cards[id].lastReviewed<today);
+  const lastSeen=id=>dates.filter(date=>state.checkups[date].some(r=>r.lessonId===id)).at(-1)||state.startedAt;
+  candidates.sort((a,b)=>lastSeen(a).localeCompare(lastSeen(b))||effectiveDue(state,a,state.cards[a]).localeCompare(effectiveDue(state,b,state.cards[b]))||order.get(a)-order.get(b));
+  const due=today>=nextDate&&candidates.length>0;
+  return {due,ids:due?candidates.slice(0,3):[],lastDate,nextDate};
+}
+
+/** Checkups do not promote a card; only ordinary delayed recall can grow its interval. */
+export function recordCheckup(state,lessons,results,today=dayKey()){
+  dateParts(today);
+  if(today<state.startedAt||Object.keys(state.checkups||{}).some(date=>date>today))fail('小测日期早于已有记录');
+  if(Object.hasOwn(state.checkups||{},today))return cloneState(state);
+  const plan=getCheckupPlan(state,lessons,today);
+  if(!plan.due||!Array.isArray(results)||results.length!==plan.ids.length)fail('小测尚未到期或结果数量不正确');
+  const seen=new Set();
+  for(const result of results){
+    exactKeys(result,['lessonId','meaning','spoken'],'小测结果');
+    if(!plan.ids.includes(result.lessonId)||seen.has(result.lessonId)||typeof result.meaning!=='boolean'||!RATINGS.has(result.spoken))fail('小测结果不正确');
+    seen.add(result.lessonId);
+  }
+  const next=cloneState(state);next.checkups[today]=results.map(r=>({...r}));return next;
 }
 
 /** dueIds contains remaining work only. Missed days never create extra new lessons. */
@@ -148,7 +199,7 @@ export function recordResult(state, lessonId, rating, today = dayKey(), { isNew 
     entry.newDone = true;
   } else {
     if (!previous) fail('请先完成这句的新句练习');
-    if (previous.due > today) fail('这句尚未到复习日期');
+    if (effectiveDue(result,lessonId,previous) > today) fail('这句尚未到复习日期');
     if (entry.reviewed.length >= result.settings.dailyReviews) fail('今天的复习已完成');
     entry.reviewed.push(lessonId);
   }
@@ -164,23 +215,27 @@ export function getStats(state, lessons, today = dayKey()) {
   const learned = ids.filter((id) => Object.hasOwn(state.cards, id));
   const plan = getDailyPlan(state, lessons, today);
   const practiced = Object.entries(state.days).filter(([date, entry]) => date <= today && entry.results.length > 0);
+  const checkups = Object.entries(state.checkups || {}).filter(([date, results]) => date <= today && results.length > 0);
+  const practicedDates = new Set([...practiced.map(([date]) => date), ...checkups.map(([date]) => date)]);
   const dueCount = allDueIds(state, ids, today).length;
   const tomorrow = addDays(today, 1);
   return {
     learnedCount: learned.length,
     totalLearned: learned.length,
     familiarCount: learned.filter((id) => state.cards[id].stage >= 3).length,
-    practicedDays: practiced.length,
+    practicedDays: practicedDates.size,
+    // Ordinary practice keeps its existing meaning; checkup observations are counted separately.
     totalPracticeCount: practiced.reduce((sum, [, entry]) => sum + entry.results.length, 0),
+    checkupCount: checkups.reduce((sum, [, results]) => sum + results.length, 0),
     dueCount,
     reviewDueCount: dueCount,
-    nextDueCount: learned.filter((id) => state.cards[id].due === tomorrow).length,
+    nextDueCount: learned.filter((id) => effectiveDue(state,id,state.cards[id]) === tomorrow).length,
     todayNewDone: plan.newDone,
     todayReviewDone: plan.reviewDone,
     todayTotalDone: plan.totalDone,
     last7Days: Array.from({ length: 7 }, (_, index) => {
       const date = addDays(today, index - 6);
-      const totalDone = dayEntry(state, date).results.length;
+      const totalDone = dayEntry(state, date).results.length + (state.checkups?.[date]?.length || 0);
       return { date, practiced: totalDone > 0, totalDone };
     }),
   };
@@ -197,13 +252,44 @@ function integer(value, min, max, label) {
   if (!Number.isSafeInteger(value) || value < min || value > max) fail(`${label}不正确`);
 }
 
+/** A checkup must fit at a real boundary between that day's recorded practice events. */
+function validateCheckupHistory(state, lessons) {
+  if (!Object.keys(state.checkups).length) return;
+  const replay = createState(state.startedAt);
+  const dates = [...new Set([...Object.keys(state.days), ...Object.keys(state.checkups)])].sort();
+  for (const date of dates) {
+    const checkup = state.checkups[date];
+    let accepted = !checkup;
+    function acceptIfPossible() {
+      if (accepted) return;
+      const plan = getCheckupPlan(replay, lessons, date);
+      if (plan.due && plan.ids.length === checkup.length && checkup.every(result => plan.ids.includes(result.lessonId))) {
+        replay.checkups[date] = checkup;
+        accepted = true;
+      }
+    }
+    // A legitimate checkup can precede all reviews, follow them, or sit between two.
+    acceptIfPossible();
+    for (const result of state.days[date]?.results || []) {
+      const entry = dayEntry(replay, date);
+      if (result.isNew) { entry.newId = result.lessonId; entry.newDone = true; }
+      else entry.reviewed.push(result.lessonId);
+      entry.results.push(result);
+      replay.days[date] = entry;
+      replay.cards[result.lessonId] = nextCard(replay.cards[result.lessonId], result.rating, date);
+      acceptIfPossible();
+    }
+    if (!accepted) fail('小测结果与当天可完整完成的题目不一致');
+  }
+}
+
 /** Import is a strict, bounded JSON backup, never an executable object or audio payload. */
 export function validateImport(input, lessons) {
   if (typeof input === 'string') {
     if (input.length > MAX_IMPORT_BYTES) fail('备份超过 5 MB');
     try { input = JSON.parse(input); } catch { fail('不是有效的 JSON 文件'); }
   }
-  exactKeys(input, ['version', 'startedAt', 'settings', 'cards', 'days'], '备份');
+  exactKeys(input, ['version', 'startedAt', 'settings', 'cards', 'days',...['checkups','garden'].filter(key=>Object.hasOwn(input||{},key))], '备份');
   if (input.version !== 1) fail('备份版本不受支持');
   dateParts(input.startedAt);
   exactKeys(input.settings, ['nickname', 'dailyReviews'], '设置');
@@ -227,6 +313,23 @@ export function validateImport(input, lessons) {
     clean.cards[id] = { ...card };
   }
   const replay = {};
+  if(Object.hasOwn(input,'checkups')){
+    if(!isRecord(input.checkups)||Object.keys(input.checkups).length>MAX_HISTORY_DAYS)fail('小测记录不正确');
+    let previousDate=null;
+    for(const date of Object.keys(input.checkups).sort()){
+      dateParts(date);
+      if(date<addDays(previousDate||clean.startedAt,7))fail('小测间隔不足七天');
+      const results=input.checkups[date];
+      if(!Array.isArray(results)||results.length<1||results.length>3)fail('小测结果数量不正确');
+      const seen=new Set();
+      clean.checkups[date]=results.map(result=>{
+        exactKeys(result,['lessonId','meaning','spoken'],'小测结果');
+        if(!known.has(result.lessonId)||!Object.hasOwn(clean.cards,result.lessonId)||seen.has(result.lessonId)||typeof result.meaning!=='boolean'||!RATINGS.has(result.spoken))fail('小测结果不正确');
+        seen.add(result.lessonId);return {...result};
+      });
+      previousDate=date;
+    }
+  }
   const introduced = new Set();
   for (const date of Object.keys(input.days).sort()) {
     dateParts(date);
@@ -249,7 +352,7 @@ export function validateImport(input, lessons) {
         if (introduced.has(item.lessonId) || item.lessonId !== entry.newId || !entry.newDone) fail('新句历史不一致');
         introduced.add(item.lessonId);
       } else {
-        if (!introduced.has(item.lessonId) || replay[item.lessonId].due > date) fail('复习早于学习或预约日期');
+        if (!introduced.has(item.lessonId) || effectiveDue(clean,item.lessonId,replay[item.lessonId]) > date) fail('复习早于学习或预约日期');
         reviews.push(item.lessonId);
       }
       replay[item.lessonId] = nextCard(Object.hasOwn(replay, item.lessonId) ? replay[item.lessonId] : null, item.rating, date);
@@ -261,5 +364,12 @@ export function validateImport(input, lessons) {
   for (const [id, card] of Object.entries(clean.cards)) {
     if (!Object.hasOwn(replay, id) || Object.keys(card).some((key) => card[key] !== replay[id][key])) fail('课程进度与练习历史不一致');
   }
+  const introductions=introductionDates(clean);
+  for(const [date,results] of Object.entries(clean.checkups))for(const result of results){
+    if(!introductions[result.lessonId]||introductions[result.lessonId]>addDays(date,-3))fail('小测应检查至少三天前学过的句子');
+  }
+  validateCheckupHistory(clean, lessons);
+  clean.garden=validateGarden(input.garden,clean);
+  for(const action of clean.garden.actions){dateParts(action.date);if(action.date<clean.startedAt)fail('种植日期早于首次使用日期');}
   return clean;
 }
