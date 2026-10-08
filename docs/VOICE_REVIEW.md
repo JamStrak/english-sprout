@@ -4,7 +4,7 @@
 
 ## 用户试听与声线决定
 
-用户试听后明确反馈 Zira 机械、缺少情感；Aiden / Ryan 两者生动且口语化，因此两套都保留。默认 Aiden，家长页和练习中可切换 Ryan，不重复建立学习记录。该反馈是初始四句对照样本的认可，不表示全部新生成台词都经过真人验收。
+用户试听后明确反馈 Zira 机械、缺少情感；Aiden / Ryan 两者生动且口语化，因此两套都保留。默认 Aiden，家长页和练习中可切换 Ryan，不重复建立学习记录。最初反馈来自四句对照；全量安装后用户再次打开新版正式配音试听页，反馈“效果很好”，并明确要求完善后部署。未据此宣称全部 120 句都已真人逐句验收。
 
 本机 `test-results/voice-audit/试听对照.html` 保留 Zira / Aiden / Ryan 的四句对比：Can you play with me?、May I have some milk?、I can't find it.、Let's get dressed.。历史对照不进入公开发布包。
 

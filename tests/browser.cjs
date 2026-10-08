@@ -6,6 +6,10 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const origin = process.env.TEST_URL || 'http://127.0.0.1:24736';
 const localTarget = ['localhost','127.0.0.1','[::1]'].includes(new URL(origin).hostname);
+// The published CDN needs time to download all 251 clips; keep local budgets tight.
+const navigationTimeout = Number(process.env.NAVIGATION_TIMEOUT_MS || (localTarget ? 8000 : 30000));
+const offlineTimeout = Number(process.env.OFFLINE_TIMEOUT_MS || (localTarget ? 30000 : 180000));
+for(const timeout of [navigationTimeout,offlineTimeout])if(!Number.isInteger(timeout)||timeout<1)throw new Error('Network timeout budgets must be positive integer milliseconds.');
 // Local and published QA have separate screenshots, backups and reports by default.
 const reportName = process.env.REPORT_NAME || (localTarget ? 'local' : 'live');
 if(!/^[A-Za-z0-9_-]+$/.test(reportName))throw new Error('REPORT_NAME must contain only letters, digits, underscores or hyphens.');
@@ -27,8 +31,10 @@ async function test(name, fn) {
 }
 async function context(options={}) {
   const c = await browser.newContext({viewport:{width:1440,height:1000},timezoneId:'Asia/Shanghai',permissions:['microphone'],...options});
+  c.setDefaultNavigationTimeout(navigationTimeout);
   await c.addInitScript(() => {
     window.__qaAudio=[];window.__qaStreams=[];window.__qaErrors=[];window.__qaPlay=[];window.__qaAudioTimeline=[];
+    if(navigator.storage?.persist){const persist=navigator.storage.persist.bind(navigator.storage);navigator.storage.persist=async()=>{window.__qaPersist={started:true,settled:false};try{const value=await persist();window.__qaPersist={started:true,settled:true,value};return value;}catch(error){window.__qaPersist={started:true,settled:true,error:error.message};throw error;}};}
     const NativeAudio=window.Audio;
     window.Audio=function(...args){const a=new NativeAudio(...args);window.__qaAudio.push(a);a.addEventListener('playing',()=>window.__qaPlay.push({src:a.src,rate:a.playbackRate,duration:a.duration}));for(const type of ['playing','pause','ended'])a.addEventListener(type,()=>window.__qaAudioTimeline.push({type,src:a.src,ended:a.ended}));return a;};
     window.Audio.prototype=NativeAudio.prototype;
@@ -39,7 +45,7 @@ async function context(options={}) {
   return c;
 }
 async function newPage(c,date='2026-10-08T10:00:00+08:00') {
-  const p=await c.newPage();p.setDefaultTimeout(8000);await p.clock.setFixedTime(new Date(date));
+  const p=await c.newPage();p.setDefaultTimeout(8000);p.setDefaultNavigationTimeout(navigationTimeout);await p.clock.setFixedTime(new Date(date));
   await p.goto(origin,{waitUntil:'networkidle'});await p.locator('#start-today').waitFor();return p;
 }
 async function go(p,view){await p.locator(`[data-go="${view}"]:visible`).first().click();}
@@ -65,6 +71,22 @@ async function audio(p,selector,rate=1){
   assert.equal(event.rate,rate);assert.ok(event.duration>0.3);return event;
 }
 async function waitSW(p){await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>navigator.serviceWorker.controller!==null);}
+async function waitOfflineSaved(p){
+  const started=Date.now(),requests=[],responses=[];
+  const failed=request=>requests.push({url:request.url(),failure:request.failure()});
+  const response=reply=>{if(reply.url().endsWith('.mp3')&&(reply.status()===206||!reply.ok()))responses.push({url:reply.url(),status:reply.status()});};
+  p.context().on('requestfailed',failed);
+  p.context().on('response',response);
+  const snapshot=async()=>p.evaluate(async name=>({status:document.querySelector('#offline-status')?.textContent,disabled:document.querySelector('#offline-audio')?.disabled,persist:window.__qaPersist||null,cachedMP3:(await(await caches.open(name)).keys()).filter(request=>request.url.endsWith('.mp3')).length}),audioCache);
+  const progress=localTarget?null:setInterval(async()=>{try{console.log('Offline save progress',JSON.stringify({elapsedMs:Date.now()-started,...await snapshot()}));}catch{}},30000);
+  try{
+    await p.waitForFunction(()=>document.querySelector('#offline-status')?.textContent.includes('两套示范与中文引导共 251 段声音已保存'),null,{timeout:offlineTimeout});
+    return {elapsedMs:Date.now()-started};
+  }catch(error){
+    const details={elapsedMs:Date.now()-started,...await snapshot().catch(()=>({})),failedRequests:requests,unexpectedResponses:responses};
+    console.log('Offline save diagnostics',JSON.stringify(details));error.message+=' '+JSON.stringify(details);throw error;
+  }finally{clearInterval(progress);p.context().off('requestfailed',failed);p.context().off('response',response);}
+}
 async function delayCacheCount(p){
   await p.evaluate(count=>{
     const original=Cache.prototype.match;let remaining=count;window.__qaCacheReplies=[];
@@ -173,7 +195,7 @@ async function delayCacheCount(p){
     const s=await state(p);assert.equal(s.days['2026-10-09'].results.length,2);assert.equal(s.cards['hello-01'].due,'2026-10-10');assert.equal(s.cards['hello-02'].due,'2026-10-10');return s.days['2026-10-09'];
   });
   await test('All 251 bundled audio files cache and both English voices play after offline reload',async()=>{
-    await go(p,'parent');await waitSW(p);await p.locator('#offline-audio').click();await p.waitForFunction(()=>document.querySelector('#offline-status')?.textContent.includes('两套示范与中文引导共 251 段声音已保存'),null,{timeout:30000});
+    await go(p,'parent');await waitSW(p);await p.locator('#offline-audio').click();const download=await waitOfflineSaved(p);
     const count=await p.evaluate(async name=>{const cache=await caches.open(name);return(await cache.keys()).filter(r=>r.url.endsWith('.mp3')).length;},audioCache);assert.equal(count,totalAudioCount);
     // Reproduce CDN Vary: Accept-Encoding mismatch between prefetch and media.
     await p.evaluate(async name=>{
@@ -186,7 +208,7 @@ async function delayCacheCount(p){
     await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('#offline-audio').waitFor();await go(p,'library');await p.locator('[data-preview="kindness-10"]').click();await p.locator('[data-voice]').selectOption('aiden');const event=await audio(p,'[data-listen="normal"]');assert.match(event.src,/\/audio\/kindness-10\.mp3$/);
     await p.locator('[data-voice]').selectOption('ryan');const ryan=await audio(p,'[data-listen="normal"]');assert.match(ryan.src,/\/audio\/ryan\/kindness-10\.mp3$/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
     const range=await p.evaluate(async()=>{const r=await fetch('./audio/kindness-10.mp3',{headers:{Range:'bytes=0-127'}});return{status:r.status,range:r.headers.get('Content-Range'),length:(await r.arrayBuffer()).byteLength};});assert.equal(range.status,206);assert.equal(range.length,128);assert.match(range.range,/^bytes 0-127\//);
-    await c.setOffline(false);return {cachedMP3:count,offlinePlay:{aiden:event,ryan},range};
+    await c.setOffline(false);return {cachedMP3:count,download,offlinePlay:{aiden:event,ryan},range};
   });
   await test('App reports no uncaught JavaScript errors',async()=>{assert.deepEqual(await p.evaluate(()=>window.__qaErrors),[]);});
   await c.close();
@@ -234,7 +256,7 @@ async function delayCacheCount(p){
   const cacheRaceContext=await context();const cp=await newPage(cacheRaceContext);
   await test('Delayed cache counts cannot overwrite download success or a newer parent page',async()=>{
     await waitSW(cp);await delayCacheCount(cp);await go(cp,'parent');await cp.waitForFunction(count=>window.__qaCacheReplies.length===count,englishAudioCount);
-    await cp.locator('#offline-audio').click();await cp.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes('两套示范与中文引导共 251 段声音已保存'),null,{timeout:30000});
+    await cp.locator('#offline-audio').click();await waitOfflineSaved(cp);
     await cp.evaluate(()=>window.__qaReleaseCacheCount());assert.match(await cp.locator('#offline-status').innerText(),/两套示范与中文引导共 251 段声音已保存/);
     // A previous render must not overwrite the status of a fresh parent page either.
     await go(cp,'home');await cp.evaluate(async name=>{const cache=await caches.open(name),url=new URL('./audio/hello-01.mp3',document.baseURI).href;window.__qaSavedAudio=await cache.match(url);await cache.delete(url);},audioCache);
@@ -329,7 +351,7 @@ async function delayCacheCount(p){
     assert.equal(await st.evaluate(()=>window.__qaAudio.filter(audio=>!audio.paused&&!audio.ended).length),0);const played=await st.evaluate(()=>window.__qaPlay.length);await st.waitForTimeout(250);assert.equal(await st.evaluate(()=>window.__qaPlay.length),played);assert.deepEqual(await state(st),mature);assert.equal(await st.locator('.practice-shell').count(),0);
   });await storageContext.close();
   await browser.close();
-  const report={name:reportName,url:origin,date:'2026-10-08',browser:'Microsoft Edge Chromium headless',checks,passed:checks.filter(c=>c.status==='PASS').length,failed:checks.filter(c=>c.status==='FAIL').length};
+  const report={name:reportName,url:origin,date:'2026-10-08',browser:'Microsoft Edge Chromium headless',networkBudgets:{navigationMs:navigationTimeout,offlineMs:offlineTimeout},checks,passed:checks.filter(c=>c.status==='PASS').length,failed:checks.filter(c=>c.status==='FAIL').length};
   fs.writeFileSync(path.join(output,'browser-results.json'),JSON.stringify(report,null,2));
   const md=`# 浏览器集成验证\n\n验证日期：2026-10-08。实际运行 Microsoft Edge Chromium / Playwright，地址 ${origin}。\n\n结果：${report.passed} 项通过，${report.failed} 项失败。\n\n`+checks.map(c=>`- **${c.status}** ${c.name}${c.status==='FAIL'?`\n  - ${c.error.split('\n')[0]}`:''}`).join('\n')+`\n\n## 范围与限制\n\n- 桌面宽度 1440px，移动视口 390px 与 320px；截图见 ${path.relative(root,output).replaceAll('\\','/')}。移动视口不是实体 iPhone Safari / Android 测试。\n- 检查 MP3 的真实浏览器播放事件、时长和速度；未进行人工逐句听音。\n- 录音成功路径使用 Edge 假麦克风设备与真实 MediaRecorder；拒绝路径注入 NotAllowedError。\n- 日期通过 Playwright clock 固定在中国时区，验证次日复习。\n- 离线用 service worker 缓存＋浏览器断网模拟，不等同于验证全国移动网络或系统长期缓存保留。\n- 报告对应验证地址 ${origin} 当时返回的版本；本地修改须重建，正式网页须部署后再复验。\n`;
   fs.writeFileSync(path.join(output,'UI_QA.md'),md);
