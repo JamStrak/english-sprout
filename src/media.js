@@ -1,17 +1,92 @@
-let player=null;
-export function stopAudio(){if(player){player.pause();player=null;}if('speechSynthesis' in window)window.speechSynthesis.cancel();}
+const MAX_WARM_AUDIO=6;
+const warmAudio=new Map();
+let player=null,playback=null;
+const audioURL=file=>new URL(file,document.baseURI).href;
+const canWarm=url=>/^https?:/.test(url);
+
+function releaseAudio(audio){
+  audio.pause();
+  audio.removeAttribute('src');
+  // Discard only evicted buffers. Pausing ordinary playback keeps its warm data.
+  audio.load();
+}
+function trimWarmAudio(){
+  while(warmAudio.size>MAX_WARM_AUDIO){
+    const unused=[...warmAudio].find(([,entry])=>entry.audio!==player);
+    if(!unused)break;
+    warmAudio.delete(unused[0]);releaseAudio(unused[1].audio);
+  }
+}
+function audioEntry(url){
+  let entry=warmAudio.get(url);
+  if(entry){warmAudio.delete(url);warmAudio.set(url,entry);return entry;}
+  const audio=new Audio();
+  audio.preload='auto';audio.src=url;
+  entry={audio,url,warmed:false};
+  if(canWarm(url)){
+    warmAudio.set(url,entry);
+    audio.addEventListener('error',()=>{if(warmAudio.get(url)===entry)warmAudio.delete(url);});
+    trimWarmAudio();
+  }
+  return entry;
+}
+export function preloadAudio(files){
+  // Keep this small: a browser may ignore preload, but a user tap must still play.
+  const urls=[...new Set(files.map(audioURL).filter(canWarm))].slice(0,MAX_WARM_AUDIO);
+  for(const url of urls){
+    const entry=audioEntry(url);
+    if(entry.warmed||entry.audio===player)continue;
+    entry.warmed=true;
+    try{entry.audio.load();}catch{if(warmAudio.get(url)===entry)warmAudio.delete(url);}
+  }
+}
+export function isAudioLoading(file,slow=false){
+  return !!(playback&&playback.url===audioURL(file)&&playback.rate===(slow?.8:1)&&(playback.pending||playback.status==='loading'));
+}
+export function stopAudio(){
+  const previous=playback;
+  playback=null;player=null;
+  if(previous){previous.cleanup();previous.audio.pause();}
+  if('speechSynthesis' in window)window.speechSynthesis.cancel();
+}
 export async function playFile(file,slow=false,onState=()=>{}){
+  if(isAudioLoading(file,slow)){
+    playback.observers.add(onState);onState('loading');
+    return playback.promise;
+  }
   stopAudio();
-  const audio=new Audio(new URL(file,document.baseURI));
-  player=audio;
-  audio.playbackRate=slow?.8:1;
-  audio.preservesPitch=true;
-  for(const event of ['playing','waiting','ended','pause','error'])audio.addEventListener(event,()=>{
-    if(player!==audio)return;
-    onState(event==='playing'?'playing':event==='waiting'?'loading':event==='error'?'error':'idle');
-  });
+  const entry=audioEntry(audioURL(file)),audio=entry.audio;
+  const current={audio,url:entry.url,rate:slow?.8:1,status:'loading',pending:true,observers:new Set([onState]),cleanup:()=>{},promise:null};
+  player=audio;playback=current;entry.warmed=true;
+  audio.playbackRate=current.rate;audio.preservesPitch=true;
+  try{audio.currentTime=0;}catch{} // Metadata may not exist yet on a cold request.
+  const notify=state=>{current.status=state;for(const observer of current.observers)observer(state);};
+  const onEvent=event=>{
+    if(playback!==current)return;
+    // Media events are queued tasks. An old pause/end can arrive after a warmed
+    // element has already restarted, so check its present state as well.
+    if(event.type==='pause'&&!audio.paused)return;
+    if(event.type==='ended'&&audio.ended===false)return;
+    if(event.type==='playing'&&audio.paused)return;
+    const state=event.type==='playing'?'playing':event.type==='waiting'?'loading':event.type==='error'?'error':'idle';
+    if(state==='idle'||state==='error')current.pending=false;
+    notify(state);
+  };
+  const events=['playing','waiting','ended','pause','error'];
+  for(const event of events)audio.addEventListener(event,onEvent);
+  current.cleanup=()=>{for(const event of events)audio.removeEventListener(event,onEvent);};
   onState('loading');
-  try{await audio.play();return audio;}catch(e){if(player!==audio)return;player=null;onState('error');throw e;}
+  current.promise=(async()=>{
+    try{await audio.play();if(playback!==current)return;current.pending=false;return audio;}
+    catch(error){
+      if(playback!==current)return;
+      if(warmAudio.get(entry.url)===entry)warmAudio.delete(entry.url);
+      current.pending=false;if(current.status!=='error')notify('error');
+      current.cleanup();playback=null;player=null;
+      throw error;
+    }
+  })();
+  return current.promise;
 }
 let activeRecording=null,clipURL=null,recordGeneration=0;
 export function recordingSupported(){return !!(window.isSecureContext&&navigator.mediaDevices?.getUserMedia&&window.MediaRecorder);}

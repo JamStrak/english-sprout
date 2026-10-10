@@ -114,7 +114,7 @@ async function delayCacheCount(p){
   await test('Voice name buttons immediately replay the current sentence and preserve recording and progress',async()=>{
     const before=await state(p),recorded=await audio(p,'#replay-record');
     assert.equal(await p.locator('select[data-voice]').count(),0);assert.equal(await p.locator('[data-voice="aiden"]').getAttribute('aria-pressed'),'true');
-    const aiden=await audio(p,'[data-listen="normal"]');assert.match(aiden.src,/\/audio\/hello-01\.mp3$/);const oldAudio=await p.evaluate(()=>window.__qaAudio.length-1);
+    const aiden=await audio(p,'[data-listen="normal"]');assert.match(aiden.src,/\/audio\/hello-01\.mp3$/);const oldAudio=await p.evaluate(src=>window.__qaAudio.findIndex(a=>a.src===src&&!a.paused),aiden.src);assert.ok(oldAudio>=0);
     const ryan=await audio(p,'[data-voice="ryan"]');assert.equal(await p.evaluate(index=>window.__qaAudio[index].paused,oldAudio),true);assert.match(ryan.src,/\/audio\/ryan\/hello-01\.mp3$/);
     assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');assert.match((await audio(p,'[data-voice="ryan"]')).src,/\/audio\/ryan\/hello-01\.mp3$/);
     await audio(p,'[data-listen="slow"]',0.8);
@@ -295,17 +295,21 @@ async function delayCacheCount(p){
     await tp.waitForFunction(()=>document.querySelectorAll('.interaction-feedback-burst').length===0);assert.equal(await tp.locator('.interaction-feedback-active').count(),0);
     return {actualTap:point,reducedMotion:true,nextActionUnaffected:true};
   });await tapContext.close();
-  const feedbackContext=await context({serviceWorkers:'block'});const fp=await newPage(feedbackContext);
+  const feedbackContext=await context({serviceWorkers:'block'});const fp=await feedbackContext.newPage();fp.setDefaultTimeout(8000);
   await test('Audio feedback shows loading, playback and idle, then recovers from a failed clip on the next tap',async()=>{
-    await fp.locator('#hero-start').click();let release;
+    let release;
     const gate=new Promise(resolve=>{release=resolve;});
     await fp.route('**/audio/hello-01.mp3',async route=>{await gate;await route.fulfill({contentType:'audio/mpeg',body:fs.readFileSync(path.join(root,'public/audio/hello-01.mp3'))});});
     try{
+      // Intercept before navigation: the current sentence now preloads silently.
+      await fp.goto(origin,{waitUntil:'domcontentloaded'});await fp.locator('#hero-start').click();
       await fp.locator('.scene-picture').click();await fp.locator('.audio-status[data-audio-state="loading"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'loading');
       release();await fp.locator('.audio-status[data-audio-state="playing"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'playing');
       await fp.locator('.audio-status[data-audio-state="idle"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'idle');
     }finally{release();await fp.unroute('**/audio/hello-01.mp3');}
     await fp.route('**/audio/hello-01.mp3',route=>route.fulfill({status:503,contentType:'text/plain',body:'QA unavailable audio'}));
+    // A new document represents a real uncached failure, not a buffered replay.
+    await fp.reload({waitUntil:'domcontentloaded'});await fp.locator('#hero-start').click();
     await fp.locator('.scene-picture').click();await fp.locator('.audio-status[data-audio-state="error"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'error');assert.equal(await fp.locator('.scene-picture').isEnabled(),true);
     await fp.unroute('**/audio/hello-01.mp3');const recovered=await audio(fp,'.scene-picture .picture-play');await fp.locator('.audio-status[data-audio-state="idle"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'idle');assert.equal(await state(fp),null);
     return {states:['loading','playing','idle','error','playing','idle'],recoveredClip:recovered.src};
@@ -350,7 +354,7 @@ async function delayCacheCount(p){
   await test('Weekly checkup recalls before listening, preserves first choices and separates meaning from prompted speech',async()=>{
     await qp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:mature});await qp.reload();await qp.locator('#start-checkup').waitFor();await qp.locator('#start-checkup').click();
     assert.equal(await qp.locator('.practice-english,.practice-chinese,.parent-prompt').count(),0);assert.equal(await qp.locator('.listen-buttons').count(),0);assert.equal(await qp.locator('.scene-picture .lesson-illustration').count(),1);
-    assert.deepEqual(await qp.evaluate(()=>window.__qaAudio.map(audio=>audio.src)),[]);
+    assert.deepEqual(await qp.evaluate(()=>window.__qaPlay),[],'silent preloading must not reveal the answer');
     await qp.locator('#exit-session').click();assert.deepEqual(await state(qp),mature);await qp.locator('#start-checkup').click();
     for(let i=0;i<3;i++){
       const lesson=curriculum.lessons[i];assert.equal(await qp.locator('.practice-main').getAttribute('data-lesson-id'),lesson.id);assert.equal(await qp.locator('.practice-english,.practice-chinese').count(),0);

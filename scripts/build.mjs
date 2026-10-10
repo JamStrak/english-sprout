@@ -20,5 +20,5 @@ hash.update(sw);
 const version=hash.digest('hex').slice(0,12);
 sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
 await fs.writeFile(path.join(dist,'sw.js'),sw);
-await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.2.0',build:version}));
-console.log('Built English Sprout 1.2.0 · '+version);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.2.1',build:version}));
+console.log('Built English Sprout 1.2.1 · '+version);

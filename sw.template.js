@@ -13,7 +13,8 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET'||u.origin!==location.origin||!u.href.startsWith(self.registration.scope))return;
   if(u.pathname.endsWith('/__english_sprout_health'))return;
   const isAudio=u.pathname.includes('/audio/');
-  event.respondWith((async()=>{
+  let cacheWrite=Promise.resolve();
+  const responsePromise=(async()=>{
     let cache,found;
     // The CDN varies by Accept-Encoding. Media range requests may use identity
     // while prefetch uses gzip/br; the cached body is the same decoded MP3.
@@ -35,11 +36,19 @@ self.addEventListener('fetch',event=>{
     }
     try{
       const response=await fetch(event.request);
-      if(cache&&response.ok&&response.status===200){try{await cache.put(event.request,response.clone());}catch{}}
+      if(cache&&response.ok&&response.status===200){
+        // Let the media element start consuming the response immediately. Saving
+        // the cloned body may wait for the full download and slow device storage.
+        try{cacheWrite=cache.put(event.request,response.clone()).catch(()=>{});}catch{}
+      }
       return response;
     }catch(error){
       if(cache&&event.request.mode==='navigate')return (await cache.match('./index.html'))||Response.error();
       return Response.error();
     }
-  })());
+  })();
+  event.respondWith(responsePromise);
+  // Register the lifetime extension during dispatch, then retain the worker
+  // until any background write finishes, without delaying the response.
+  event.waitUntil(responsePromise.then(()=>cacheWrite).catch(()=>{}));
 });

@@ -1,6 +1,5 @@
 import test, { beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { playFile, stopAudio, startRecording, stopRecording, clearRecording, recordingSupported } from '../src/media.js';
 import { VOICE_STORAGE_KEY, readVoicePreference, saveVoicePreference, voiceAudioPath, englishAudioFiles } from '../src/voices.js';
 
 const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
@@ -11,6 +10,8 @@ const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document')
 const originalCreateURL = URL.createObjectURL;
 const originalRevokeURL = URL.revokeObjectURL;
 let instances, blobs, revoked, streams, constructorFailure, startFailure, audioInstances, audioPlayResult;
+let playFile, stopAudio, preloadAudio, isAudioLoading, startRecording, stopRecording, clearRecording, recordingSupported;
+let moduleGeneration=0;
 
 function stream() {
   const tracks = [{ stops: 0, stop() { this.stops += 1; } }];
@@ -28,15 +29,17 @@ function restoreGlobal(name, descriptor) {
   else delete globalThis[name];
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   instances = []; blobs = new Map(); revoked = []; streams = [];
   constructorFailure = false; startFailure = false;
   audioInstances = []; audioPlayResult = null;
   Object.defineProperty(globalThis, 'document', { configurable: true, value: { baseURI: 'https://example.test/english-sprout/' } });
   Object.defineProperty(globalThis, 'Audio', { configurable: true, value: class extends EventTarget {
-    constructor(url) { super(); this.src = String(url); this.paused = true; audioInstances.push(this); }
-    play() { this.paused = false; if(audioPlayResult)return audioPlayResult(this);this.dispatchEvent(new Event('playing'));return Promise.resolve(); }
+    constructor(url) { super(); this.src = url ? String(url) : ''; this.paused = true; this.currentTime = 0; this.loadCalls = 0; this.playCalls = 0; audioInstances.push(this); }
+    play() { this.playCalls += 1; this.paused = false; if(audioPlayResult)return audioPlayResult(this);this.dispatchEvent(new Event('playing'));return Promise.resolve(); }
     pause() { this.paused = true; this.dispatchEvent(new Event('pause')); }
+    load() { this.loadCalls += 1; }
+    removeAttribute(name) { if(name === 'src') this.src = ''; }
   } });
   const Recorder = class {
     static isTypeSupported() { return true; }
@@ -61,6 +64,8 @@ beforeEach(() => {
   Object.defineProperty(globalThis, 'MediaRecorder', { configurable: true, value: Recorder });
   URL.createObjectURL = blob => { const url = `blob:test-${blobs.size}`; blobs.set(url, blob); return url; };
   URL.revokeObjectURL = url => revoked.push(url);
+  // Each browser document owns its own warm pool; isolate that document per test.
+  ({playFile,stopAudio,preloadAudio,isAudioLoading,startRecording,stopRecording,clearRecording,recordingSupported}=await import(`../src/media.js?test=${++moduleGeneration}`));
 });
 
 afterEach(() => {
@@ -101,6 +106,70 @@ test('Voice playback preserves pitch and stops the previous sample without mappi
   await playFile(voiceAudioPath('audio/hello-01.mp3', 'ryan'), true);
   const ryan = audioInstances[1]; assert.equal(aiden.paused, true); assert.equal(ryan.src, 'https://example.test/english-sprout/audio/ryan/hello-01.mp3'); assert.equal(ryan.playbackRate, 0.8); assert.equal(ryan.preservesPitch, true);
   await playFile('blob:local-recording'); assert.equal(ryan.paused, true); assert.equal(audioInstances[2].src, 'blob:local-recording');
+});
+
+test('Silent preload deduplicates URLs and playback reuses its warmed element without reloading', async () => {
+  preloadAudio(['audio/hello-01.mp3','audio/hello-01.mp3','https://example.test/english-sprout/audio/hello-01.mp3']);
+  assert.equal(audioInstances.length,1);const warmed=audioInstances[0];
+  assert.equal(warmed.preload,'auto');assert.equal(warmed.loadCalls,1);assert.equal(warmed.playCalls,0);assert.equal(warmed.paused,true);
+  preloadAudio(['audio/hello-01.mp3']);
+  assert.equal(warmed.loadCalls,1,'repeated hints never restart the fetch');
+  assert.equal(await playFile('audio/hello-01.mp3'),warmed);
+  warmed.currentTime=1.2;stopAudio();
+  assert.equal(warmed.src,'https://example.test/english-sprout/audio/hello-01.mp3');assert.equal(warmed.loadCalls,1);
+  assert.equal(await playFile('audio/hello-01.mp3'),warmed);assert.equal(warmed.currentTime,0);assert.equal(warmed.playCalls,2);
+});
+
+test('Warm pool is bounded, ignores recordings and releases only the least recent inactive audio', async () => {
+  preloadAudio(Array.from({length:20},(_,i)=>`audio/lesson-${i}.mp3`));
+  assert.equal(audioInstances.length,6,'a large hint cannot download the whole curriculum');
+  const active=await playFile('audio/lesson-0.mp3');
+  preloadAudio(['blob:private-recording','data:audio/mp3;base64,AA==','audio/new.mp3']);
+  assert.equal(audioInstances.length,7);assert.equal(audioInstances.filter(audio=>audio.src).length,6);
+  assert.equal(active.paused,false);assert.equal(active.src,'https://example.test/english-sprout/audio/lesson-0.mp3');
+  assert.equal(audioInstances[1].src,'');assert.equal(audioInstances[1].loadCalls,2,'eviction discards the unused buffer');
+  preloadAudio(Array.from({length:6},(_,i)=>`audio/more-${i}.mp3`));
+  assert.equal(audioInstances.filter(audio=>audio.src).length,6);assert.equal(active.paused,false);
+});
+
+test('Repeated taps while the same clip is pending share playback and still deliver actual events', async () => {
+  const pending=deferred(),states=[],secondStates=[];audioPlayResult=()=>pending.promise;
+  const first=playFile('audio/hello-01.mp3',false,state=>states.push(state));
+  assert.equal(isAudioLoading('audio/hello-01.mp3'),true);
+  assert.equal(isAudioLoading('audio/hello-01.mp3',true),false);
+  assert.equal(isAudioLoading('audio/ryan/hello-01.mp3'),false);
+  const second=playFile('audio/hello-01.mp3',false,state=>secondStates.push(state));
+  assert.equal(audioInstances.length,1);assert.equal(audioInstances[0].playCalls,1);
+  audioInstances[0].dispatchEvent(new Event('playing'));pending.resolve();
+  assert.equal(await first,await second);assert.equal(isAudioLoading('audio/hello-01.mp3'),false);
+  assert.deepEqual(states,['loading','playing']);assert.deepEqual(secondStates,['loading','playing']);
+  audioInstances[0].dispatchEvent(new Event('waiting'));
+  assert.equal(isAudioLoading('audio/hello-01.mp3'),true);
+  await playFile('audio/hello-01.mp3');assert.equal(audioInstances[0].playCalls,1,'buffering taps do not restart playback');
+});
+
+test('Stopping and reusing the same warmed element detaches obsolete feedback callbacks', async () => {
+  const firstStates=[],secondStates=[];
+  const first=await playFile('audio/hello-01.mp3',false,state=>firstStates.push(state));
+  const count=firstStates.length;
+  const second=await playFile('audio/hello-01.mp3',false,state=>secondStates.push(state));
+  assert.equal(first,second);
+  second.dispatchEvent(new Event('pause'));second.ended=false;second.dispatchEvent(new Event('ended'));
+  assert.deepEqual(secondStates,['loading','playing'],'queued pause/end from the previous turn cannot clear current playback');
+  second.dispatchEvent(new Event('waiting'));second.dispatchEvent(new Event('playing'));
+  assert.equal(firstStates.length,count);assert.deepEqual(secondStates,['loading','playing','loading','playing']);
+  stopAudio();assert.equal(isAudioLoading('audio/hello-01.mp3'),false);
+});
+
+test('Failed preloads and failed playback are replaced, while temporary recorded audio is never pooled', async () => {
+  preloadAudio(['audio/hello-01.mp3']);const broken=audioInstances[0];broken.dispatchEvent(new Event('error'));
+  const retry=await playFile('audio/hello-01.mp3');assert.notEqual(retry,broken);
+  audioPlayResult=()=>Promise.reject(new Error('Offline'));
+  await assert.rejects(playFile('audio/missing.mp3'),/Offline/);const missing=audioInstances.at(-1);
+  audioPlayResult=null;assert.notEqual(await playFile('audio/missing.mp3'),missing);
+  const recorded=await playFile('blob:private-recording');stopAudio();
+  assert.notEqual(await playFile('blob:private-recording'),recorded);
+  assert.equal(await playFile('audio/hello-01.mp3'),retry,'recording playback does not evict warm course audio');
 });
 
 test('Switching voice during pending playback ignores only the interrupted sample failure', async () => {
