@@ -21,6 +21,7 @@ const curriculum = JSON.parse(fs.readFileSync(path.join(root, 'public/data/curri
 const englishAudioCount = curriculum.lessons.length * 2;
 const totalAudioCount = englishAudioCount + 11;
 const audioCache = fs.readFileSync(path.join(root, 'src/media.js'), 'utf8').match(/english-sprout-audio-v[\w.-]+/)[0];
+const reportDate = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai'}).format(new Date());
 const checks = [];
 fs.mkdirSync(output, {recursive:true});
 let browser;
@@ -63,8 +64,8 @@ async function audio(p,selector,rate=1){
   const before=await p.evaluate(()=>window.__qaPlay.length);
   const kind=selector==='#replay-record'?'recording':selector==='#guide-audio'?'guide':'english';
   const lesson=kind==='english'&&await p.locator('.practice-main').count()?await p.locator('.practice-main').getAttribute('data-lesson-id'):null;
-  const voice=lesson?await p.locator('[data-voice]').inputValue():null;
-  await p.locator(selector).click();
+  const voice=selector.match(/^\[data-voice="(aiden|ryan)"\]$/)?.[1]||(lesson?await p.locator('[data-voice][aria-pressed="true"]').getAttribute('data-voice'):null);
+  await p.locator(selector).first().click();
   const args={before,rate,kind,lesson,voice};
   await p.waitForFunction(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).some(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args,{timeout:45000});
   const event=await p.evaluate(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).find(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args);
@@ -102,7 +103,7 @@ async function delayCacheCount(p){
   await test('Real bundled home audio plays with finite duration',()=>audio(p,'#preview-audio'));
   await test('New lesson starts without requiring a microphone',async()=>{await p.locator('#start-today').click();assert.match(await p.locator('.practice-title').innerText(),/先听一听/);assert.equal(await p.locator('.practice-english').innerText(),curriculum.lessons[0].english);return overflow(p,'desktop practice');});
   await test('Normal and slow audio use real MP3 and correct playback rates',async()=>({normal:await audio(p,'[data-listen="normal"]'),slow:await audio(p,'[data-listen="slow"]',0.8)}));
-  await test('Chinese guidance audio plays',()=>audio(p,'#guide-audio'));
+  await test('Chinese guidance remains available when deliberately requested',()=>audio(p,'#guide-audio'));
   await test('Wrong answer gives gentle retry, correct answer enables speaking',async()=>{await quiz(p,curriculum.lessons[0],true);assert.match(await p.locator('.practice-title').innerText(),/开口/);assert.equal(await p.locator('#replay-record').isDisabled(),true);});
   await test('Real MediaRecorder accepts fake microphone, stop and playback work',async()=>{
     await p.locator('#record').click();await p.waitForFunction(()=>document.querySelector('#record').textContent.includes('停止录音'));
@@ -110,13 +111,15 @@ async function delayCacheCount(p){
     await p.waitForTimeout(1800);await p.locator('#record').click();await p.waitForFunction(()=>!document.querySelector('#replay-record').disabled);
     const event=await audio(p,'#replay-record');assert.match(event.src,/^blob:/);assert.equal(await p.evaluate(()=>window.__qaStreams.flatMap(s=>s.getTracks()).filter(t=>t.readyState==='live').length),0);return {source:'Edge fake microphone / actual MediaRecorder',played:true};
   });
-  await test('Changing English voice stops old playback and preserves the same recording and progress',async()=>{
+  await test('Voice name buttons immediately replay the current sentence and preserve recording and progress',async()=>{
     const before=await state(p),recorded=await audio(p,'#replay-record');
-    assert.equal(await p.locator('[data-voice]').inputValue(),'aiden');const aiden=await audio(p,'[data-listen="normal"]');assert.match(aiden.src,/\/audio\/hello-01\.mp3$/);
-    await p.locator('[data-voice]').selectOption('ryan');assert.equal(await p.evaluate(()=>window.__qaAudio.at(-1).paused),true);
-    const ryan=await audio(p,'[data-listen="slow"]',0.8);assert.match(ryan.src,/\/audio\/ryan\/hello-01\.mp3$/);
+    assert.equal(await p.locator('select[data-voice]').count(),0);assert.equal(await p.locator('[data-voice="aiden"]').getAttribute('aria-pressed'),'true');
+    const aiden=await audio(p,'[data-listen="normal"]');assert.match(aiden.src,/\/audio\/hello-01\.mp3$/);const oldAudio=await p.evaluate(()=>window.__qaAudio.length-1);
+    const ryan=await audio(p,'[data-voice="ryan"]');assert.equal(await p.evaluate(index=>window.__qaAudio[index].paused,oldAudio),true);assert.match(ryan.src,/\/audio\/ryan\/hello-01\.mp3$/);
+    assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');assert.match((await audio(p,'[data-voice="ryan"]')).src,/\/audio\/ryan\/hello-01\.mp3$/);
+    await audio(p,'[data-listen="slow"]',0.8);
     assert.equal((await audio(p,'#replay-record')).src,recorded.src);assert.deepEqual(await state(p),before);
-    await p.locator('[data-voice]').selectOption('aiden');assert.equal(await p.locator('#replay-record').isDisabled(),false);assert.deepEqual(await state(p),before);
+    await audio(p,'[data-voice="aiden"]');assert.equal(await p.locator('#replay-record').isDisabled(),false);assert.deepEqual(await state(p),before);
     return {aiden:aiden.src,ryan:ryan.src,recordingPreserved:true};
   });
   await test('First completion saves one card and next-day review; no second new sentence',async()=>{
@@ -141,6 +144,7 @@ async function delayCacheCount(p){
   await test('Exit practice immediately stops active microphone and audio',async()=>{
     await p.locator('[data-preview="hello-01"]').click();await quiz(p,curriculum.lessons[0]);await p.locator('#record').click();await p.waitForFunction(()=>document.querySelector('#record').textContent.includes('停止录音'));await p.locator('#exit-session').click();await p.locator('.phrase-grid').waitFor();
     assert.equal(await p.evaluate(()=>window.__qaStreams.flatMap(s=>s.getTracks()).filter(t=>t.readyState==='live').length),0);assert.equal(await p.evaluate(()=>window.__qaAudio.filter(a=>!a.paused&&!a.ended).length),0);
+    await go(p,'home');const resumed=await audio(p,'#preview-audio');assert.match(resumed.src,/\/audio\/hello-01\.mp3$/);await go(p,'library');return {captureStopped:true,homePlaybackResumed:true};
   });
   let backup;
   await test('Settings persist and export produces valid transferable backup',async()=>{
@@ -149,9 +153,9 @@ async function delayCacheCount(p){
     assert.equal(backup.app,'english-sprout');assert.equal(backup.state.settings.nickname,'小小测试员');assert.equal(backup.state.settings.dailyReviews,3);assert.equal(Object.keys(backup.state.cards).length,1);return overflow(p,'desktop parent');
   });
   await test('Parent voice preference survives reload and applies to home and phrase-book audio without altering progress',async()=>{
-    const before=await state(p);await p.locator('[data-voice]').selectOption('ryan');await p.reload();await p.locator('#save-settings').waitFor();assert.equal(await p.locator('[data-voice]').inputValue(),'ryan');
+    const before=await state(p);await p.locator('[data-voice="ryan"]').click();await p.reload();await p.locator('#save-settings').waitFor();assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');
     await go(p,'home');assert.match((await audio(p,'#preview-audio')).src,/\/audio\/ryan\/hello-01\.mp3$/);
-    await go(p,'library');await p.locator('[data-preview="hello-02"]').click();assert.equal(await p.locator('[data-voice]').inputValue(),'ryan');assert.match((await audio(p,'[data-listen="normal"]')).src,/\/audio\/ryan\/hello-02\.mp3$/);
+    await go(p,'library');await p.locator('[data-preview="hello-02"]').click();assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');assert.match((await audio(p,'[data-listen="normal"]')).src,/\/audio\/ryan\/hello-02\.mp3$/);
     await p.locator('#exit-session').click();await go(p,'parent');assert.deepEqual(await state(p),before);assert.deepEqual(Object.keys(backup.state.settings).sort(),['dailyReviews','nickname']);
   });
   await test('Parent phone QR renders and copy-link uses the intended public URL',async()=>{
@@ -205,8 +209,8 @@ async function delayCacheCount(p){
       const bytes=await response.arrayBuffer();await cache.delete(url,{ignoreVary:true});
       await cache.put(new Request(url,{headers:{'Accept-Encoding':'qa-prefetch-variant'}}),new Response(bytes,{headers:{'Content-Type':'audio/mpeg','Vary':'Accept-Encoding'}}));
     },audioCache);
-    await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('#offline-audio').waitFor();await go(p,'library');await p.locator('[data-preview="kindness-10"]').click();await p.locator('[data-voice]').selectOption('aiden');const event=await audio(p,'[data-listen="normal"]');assert.match(event.src,/\/audio\/kindness-10\.mp3$/);
-    await p.locator('[data-voice]').selectOption('ryan');const ryan=await audio(p,'[data-listen="normal"]');assert.match(ryan.src,/\/audio\/ryan\/kindness-10\.mp3$/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
+    await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('#offline-audio').waitFor();await go(p,'library');await p.locator('[data-preview="kindness-10"]').click();const event=await audio(p,'[data-voice="aiden"]');assert.match(event.src,/\/audio\/kindness-10\.mp3$/);
+    const ryan=await audio(p,'[data-voice="ryan"]');assert.match(ryan.src,/\/audio\/ryan\/kindness-10\.mp3$/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
     const range=await p.evaluate(async()=>{const r=await fetch('./audio/kindness-10.mp3',{headers:{Range:'bytes=0-127'}});return{status:r.status,range:r.headers.get('Content-Range'),length:(await r.arrayBuffer()).byteLength};});assert.equal(range.status,206);assert.equal(range.length,128);assert.match(range.range,/^bytes 0-127\//);
     await c.setOffline(false);return {cachedMP3:count,download,offlinePlay:{aiden:event,ryan},range};
   });
@@ -244,7 +248,7 @@ async function delayCacheCount(p){
     for(const lesson of curriculum.lessons.slice(0,3)){
       await sp.evaluate(()=>{Math.random=()=>0;});await sp.locator(`[data-preview="${lesson.id}"]`).click();await sp.locator('[data-step="choose"]').click();
       const labels=await sp.locator('.choice strong').allTextContents();assert.deepEqual(labels,[1,2,0].map(i=>lesson.choices[i].label));assert.deepEqual(await sp.locator('.choice i').allTextContents(),['A','B','C']);
-      await sp.locator('[data-voice]').selectOption('ryan');assert.deepEqual(await sp.locator('.choice strong').allTextContents(),labels);
+      await audio(sp,'[data-voice="ryan"]');assert.deepEqual(await sp.locator('.choice strong').allTextContents(),labels);
       // A retry must not reshuffle or treat the displayed letter as the source answer index.
       await sp.locator('.choice').filter({hasText:lesson.choices[(lesson.answerIndex+1)%3].label}).click();assert.match(await sp.locator('#quiz-feedback').innerText(),/再听一次/);assert.equal(await sp.locator('#quiz-next').isVisible(),false);
       await audio(sp,'[data-listen="slow"]',0.8);assert.deepEqual(await sp.locator('.choice strong').allTextContents(),labels);
@@ -267,26 +271,72 @@ async function delayCacheCount(p){
     assert.deepEqual(await cp.evaluate(()=>window.__qaErrors),[]);
   });await cacheRaceContext.close();
   const guideContext=await context();const ap=await newPage(guideContext);
-  await test('Chinese stage guidance finishes before the automatic English example starts',async()=>{
-    await ap.locator('#start-today').click();await ap.locator('[data-step="choose"]').click();
+  await test('Learning stages, answer feedback and completion never automatically start Chinese narration',async()=>{
+    await ap.locator('#hero-start').click();await ap.locator('[data-step="choose"]').click();
     await ap.waitForFunction(()=>window.__qaPlay.some(event=>event.src.endsWith('/audio/hello-01.mp3')),null,{timeout:30000});
-    const timeline=await ap.evaluate(()=>window.__qaAudioTimeline),guideStart=timeline.findIndex(event=>event.type==='playing'&&event.src.endsWith('/audio/ui/choose.mp3')),guideEnd=timeline.findIndex(event=>event.type==='ended'&&event.src.endsWith('/audio/ui/choose.mp3')),englishStart=timeline.findIndex(event=>event.type==='playing'&&event.src.endsWith('/audio/hello-01.mp3'));
-    assert.ok(guideStart>=0&&guideEnd>guideStart&&englishStart>guideEnd,JSON.stringify(timeline));assert.equal(timeline.slice(guideStart,guideEnd).some(event=>event.type==='pause'&&!event.ended&&event.src.endsWith('/audio/ui/choose.mp3')),false);
+    await ap.locator('[data-choice="1"]').click();assert.equal(await ap.locator('#quiz-next').isVisible(),false);
+    await ap.locator('[data-choice="0"]').click();await ap.locator('#quiz-next').click();await ap.locator('[data-rating="good"]').click();await ap.locator('.completion').waitFor();
+    const narration=await ap.evaluate(()=>window.__qaAudio.filter(audio=>audio.src.includes('/audio/ui/')).map(audio=>audio.src));assert.deepEqual(narration,[]);
   });await guideContext.close();
+  const pictureContext=await context({serviceWorkers:'block'});const ip=await newPage(pictureContext);
+  await test('The complete scene picture and its play icon both replay the current sentence',async()=>{
+    await ip.locator('#hero-start').click();assert.equal(await ip.locator('.scene-picture').evaluate(element=>element.tagName),'BUTTON');assert.ok(await ip.locator('.scene-picture').getAttribute('aria-label'));
+    const picture=await audio(ip,'.scene-picture .lesson-illustration');const playIcon=await audio(ip,'.scene-picture .picture-play');assert.match(picture.src,/\/audio\/hello-01\.mp3$/);assert.equal(playIcon.src,picture.src);
+    assert.equal(await state(ip),null);return {picture:picture.src,playIcon:playIcon.src};
+  });await pictureContext.close();
+  const tapContext=await context({serviceWorkers:'block',reducedMotion:'reduce'});const tp=await newPage(tapContext);
+  await test('Child tap feedback marks the actual tap, survives navigation and never blocks the next action',async()=>{
+    const target=await tp.locator('#hero-start').boundingBox(),point={x:target.x+target.width/2,y:target.y+target.height/2};
+    await tp.mouse.click(point.x,point.y);await tp.locator('.practice-main').waitFor();
+    const burst=await tp.locator('.interaction-feedback-burst').last().evaluate(el=>({x:parseFloat(el.style.left),y:parseFloat(el.style.top),layerPointerEvents:getComputedStyle(el.parentElement).pointerEvents,ringAnimation:getComputedStyle(el.querySelector('.interaction-feedback-ring')).animationName,ringOpacity:getComputedStyle(el.querySelector('.interaction-feedback-ring')).opacity,stars:[...el.querySelectorAll('.interaction-feedback-star')].map(star=>getComputedStyle(star).display)}));
+    assert.ok(Math.abs(burst.x-point.x)<1&&Math.abs(burst.y-point.y)<1);assert.equal(burst.layerPointerEvents,'none');assert.equal(burst.ringAnimation,'none');assert.ok(Number(burst.ringOpacity)>0);assert.ok(burst.stars.every(display=>display==='none'));
+    await tp.locator('[data-voice="ryan"]').click();assert.equal(await tp.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');
+    await tp.locator('#exit-session').focus();await tp.keyboard.press('Enter');await tp.locator('#hero-start').waitFor();assert.equal(await state(tp),null);
+    await tp.waitForFunction(()=>document.querySelectorAll('.interaction-feedback-burst').length===0);assert.equal(await tp.locator('.interaction-feedback-active').count(),0);
+    return {actualTap:point,reducedMotion:true,nextActionUnaffected:true};
+  });await tapContext.close();
+  const feedbackContext=await context({serviceWorkers:'block'});const fp=await newPage(feedbackContext);
+  await test('Audio feedback shows loading, playback and idle, then recovers from a failed clip on the next tap',async()=>{
+    await fp.locator('#hero-start').click();let release;
+    const gate=new Promise(resolve=>{release=resolve;});
+    await fp.route('**/audio/hello-01.mp3',async route=>{await gate;await route.fulfill({contentType:'audio/mpeg',body:fs.readFileSync(path.join(root,'public/audio/hello-01.mp3'))});});
+    try{
+      await fp.locator('.scene-picture').click();await fp.locator('.audio-status[data-audio-state="loading"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'loading');
+      release();await fp.locator('.audio-status[data-audio-state="playing"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'playing');
+      await fp.locator('.audio-status[data-audio-state="idle"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'idle');
+    }finally{release();await fp.unroute('**/audio/hello-01.mp3');}
+    await fp.route('**/audio/hello-01.mp3',route=>route.fulfill({status:503,contentType:'text/plain',body:'QA unavailable audio'}));
+    await fp.locator('.scene-picture').click();await fp.locator('.audio-status[data-audio-state="error"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'error');assert.equal(await fp.locator('.scene-picture').isEnabled(),true);
+    await fp.unroute('**/audio/hello-01.mp3');const recovered=await audio(fp,'.scene-picture .picture-play');await fp.locator('.audio-status[data-audio-state="idle"]').waitFor();assert.equal(await fp.locator('body').getAttribute('data-playing'),'idle');assert.equal(await state(fp),null);
+    return {states:['loading','playing','idle','error','playing','idle'],recoveredClip:recovered.src};
+  });await feedbackContext.close();
   const learning=await import(require('node:url').pathToFileURL(path.join(root,'src/learning.js')).href);
   let mature=learning.createState('2026-10-01');
   for(let i=0;i<3;i++)mature=learning.recordResult(mature,curriculum.lessons[i].id,'good',`2026-10-0${i+1}`,{isNew:true});
   const heroContext=await context();const hp=await newPage(heroContext);
-  await test('Home main entry prioritizes due review, then available checkup or garden after daily completion',async()=>{
+  await test('Home main entry teaches only the daily new sentence despite due reviews, then repeats it without rewards',async()=>{
     await hp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:mature});await hp.reload();await hp.locator('#hero-start').click();
-    assert.equal(await hp.locator('.practice-main').getAttribute('data-lesson-id'),'hello-01');assert.match(await hp.locator('.practice-title').innerText(),/还记得/);assert.equal(await hp.locator('.is-checkup').count(),0);assert.deepEqual(await state(hp),mature);await hp.locator('#exit-session').click();
-    let readyForCheckup=learning.recordResult({...mature,settings:{...mature.settings,dailyReviews:1}},'hello-01','good','2026-10-08');
-    readyForCheckup=learning.recordResult(readyForCheckup,'hello-04','good','2026-10-08',{isNew:true});
-    assert.equal(learning.getDailyPlan(readyForCheckup,curriculum.lessons,'2026-10-08').dueIds.length,0);assert.equal(learning.getCheckupPlan(readyForCheckup,curriculum.lessons,'2026-10-08').due,true);
-    await hp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:readyForCheckup});await hp.reload();await hp.locator('#hero-start').click();assert.equal(await hp.locator('.is-checkup').count(),1);assert.equal(await hp.locator('.practice-english').count(),0);assert.deepEqual(await state(hp),readyForCheckup);await hp.locator('#exit-session').click();
-    const firstDay=learning.recordResult(learning.createState('2026-10-08'),'hello-01','good','2026-10-08',{isNew:true});
-    await hp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:firstDay});await hp.reload();await hp.locator('#hero-start').click();await hp.locator('.garden-plots').waitFor();assert.deepEqual(await state(hp),firstDay);return {priority:['due review','new lesson','due checkup','garden'],entryDoesNotChangeProgress:true};
+    assert.equal(await hp.locator('.practice-main').getAttribute('data-lesson-id'),'hello-04');assert.match(await hp.locator('.practice-title').innerText(),/先听一听/);assert.equal(await hp.locator('.is-checkup').count(),0);assert.deepEqual(await state(hp),mature);
+    await quiz(hp,curriculum.lessons[3]);await hp.locator('[data-rating="good"]').click();await hp.locator('.completion').waitFor();const completed=await state(hp);
+    assert.equal(Object.keys(completed.cards).length,4);assert.equal(completed.days['2026-10-08'].results.length,1);assert.equal(completed.days['2026-10-08'].newDone,true);assert.equal(completed.days['2026-10-08'].reviewed.length,0);
+    for(const lesson of curriculum.lessons.slice(0,3))assert.deepEqual(completed.cards[lesson.id],mature.cards[lesson.id]);
+    await go(hp,'home');assert.equal(await hp.locator('#start-review').isVisible(),true);assert.equal(await hp.locator('#start-checkup').isVisible(),true);
+    await hp.locator('#hero-start').click();assert.equal(await hp.locator('.practice-main').getAttribute('data-lesson-id'),'hello-04');await quiz(hp,curriculum.lessons[3]);await hp.locator('[data-rating="good"]').click();await hp.locator('#hero-start').waitFor();assert.deepEqual(await state(hp),completed);
+    for(const selector of ['#daily-words','#daily-picture']){await hp.locator(selector).click();assert.equal(await hp.locator('.practice-main').getAttribute('data-lesson-id'),'hello-04');await hp.locator('#exit-session').click();assert.deepEqual(await state(hp),completed);}
+    return {dailySentence:'hello-04',dueReviewsKept:3,repeatedPracticeChangesProgress:false};
   });await heroContext.close();
+  const finishedContext=await context();const fh=await newPage(finishedContext);
+  await test('After all 120 sentences the main entry offers due review, then the checkup, then the garden',async()=>{
+    const first='2026-06-09',today='2026-10-08';let allLearned=learning.createState(first);
+    for(let index=0;index<curriculum.lessons.length;index++)allLearned=learning.recordResult(allLearned,curriculum.lessons[index].id,'good',learning.addDays(first,index),{isNew:true});
+    assert.equal(learning.getDailyPlan(allLearned,curriculum.lessons,today).newLessonId,null);
+    await fh.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:allLearned});await fh.reload();assert.match(await fh.locator('#hero-start').innerText(),/复习/);await fh.locator('#hero-start').click();assert.match(await fh.locator('.practice-title').innerText(),/还记得/);assert.equal(await fh.locator('.is-checkup').count(),0);await fh.locator('#exit-session').click();
+    for(const id of learning.getDailyPlan(allLearned,curriculum.lessons,today).dueIds)allLearned=learning.recordResult(allLearned,id,'good',today);
+    await fh.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:allLearned});await fh.reload();assert.match(await fh.locator('#hero-start').innerText(),/小游戏/);await fh.locator('#hero-start').click();assert.equal(await fh.locator('.is-checkup').count(),1);await fh.locator('#exit-session').click();
+    allLearned=learning.recordCheckup(allLearned,curriculum.lessons,learning.getCheckupPlan(allLearned,curriculum.lessons,today).ids.map(lessonId=>({lessonId,meaning:true,spoken:'good'})),today);
+    await fh.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:allLearned});await fh.reload();assert.match(await fh.locator('#hero-start').innerText(),/花田/);await fh.locator('#hero-start').click();await fh.locator('.garden-plots').waitFor();assert.deepEqual(await state(fh),allLearned);
+    return {learned:120,remainingEntryOrder:['review','checkup','garden']};
+  });await finishedContext.close();
   const reviewContext=await context();const rp=await newPage(reviewContext);
   await test('Home names and pictures due reviews; review-only entry never introduces a new lesson',async()=>{
     await rp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:mature});await rp.reload();await rp.locator('#start-review').waitFor();
@@ -299,12 +349,12 @@ async function delayCacheCount(p){
   const checkupContext=await context();const qp=await newPage(checkupContext);
   await test('Weekly checkup recalls before listening, preserves first choices and separates meaning from prompted speech',async()=>{
     await qp.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:mature});await qp.reload();await qp.locator('#start-checkup').waitFor();await qp.locator('#start-checkup').click();
-    assert.equal(await qp.locator('.practice-english,.practice-chinese,.parent-prompt').count(),0);assert.equal(await qp.locator('[data-listen]').count(),0);assert.equal(await qp.locator('.scene-picture .lesson-illustration').count(),1);
-    await qp.waitForFunction(()=>window.__qaPlay.some(event=>event.src.endsWith('/audio/ui/checkup.mp3')));assert.equal(await qp.evaluate(()=>window.__qaPlay.some(event=>event.src.includes('/audio/')&&!event.src.includes('/audio/ui/'))),false);
+    assert.equal(await qp.locator('.practice-english,.practice-chinese,.parent-prompt').count(),0);assert.equal(await qp.locator('.listen-buttons').count(),0);assert.equal(await qp.locator('.scene-picture .lesson-illustration').count(),1);
+    assert.deepEqual(await qp.evaluate(()=>window.__qaAudio.map(audio=>audio.src)),[]);
     await qp.locator('#exit-session').click();assert.deepEqual(await state(qp),mature);await qp.locator('#start-checkup').click();
     for(let i=0;i<3;i++){
       const lesson=curriculum.lessons[i];assert.equal(await qp.locator('.practice-main').getAttribute('data-lesson-id'),lesson.id);assert.equal(await qp.locator('.practice-english,.practice-chinese').count(),0);
-      if(i===1){await qp.locator('#reveal').click();assert.equal(await qp.locator('[data-rating="good"]').isDisabled(),true);await qp.locator('[data-rating="help"]').click();}else await qp.locator(`[data-rating="${i===0?'good':'again'}"]`).click();
+      if(i===1){await audio(qp,'.scene-picture');assert.equal(await qp.locator('#reveal').count(),0);assert.equal(await qp.locator('.practice-english').innerText(),lesson.english);assert.equal(await qp.locator('[data-rating="good"]').isDisabled(),true);await qp.locator('[data-rating="help"]').click();}else await qp.locator(`[data-rating="${i===0?'good':'again'}"]`).click();
       assert.equal(await qp.locator('.choices .lesson-illustration').count(),3);
       if(i===0){await qp.locator(`[data-choice="${(lesson.answerIndex+1)%3}"]`).click();assert.equal(await qp.locator('#quiz-next').isVisible(),false);}
       await qp.locator(`[data-choice="${lesson.answerIndex}"]`).click();await qp.locator('#quiz-next').click();
@@ -346,14 +396,49 @@ async function delayCacheCount(p){
   const storageContext=await context();const st=await newPage(storageContext);
   await test('A learning-state update from another tab stops current and queued practice audio',async()=>{
     const other=await storageContext.newPage();await other.goto(origin,{waitUntil:'networkidle'});await other.locator('#start-today').waitFor();
-    await st.locator('#start-today').click();await st.locator('[data-step="choose"]').click();await st.waitForFunction(()=>window.__qaPlay.some(event=>event.src.endsWith('/audio/ui/choose.mp3')));
+    await st.locator('#start-today').click();await st.locator('[data-step="choose"]').click();await audio(st,'[data-listen="slow"]',0.8);
     await other.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value:mature});await st.locator('#start-today').waitFor();
     assert.equal(await st.evaluate(()=>window.__qaAudio.filter(audio=>!audio.paused&&!audio.ended).length),0);const played=await st.evaluate(()=>window.__qaPlay.length);await st.waitForTimeout(250);assert.equal(await st.evaluate(()=>window.__qaPlay.length),played);assert.deepEqual(await state(st),mature);assert.equal(await st.locator('.practice-shell').count(),0);
   });await storageContext.close();
+  const avatarKey='english-sprout-avatar-v1';
+  const avatarContext=await context();const av=await newPage(avatarContext);const avatarTraffic=[];
+  avatarContext.on('request',request=>{if(!['GET','HEAD'].includes(request.method()))avatarTraffic.push({url:request.url(),method:request.method()});});
+  await test('Six animal presets are selectable and persist separately from learning progress',async()=>{
+    const before=await state(av);await av.locator('#avatar-open').click();await av.locator('dialog.avatar-picker[open]').waitFor();
+    assert.equal(await av.locator('[data-avatar-animal]').count(),6);assert.equal(await av.locator('#avatar-camera-file').getAttribute('capture'),'user');
+    await av.locator('[data-avatar-animal="cat"]').click();await av.waitForFunction(key=>JSON.parse(localStorage.getItem(key)||'null')?.animal==='cat',avatarKey);
+    const preset=await av.evaluate(key=>JSON.parse(localStorage.getItem(key)),avatarKey);assert.deepEqual(preset,{version:1,kind:'preset',animal:'cat'});
+    if(await av.locator('dialog.avatar-picker[open]').count())await av.locator('#avatar-close').click();
+    await av.reload();await av.locator('#avatar-open').waitFor();assert.deepEqual(await av.evaluate(key=>JSON.parse(localStorage.getItem(key)),avatarKey),preset);assert.deepEqual(await state(av),before);
+    return {presets:6,selected:'cat',learningUnchanged:true};
+  });
+  let savedAvatar;
+  await test('A local selfie is composed only after Save, stays out of learning backups and remains available offline',async()=>{
+    const before=await state(av),fixture=await av.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;const ctx=canvas.getContext('2d');ctx.fillStyle='#edd8bb';ctx.fillRect(0,0,600,800);ctx.fillStyle='#9c6d52';ctx.beginPath();ctx.arc(300,370,150,0,Math.PI*2);ctx.fill();return canvas.toDataURL('image/png').split(',')[1];});
+    await av.locator('#avatar-open').click();await av.locator('[data-avatar-mode="photo"]').click();
+    const previous=await av.evaluate(key=>localStorage.getItem(key),avatarKey);
+    await av.locator('#avatar-photo-file').setInputFiles({name:'local-qa-portrait.png',mimeType:'image/png',buffer:Buffer.from(fixture,'base64')});
+    await av.waitForFunction(()=>!document.querySelector('#avatar-save-photo').disabled);assert.equal(await av.evaluate(key=>localStorage.getItem(key),avatarKey),previous);
+    await av.locator('[data-avatar-animal="fox"]').click();await av.locator('#avatar-save-photo').click();
+    await av.waitForFunction(key=>JSON.parse(localStorage.getItem(key)||'null')?.kind==='photo',avatarKey);savedAvatar=await av.evaluate(key=>JSON.parse(localStorage.getItem(key)),avatarKey);
+    assert.equal(savedAvatar.animal,'fox');assert.match(savedAvatar.image,/^data:image\/jpeg;base64,/);assert.deepEqual(await state(av),before);assert.deepEqual(avatarTraffic,[]);
+    if(await av.locator('dialog.avatar-picker[open]').count())await av.locator('#avatar-close').click();
+    await go(av,'parent');const pending=av.waitForEvent('download');await av.locator('#export-progress').click();const download=await pending;const exportFile=path.join(output,'qa-avatar-learning-backup.json');await download.saveAs(exportFile);
+    const exported=fs.readFileSync(exportFile,'utf8');assert.doesNotMatch(exported,/data:image|english-sprout-avatar|local-qa-portrait/);assert.equal(JSON.parse(exported).app,'english-sprout');
+    await go(av,'home');await waitSW(av);await avatarContext.setOffline(true);await av.reload({waitUntil:'domcontentloaded'});await av.locator('#avatar-open').waitFor();
+    await av.waitForFunction(()=>{const image=document.querySelector('[data-user-avatar] img');return image?.complete&&image.naturalWidth>0;});assert.equal(await av.locator('[data-user-avatar] img').getAttribute('src'),savedAvatar.image);assert.deepEqual(await av.evaluate(key=>JSON.parse(localStorage.getItem(key)),avatarKey),savedAvatar);
+    assert.deepEqual(await state(av),before);await avatarContext.setOffline(false);return {animal:'fox',savedOnlyOnRequest:true,photoInLearningBackup:false,offline:true,writeRequests:avatarTraffic.length};
+  });
+  await test('Deleting the saved selfie removes local photo data and returns to an animal preset',async()=>{
+    await av.locator('#avatar-open').click();await av.locator('[data-avatar-mode="photo"]').click();await av.locator('#avatar-delete-photo').click();
+    await av.waitForFunction(key=>JSON.parse(localStorage.getItem(key)||'null')?.kind!=='photo',avatarKey);
+    const after=await av.evaluate(key=>localStorage.getItem(key),avatarKey);assert.doesNotMatch(after||'',/data:image/);
+    if(await av.locator('dialog.avatar-picker[open]').count())await av.locator('#avatar-close').click();await av.reload();await av.locator('#avatar-open').waitFor();assert.equal(await av.locator('[data-user-avatar] img[src^="data:"]').count(),0);assert.equal(await state(av),null);assert.deepEqual(await av.evaluate(()=>window.__qaErrors),[]);return {photoRemoved:true};
+  });await avatarContext.close();
   await browser.close();
-  const report={name:reportName,url:origin,date:'2026-10-08',browser:'Microsoft Edge Chromium headless',networkBudgets:{navigationMs:navigationTimeout,offlineMs:offlineTimeout},checks,passed:checks.filter(c=>c.status==='PASS').length,failed:checks.filter(c=>c.status==='FAIL').length};
+  const report={name:reportName,url:origin,date:reportDate,browser:'Microsoft Edge Chromium headless',networkBudgets:{navigationMs:navigationTimeout,offlineMs:offlineTimeout},checks,passed:checks.filter(c=>c.status==='PASS').length,failed:checks.filter(c=>c.status==='FAIL').length};
   fs.writeFileSync(path.join(output,'browser-results.json'),JSON.stringify(report,null,2));
-  const md=`# 浏览器集成验证\n\n验证日期：2026-10-08。实际运行 Microsoft Edge Chromium / Playwright，地址 ${origin}。\n\n结果：${report.passed} 项通过，${report.failed} 项失败。\n\n`+checks.map(c=>`- **${c.status}** ${c.name}${c.status==='FAIL'?`\n  - ${c.error.split('\n')[0]}`:''}`).join('\n')+`\n\n## 范围与限制\n\n- 桌面宽度 1440px，移动视口 390px 与 320px；截图见 ${path.relative(root,output).replaceAll('\\','/')}。移动视口不是实体 iPhone Safari / Android 测试。\n- 检查 MP3 的真实浏览器播放事件、时长和速度；未进行人工逐句听音。\n- 录音成功路径使用 Edge 假麦克风设备与真实 MediaRecorder；拒绝路径注入 NotAllowedError。\n- 日期通过 Playwright clock 固定在中国时区，验证次日复习。\n- 离线用 service worker 缓存＋浏览器断网模拟，不等同于验证全国移动网络或系统长期缓存保留。\n- 报告对应验证地址 ${origin} 当时返回的版本；本地修改须重建，正式网页须部署后再复验。\n`;
+  const md=`# 浏览器集成验证\n\n验证日期：${reportDate}。实际运行 Microsoft Edge Chromium / Playwright，地址 ${origin}。\n\n结果：${report.passed} 项通过，${report.failed} 项失败。\n\n`+checks.map(c=>`- **${c.status}** ${c.name}${c.status==='FAIL'?`\n  - ${c.error.split('\n')[0]}`:''}`).join('\n')+`\n\n## 范围与限制\n\n- 桌面宽度 1440px，移动视口 390px 与 320px；截图见 ${path.relative(root,output).replaceAll('\\','/')}。移动视口不是实体 iPhone Safari / Android 测试。\n- 检查 MP3 的真实浏览器播放事件、时长和速度；未进行人工逐句听音。\n- 录音成功路径使用 Edge 假麦克风设备与真实 MediaRecorder；拒绝路径注入 NotAllowedError。\n- 日期通过 Playwright clock 固定在中国时区，验证次日复习。\n- 离线用 service worker 缓存＋浏览器断网模拟，不等同于验证全国移动网络或系统长期缓存保留。\n- 报告对应验证地址 ${origin} 当时返回的版本；本地修改须重建，正式网页须部署后再复验。\n`;
   fs.writeFileSync(path.join(output,'UI_QA.md'),md);
   fs.writeFileSync(summaryPath,md);
   console.log(JSON.stringify({name:reportName,passed:report.passed,failed:report.failed,report:path.join(output,'browser-results.json'),summary:summaryPath}));

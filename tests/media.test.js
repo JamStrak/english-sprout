@@ -33,10 +33,10 @@ beforeEach(() => {
   constructorFailure = false; startFailure = false;
   audioInstances = []; audioPlayResult = null;
   Object.defineProperty(globalThis, 'document', { configurable: true, value: { baseURI: 'https://example.test/english-sprout/' } });
-  Object.defineProperty(globalThis, 'Audio', { configurable: true, value: class {
-    constructor(url) { this.src = String(url); this.paused = true; audioInstances.push(this); }
-    play() { this.paused = false; return audioPlayResult ? audioPlayResult(this) : Promise.resolve(); }
-    pause() { this.paused = true; }
+  Object.defineProperty(globalThis, 'Audio', { configurable: true, value: class extends EventTarget {
+    constructor(url) { super(); this.src = String(url); this.paused = true; audioInstances.push(this); }
+    play() { this.paused = false; if(audioPlayResult)return audioPlayResult(this);this.dispatchEvent(new Event('playing'));return Promise.resolve(); }
+    pause() { this.paused = true; this.dispatchEvent(new Event('pause')); }
   } });
   const Recorder = class {
     static isTypeSupported() { return true; }
@@ -110,6 +110,25 @@ test('Switching voice during pending playback ignores only the interrupted sampl
   assert.equal(audioInstances[0].paused, true); assert.equal(audioInstances[1].paused, false);
   audioPlayResult = () => Promise.reject(new Error('Missing audio'));
   await assert.rejects(playFile('audio/missing.mp3'), /Missing audio/);
+});
+
+test('Playback feedback follows actual loading, playing, buffering and end events', async () => {
+  const states=[];
+  const audio=await playFile('audio/hello-01.mp3',false,state=>states.push(state));
+  assert.deepEqual(states,['loading','playing']);
+  audio.dispatchEvent(new Event('waiting'));audio.dispatchEvent(new Event('playing'));audio.dispatchEvent(new Event('ended'));
+  assert.deepEqual(states,['loading','playing','loading','playing','idle']);
+  await playFile('audio/ryan/hello-01.mp3');
+  const count=states.length;audio.dispatchEvent(new Event('error'));audio.dispatchEvent(new Event('playing'));
+  assert.equal(states.length,count,'stale media events cannot change the new clip feedback');
+});
+
+test('Rejected playback reports an error and a later user retry can play', async () => {
+  const states=[];audioPlayResult=()=>Promise.reject(new Error('Network unavailable'));
+  await assert.rejects(playFile('audio/hello-01.mp3',false,state=>states.push(state)),/Network unavailable/);
+  assert.deepEqual(states,['loading','error']);audioPlayResult=null;
+  await playFile('audio/hello-01.mp3',false,state=>states.push(state));
+  assert.deepEqual(states,['loading','error','loading','playing']);
 });
 
 test('normal stop releases microphone immediately, returns only recorded audio and clear revokes it', async () => {

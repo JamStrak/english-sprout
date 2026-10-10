@@ -1,12 +1,17 @@
 let player=null;
 export function stopAudio(){if(player){player.pause();player=null;}if('speechSynthesis' in window)window.speechSynthesis.cancel();}
-export async function playFile(file,slow=false){
+export async function playFile(file,slow=false,onState=()=>{}){
   stopAudio();
   const audio=new Audio(new URL(file,document.baseURI));
   player=audio;
   audio.playbackRate=slow?.8:1;
   audio.preservesPitch=true;
-  try{await audio.play();return audio;}catch(e){if(player!==audio)return;player=null;throw e;}
+  for(const event of ['playing','waiting','ended','pause','error'])audio.addEventListener(event,()=>{
+    if(player!==audio)return;
+    onState(event==='playing'?'playing':event==='waiting'?'loading':event==='error'?'error':'idle');
+  });
+  onState('loading');
+  try{await audio.play();return audio;}catch(e){if(player!==audio)return;player=null;onState('error');throw e;}
 }
 let activeRecording=null,clipURL=null,recordGeneration=0;
 export function recordingSupported(){return !!(window.isSecureContext&&navigator.mediaDevices?.getUserMedia&&window.MediaRecorder);}

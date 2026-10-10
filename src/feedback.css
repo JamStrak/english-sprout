@@ -1,0 +1,58 @@
+.interaction-feedback-layer{
+  position:fixed;
+  inset:0;
+  margin:0;
+  padding:0;
+  border:0;
+  z-index:2147483646;
+  overflow:hidden;
+  pointer-events:none;
+  user-select:none;
+}
+.interaction-feedback-layer *{pointer-events:none}
+.interaction-feedback-burst{position:absolute;width:0;height:0}
+.interaction-feedback-ring{
+  position:absolute;
+  left:-18px;
+  top:-18px;
+  width:36px;
+  height:36px;
+  border:2px solid #739f88;
+  border-radius:50%;
+  background:#e6f3df38;
+  animation:interaction-feedback-ring 600ms ease-out both;
+}
+.interaction-feedback-star{
+  position:absolute;
+  left:-6px;
+  top:-7px;
+  width:12px;
+  height:14px;
+  color:#b98c42;
+  font:14px/1 Georgia,serif;
+  text-align:center;
+  animation:interaction-feedback-star 600ms ease-out both;
+}
+.interaction-feedback-star-1{--feedback-x:-24px;--feedback-y:-17px;--feedback-turn:-18deg}
+.interaction-feedback-star-2{--feedback-x:0px;--feedback-y:-29px;--feedback-turn:10deg;color:#81a289}
+.interaction-feedback-star-3{--feedback-x:24px;--feedback-y:-15px;--feedback-turn:22deg}
+/* Keep the normal keyboard focus outline visible throughout the tap feedback. */
+button.interaction-feedback-active:not(:focus-visible),a.interaction-feedback-active:not(:focus-visible),[data-feedback-target].interaction-feedback-active:not(:focus-visible){
+  outline:2px solid #91b49a;
+  outline-offset:3px;
+}
+@keyframes interaction-feedback-ring{
+  from{opacity:.75;transform:scale(.75)}
+  to{opacity:0;transform:scale(1.35)}
+}
+@keyframes interaction-feedback-star{
+  from{opacity:.7;transform:translate(0,-2px) scale(.65)}
+  to{opacity:0;transform:translate(var(--feedback-x),var(--feedback-y)) rotate(var(--feedback-turn)) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .interaction-feedback-ring{animation:none;opacity:.45;background:transparent}
+  .interaction-feedback-star{display:none;animation:none}
+}
+@media (hover:none){
+  button:hover:not(:disabled){filter:none}
+}
