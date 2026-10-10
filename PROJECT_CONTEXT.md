@@ -8,7 +8,7 @@
 
 ## 当前版本与入口
 
-本轮 v1.2.1，课程 1.1，学习状态 v1。本地构建 `403b4d0486dd`，发布与线上复验进行中。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。普通本地入口“启动英语小芽.vbs”，服务 http://127.0.0.1:24736 。上一正式版本 v1.2.0（dafa82e，GitHub Pages 任务 38029674802）。
+本轮 v1.2.1，课程 1.1，学习状态 v1。本地构建 `403b4d0486dd`，正式构建 `40fe69f3b1e4`。发布提交 b3867f6，GitHub Pages 任务 38036547468 成功，线上双声线及点图播放复验已通过。LF/CRLF 差异导致构建编号不同，已按 Git blob 核对。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。普通本地入口“启动英语小芽.vbs”，服务 http://127.0.0.1:24736 。上一正式版本 v1.2.0（dafa82e，GitHub Pages 任务 38029674802）。
 
 本轮优化：
 
@@ -41,6 +41,9 @@
 - `npm run build`：v1.2.1 / 403b4d0486dd。
 - 最终构建浏览器完整检查 48/48 通过：test-results/local-v121-final；摘要 docs/UI_QA_local-v121-final.md。包括录音清理、双声线全量 251 段离线保存/回放、首屏/图标点击、回想题静默、窄屏、头像及原有学习/花园行为。
 - 早期测试两项旧假设已修正：预加载前拦截慢网请求；用实际 playing 事件确认未提前说答案，不能以 Audio 对象存在表示出声。原始失败与修正后证据保留在 test-results/local-v121。
-- 慢网专项与发布结果待本轮收尾补充。上一版本证据见 docs/UI_QA_live-v120.md。
+- 慢加载专项通过：响应未返回时连点画面五次仍只有一个 Aiden 元素/一次 play/一次请求；放行后正常出声且无 JS 异常，见 test-results/audio-latency-quick。
+- 正式站 v1.2.1 独立 Edge 检查通过；预加载就绪后点击到 playing 事件约 4–13 ms，不能等同于首次冷加载或设备物理出声延迟。详见 docs/AUDIO_PERFORMANCE.md，原始证据 test-results/live-v121。上一版本证据见 docs/UI_QA_live-v120.md。
 
 手机视口和假麦克风不等于实体 iPhone Safari / Android 或儿童学习效果验收。没有重新配音；保留之前完整文件哈希及离线转写证据。无长期后台任务。
+
+当前版本已发布，正式链接不变。已有打开页面在家长页点击新版本更新按钮可启用新版；不会清理进度、头像和声音缓存。
