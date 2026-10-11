@@ -10,7 +10,7 @@ const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document')
 const originalCreateURL = URL.createObjectURL;
 const originalRevokeURL = URL.revokeObjectURL;
 let instances, blobs, revoked, streams, constructorFailure, startFailure, audioInstances, audioPlayResult;
-let playFile, stopAudio, preloadAudio, isAudioLoading, startRecording, stopRecording, clearRecording, recordingSupported;
+let playFile, stopAudio, preloadAudio, isAudioLoading, setPlaybackRate, startRecording, stopRecording, clearRecording, recordingSupported;
 let moduleGeneration=0;
 
 function stream() {
@@ -65,7 +65,7 @@ beforeEach(async () => {
   URL.createObjectURL = blob => { const url = `blob:test-${blobs.size}`; blobs.set(url, blob); return url; };
   URL.revokeObjectURL = url => revoked.push(url);
   // Each browser document owns its own warm pool; isolate that document per test.
-  ({playFile,stopAudio,preloadAudio,isAudioLoading,startRecording,stopRecording,clearRecording,recordingSupported}=await import(`../src/media.js?test=${++moduleGeneration}`));
+  ({playFile,stopAudio,preloadAudio,isAudioLoading,setPlaybackRate,startRecording,stopRecording,clearRecording,recordingSupported}=await import(`../src/media.js?test=${++moduleGeneration}`));
 });
 
 afterEach(() => {
@@ -83,11 +83,12 @@ afterEach(() => {
 test('English voice paths map both complete courses without altering guidance or local recordings', () => {
   const lessons = Array.from({length:120}, (_, i) => ({audio:`audio/lesson-${i + 1}.mp3`}));
   const files = englishAudioFiles(lessons);
-  assert.equal(files.length, 240); assert.equal(new Set(files).size, 240);
+  assert.equal(files.length, 360); assert.equal(new Set(files).size, 360);
   assert.equal(voiceAudioPath('audio/hello-01.mp3', 'aiden'), 'audio/hello-01.mp3');
   assert.equal(voiceAudioPath('audio/hello-01.mp3', 'ryan'), 'audio/ryan/hello-01.mp3');
+  assert.equal(voiceAudioPath('audio/hello-01.mp3', 'pip'), 'audio/characters/pip/hello-01.mp3');
   assert.equal(voiceAudioPath('audio/hello-01.mp3', 'unknown'), 'audio/hello-01.mp3');
-  for (const path of ['audio/ui/listen.mp3', 'blob:local-recording', 'audio/ryan/hello-01.mp3']) assert.equal(voiceAudioPath(path, 'ryan'), path);
+  for (const path of ['audio/ui/listen.mp3', 'blob:local-recording', 'audio/ryan/hello-01.mp3', 'audio/characters/pip/hello-01.mp3']) assert.equal(voiceAudioPath(path, 'ryan'), path);
 });
 
 test('Voice preference is separate from learning state and safely defaults when storage is unavailable', () => {
@@ -106,6 +107,34 @@ test('Voice playback preserves pitch and stops the previous sample without mappi
   await playFile(voiceAudioPath('audio/hello-01.mp3', 'ryan'), true);
   const ryan = audioInstances[1]; assert.equal(aiden.paused, true); assert.equal(ryan.src, 'https://example.test/english-sprout/audio/ryan/hello-01.mp3'); assert.equal(ryan.playbackRate, 0.8); assert.equal(ryan.preservesPitch, true);
   await playFile('blob:local-recording'); assert.equal(ryan.paused, true); assert.equal(audioInstances[2].src, 'blob:local-recording');
+});
+
+test('Live numeric speed changes preserve pitch, position and stream without changing other playback', async () => {
+  const file='audio/hello-01.mp3',audio=await playFile(file,.9);
+  assert.equal(audio.playbackRate,.9);audio.currentTime=.6;
+  for(const rate of [.75,1.15,1]){
+    assert.equal(setPlaybackRate(rate,file),true);assert.equal(audio.playbackRate,rate);
+    assert.equal(audio.preservesPitch,true);assert.equal(audio.currentTime,.6);
+  }
+  assert.equal(audio.playCalls,1);assert.equal(audio.loadCalls,0);assert.equal(audioInstances.length,1);
+  assert.equal(setPlaybackRate(.75,'audio/ryan/hello-01.mp3'),false);
+  assert.equal(setPlaybackRate(NaN,file),false);assert.equal(audio.playbackRate,1);
+  audio.dispatchEvent(new Event('ended'));assert.equal(setPlaybackRate(.75,file),false);
+  stopAudio();assert.equal(setPlaybackRate(.75,file),false);
+  assert.equal((await playFile(file,true)).playbackRate,.8,'existing slow-listen remains compatible');
+  assert.equal((await playFile(file,false)).playbackRate,1,'course defaults stay at normal speed');
+  assert.equal((await playFile(file,10)).playbackRate,1.5);
+  assert.equal((await playFile(file,NaN)).playbackRate,1);
+});
+
+test('Speed changes during loading keep repeated taps on the same pending request', async () => {
+  const pending=deferred(),file='audio/hello-01.mp3';audioPlayResult=()=>pending.promise;
+  const first=playFile(file,1);assert.equal(setPlaybackRate(.75,file),true);
+  assert.equal(isAudioLoading(file,.75),true);assert.equal(isAudioLoading(file,1),false);
+  const second=playFile(file,.75);assert.equal(audioInstances[0].playCalls,1);
+  audioInstances[0].dispatchEvent(new Event('playing'));pending.resolve();
+  assert.equal(await first,await second);assert.equal(audioInstances.length,1);
+  assert.equal(audioInstances[0].playbackRate,.75);
 });
 
 test('Silent preload deduplicates URLs and playback reuses its warmed element without reloading', async () => {

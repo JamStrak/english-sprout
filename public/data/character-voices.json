@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "createdAt": "2026-10-11",
+  "lessons": [
+    {
+      "id": "family-07",
+      "english": "Can you play with me?",
+      "chinese": "你能陪我玩吗？"
+    },
+    {
+      "id": "meals-10",
+      "english": "May I have some milk?",
+      "chinese": "可以给我一些牛奶吗？"
+    },
+    {
+      "id": "tidy-07",
+      "english": "I can't find it.",
+      "chinese": "我找不到它。"
+    },
+    {
+      "id": "dress-09",
+      "english": "Let's get dressed.",
+      "chinese": "我们穿好衣服吧。"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "pogo",
+      "name": "Pogo 蹦蹦狐",
+      "gender": "male",
+      "animal": "fox",
+      "tagline": "明亮活泼 · 弹跳语调",
+      "description": "阳光小狐狸的表演方向：带着笑意邀请，关键词轻轻弹起来。",
+      "sourceSpeaker": "Aiden",
+      "samples": {
+        "family-07": "audio/characters/pogo/family-07.mp3",
+        "meals-10": "audio/characters/pogo/meals-10.mp3",
+        "tidy-07": "audio/characters/pogo/tidy-07.mp3",
+        "dress-09": "audio/characters/pogo/dress-09.mp3"
+      }
+    },
+    {
+      "id": "milo",
+      "name": "Milo 淘气熊",
+      "gender": "male",
+      "animal": "bear",
+      "tagline": "温暖顽皮 · 小小戏剧感",
+      "description": "淘气小熊的表演方向：温暖厚一点，带好奇、故作惊讶的小转折。",
+      "sourceSpeaker": "Ryan",
+      "samples": {
+        "family-07": "audio/characters/milo/family-07.mp3",
+        "meals-10": "audio/characters/milo/meals-10.mp3",
+        "tidy-07": "audio/characters/milo/tidy-07.mp3",
+        "dress-09": "audio/characters/milo/dress-09.mp3"
+      }
+    },
+    {
+      "id": "lulu",
+      "name": "Lulu 甜甜兔",
+      "gender": "female",
+      "animal": "rabbit",
+      "tagline": "甜亮欢快 · 有笑意",
+      "description": "甜甜小兔的表演方向：明亮轻盈，期待和开心写在语气里。",
+      "sourceSpeaker": "Vivian",
+      "samples": {
+        "family-07": "audio/characters/lulu/family-07.mp3",
+        "meals-10": "audio/characters/lulu/meals-10.mp3",
+        "tidy-07": "audio/characters/lulu/tidy-07.mp3",
+        "dress-09": "audio/characters/lulu/dress-09.mp3"
+      }
+    },
+    {
+      "id": "pip",
+      "name": "Pip 泡泡猫",
+      "gender": "female",
+      "animal": "cat",
+      "tagline": "灵动好奇 · 俏皮小转折",
+      "description": "泡泡小猫的表演方向：轻柔好奇，像发现了小秘密，句尾有俏皮变化。",
+      "sourceSpeaker": "Serena",
+      "samples": {
+        "family-07": "audio/characters/pip/family-07.mp3",
+        "meals-10": "audio/characters/pip/meals-10.mp3",
+        "tidy-07": "audio/characters/pip/tidy-07.mp3",
+        "dress-09": "audio/characters/pip/dress-09.mp3"
+      }
+    }
+  ],
+  "clips": [
+    {
+      "candidateId": "pogo",
+      "lessonId": "family-07",
+      "file": "audio/characters/pogo/family-07.mp3",
+      "sha256": "17303c3d00525b4089fc963d3cac7d9477aceb64067582ed009fc09cb1ed8f57",
+      "bytes": 10748,
+      "seconds": 1.702083,
+      "seed": 20262011,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "pogo",
+      "lessonId": "meals-10",
+      "file": "audio/characters/pogo/meals-10.mp3",
+      "sha256": "c2d7870b2f4f7bcf9910c52c2fbe7fb20a7f0d2e7f7172316fce967f4354b494",
+      "bytes": 13052,
+      "seconds": 2.069333,
+      "seed": 20262012,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "pogo",
+      "lessonId": "tidy-07",
+      "file": "audio/characters/pogo/tidy-07.mp3",
+      "sha256": "4b0e5a6b92b487a72d92c0046bbf003e84051bbf355baf4baf17b70134eca09d",
+      "bytes": 12188,
+      "seconds": 1.937833,
+      "seed": 20262013,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "pogo",
+      "lessonId": "dress-09",
+      "file": "audio/characters/pogo/dress-09.mp3",
+      "sha256": "c636a8c6cc93ef82a3292054c68d6c3f0842cbe9dbd1f7f78eed9cc2d2f28601",
+      "bytes": 11900,
+      "seconds": 1.8905,
+      "seed": 20262014,
+      "atempo": 0.8421
+    },
+    {
+      "candidateId": "milo",
+      "lessonId": "family-07",
+      "file": "audio/characters/milo/family-07.mp3",
+      "sha256": "f24c6d6512b02c341ca1b8b384055106f3b025569ef676a5ab9ebea5f6718cfb",
+      "bytes": 14924,
+      "seconds": 2.385917,
+      "seed": 20262111,
+      "atempo": 0.7667
+    },
+    {
+      "candidateId": "milo",
+      "lessonId": "meals-10",
+      "file": "audio/characters/milo/meals-10.mp3",
+      "sha256": "ea306d1fc93cae4077be0080b493e9c77cc7a3a57b24f58af5e1b51bbd386368",
+      "bytes": 15212,
+      "seconds": 2.431667,
+      "seed": 20262112,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "milo",
+      "lessonId": "tidy-07",
+      "file": "audio/characters/milo/tidy-07.mp3",
+      "sha256": "67e49992ce4be4b9345da24ab14e183bde61840d7e9e2c47a24d254bc5318348",
+      "bytes": 16220,
+      "seconds": 2.614792,
+      "seed": 20262113,
+      "atempo": 0.85
+    },
+    {
+      "candidateId": "milo",
+      "lessonId": "dress-09",
+      "file": "audio/characters/milo/dress-09.mp3",
+      "sha256": "8dab9b7f40c7fd501ac76707b21ec1cd577b45a5eaed3a7b9d369fd620fd7591",
+      "bytes": 12908,
+      "seconds": 2.058125,
+      "seed": 20262114,
+      "atempo": 0.85
+    },
+    {
+      "candidateId": "lulu",
+      "lessonId": "family-07",
+      "file": "audio/characters/lulu/family-07.mp3",
+      "sha256": "ac9d5303fb98a127c02712831fbf5523a51f53d1ca52a7fadd44b9c051abc193",
+      "bytes": 13772,
+      "seconds": 2.185958,
+      "seed": 20262211,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "lulu",
+      "lessonId": "meals-10",
+      "file": "audio/characters/lulu/meals-10.mp3",
+      "sha256": "281f695a372837a2d257001f65b3c078d503075e360f44d8003e07845354641b",
+      "bytes": 14492,
+      "seconds": 2.317625,
+      "seed": 20262212,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "lulu",
+      "lessonId": "tidy-07",
+      "file": "audio/characters/lulu/tidy-07.mp3",
+      "sha256": "152e3887d83ff4e894886fdb76fc989540e07a51035d509d006c5bdb49bff994",
+      "bytes": 12908,
+      "seconds": 2.063708,
+      "seed": 20262213,
+      "atempo": 0.85
+    },
+    {
+      "candidateId": "lulu",
+      "lessonId": "dress-09",
+      "file": "audio/characters/lulu/dress-09.mp3",
+      "sha256": "0e67093abc189a8c202c8135d78de0cfc472e80dbb2e09b1d9279a7d6ee121ff",
+      "bytes": 11900,
+      "seconds": 1.874833,
+      "seed": 20262214,
+      "atempo": 0.7579
+    },
+    {
+      "candidateId": "pip",
+      "lessonId": "family-07",
+      "file": "audio/characters/pip/family-07.mp3",
+      "sha256": "9e0d715f93a17f901b4e9f659493bf2467a65a8f5ede8820bf0d7df52dfa0cfa",
+      "bytes": 11612,
+      "seconds": 1.827792,
+      "seed": 20262311,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "pip",
+      "lessonId": "meals-10",
+      "file": "audio/characters/pip/meals-10.mp3",
+      "sha256": "7cb31466fa6313a0c329b23754605f2df360b175cf551e69c8180c2fcdcbc356",
+      "bytes": 20252,
+      "seconds": 3.275583,
+      "seed": 20262312,
+      "atempo": 0.85
+    },
+    {
+      "candidateId": "pip",
+      "lessonId": "tidy-07",
+      "file": "audio/characters/pip/tidy-07.mp3",
+      "sha256": "d05a36f66fa9831feb9e97cb2c011ead47cb97888cced04a1ce1da292788c0b4",
+      "bytes": 11612,
+      "seconds": 1.827917,
+      "seed": 20262313,
+      "atempo": 0.65
+    },
+    {
+      "candidateId": "pip",
+      "lessonId": "dress-09",
+      "file": "audio/characters/pip/dress-09.mp3",
+      "sha256": "cdd98ddace1f1b975c6358e85a8bc50c6fa6f8c68d392a33001c33529c65c895",
+      "bytes": 11900,
+      "seconds": 1.876042,
+      "seed": 20262314,
+      "atempo": 0.7158
+    }
+  ],
+  "production": {
+    "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "revision": "f00cf133b78d3c2c35857faba3b1be9b98c4f971",
+    "method": "New instruction-directed performances; pitch-preserving atempo 0.65 to 0.85, chosen per phrase",
+    "technicalReview": "16 decoded clips and independent CPU ASR text checks",
+    "subjectiveApproval": false,
+    "originalCourseAudioUnchanged": true
+  }
+}

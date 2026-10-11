@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const origin = process.env.TEST_URL || 'http://127.0.0.1:24736';
 const localTarget = ['localhost','127.0.0.1','[::1]'].includes(new URL(origin).hostname);
-// The published CDN needs time to download all 251 clips; keep local budgets tight.
+// The published CDN needs time to download the course and audition clips.
 const navigationTimeout = Number(process.env.NAVIGATION_TIMEOUT_MS || (localTarget ? 8000 : 30000));
 const offlineTimeout = Number(process.env.OFFLINE_TIMEOUT_MS || (localTarget ? 30000 : 180000));
 for(const timeout of [navigationTimeout,offlineTimeout])if(!Number.isInteger(timeout)||timeout<1)throw new Error('Network timeout budgets must be positive integer milliseconds.');
@@ -18,8 +18,12 @@ const output = process.env.RESULT_DIR ? path.resolve(root,process.env.RESULT_DIR
 const summaryPath = path.join(root,'docs',reportName==='local'?'UI_QA.md':`UI_QA_${reportName}.md`);
 const key = 'english-sprout-state-v1';
 const curriculum = JSON.parse(fs.readFileSync(path.join(root, 'public/data/curriculum.json'), 'utf8'));
-const englishAudioCount = curriculum.lessons.length * 2;
-const totalAudioCount = englishAudioCount + 11;
+const courseVoices=['aiden','ryan','pip'];
+const courseAudioFiles=curriculum.lessons.flatMap(l=>courseVoices.map(v=>`audio/${v==='pip'?'characters/pip/':v==='ryan'?'ryan/':''}${l.id}.mp3`));
+const englishAudioCount = courseAudioFiles.length;
+const voiceCandidates = JSON.parse(fs.readFileSync(path.join(root,'public/data/character-voices.json'),'utf8'));
+const auditionAudioCount = new Set(voiceCandidates.candidates.flatMap(candidate=>Object.values(candidate.samples)).filter(file=>!courseAudioFiles.includes(file))).size;
+const totalAudioCount = englishAudioCount + 11 + auditionAudioCount;
 const audioCache = fs.readFileSync(path.join(root, 'src/media.js'), 'utf8').match(/english-sprout-audio-v[\w.-]+/)[0];
 const reportDate = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai'}).format(new Date());
 const checks = [];
@@ -37,7 +41,7 @@ async function context(options={}) {
     window.__qaAudio=[];window.__qaStreams=[];window.__qaErrors=[];window.__qaPlay=[];window.__qaAudioTimeline=[];
     if(navigator.storage?.persist){const persist=navigator.storage.persist.bind(navigator.storage);navigator.storage.persist=async()=>{window.__qaPersist={started:true,settled:false};try{const value=await persist();window.__qaPersist={started:true,settled:true,value};return value;}catch(error){window.__qaPersist={started:true,settled:true,error:error.message};throw error;}};}
     const NativeAudio=window.Audio;
-    window.Audio=function(...args){const a=new NativeAudio(...args);window.__qaAudio.push(a);a.addEventListener('playing',()=>window.__qaPlay.push({src:a.src,rate:a.playbackRate,duration:a.duration}));for(const type of ['playing','pause','ended'])a.addEventListener(type,()=>window.__qaAudioTimeline.push({type,src:a.src,ended:a.ended}));return a;};
+    window.Audio=function(...args){const a=new NativeAudio(...args);window.__qaAudio.push(a);a.qaPlayCalls=0;a.qaLoadCalls=0;const play=a.play.bind(a),load=a.load.bind(a);a.play=(...args)=>{a.qaPlayCalls++;return play(...args);};a.load=(...args)=>{a.qaLoadCalls++;return load(...args);};a.addEventListener('playing',()=>window.__qaPlay.push({src:a.src,rate:a.playbackRate,duration:a.duration}));for(const type of ['playing','pause','ended'])a.addEventListener(type,()=>window.__qaAudioTimeline.push({type,src:a.src,ended:a.ended}));return a;};
     window.Audio.prototype=NativeAudio.prototype;
     if(navigator.mediaDevices?.getUserMedia){const original=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=async(...args)=>{const s=await original(...args);window.__qaStreams.push(s);return s;};}
     window.addEventListener('error',e=>window.__qaErrors.push(e.message));
@@ -64,11 +68,11 @@ async function audio(p,selector,rate=1){
   const before=await p.evaluate(()=>window.__qaPlay.length);
   const kind=selector==='#replay-record'?'recording':selector==='#guide-audio'?'guide':'english';
   const lesson=kind==='english'&&await p.locator('.practice-main').count()?await p.locator('.practice-main').getAttribute('data-lesson-id'):null;
-  const voice=selector.match(/^\[data-voice="(aiden|ryan)"\]$/)?.[1]||(lesson?await p.locator('[data-voice][aria-pressed="true"]').getAttribute('data-voice'):null);
+  const voice=selector.match(/^\[data-voice="(aiden|ryan|pip)"\]$/)?.[1]||(lesson?await p.locator('[data-voice][aria-pressed="true"]').getAttribute('data-voice'):null);
   await p.locator(selector).first().click();
   const args={before,rate,kind,lesson,voice};
-  await p.waitForFunction(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).some(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args,{timeout:45000});
-  const event=await p.evaluate(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).find(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args);
+  await p.waitForFunction(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).some(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='pip'?'characters/pip/':voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args,{timeout:45000});
+  const event=await p.evaluate(({before,rate,kind,lesson,voice})=>window.__qaPlay.slice(before).find(event=>event.rate===rate&&(kind==='recording'?event.src.startsWith('blob:'):kind==='guide'?event.src.includes('/audio/ui/'):event.src.includes('/audio/')&&!event.src.includes('/audio/ui/')&&(!lesson||event.src.endsWith(`/audio/${voice==='pip'?'characters/pip/':voice==='ryan'?'ryan/':''}${lesson}.mp3`)))),args);
   assert.equal(event.rate,rate);assert.ok(event.duration>0.3);return event;
 }
 async function waitSW(p){await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>navigator.serviceWorker.controller!==null);}
@@ -81,7 +85,7 @@ async function waitOfflineSaved(p){
   const snapshot=async()=>p.evaluate(async name=>({status:document.querySelector('#offline-status')?.textContent,disabled:document.querySelector('#offline-audio')?.disabled,persist:window.__qaPersist||null,cachedMP3:(await(await caches.open(name)).keys()).filter(request=>request.url.endsWith('.mp3')).length}),audioCache);
   const progress=localTarget?null:setInterval(async()=>{try{console.log('Offline save progress',JSON.stringify({elapsedMs:Date.now()-started,...await snapshot()}));}catch{}},30000);
   try{
-    await p.waitForFunction(()=>document.querySelector('#offline-status')?.textContent.includes('两套示范与中文引导共 251 段声音已保存'),null,{timeout:offlineTimeout});
+    await p.waitForFunction(()=>document.querySelector('#offline-status')?.textContent.includes('段声音已保存'),null,{timeout:offlineTimeout});
     return {elapsedMs:Date.now()-started};
   }catch(error){
     const details={elapsedMs:Date.now()-started,...await snapshot().catch(()=>({})),failedRequests:requests,unexpectedResponses:responses};
@@ -118,9 +122,24 @@ async function delayCacheCount(p){
     const ryan=await audio(p,'[data-voice="ryan"]');assert.equal(await p.evaluate(index=>window.__qaAudio[index].paused,oldAudio),true);assert.match(ryan.src,/\/audio\/ryan\/hello-01\.mp3$/);
     assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');assert.match((await audio(p,'[data-voice="ryan"]')).src,/\/audio\/ryan\/hello-01\.mp3$/);
     await audio(p,'[data-listen="slow"]',0.8);
+    const pip=await audio(p,'[data-voice="pip"]');assert.match(pip.src,/\/audio\/characters\/pip\/hello-01\.mp3$/);
     assert.equal((await audio(p,'#replay-record')).src,recorded.src);assert.deepEqual(await state(p),before);
     await audio(p,'[data-voice="aiden"]');assert.equal(await p.locator('#replay-record').isDisabled(),false);assert.deepEqual(await state(p),before);
-    return {aiden:aiden.src,ryan:ryan.src,recordingPreserved:true};
+    return {aiden:aiden.src,ryan:ryan.src,pip:pip.src,recordingPreserved:true};
+  });
+  await test('Course speed changes immediately without restarting, while guidance and recorded voice stay natural',async()=>{
+    const before=await state(p);assert.equal(await p.locator('[data-course-rate]').count(),4);
+    await audio(p,'[data-voice="pip"]');
+    await p.waitForFunction(()=>window.__qaAudio.some(a=>!a.paused&&!a.ended&&a.currentTime>.12));
+    const initial=await p.evaluate(()=>{window.__qaSpeedTarget=window.__qaAudio.find(a=>!a.paused&&!a.ended);const a=window.__qaSpeedTarget;return {time:a.currentTime,plays:a.qaPlayCalls,loads:a.qaLoadCalls};});
+    await p.locator('[data-course-rate="0.75"]').click();
+    const changed=await p.evaluate(()=>{const a=window.__qaSpeedTarget;return {time:a.currentTime,rate:a.playbackRate,pitch:a.preservesPitch,plays:a.qaPlayCalls,loads:a.qaLoadCalls,active:!a.paused&&!a.ended};});
+    assert.equal(changed.rate,.75);assert.equal(changed.pitch,true);assert.equal(changed.active,true);assert.ok(changed.time>=initial.time);assert.equal(changed.plays,initial.plays);assert.equal(changed.loads,initial.loads);
+    await audio(p,'[data-listen="normal"]',.75);await audio(p,'[data-voice="aiden"]',.75);
+    await audio(p,'[data-listen="slow"]',.8);await audio(p,'#guide-audio',1);await audio(p,'#replay-record',1);
+    await p.locator('[data-course-rate="1.15"]').click();await audio(p,'[data-listen="normal"]',1.15);
+    await p.locator('[data-course-rate="1"]').click();assert.deepEqual(await state(p),before);
+    assert.equal(await p.evaluate(()=>localStorage.getItem('english-sprout-course-rate-v1')),'1');return {initial,changed,recordingAndGuidanceRate:1};
   });
   await test('First completion saves one card and next-day review; no second new sentence',async()=>{
     await p.locator('[data-rating="good"]').click();await p.locator('.completion').waitFor();
@@ -157,6 +176,19 @@ async function delayCacheCount(p){
     await go(p,'home');assert.match((await audio(p,'#preview-audio')).src,/\/audio\/ryan\/hello-01\.mp3$/);
     await go(p,'library');await p.locator('[data-preview="hello-02"]').click();assert.equal(await p.locator('[data-voice="ryan"]').getAttribute('aria-pressed'),'true');assert.match((await audio(p,'[data-listen="normal"]')).src,/\/audio\/ryan\/hello-02\.mp3$/);
     await p.locator('#exit-session').click();await go(p,'parent');assert.deepEqual(await state(p),before);assert.deepEqual(Object.keys(backup.state.settings).sort(),['dailyReviews','nickname']);
+  });
+  await test('Pip is a complete third voice across home and all twelve lesson themes',async()=>{
+    const before=await state(p);await audio(p,'[data-voice="pip"]');await p.reload();await p.locator('#save-settings').waitFor();
+    assert.equal(await p.locator('[data-voice="pip"]').getAttribute('aria-pressed'),'true');assert.equal(await p.locator('[data-voice]').count(),3);
+    await go(p,'home');assert.match((await audio(p,'#preview-audio')).src,/\/audio\/characters\/pip\/hello-01\.mp3$/);
+    await go(p,'library');const clips=[];
+    for(const theme of curriculum.themes){
+      const lesson=curriculum.lessons.find(l=>l.theme===theme.id||l.themeId===theme.id||l.id.startsWith(theme.id+'-'));
+      assert.ok(lesson);await p.locator(`[data-preview="${lesson.id}"]`).click();
+      const played=await audio(p,'[data-listen="normal"]');assert.ok(played.src.endsWith(`/audio/characters/pip/${lesson.id}.mp3`));clips.push(played);
+      await p.locator('#exit-session').click();
+    }
+    await go(p,'parent');assert.deepEqual(await state(p),before);await audio(p,'[data-voice="ryan"]');return {clips,learningUnchanged:true};
   });
   await test('Parent phone QR renders and copy-link uses the intended public URL',async()=>{
     const qr=p.locator('.phone-share img');assert.equal(await qr.evaluate(i=>i.complete&&i.naturalWidth>0),true);
@@ -198,7 +230,7 @@ async function delayCacheCount(p){
     await p.locator('[data-rating="help"]').click();await p.locator('.completion').waitFor();
     const s=await state(p);assert.equal(s.days['2026-10-09'].results.length,2);assert.equal(s.cards['hello-01'].due,'2026-10-10');assert.equal(s.cards['hello-02'].due,'2026-10-10');return s.days['2026-10-09'];
   });
-  await test('All 251 bundled audio files cache and both English voices play after offline reload',async()=>{
+  await test(`All ${totalAudioCount} course and audition audio files cache and all three English voices play after offline reload`,async()=>{
     await go(p,'parent');await waitSW(p);await p.locator('#offline-audio').click();const download=await waitOfflineSaved(p);
     const count=await p.evaluate(async name=>{const cache=await caches.open(name);return(await cache.keys()).filter(r=>r.url.endsWith('.mp3')).length;},audioCache);assert.equal(count,totalAudioCount);
     // Reproduce CDN Vary: Accept-Encoding mismatch between prefetch and media.
@@ -210,9 +242,9 @@ async function delayCacheCount(p){
       await cache.put(new Request(url,{headers:{'Accept-Encoding':'qa-prefetch-variant'}}),new Response(bytes,{headers:{'Content-Type':'audio/mpeg','Vary':'Accept-Encoding'}}));
     },audioCache);
     await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('#offline-audio').waitFor();await go(p,'library');await p.locator('[data-preview="kindness-10"]').click();const event=await audio(p,'[data-voice="aiden"]');assert.match(event.src,/\/audio\/kindness-10\.mp3$/);
-    const ryan=await audio(p,'[data-voice="ryan"]');assert.match(ryan.src,/\/audio\/ryan\/kindness-10\.mp3$/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
+    const ryan=await audio(p,'[data-voice="ryan"]');assert.match(ryan.src,/\/audio\/ryan\/kindness-10\.mp3$/);const pip=await audio(p,'[data-voice="pip"]');assert.match(pip.src,/\/audio\/characters\/pip\/kindness-10\.mp3$/);await audio(p,'#guide-audio');await p.locator('#exit-session').click();
     const range=await p.evaluate(async()=>{const r=await fetch('./audio/kindness-10.mp3',{headers:{Range:'bytes=0-127'}});return{status:r.status,range:r.headers.get('Content-Range'),length:(await r.arrayBuffer()).byteLength};});assert.equal(range.status,206);assert.equal(range.length,128);assert.match(range.range,/^bytes 0-127\//);
-    await c.setOffline(false);return {cachedMP3:count,download,offlinePlay:{aiden:event,ryan},range};
+    await c.setOffline(false);return {cachedMP3:count,download,offlinePlay:{aiden:event,ryan,pip},range};
   });
   await test('App reports no uncaught JavaScript errors',async()=>{assert.deepEqual(await p.evaluate(()=>window.__qaErrors),[]);});
   await c.close();
@@ -261,13 +293,13 @@ async function delayCacheCount(p){
   await test('Delayed cache counts cannot overwrite download success or a newer parent page',async()=>{
     await waitSW(cp);await delayCacheCount(cp);await go(cp,'parent');await cp.waitForFunction(count=>window.__qaCacheReplies.length===count,englishAudioCount);
     await cp.locator('#offline-audio').click();await waitOfflineSaved(cp);
-    await cp.evaluate(()=>window.__qaReleaseCacheCount());assert.match(await cp.locator('#offline-status').innerText(),/两套示范与中文引导共 251 段声音已保存/);
+    await cp.evaluate(()=>window.__qaReleaseCacheCount());assert.match(await cp.locator('#offline-status').innerText(),/段声音已保存/);
     // A previous render must not overwrite the status of a fresh parent page either.
     await go(cp,'home');await cp.evaluate(async name=>{const cache=await caches.open(name),url=new URL('./audio/hello-01.mp3',document.baseURI).href;window.__qaSavedAudio=await cache.match(url);await cache.delete(url);},audioCache);
     await delayCacheCount(cp);await go(cp,'parent');await cp.waitForFunction(count=>window.__qaCacheReplies.length===count,englishAudioCount);
     await cp.evaluate(async name=>{const cache=await caches.open(name);await cache.put(new URL('./audio/hello-01.mp3',document.baseURI).href,window.__qaSavedAudio);},audioCache);
-    await go(cp,'home');await go(cp,'parent');await cp.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes('240 / 240'));
-    await cp.evaluate(()=>window.__qaReleaseCacheCount());assert.match(await cp.locator('#offline-status').innerText(),/240 \/ 240/);
+    await go(cp,'home');await go(cp,'parent');await cp.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes(`${360} / ${360}`));
+    await cp.evaluate(()=>window.__qaReleaseCacheCount());assert.match(await cp.locator('#offline-status').innerText(),/360 \/ 360/);
     assert.deepEqual(await cp.evaluate(()=>window.__qaErrors),[]);
   });await cacheRaceContext.close();
   const guideContext=await context();const ap=await newPage(guideContext);

@@ -1,49 +1,49 @@
 # 英语小芽 · 当前状态
 
-更新：2026-10-10（Asia/Shanghai）。工程：`E:\AI新项目\其他实验\儿童英语练习`。
+更新：2026-10-11（Asia/Shanghai）。
 
-## 目标与授权
+## 当前交付
 
-适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。已授权完善并更新正式网站。本轮用户明确要求解决部分声音播放等待过久，保持已认可的 Aiden / Ryan 配音，减少操作和等待。
+适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。用户最新决定：只采纳第四位女生 Pip 泡泡猫，补齐完整课程；原 Aiden / Ryan 保留，其他三位新候选留待后续版本。不要继续自动扩充其他角色。
 
-## 当前版本与入口
+当前 v1.3.0，课程 1.1，学习状态 v1。本地构建 a1b9a11f78ef 已完成验证，正在按此前授权发布。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。发布成功后补充该次提交、线上构建及验证结果。
 
-本轮 v1.2.1，课程 1.1，学习状态 v1。本地构建 `403b4d0486dd`，正式构建 `40fe69f3b1e4`。发布提交 b3867f6，GitHub Pages 任务 38036547468 成功，线上双声线及点图播放复验已通过。LF/CRLF 差异导致构建编号不同，已按 Git blob 核对。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。普通本地入口“启动英语小芽.vbs”，服务 http://127.0.0.1:24736 。上一正式版本 v1.2.0（dafa82e，GitHub Pages 任务 38029674802）。
+本地 http://127.0.0.1:24736/ ，普通入口“启动英语小芽.vbs”。家长页有“配音对照试听”，直达 http://127.0.0.1:24736/?audition=1 。
 
-本轮优化：
+## 本轮变更
 
-- Service Worker 立即将网络响应流交给播放器，缓存克隆在后台写入并由 waitUntil 保活，避免完整下载/磁盘缓存阻塞首次播放。
-- 静默预加载当前与邻近短句的双声线，最多保留六个音频元素；复用缓冲，避免每点一次都新建播放器。首页为当天句与前两句复习；小书为前两句及正在触碰/聚焦的卡片；练习为当前与下一句。
-- 同一句同速度尚在加载或缓冲时，重复点按共用请求；真正开始播放后仍能点按从头重听。快速切换只保留最新声音；复用元素的旧媒体事件不覆盖新状态。较长等待有就地提示。
-- 首次未缓存、浏览器限制预载或慢网络仍可能等待；不宣称所有设备秒播。全部离线下载入口继续保留。
+- 正式角色为 Aiden / Ryan / Pip，各 120 句。Pip 沿用用户已选的 Serena 底色和好奇小猫表演方向，复用四段原样音、新制 116 段；原 251 段音频及 manifest 不变。默认和已有角色选择保留，不强制切换到 Pip。
+- Pip 共 1,346,064 字节、212.496 秒。119 句通过独立 CPU tiny.en 内容检查；meals-04 采用自然节奏 1.76 秒，由既有 faster-whisper-base 对原 WAV 和最终 MP3 交叉核对匹配。tiny.en 对这一句仍有差异，证据及公开 manifest 如实保留。未宣称全课程真人逐句验收。
+- 四档 0.75× / 0.9× / 1× / 1.15× 即时保调语速，播放中换档不重播、不重新请求；记住偏好。临时慢听仍为 0.8×，孩子录音和手动中文帮助保持 1×。
+- 首页、短句书、练习和家长页均直接点名字换声；整幅图和播放按钮都能重听。当前角色优先预载，池上限六段；重复加载请求合并、流式播放保留。
+- 对照试听移至家长页，Pip 标明完整课程，其余三位只保留样音。保留原两声对照，不再提供待选择的男女投票操作。打开、关闭或换页不会额外自动说话。
+- 声音缓存 v5，迁移并保留 v4 / v3 合法旧下载；下载全部为 383 个唯一文件（360 英文、11 中文帮助、12 额外对照样音）。Pip 四段样音与完整课程复用，不重复计数。音频旁 JSON manifest 属核心缓存，不走 MP3 范围请求。
 
-沿用功能：120 句 × 两位伙伴 + 11 段手动中文帮助；120 幅图；首屏每日一句、名字换声、整图播放和明显点按/播放反馈；无自动中文女生引导；六款动物头像及只在本机保存的动物自拍；日历间隔复习、每周回想/听辨小测与简单花园养成。静默预载不播放答案，选择题不证明发音准确或口语掌握。自由练习不改记录或刷奖励。
+沿用功能：120 幅图；首屏每日一句、点按反馈；无自动中文女生引导；六款动物头像与本机动物自拍；日历间隔复习、每周回想/听辨小测、花园养成。自由练习不改记录或刷奖励。
 
 ## 技术不变量
 
-- 纯静态网页，无付费运行时 API、账户或云端儿童数据。录音只在内存回听，离开卡片关闭麦克风并清理；头像仅浏览器本地保存。
-- `src/learning.js` 是学习日期、复习和小测规则唯一实现；`src/garden.js` 重放材料与种植账本。稳定课程 ID，旧 v1 进度/备份兼容。
-- 学习备份用于导入替换，不合并；声线和头像使用独立本机偏好键，不随备份迁移。
-- 声音文件本轮未变，仍为 `english-sprout-audio-v3`，media.js 与 sw.template.js 一致，251 段约 2.94 MiB。无需重新生成或更换声音缓存版本。
-- 构建只输出 dist。头像/交互模块及样式均进入核心离线缓存；不发布 test-results、个人备份、原始照片或本机配置。
-- 标准双击入口隐藏终端、复用同项目服务并处理端口；本轮未改启动器。全局 notify 完成提示音已核对保留。
+- 纯静态，无付费运行时 API、账户或云端儿童数据。录音仅内存回听，离开卡片关闭麦克风并清理；头像仅本机。
+- src/learning.js 是日期、复习、小测规则唯一实现；src/garden.js 重放账本。稳定课程 ID，旧 v1 进度/备份兼容，选择题不能证明口语掌握。
+- 学习备份导入替换不合并；声线、语速、头像与试听偏好独立，不随学习备份迁移。正式语速仅首次从合法试听语速迁移。
+- english-sprout-audio-v5 在 src/media.js / sw.template.js 一致；新 116 段 Pip 不误读旧缓存。
+- 只发布 dist；核心离线缓存含试听模块、样式和公开 manifest。不公开 test-results、原始照片、运行日志或本机配置。
+- 启动器未改，仍隐藏终端、复用服务和处理端口；全局 notify 完成提示音保持启用。
 
 ## 文件定位
 
-- 界面/媒体：src/app.js、styles.css、interaction.css、media.js、voices.js；点按反馈 feedback.js/css；头像 avatars.js/css；配图 illustrations.js。
-- 学习/收集：learning.js、garden.js；规则 docs/LEARNING.md，交互/数据约定 docs/DESIGN.md。
-- 课程/成品：public/data、public/audio；docs/CURRICULUM.md、VOICE_REVIEW.md。声音生成/核对/安装脚本仅维护时使用，本轮无需运行。
-- 发布与离线：scripts/build.mjs、sw.template.js、.github/workflows/pages.yml。
+- 界面/媒体：src/app.js、styles.css、interaction.css、media.js、voices.js；点按 feedback.js/css；头像 avatars.js/css；配图 illustrations.js。
+- 配音：public/audio/characters/pip、public/audio/pip-manifest.json；制作 scripts/generate-pip-course.py、generate-character-samples.py；说明 docs/VOICE_REVIEW.md。
+- 试听：src/voice-audition.js/css、public/data/character-voices.json。其余候选 Pogo / Milo / Lulu 当前只有四句样音。
+- 学习/收集：learning.js、garden.js；规则 docs/LEARNING.md，交互 docs/DESIGN.md。
+- 发布/离线：scripts/build.mjs、sw.template.js、.github/workflows/pages.yml。
 
-## 本轮验证
+## 当前验证
 
-- `npm test`：90/90 通过。新增慢缓存写入不阻塞、流式响应可先读取、预载元素复用/上限、重复点播合并、失败重试、媒体旧事件隔离回归。
-- `npm run build`：v1.2.1 / 403b4d0486dd。
-- 最终构建浏览器完整检查 48/48 通过：test-results/local-v121-final；摘要 docs/UI_QA_local-v121-final.md。包括录音清理、双声线全量 251 段离线保存/回放、首屏/图标点击、回想题静默、窄屏、头像及原有学习/花园行为。
-- 早期测试两项旧假设已修正：预加载前拦截慢网请求；用实际 playing 事件确认未提前说答案，不能以 Audio 对象存在表示出声。原始失败与修正后证据保留在 test-results/local-v121。
-- 慢加载专项通过：响应未返回时连点画面五次仍只有一个 Aiden 元素/一次 play/一次请求；放行后正常出声且无 JS 异常，见 test-results/audio-latency-quick。
-- 正式站 v1.2.1 独立 Edge 检查通过；预加载就绪后点击到 playing 事件约 4–13 ms，不能等同于首次冷加载或设备物理出声延迟。详见 docs/AUDIO_PERFORMANCE.md，原始证据 test-results/live-v121。上一版本证据见 docs/UI_QA_live-v120.md。
+- npm test：109/109；npm run build 成功。
+- 完整浏览器：50/50，包含三角色真实 MP3、十二主题 Pip、即时变速不重开播放、录音/中文帮助原速、383 段离线下载后重载、学习记录/复习/花园/头像、320/390px 布局。证据 test-results/local-v130-pip，摘要 docs/UI_QA_local-v130-pip.md。
+- 试听专项：10/10。16 段样音、原双声对照、即时变速、离线重载、失败重试、320px 和关闭/导航停止均通过。证据 test-results/audition-local。
+- 制作闸门 Python 16/16、两脚本编译通过；13 个句子返工 19 次。全部成品哈希、原 251 段和四段已选样音保留检查通过，GPU 锁已释放。
+- 制作证据：test-results/pip-course-20261011/final-verification.json；原始 ASR test-results/speech-check/pip-course-20261011.json。单句交叉报告、未通过的尝试均保留本机，不公开。
 
-手机视口和假麦克风不等于实体 iPhone Safari / Android 或儿童学习效果验收。没有重新配音；保留之前完整文件哈希及离线转写证据。无长期后台任务。
-
-当前版本已发布，正式链接不变。已有打开页面在家长页点击新版本更新按钮可启用新版；不会清理进度、头像和声音缓存。
+手机视口、自动转写和浏览器实际播放不能代替实体手机或真人听感验收；后续反馈按具体句子局部改进，不自动扩充新声线。

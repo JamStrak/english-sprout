@@ -40,8 +40,19 @@ export function preloadAudio(files){
     try{entry.audio.load();}catch{if(warmAudio.get(url)===entry)warmAudio.delete(url);}
   }
 }
+const playbackRate=value=>typeof value==='number'&&Number.isFinite(value)?Math.max(.5,Math.min(1.5,value)):value===true?.8:1;
 export function isAudioLoading(file,slow=false){
-  return !!(playback&&playback.url===audioURL(file)&&playback.rate===(slow?.8:1)&&(playback.pending||playback.status==='loading'));
+  return !!(playback&&playback.url===audioURL(file)&&playback.rate===playbackRate(slow)&&(playback.pending||playback.status==='loading'));
+}
+export function setPlaybackRate(rate,file){
+  // Change the current stream in place: no seek, play(), load(), or new request.
+  if(!playback||!file||playback.url!==audioURL(file)||!['loading','playing'].includes(playback.status)||typeof rate!=='number'||!Number.isFinite(rate))return false;
+  try{
+    playback.audio.preservesPitch=true;
+    playback.audio.playbackRate=playbackRate(rate);
+    playback.rate=playback.audio.playbackRate;
+    return true;
+  }catch{return false;}
 }
 export function stopAudio(){
   const previous=playback;
@@ -56,7 +67,7 @@ export async function playFile(file,slow=false,onState=()=>{}){
   }
   stopAudio();
   const entry=audioEntry(audioURL(file)),audio=entry.audio;
-  const current={audio,url:entry.url,rate:slow?.8:1,status:'loading',pending:true,observers:new Set([onState]),cleanup:()=>{},promise:null};
+  const current={audio,url:entry.url,rate:playbackRate(slow),status:'loading',pending:true,observers:new Set([onState]),cleanup:()=>{},promise:null};
   player=audio;playback=current;entry.warmed=true;
   audio.playbackRate=current.rate;audio.preservesPitch=true;
   try{audio.currentTime=0;}catch{} // Metadata may not exist yet on a cold request.
@@ -150,7 +161,7 @@ export function clearRecording(){
 }
 export async function cacheAllAudio(files,onProgress){
   if(!('caches' in window))throw new Error('这个浏览器暂不支持离线保存，请使用新版 Safari、Chrome 或 Edge。');
-  const cache=await caches.open('english-sprout-audio-v3');let done=0;let cursor=0;
+  const cache=await caches.open('english-sprout-audio-v5');let done=0;let cursor=0;
   const unique=[...new Set(files)];
   await Promise.all(Array.from({length:3},async()=>{
     while(cursor<unique.length){
@@ -162,7 +173,7 @@ export async function cacheAllAudio(files,onProgress){
 }
 export async function cachedAudioCount(files){
   if(!('caches' in window))return 0;
-  const cache=await caches.open('english-sprout-audio-v3');
+  const cache=await caches.open('english-sprout-audio-v5');
   const results=await Promise.all(files.map(f=>cache.match(new URL(f,document.baseURI).href)));
   return results.filter(Boolean).length;
 }

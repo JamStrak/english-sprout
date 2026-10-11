@@ -1,10 +1,11 @@
 import {createState,dayKey,getDailyPlan,recordResult,getStats,validateImport,getCheckupPlan,recordCheckup} from './learning.js';
-import {playFile,stopAudio,preloadAudio,isAudioLoading,startRecording,stopRecording,clearRecording,recordingSupported,cacheAllAudio,cachedAudioCount} from './media.js';
-import {VOICE_STORAGE_KEY,VOICES,UI_PROMPTS,normalizeVoice,readVoicePreference,saveVoicePreference,voiceAudioPath,englishAudioFiles} from './voices.js';
+import {playFile,stopAudio,preloadAudio,isAudioLoading,setPlaybackRate,startRecording,stopRecording,clearRecording,recordingSupported,cacheAllAudio,cachedAudioCount} from './media.js';
+import {VOICE_STORAGE_KEY,VOICES,UI_PROMPTS,normalizeVoice,readVoicePreference,saveVoicePreference,voiceAudioPath,englishAudioFiles,COURSE_RATE_KEY,PLAYBACK_RATES,PLAYBACK_RATE_LABELS,readCourseRate,saveCourseRate} from './voices.js';
 import {lessonIllustration} from './illustrations.js';
 import {getGarden,recordGardenAction,PLANTS} from './garden.js';
 import {avatarMarkup,openAvatarPicker,AVATAR_STORAGE_KEY} from './avatars.js';
 import {installInteractionFeedback} from './feedback.js';
+import {openVoiceAudition} from './voice-audition.js';
 
 const KEY='english-sprout-state-v1';
 const PUBLISHED_URL='https://jamstrak.github.io/english-sprout/';
@@ -12,6 +13,7 @@ const app=document.querySelector('#app');
 let curriculum,state,view='home',session=null,libraryTheme='all',search='',recording=false,recordPending=false,recordedURL=null,toastTimer,offlineBusy=false,offlineDownloadGeneration=0,installEvent,waitingSW,screenGeneration=0;
 let storageOK=true;
 let selectedVoice=readVoicePreference();
+let selectedRate=readCourseRate(),activeCourseAudio=null;
 let audioSequence=Promise.resolve(),audioGeneration=0;
 let audioWaitTimer;
 const icons={
@@ -46,7 +48,11 @@ const daily=()=>getDailyPlan(state,curriculum.lessons,dayKey());
 const stats=()=>getStats(state,curriculum.lessons,dayKey());
 function warmLessons(ids){
   const voices=[selectedVoice,...VOICES.map(v=>v.id).filter(id=>id!==selectedVoice)];
-  preloadAudio([...new Set(ids.filter(Boolean))].slice(0,3).flatMap(id=>{const lesson=lessonById(id);return lesson?voices.map(voice=>voiceAudioPath(lesson.audio,voice)):[];}));
+  const lessons=[...new Set(ids.filter(Boolean))].slice(0,3).map(lessonById).filter(Boolean);
+  const current=lessons[0];
+  if(!current)return;
+  const files=[...voices.map(voice=>voiceAudioPath(current.audio,voice)),...lessons.slice(1).map(lesson=>voiceAudioPath(lesson.audio,selectedVoice)),...lessons.slice(1).flatMap(lesson=>voices.filter(voice=>voice!==selectedVoice).map(voice=>voiceAudioPath(lesson.audio,voice)))];
+  preloadAudio(files.slice(0,6));
 }
 function nextLessonId(id){return curriculum.lessons[curriculum.lessons.findIndex(l=>l.id===id)+1]?.id;}
 function dateLabel(){return new Intl.DateTimeFormat('zh-CN',{month:'long',day:'numeric',weekday:'long'}).format(new Date());}
@@ -58,6 +64,8 @@ function shell(content){
   bindAvatar();
 }
 function bindAvatar(){document.querySelectorAll('#avatar-open,[data-edit-avatar]').forEach(button=>button.onclick=()=>{stopPlayback();openAvatarPicker({notify:toast,onSave:()=>document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup())});});}
+function voiceAuditionEntry(){return `<button class="voice-audition-entry" data-voice-audition><span aria-hidden="true">🎭</span><span><strong>配音对照试听</strong><small>Pip 已加入整本小书 · 保留其他伙伴的样音对照</small></span>${icon('speaker')}</button>`;}
+function bindVoiceAudition(){document.querySelectorAll('[data-voice-audition]').forEach(button=>button.onclick=()=>{stopPlayback();openVoiceAudition();});}
 function navItems(){return [['home','home','今日练习'],['library','book','短句小书'],['garden','sprout','成长花园']].map(([id,i,label])=>`<button data-go="${id}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}>${icon(i)}<span>${label}</span></button>`).join('');}
 function navigate(next){stopPlayback();resetRecording();session=null;view=next;location.hash=next;render();window.scrollTo({top:0,behavior:'instant'});}
 function render(){if(view==='home')renderHome();else if(view==='library')renderLibrary();else if(view==='garden')renderGarden();else if(view==='parent')renderParent();else renderHome();}
@@ -107,23 +115,42 @@ function showAudioState(next,label='',lessonId=null){
   document.querySelectorAll('[data-voice]').forEach(el=>el.classList.toggle('voice-speaking',next==='playing'&&el.dataset.voice===selectedVoice&&!!lessonId));
   if(next==='loading')audioWaitTimer=setTimeout(()=>{document.querySelectorAll('.audio-status[data-audio-state="loading"] .audio-status-copy').forEach(el=>el.textContent='正在把声音接过来，等一下就好，不用再点哦');},2500);
 }
-function stopPlayback(){audioGeneration++;stopAudio();audioSequence=Promise.resolve();showAudioState('idle');}
+function stopPlayback(){audioGeneration++;activeCourseAudio=null;stopAudio();audioSequence=Promise.resolve();showAudioState('idle');}
 function queueAudio(items){
   const generation=audioGeneration;
   audioSequence=audioSequence.catch(()=>{}).then(async()=>{
     for(const item of items){
       if(generation!==audioGeneration)return;
-      const audio=await playFile(item.file,item.slow,status=>{if(generation===audioGeneration)showAudioState(status,item.label||'正在听你的声音',item.lessonId);});
+      const rate=item.lessonId?(item.temporarySlow?.8:selectedRate):1;
+      const current=item.lessonId?{...item,rate}:null;
+      activeCourseAudio=current;
+      const audio=await playFile(item.file,rate,status=>{
+        if(generation!==audioGeneration)return;
+        const label=current?courseAudioLabel(current):item.label||'正在听你的声音';
+        showAudioState(status,label,item.lessonId);
+        if(['idle','error'].includes(status)&&activeCourseAudio===current)activeCourseAudio=null;
+      });
       if(!audio||generation!==audioGeneration)return;
       if(!audio.ended)await new Promise(resolve=>{const done=()=>{audio.removeEventListener('ended',done);audio.removeEventListener('pause',done);audio.removeEventListener('error',done);resolve();};audio.addEventListener('ended',done);audio.addEventListener('pause',done);audio.addEventListener('error',done);});
     }
   }).catch(()=>{if(generation===audioGeneration){showAudioState('error');toast('声音暂时没有打开，请联网保存离线声音后再试。');}});
   return audioSequence;
 }
-function playLesson(l,slow=false){if(!l)return;if(recordPending||recording){toast('先结束录音，再来听示范吧。');return;}const file=voiceAudioPath(l.audio,selectedVoice);if(isAudioLoading(file,slow))return audioSequence;stopPlayback();return queueAudio([{file,slow,lessonId:l.id,label:`${VOICES.find(v=>v.id===selectedVoice).name}${slow?' 慢慢说':' 正在说'} · ${l.english}`}]);}
-function voiceButtons(){return `<div class="voice-buttons" role="group" aria-label="选择示范声音">${VOICES.map(voice=>`<button class="voice-button ${selectedVoice===voice.id?'selected':''}" data-voice="${voice.id}" aria-pressed="${selectedVoice===voice.id}"><span class="voice-face" aria-hidden="true">${voice.id==='aiden'?'🐻':'🦊'}</span><span>${voice.name}<small>${voice.id==='aiden'?'小熊伙伴':'小狐伙伴'}</small></span><span class="voice-tick" aria-hidden="true">✓</span></button>`).join('')}</div>`;}
+function courseAudioLabel(item){return `${VOICES.find(voice=>voice.id===item.voice)?.name||'伙伴'} ${item.temporarySlow?'临时慢听 0.8×':`${item.rate}× 正在说`} · ${item.english}`;}
+function playLesson(l,slow=false){if(!l)return;if(recordPending||recording){toast('先结束录音，再来听示范吧。');return;}const file=voiceAudioPath(l.audio,selectedVoice),rate=slow?.8:selectedRate;if(isAudioLoading(file,rate))return audioSequence;stopPlayback();return queueAudio([{file,temporarySlow:slow,lessonId:l.id,voice:selectedVoice,english:l.english}]);}
+function voiceButtons(){return `<div class="voice-buttons" role="group" aria-label="选择示范声音">${VOICES.map(voice=>`<button class="voice-button ${selectedVoice===voice.id?'selected':''}" data-voice="${voice.id}" aria-pressed="${selectedVoice===voice.id}" aria-label="${voice.name} ${voice.nickname}"><span class="voice-face" aria-hidden="true">${voice.icon}</span><span>${voice.name}<small>${voice.nickname}</small></span><span class="voice-tick" aria-hidden="true">✓</span></button>`).join('')}</div>`;}
+function courseRateButtons(){return `<div class="course-speed"><div class="course-rate-buttons" role="group" aria-label="示范语速">${PLAYBACK_RATES.map(rate=>`<button type="button" data-course-rate="${rate}" aria-pressed="${rate===selectedRate}" aria-label="${rate}倍速，${PLAYBACK_RATE_LABELS[rate]}"><strong>${rate}×</strong><span>${PLAYBACK_RATE_LABELS[rate]}</span></button>`).join('')}</div><p class="course-rate-note" data-course-rate-note role="status" aria-live="polite">${selectedRate}× ${PLAYBACK_RATE_LABELS[selectedRate]} · 点一下换语速</p></div>`;}
+function syncCourseRates(){document.querySelectorAll('[data-course-rate]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.courseRate)===selectedRate)));}
+function applyCourseRate(rate,persist=true){
+  selectedRate=rate;const saved=!persist||saveCourseRate(rate);
+  let applied=false;
+  if(activeCourseAudio){applied=setPlaybackRate(rate,activeCourseAudio.file);if(applied){activeCourseAudio.rate=rate;activeCourseAudio.temporarySlow=false;showAudioState(document.body.dataset.playing,courseAudioLabel(activeCourseAudio),activeCourseAudio.lessonId);}}
+  syncCourseRates();
+  document.querySelectorAll('[data-course-rate-note]').forEach(note=>note.textContent=`${rate}× ${PLAYBACK_RATE_LABELS[rate]} · ${applied?'已即时切换，音调不变':'已选好，下次听示范就用这个语速'}${saved?'':'；本机暂时无法记住语速'}`);
+}
+function bindCourseRates(){document.querySelectorAll('[data-course-rate]').forEach(button=>button.onclick=()=>applyCourseRate(Number(button.dataset.courseRate)));}
 function syncVoiceSelectors(){document.querySelectorAll('[data-voice]').forEach(button=>{const active=button.dataset.voice===selectedVoice;button.classList.toggle('selected',active);button.setAttribute('aria-pressed',String(active));});}
-function bindVoiceSelectors(){document.querySelectorAll('[data-voice]').forEach(button=>button.onclick=()=>{if(recordPending||recording){toast('先结束录音，再来换伙伴吧。');return;}const next=normalizeVoice(button.dataset.voice);selectedVoice=next;syncVoiceSelectors();if(!saveVoicePreference(next))toast('音色已切换，但本机暂时无法保存偏好。');const l=session?sessionCurrent():lessonById(daily().newLessonId)||curriculum.lessons[0];if(session)revealHint(l);playLesson(l);});}
+function bindVoiceSelectors(previewLesson=null){document.querySelectorAll('.voice-buttons').forEach(group=>{if(!group.parentElement.querySelector('.course-speed'))group.insertAdjacentHTML('afterend',courseRateButtons());});bindCourseRates();document.querySelectorAll('[data-voice]').forEach(button=>button.onclick=()=>{if(recordPending||recording){toast('先结束录音，再来换伙伴吧。');return;}const next=normalizeVoice(button.dataset.voice);selectedVoice=next;syncVoiceSelectors();if(!saveVoicePreference(next))toast('音色已切换，但本机暂时无法保存偏好。');const l=session?sessionCurrent():previewLesson||lessonById(daily().newLessonId)||curriculum.lessons[0];if(session)revealHint(l);playLesson(l);});}
 function playPrompt(name){if(recordPending||recording)return;stopPlayback();return queueAudio([{file:`audio/ui/${name}.mp3`,label:'正在听玩法提示'}]);}
 function guideStage(){if(session&&['listen','choose'].includes(session.step))playLesson(sessionCurrent());}
 function startNewLesson(){const p=daily();if(!p.newLessonId||p.newDone)return;session={ids:[p.newLessonId],index:0,newId:p.newLessonId,day:dayKey(),step:'listen',preview:false,choice:null,revealed:false};renderSession();guideStage();}
@@ -176,7 +203,7 @@ function renderSession(){
   window.scrollTo({top:0,behavior:'instant'});
 }
 function phraseMarkup(l){return `<p class="practice-english" lang="en">${esc(l.english)}</p><p class="practice-chinese">${esc(l.chinese)}</p>`;}
-function listeningButtons(){return `<div class="listen-buttons"><button class="primary" data-listen="normal">${icon('speaker')} 听一听</button><button class="secondary" data-listen="slow">慢一点听</button></div><p class="small-note">先听完整句，难处慢听，再回到原速跟着说。</p>`;}
+function listeningButtons(){return `<div class="listen-buttons"><button class="primary" data-listen="normal">${icon('speaker')} 听一听</button><button class="secondary" data-listen="slow">临时慢听 0.8×</button></div><p class="small-note">“听一听”使用上方语速；临时慢听只放慢这一次。</p>`;}
 function practiceBody(l){
   if(session.step==='listen')return `<div class="phrase-box">${phraseMarkup(l)}</div>${listeningButtons()}<div class="action-note"><span>一起做一做</span><p>${esc(l.action)}</p></div><button class="primary next-button" data-step="choose">听过啦，来试试 ${icon('arrow')}</button>`;
   if(session.step==='remember')return `<div class="recall-box"><p class="practice-chinese">${esc(l.chinese)}</p><p>先看图，试着自己说出来。</p></div><button class="primary next-button" data-step="speak">我来说一说 ${icon('mic')}</button><button class="text-button centered" data-step="listen">还想不起来，听听提示</button>`;
@@ -238,6 +265,8 @@ function renderCompletion(){
 function renderLibrary(){
   const filtered=curriculum.lessons.filter(l=>(libraryTheme==='all'||l.theme===libraryTheme)&&(!search||`${l.english} ${l.chinese}`.toLowerCase().includes(search.toLowerCase())));
   shell(`<section class="page-intro"><span class="eyebrow">MY LITTLE PHRASE BOOK</span><h1>短句小书</h1><p>好奇哪一句，就打开听听。自由练习不会改变每日复习计划。</p></section><div class="library-toolbar"><div class="theme-filters"><button data-filter="all" class="${libraryTheme==='all'?'selected':''}">全部短句</button>${curriculum.themes.map(t=>`<button data-filter="${esc(t.id)}" class="${libraryTheme===t.id?'selected':''}">${esc(t.icon)} ${esc(t.name)}</button>`).join('')}</div><label class="search-label"><span>找一句话</span><input id="phrase-search" type="search" placeholder="中文或英文都可以" value="${esc(search)}" maxlength="60"></label></div><p class="results-count">${filtered.length} 个短句 · ${stats().learnedCount} 个已学习</p><div class="phrase-grid">${filtered.map(l=>`<button class="phrase-tile" data-preview="${esc(l.id)}"><div class="tile-top"><span>${lessonIllustration(l.id)}</span><small>${state.cards[l.id]?'🌱 学过啦':esc(themeById(l.theme).name)}</small></div><strong lang="en">${esc(l.english)}</strong><span class="tile-translation">${esc(l.chinese)}</span><div class="tile-bottom"><span>听一听 · 说一说</span>${icon('arrow')}</div></button>`).join('')}</div>${!filtered.length?'<div class="empty-state">这次没有找到。换一个词试试吧。</div>':''}`);
+  document.querySelector('.library-toolbar').insertAdjacentHTML('beforebegin',`<section class="library-voice-controls" aria-label="小书的声音和语速">${voiceButtons()}${audioStatusMarkup()}</section>`);
+  bindVoiceSelectors(filtered[0]||curriculum.lessons[0]);
   document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{libraryTheme=b.dataset.filter;renderLibrary();});
   document.querySelector('#phrase-search').oninput=e=>{const pos=e.target.selectionStart;search=e.target.value;renderLibrary();const input=document.querySelector('#phrase-search');input.focus();try{input.setSelectionRange(pos,pos);}catch{}};
   document.querySelectorAll('[data-preview]').forEach(b=>{
@@ -282,15 +311,17 @@ function renderGarden(){
  });
 }
 function renderParent(){
-  shell(`<section class="page-intro"><span class="eyebrow">A LITTLE HELP FROM GROWN-UPS</span><h1>陪孩子，慢慢说</h1><p>不用上课一样认真。每天留一点时间，让一句英语走进生活。</p></section><div class="parent-grid"><section class="settings-card"><h2>我们的练习习惯</h2><label class="field">孩子的小昵称<input id="nickname" value="${esc(state.settings.nickname)}" maxlength="32" autocomplete="off"><small>最多 16 个字符，仅保存在这台设备，不需要真实姓名。</small></label><label class="field">每天最多复习几句<select id="daily-reviews">${Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}" ${state.settings.dailyReviews===n?'selected':''}>${n} 句${n===5?'（默认）':''}</option>`).join('')}</select><small>每天 1 个新短句，旧短句少量复习。累了就休息。</small></label><div class="field"><span>点名字，换一个伙伴</span>${voiceButtons()}${audioStatusMarkup()}<small>两位伙伴各有完整 120 句。点名字马上试听，偏好自动保存在这台设备。</small></div><div class="avatar-settings"><span data-user-avatar>${avatarMarkup()}</span><button class="secondary" data-edit-avatar>换动物头像 / 自拍</button><small>照片只留在这台设备，不随学习进度备份。</small></div><button class="primary" id="save-settings">保存设置 ${icon('check')}</button></section>
-  <section class="settings-card"><h2>把小芽放进口袋</h2><p>手机和电脑打开同一个网址即可使用。iPhone：Safari 分享 → 添加到主屏幕；Android：浏览器菜单 → 安装应用 / 添加到主屏幕。</p><button class="secondary" id="install-app">${icon('download')} 添加到主屏幕</button><hr><h3>下载离线声音</h3><p>Aiden 和 Ryan 两套各 120 句，共 240 段英文示范，另有 11 段可手动点播的中文帮助。进入课程直接听英文。一次保存后，两种声音都能离线练习。</p><button class="primary" id="offline-audio" ${offlineBusy?'disabled':''}>${icon('download')} ${offlineBusy?'正在保存声音…':'保存全部离线声音'}</button><p id="offline-status" class="small-note" aria-live="polite">正在检查本机离线内容…</p>${waitingSW?'<button class="secondary" id="update-app">新版本已准备好，重新打开</button>':''}</section>
+  shell(`<section class="page-intro"><span class="eyebrow">A LITTLE HELP FROM GROWN-UPS</span><h1>陪孩子，慢慢说</h1><p>不用上课一样认真。每天留一点时间，让一句英语走进生活。</p></section><div class="parent-grid"><section class="settings-card"><h2>我们的练习习惯</h2><label class="field">孩子的小昵称<input id="nickname" value="${esc(state.settings.nickname)}" maxlength="32" autocomplete="off"><small>最多 16 个字符，仅保存在这台设备，不需要真实姓名。</small></label><label class="field">每天最多复习几句<select id="daily-reviews">${Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}" ${state.settings.dailyReviews===n?'selected':''}>${n} 句${n===5?'（默认）':''}</option>`).join('')}</select><small>每天 1 个新短句，旧短句少量复习。累了就休息。</small></label><div class="field"><span>点名字，换一个伙伴</span>${voiceButtons()}${audioStatusMarkup()}<small>${VOICES.length} 位伙伴各有完整 ${curriculum.lessons.length} 句。Pip 泡泡猫已加入；点名字马上试听，声音和语速会记在这台设备。</small></div><div class="avatar-settings"><span data-user-avatar>${avatarMarkup()}</span><button class="secondary" data-edit-avatar>换动物头像 / 自拍</button><small>照片只留在这台设备，不随学习进度备份。</small></div><button class="primary" id="save-settings">保存设置 ${icon('check')}</button></section>
+  <section class="settings-card"><h2>把小芽放进口袋</h2><p>手机和电脑打开同一个网址即可使用。iPhone：Safari 分享 → 添加到主屏幕；Android：浏览器菜单 → 安装应用 / 添加到主屏幕。</p><button class="secondary" id="install-app">${icon('download')} 添加到主屏幕</button><hr><h3>下载离线声音</h3><p>${VOICES.map(voice=>voice.name).join("、")} 各有 ${curriculum.lessons.length} 句，共 ${VOICES.length*curriculum.lessons.length} 段英文示范，另有 ${UI_PROMPTS.length} 段可手动点播的中文帮助。一次保存后，所有正式伙伴都能离线练习，并保留配音对照样音。</p><button class="primary" id="offline-audio" ${offlineBusy?'disabled':''}>${icon('download')} ${offlineBusy?'正在保存声音…':'保存全部离线声音'}</button><p id="offline-status" class="small-note" aria-live="polite">正在检查本机离线内容…</p>${waitingSW?'<button class="secondary" id="update-app">新版本已准备好，重新打开</button>':''}</section>
   <section class="settings-card"><h2>进度备份与换设备</h2><p><strong>手机和电脑的进度分别保存在各自浏览器，不会自动同步。</strong>在旧设备导出，再把文件传到新设备导入即可。清理浏览器数据或卸载可能清除进度，请定期备份。</p><div class="button-row"><button class="secondary" id="export-progress">${icon('download')} 导出进度</button><button class="secondary" id="import-progress">导入进度</button></div><input id="import-file" type="file" accept="application/json,.json" hidden><p id="import-status" class="small-note" aria-live="polite"></p>${!storageOK?'<button class="secondary" id="export-raw">导出原始记录</button>':''}</section>
   <section class="settings-card"><h2>怎样陪伴更有效</h2><ol class="parent-tips"><li><strong>听懂场景。</strong>先听示范，做动作、指物品，不要求识字。</li><li><strong>留出回想。</strong>复习时等几秒再提示，帮孩子找回这句话。</li><li><strong>一起开口。</strong>录音可选，只用于回听；不做自动评分。</li><li><strong>生活里再用。</strong>喝水、出门、玩玩具时，自然地说一次。</li></ol><p class="small-note">“自己会说”由亲子观察填写，不等于语音识别判定。正确选择图片也不等于会说。4—7 岁建议家长陪伴。</p></section>
-  <section class="settings-card wide"><h2>关于英语小芽</h2><p>内置 120 个生活短句 · 无广告 · 无付费 API · 无账户 · 无录音上传。示范音频为本地合成语音，不是真人录音。录音离开练习卡即删除。</p><p>间隔复习结合主动回想，有助于安排练习；本工具不保证特定学习效果，也不能替代真实交流。完成全部新句后，已有短句仍会继续复习。</p><div class="button-row"><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">家长阅读：幼儿的间隔回想研究 ↗</a><button class="text-button danger" id="reset-progress">重新开始学习</button></div><p class="small-note">v1.2.1 · 静态网页应用。网站托管方会收到正常访问请求；学习进度、头像照片和录音不发送给我们。</p></section></div>`);
+  <section class="settings-card wide"><h2>关于英语小芽</h2><p>内置 120 个生活短句 · 无广告 · 无付费 API · 无账户 · 无录音上传。示范音频为本地合成语音，不是真人录音。录音离开练习卡即删除。</p><p>间隔复习结合主动回想，有助于安排练习；本工具不保证特定学习效果，也不能替代真实交流。完成全部新句后，已有短句仍会继续复习。</p><div class="button-row"><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">家长阅读：幼儿的间隔回想研究 ↗</a><button class="text-button danger" id="reset-progress">重新开始学习</button></div><p class="small-note">v1.3.0 · 静态网页应用。网站托管方会收到正常访问请求；学习进度、头像照片和录音不发送给我们。</p></section></div>`);
   const lastCheckup=Object.entries(state.checkups||{}).sort(([a],[b])=>b.localeCompare(a))[0];
   if(lastCheckup){const [date,results]=lastCheckup;document.querySelector('.parent-grid').insertAdjacentHTML('beforeend',`<section class="settings-card"><h2>最近一次记忆小游戏</h2><p>${date} · ${results.length} 句</p><p>听懂并首次选对 ${results.filter(result=>result.meaning).length} / ${results.length}<br>独立说出 ${results.filter(result=>result.spoken==='good').length} / ${results.length}</p><small>先看图主动回忆，再听音选图。开口由家长观察，不是自动发音评分。</small></section>`);}
   bindVoiceSelectors();
   const nickname=document.querySelector('#nickname');
+  document.querySelector('.settings-card .course-speed').insertAdjacentHTML('afterend',voiceAuditionEntry());
+  bindVoiceAudition();
   warmLessons([daily().newLessonId||curriculum.lessons[0].id]);
   const limitNickname=()=>{const characters=[...nickname.value];if(characters.length>16)nickname.value=characters.slice(0,16).join('');};
   nickname.addEventListener('input',event=>{if(!event.isComposing)limitNickname();});
@@ -304,7 +335,7 @@ function renderParent(){
   const files=englishAudioFiles(curriculum.lessons);
   const offlineStatus=document.querySelector('#offline-status'),downloadGeneration=offlineDownloadGeneration;
   if(offlineBusy)offlineStatus.textContent='正在保存离线声音，请稍候…';
-  else cachedAudioCount(files).then(n=>{if(offlineStatus.isConnected&&downloadGeneration===offlineDownloadGeneration)offlineStatus.textContent=`本机已保存 ${n} / ${files.length} 段英文示范（两套各 120 句）${n===files.length?' · 可离线播放':''}。浏览器清理缓存后需重新保存。`;}).catch(()=>{});
+  else cachedAudioCount(files).then(n=>{if(offlineStatus.isConnected&&downloadGeneration===offlineDownloadGeneration)offlineStatus.textContent=`本机已保存 ${n} / ${files.length} 段英文示范（${VOICES.length} 位伙伴各 ${curriculum.lessons.length} 句）${n===files.length?' · 可离线播放':''}。浏览器清理缓存后需重新保存。`;}).catch(()=>{});
   document.querySelector('#export-progress').onclick=()=>downloadJSON({app:'english-sprout',version:1,exportedAt:new Date().toISOString(),state},`英语小芽-进度-${dayKey()}.json`);
   document.querySelector('#export-raw')?.addEventListener('click',()=>{try{downloadJSON({raw:localStorage.getItem(KEY)},`英语小芽-原始记录-${dayKey()}.json`);}catch{toast('当前浏览器无法读取存储，请先保留此页面。');}});
   document.querySelector('#import-progress').onclick=()=>document.querySelector('#import-file').click();
@@ -320,9 +351,14 @@ async function downloadOffline(){
   try{
     await Promise.race([navigator.serviceWorker.ready,new Promise((_,rej)=>setTimeout(()=>rej(new Error('离线服务尚未准备好，请联网刷新后再试。')),12000))]);
     const ui=UI_PROMPTS.map(n=>`audio/ui/${n}.mp3`);
-    await cacheAllAudio([...englishAudioFiles(curriculum.lessons),...ui],(n,total)=>update(`正在保存声音 ${n} / ${total}，请保持页面打开…`));
+    const response=await fetch('./data/character-voices.json');
+    if(!response.ok)throw new Error('新伙伴试听还没下载好，请联网后再试。');
+    const catalog=await response.json(),samples=[...new Set(catalog.candidates.flatMap(candidate=>Object.values(candidate.samples)))];
+    if(samples.some(file=>!/^audio\/characters\/[a-z-]+\/[a-z]+-\d{2}\.mp3$/.test(file)))throw new Error('试听清单暂时无法读取，请更新后再试。');
+    const courseFiles=englishAudioFiles(curriculum.lessons),baseFiles=[...courseFiles,...ui],baseSet=new Set(baseFiles),extraSamples=samples.filter(file=>!baseSet.has(file)),allFiles=[...new Set([...baseFiles,...samples])];
+    await cacheAllAudio(allFiles,(n,total)=>update(`正在保存声音 ${n} / ${total}，请保持页面打开…`));
     if(navigator.storage?.persist)await navigator.storage.persist().catch(()=>false);
-    update('两套示范与中文引导共 251 段声音已保存，可以离线练习。清理浏览器数据后需重新下载。');toast('离线小书准备好了！');
+    update(`共 ${allFiles.length} 段声音已保存：${courseFiles.length} 段英文示范、${ui.length} 段中文帮助、${extraSamples.length} 段额外对照样音。可以离线练习，清理浏览器数据后需重新下载。`);toast('离线小书准备好了！');
   }catch(e){update(e.message||'没有全部保存成功，已保存的会保留，可以稍后继续。');}
   finally{offlineBusy=false;const b=document.querySelector('#offline-audio');if(b)b.disabled=false;}
 }
@@ -341,9 +377,10 @@ window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(['ho
 window.addEventListener('online',()=>{if(!session)render();});window.addEventListener('offline',()=>{if(!session)render();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();if(recording)stopRecording();}else if(!session)render();});
 window.addEventListener('pagehide',()=>{stopPlayback();resetRecording();});
-window.addEventListener('storage',e=>{if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
+window.addEventListener('storage',e=>{if(e.key===COURSE_RATE_KEY){applyCourseRate(readCourseRate(),false);return;}if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
 async function init(){
   try{const response=await fetch('./data/curriculum.json');if(!response.ok)throw new Error('课程读取失败');curriculum=await response.json();state=load();view=['library','garden','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';render();
+    if(new URLSearchParams(location.search).get('audition')==='1')openVoiceAudition();
     if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js').then(reg=>{if(reg.waiting)waitingSW=reg.waiting;reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){waitingSW=w;toast('小芽有新版本啦，可在家长页更新。');}});});}).catch(()=>toast('离线功能暂未准备好，联网练习仍可使用。'));}
   }catch{app.innerHTML='<div class="boot"><span>🌱</span><h1>小芽还没准备好</h1><p>请检查网络，重新打开。如果尚未下载离线内容，需要先联网一次。</p><button class="primary" id="retry">重新打开</button></div>';document.querySelector('#retry').onclick=()=>location.reload();}
 }
