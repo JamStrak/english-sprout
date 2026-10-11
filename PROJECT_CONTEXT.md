@@ -6,7 +6,9 @@
 
 适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。用户最新决定：只采纳第四位女生 Pip 泡泡猫，补齐完整课程；原 Aiden / Ryan 保留，其他三位新候选留待后续版本。不要继续自动扩充其他角色。
 
-当前 v1.3.0，课程 1.1，学习状态 v1。本地构建 a1b9a11f78ef 已完成验证，正在按此前授权发布。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。发布成功后补充该次提交、线上构建及验证结果。
+已发布 v1.3.0，课程 1.1，学习状态 v1。正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。代码提交 845b16b30fc7f573b0c555bf7851e9153b00bb8b；GitHub Pages 任务 38115273444 成功。线上构建 17e9beb9937e，本地构建 a1b9a11f78ef（Git 换行规范化导致哈希不同，已按提交内容复算并验证线上一致）。
+
+旧页面如仍显示两个角色，在“家长”点“新版本已准备好，重新打开”即可应用等待中的更新；不清除用户学习记录。
 
 本地 http://127.0.0.1:24736/ ，普通入口“启动英语小芽.vbs”。家长页有“配音对照试听”，直达 http://127.0.0.1:24736/?audition=1 。
 
@@ -43,6 +45,7 @@
 - npm test：109/109；npm run build 成功。
 - 完整浏览器：50/50，包含三角色真实 MP3、十二主题 Pip、即时变速不重开播放、录音/中文帮助原速、383 段离线下载后重载、学习记录/复习/花园/头像、320/390px 布局。证据 test-results/local-v130-pip，摘要 docs/UI_QA_local-v130-pip.md。
 - 试听专项：10/10。16 段样音、原双声对照、即时变速、离线重载、失败重试、320px 和关闭/导航停止均通过。证据 test-results/audition-local。
+- 正式站专项 tests/release-pip.cjs 通过：线上版本/构建与 120 条公开 manifest 完全一致，三角色真实播放、Pip 五句抽测、0.75× / 1×、偏好保存及断网重载通过，无页面错误，学习记录不变。证据 test-results/live-pip/results.json。
 - 制作闸门 Python 16/16、两脚本编译通过；13 个句子返工 19 次。全部成品哈希、原 251 段和四段已选样音保留检查通过，GPU 锁已释放。
 - 制作证据：test-results/pip-course-20261011/final-verification.json；原始 ASR test-results/speech-check/pip-course-20261011.json。单句交叉报告、未通过的尝试均保留本机，不公开。
 

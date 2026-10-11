@@ -49,6 +49,6 @@ python launcher.py --no-browser
 - [口语检查与候选声音试听](docs/VOICE_REVIEW.md)
 - [复习规则与状态格式](docs/LEARNING.md)
 - [学习设计依据](docs/DESIGN.md)
-- [界面验证](docs/UI_QA.md)
+- [界面验证](docs/UI_QA_local-v130-pip.md)
 
 项目不会上传学习进度或麦克风录音。托管平台仍会收到网站访问请求。公开仓库不包含实际孩子资料、学习备份或录音。
