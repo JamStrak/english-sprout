@@ -88,7 +88,7 @@ function cloneState(state) {
       results: entry.results.map((result) => ({ ...result })),
     }])),
     checkups: Object.fromEntries(Object.entries(state.checkups||{}).map(([day, results])=>[day,results.map(result=>({...result}))])),
-    garden: state.garden?{version:state.garden.version,actions:state.garden.actions.map(action=>({...action}))}:createGarden(),
+    garden: state.garden?{...state.garden,actions:state.garden.actions.map(action=>({...action}))}:createGarden(),
   };
 }
 

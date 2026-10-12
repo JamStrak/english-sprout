@@ -99,7 +99,7 @@ async function storedAudio(page,file){
       assert.equal(await page.locator('.focus-home').getAttribute('data-next-kind'),'learn');assert.deepEqual(await page.evaluate(()=>qa.plays),[]);
       const homeGeometry=await geometry(page),before=await page.evaluate(()=>qa.plays.length);await page.locator('#hero-start').click();const audio=await played(page,before,'/audio/hello-01.mp3');
       await page.locator('button[data-step="choose"]').click();await page.locator(`[data-choice="${course.lessons[0].answerIndex}"]`).click();await page.locator('#quiz-next').click();await page.locator('[data-rating="good"]').click();
-      assert.equal(await page.locator('.completion').getAttribute('data-next-kind'),'garden');await page.locator('#completion-next').click();await page.locator('[data-garden-action="plant"]').click();
+      assert.equal(await page.locator('.completion').getAttribute('data-next-kind'),'garden');await page.locator('#completion-next').click();await page.locator('[data-garden-tool="plant"]').click();await page.locator('[data-garden-drop]').click();
       const state=await saved(page);assert.equal(Object.keys(state.cards).length,1);assert.equal(state.cards['hello-01'].lastReviewed,'2026-10-12');assert.equal(state.garden.actions.length,1);assert.equal(state.garden.actions[0].type,'plant');
       const gardenGeometry=await geometry(page);await page.screenshot({path:path.join(output,tag+'-legacy-planted.png')});await clean(f);return{homeGeometry,gardenGeometry,audio};
     });
