@@ -4,7 +4,7 @@
 
 ## 当前交付
 
-v1.4.1 自动更新已实现，本地构建 `63eedd283640`，全部检查通过，正在发布：移除家长手动更新按钮，新版完整缓存后自动激活，各页面在空闲时应用；练习、录音、奖励展示和编辑不被刷新打断。原已打开的 v1.4.0 页面在新 worker 完整下载并激活后，普通刷新或重新打开进入新机制；此前尚未发现更新时，首次刷新可能只触发下载，不保证一次刷新即迁移。实现 src/auto-update.js、sw.template.js、scripts/build.mjs，设计边界见 docs/DESIGN.md「自动更新」。
+v1.4.1 自动更新已发布：代码 `6ce5a32fcc2806fe5dbc604c9660c1d274bf975f`，Pages 任务 `38210185440` 成功；线上构建 `32c0fc1b4d55`，本地 `63eedd283640`（换行规范化差异，已按 Git 字节复算并核对）。移除家长手动更新按钮，新版完整缓存后自动激活，各页面在空闲时应用；练习、录音、奖励展示和编辑不被刷新打断。原已打开的 v1.4.0 页面在新 worker 完整下载并激活后，普通刷新或重新打开进入新机制；此前尚未发现更新时，首次刷新可能只触发下载，不保证一次刷新即迁移。实现 src/auto-update.js、sw.template.js、scripts/build.mjs，设计边界见 docs/DESIGN.md「自动更新」。
 
 适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。上一版 v1.4.0 手机单屏改版，代码提交 `3d969a5a402b1927447892783f2634f947f3c484`；GitHub Pages 任务 `38208510562` 成功，正式站构建 `ac13af5b07c0` 已验证。本地构建 `57a8f28a8efd` 与线上哈希不同源于 Git 换行规范化，已按提交字节复算核对。课程 1.1、学习状态 v1、三套完整配音和声音缓存 v5 均保持不变。
 
@@ -45,7 +45,7 @@ v1.4.1 自动更新已实现，本地构建 `63eedd283640`，全部检查通过�
 
 ## 当前验证
 
-v1.4.1 / `63eedd283640`：npm test 123/123、构建成功；tests/browser.cjs 36/36，摘要 docs/UI_QA_local-v141-auto-update.md；tests/update-browser.cjs 12/12，真实 Edge Service Worker 在隔离服务器切换版本，验证首次不刷新、空闲仅刷新一次、录音授权/录音/回听与完成页保留、草稿/头像保留、多标签分别更新、后台与播放暂缓、完整缓存失败与旧 HTML 拒绝激活、服务器真实断网后恢复、存储失败保护，以及新 worker 激活后旧 v1.4 普通刷新迁移。证据 test-results/automatic-updates/results.json；本机测试资料不发布。
+v1.4.1 / `63eedd283640`：npm test 123/123、构建成功；tests/browser.cjs 36/36，摘要 docs/UI_QA_local-v141-auto-update.md；tests/update-browser.cjs 12/12，真实 Edge Service Worker 在隔离服务器切换版本，验证首次不刷新、空闲仅刷新一次、录音授权/录音/回听与完成页保留、草稿/头像保留、多标签分别更新、后台与播放暂缓、完整缓存失败与旧 HTML 拒绝激活、服务器真实断网后恢复、存储失败保护，以及新 worker 激活后旧 v1.4 普通刷新迁移。证据 test-results/automatic-updates/results.json；本机测试资料不发布。正式站 tests/release-focus.cjs 通过：v1.4.1 和构建标记一致，三声真实播放、Pip 0.9×、复习→新学→花园、断网重载后实际播放、进度正确、无页面异常，家长页无更新按钮；明细 test-results/live-v141/results.json。
 
 以下为上一轮 v1.4.0 单屏改版的验证，布局本轮未改变。全部本地浏览器结果基于 v1.4.0 / `57a8f28a8efd`：
 
