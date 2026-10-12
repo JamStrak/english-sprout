@@ -1,15 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {ANIMALS,AVATAR_STORAGE_KEY,MAX_AVATAR_BYTES,MAX_PHOTO_BYTES,validateAvatarRecord,readAvatar,saveAvatar,validatePhotoFile,cropGeometry,animalSvg,avatarMarkup} from '../src/avatars.js';
 
 const store = initial => {
   const map=new Map(Object.entries(initial||{}));
   return {getItem:key=>map.get(key)||null,setItem:(key,value)=>map.set(key,value),map};
 };
-test('six original animal avatars have bounded SVG markup and safe fallback',()=>{
+test('six approved preset artworks retain animal IDs and separate safe selfie hoods',()=>{
   assert.equal(ANIMALS.length,6);assert.equal(new Set(ANIMALS.map(a=>animalSvg(a.id))).size,6);
-  for(const animal of ANIMALS){const svg=animalSvg(animal.id);assert.match(svg,/viewBox="0 0 200 200"/);assert.doesNotMatch(svg,/<script|<image|href=|url\(/);assert.match(avatarMarkup({version:1,kind:'preset',animal:animal.id}),/role="img"/);}
+  assert.deepEqual(ANIMALS.map(a=>a.id),['rabbit','cat','bear','fox','panda','frog']);
+  for(const animal of ANIMALS){
+    const svg=animalSvg(animal.id),markup=avatarMarkup({version:1,kind:'preset',animal:animal.id});
+    assert.match(svg,/viewBox="0 0 200 200"/);assert.doesNotMatch(svg,/<script|<image|href=|url\(/);
+    assert.match(markup,/role="img"/);assert.ok(markup.includes(`src="./avatars/${animal.id}.webp"`));assert.doesNotMatch(markup,/<svg/);
+    const asset=fs.readFileSync(new URL(`../public/avatars/${animal.id}.webp`,import.meta.url));
+    assert.equal(asset.toString('ascii',0,4),'RIFF');assert.equal(asset.toString('ascii',8,12),'WEBP');assert.ok(asset.length<100*1024,'Preset artwork should remain small enough to pre-cache.');
+  }
   assert.equal(animalSvg('unknown'),animalSvg('rabbit'));
+  assert.equal(avatarMarkup({version:1,kind:'preset',animal:'unknown'}),avatarMarkup({version:1,kind:'preset',animal:'rabbit'}));
   assert.doesNotMatch(avatarMarkup({version:1,kind:'photo',animal:'rabbit',image:'" onerror="evil()'}),/onerror/);
 });
 test('malformed records, active image formats and oversized photos are rejected',()=>{

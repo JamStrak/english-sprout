@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {ANIMALS} from '../src/avatars.js';
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root,'dist');
 // Only replace this project's generated dist directory.
@@ -13,6 +14,7 @@ await fs.copyFile(path.join(root,'index.html'),path.join(dist,'index.html'));
 await fs.writeFile(path.join(dist,'.nojekyll'),'');
 const core=['./','./index.html','./src/app.js','./src/styles.css','./src/learning.js','./src/media.js','./src/voices.js','./src/illustrations.js','./src/garden.js','./data/curriculum.json','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/phone-qr.png','./illustrations/garden.svg'];
 const hash=crypto.createHash('sha256');
+core.push(...ANIMALS.map(animal=>animal.image));
 core.push('./src/skins.js','./src/skin-picker.js','./src/skins.css');
 core.push('./src/focus.css','./src/journey.js','./src/auto-update.js');
 core.push('./src/interaction.css','./src/avatars.js','./src/avatars.css','./src/feedback.js','./src/feedback.css');
@@ -25,5 +27,5 @@ const index=await fs.readFile(path.join(dist,'index.html'),'utf8');
 await fs.writeFile(path.join(dist,'index.html'),index.replace('__APP_BUILD__',version));
 sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
 await fs.writeFile(path.join(dist,'sw.js'),sw);
-await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.5.0',build:version}));
-console.log('Built English Sprout 1.5.0 · '+version);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.5.1',build:version}));
+console.log('Built English Sprout 1.5.1 · '+version);

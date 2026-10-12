@@ -2,12 +2,12 @@ export const AVATAR_STORAGE_KEY = 'english-sprout-avatar-v1';
 export const MAX_AVATAR_BYTES = 200 * 1024;
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 export const ANIMALS = Object.freeze([
-  {id:'rabbit',name:'软软兔',color:'#ead6d2',background:'#f9e9dd'},
-  {id:'cat',name:'奶糖猫',color:'#eabb78',background:'#f9edce'},
-  {id:'bear',name:'抱抱熊',color:'#aa795d',background:'#e8efdf'},
-  {id:'fox',name:'小橘狐',color:'#dc8960',background:'#f9e6d8'},
-  {id:'panda',name:'糯米熊猫',color:'#fff9ec',background:'#e4eddf'},
-  {id:'frog',name:'泡泡蛙',color:'#98b783',background:'#e7f0e1'},
+  {id:'rabbit',name:'软软兔',image:'./avatars/rabbit.webp',color:'#ead6d2',background:'#f9e9dd'},
+  {id:'cat',name:'奶糖猫',image:'./avatars/cat.webp',color:'#eabb78',background:'#f9edce'},
+  {id:'bear',name:'抱抱熊',image:'./avatars/bear.webp',color:'#aa795d',background:'#e8efdf'},
+  {id:'fox',name:'小橘狐',image:'./avatars/fox.webp',color:'#dc8960',background:'#f9e6d8'},
+  {id:'panda',name:'糯米熊猫',image:'./avatars/panda.webp',color:'#fff9ec',background:'#e4eddf'},
+  {id:'frog',name:'泡泡蛙',image:'./avatars/frog.webp',color:'#98b783',background:'#e7f0e1'},
 ]);
 const DEFAULT_AVATAR = Object.freeze({version:1,kind:'preset',animal:'rabbit'});
 const validAnimal = id => ANIMALS.some(animal => animal.id === id);
@@ -67,10 +67,14 @@ export function animalSvg(id, frameOnly = false) {
   return `<svg class="animal-avatar-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${frameOnly ? '' : `<circle cx="100" cy="100" r="98" fill="${animal.background}"/><path d="m22 119 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z" fill="#e7c46b"/><circle cx="175" cy="99" r="4" fill="#d5b978"/>`}${ears[animal.id]}<path d="M100 32a76 76 0 1 0 0 152 76 76 0 1 0 0-152ZM100 64a49 49 0 1 1 0 98 49 49 0 1 1 0-98Z" fill="${animal.color}" fill-rule="evenodd"/>${spots}${face}<path d="M77 176q23-10 46 0l-4 15H81Z" fill="#6f956b"/><path d="M100 181v-13m0 8q-13 0-12-10 11-1 12 10m0-2q11-1 11-10-12 0-11 10" fill="#a7bd84" stroke="#527953" stroke-width="2" stroke-linecap="round"/></svg>`;
 }
 
+function presetPicture(id){
+  const animal=ANIMALS.find(item=>item.id===id)||ANIMALS[0];
+  return `<img class="avatar-preset-art" src="${animal.image}" alt="" width="384" height="384" decoding="async" draggable="false">`;
+}
 export function avatarMarkup(record = readAvatar()) {
   const avatar = validateAvatarRecord(record) || DEFAULT_AVATAR;
   const name = ANIMALS.find(animal => animal.id === avatar.animal).name;
-  return avatar.kind === 'photo' ? `<img class="animal-avatar-image" src="${avatar.image}" alt="我的${name}头像" width="96" height="96">` : `<span class="animal-avatar" role="img" aria-label="${name}头像">${animalSvg(avatar.animal)}</span>`;
+  return avatar.kind === 'photo' ? `<img class="animal-avatar-image" src="${avatar.image}" alt="我的${name}头像" width="96" height="96">` : `<span class="animal-avatar" role="img" aria-label="${name}头像">${presetPicture(avatar.animal)}</span>`;
 }
 
 let currentPicker = null;
@@ -92,6 +96,11 @@ export function openAvatarPicker({onSave = () => {}, notify = () => {}} = {}) {
     $('#avatar-current').hidden=editing;$('.avatar-photo-panel').hidden=step==='preset';
     canvas.hidden=!editing;$('#avatar-photo-tip').hidden=step!=='source';$('.avatar-file-actions').hidden=step!=='source';
     $('.avatar-adjustments').hidden=step!=='crop';$('.avatar-animal-grid').hidden=step!=='preset'&&step!=='hood';
+    // A preset is the approved artwork; a selfie thumbnail must show its actual photo hood.
+    dialog.querySelectorAll('[data-avatar-animal]').forEach(button=>{
+      const item=ANIMALS.find(a=>a.id===button.dataset.avatarAnimal);
+      button.innerHTML=`${step==='hood'?animalSvg(item.id):presetPicture(item.id)}<span>${item.name}</span><b aria-hidden="true">✓</b>`;
+    });
     $('.avatar-photo-footer').hidden=!editing;$('#avatar-delete-photo').hidden=step!=='source'||saved.kind!=='photo';
     $('#avatar-title').textContent={preset:'选一个动物伙伴',source:'选一张笑脸照片',hood:'戴哪个动物头套？',crop:'把小脸放中间'}[step];
     $('#avatar-step-label').textContent={preset:'这是我的小模样',source:'1 · 选照片',hood:'2 · 选头套',crop:'调好就能保存啦'}[step];

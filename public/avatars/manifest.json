@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "approvedOn": "2026-10-12",
+  "encoding": {
+    "format": "webp",
+    "quality": 88,
+    "alphaQuality": 100,
+    "width": 384,
+    "height": 384,
+    "resize": "proportional, full original canvas; no crop"
+  },
+  "assets": [
+    {
+      "id": "rabbit",
+      "file": "rabbit.webp",
+      "source": "design/avatar-candidates-20261012/01-rabbit.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 27438,
+      "hasAlpha": true,
+      "sha256": "dc7a1f930c4087e638c635f95ec19ecf342ec1b7d0f2fda7c949c98b48d44def",
+      "sourceSha256": "c8290ad0975f1d15aab56faacd33b9faf54a2b84bf963120d9d394ce1ed76ba1"
+    },
+    {
+      "id": "cat",
+      "file": "cat.webp",
+      "source": "design/avatar-candidates-20261012/02-cat.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 34316,
+      "hasAlpha": true,
+      "sha256": "d7f5477f14bab40a04aa27d0318a9e52a5de9485f8f298b56579a3c3304da2ca",
+      "sourceSha256": "3fb575715dc887e7f61326889bbe6c40060ce92fa4c95d32501880e2df84e4e7"
+    },
+    {
+      "id": "bear",
+      "file": "bear.webp",
+      "source": "design/avatar-candidates-20261012/03-bear.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 29684,
+      "hasAlpha": true,
+      "sha256": "1cb80409958519a06be07d90583882e90345b5fa75b1d0fd52e505d3c44310c2",
+      "sourceSha256": "c68d192a542737fa059a2c1e3d9c88a9402e709f3925c7cdef5314c88234ae02"
+    },
+    {
+      "id": "fox",
+      "file": "fox.webp",
+      "source": "design/avatar-candidates-20261012/04-fox.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 35934,
+      "hasAlpha": true,
+      "sha256": "b3252c3f04068cc17d1396abfb9c6279bc2f96d384a5593fab419d8ec5c7202a",
+      "sourceSha256": "e9da680156a2e54f973a7d96986aec88b4ecf9bc85ffbaaa0f68d99a1100b15a"
+    },
+    {
+      "id": "panda",
+      "file": "panda.webp",
+      "source": "design/avatar-candidates-20261012/05-panda.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 32824,
+      "hasAlpha": true,
+      "sha256": "af6e7a956927020f33cdfdc3652c9931f9e489788537cf60f85c42e0fd3e83a3",
+      "sourceSha256": "cfcbce4d0a6fa104b4f94df79f75ffd0ea19adc44cebcd3c9146acc90ececa20"
+    },
+    {
+      "id": "frog",
+      "file": "frog.webp",
+      "source": "design/avatar-candidates-20261012/06-frog.png",
+      "width": 384,
+      "height": 384,
+      "bytes": 21696,
+      "hasAlpha": true,
+      "sha256": "d31009fa9972f51bb247d5569b5aa660855c8ed20dc899f1930f9a6b90ac4d7f",
+      "sourceSha256": "6c944b7f062149d5a681666b5661d2494c6283869b05e5d59d9a0c1c1fb63a60"
+    }
+  ]
+}

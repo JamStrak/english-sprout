@@ -60,7 +60,9 @@ async function parent(p,panel){await go(p,'parent');if(await p.locator('[data-pa
 async function openLesson(p,id){await go(p,'library');if(!await p.locator('#phrase-search').isVisible())await p.locator('#search-open').click();await p.locator('#phrase-search').fill(curriculum.lessons.find(l=>l.id===id).english);await p.locator(`[data-preview="${id}"]`).click();}
 async function setState(p,value){await p.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key,value});await p.reload();}
 async function setRate(p,value){if(!await p.locator('[data-voice]:visible,[data-sound-settings]:visible').count())await go(p,'home');await sound(p);await p.locator(`[data-course-rate="${value}"]`).click();await closeSound(p);}
-async function record(p){await p.locator('#record').click();await p.waitForFunction(()=>document.querySelector('#record').textContent.includes('停止录音'));await p.waitForTimeout(1800);await p.locator('#record').click();await p.waitForFunction(()=>!document.querySelector('#replay-record').disabled);return audio(p,'#replay-record');}
+// Edge's fake microphone can take over a second to deliver its first audio packet;
+// allow cold capture to settle while retaining the real playback duration assertion.
+async function record(p){await p.locator('#record').click();await p.waitForFunction(()=>document.querySelector('#record').textContent.includes('停止录音'));await p.waitForTimeout(4000);await p.locator('#record').click();await p.waitForFunction(()=>!document.querySelector('#replay-record').disabled);return audio(p,'#replay-record');}
 
 async function overflow(p,label){
   const r=await p.evaluate(()=>({viewport:innerWidth,body:document.body.scrollWidth,html:document.documentElement.scrollWidth,offenders:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.left < -1 || r.right>innerWidth+1)&&getComputedStyle(e).position!=='fixed'&&e.closest('.theme-filters')===null;}).slice(0,8).map(e=>({tag:e.tagName,cls:e.className,rect:{left:e.getBoundingClientRect().left,right:e.getBoundingClientRect().right}}))}));

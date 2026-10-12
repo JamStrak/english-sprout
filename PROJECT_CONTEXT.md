@@ -4,11 +4,17 @@
 
 ## 当前交付
 
+v1.5.1 六款批准头像已接入，待本轮发布：用户明确认可兔、猫、熊、狐狸、熊猫、青蛙整套作品并要求直接替换。正式资源在 public/avatars，384×384 透明 WebP 共 181,892 字节，完整保留批准原图构图；头像选择页、首页及家长页统一使用新图。旧动物 ID 和已保存选择保持，自拍照片与实际 SVG 头套继续兼容。六张图纳入核心离线缓存，不改课程、学习记录、声音或皮肤解锁规则。
+
+本地 v1.5.1 / `3fcc13b28eb3`：npm test 133/133、构建成功、tests/browser.cjs 36/36、头像作品专项 tests/avatar-art.cjs 21/21、原自拍流程 tests/avatar-focus.cjs 14/14。专项覆盖 320×568、390×844、五种皮肤、六图真实解码、旧选择保留、自拍与预设切换、离线首次打开及刷新。功能回归中定位并修正测试假麦克风冷启动采集时间（1.8 秒改为 4 秒），保留真实播放时长断言；产品录音代码未改。证据 docs/UI_QA_local-v151-avatars-final.md、test-results/avatar-art-v151、test-results/avatar-focus。
+
+### v1.5.0 皮肤基线
+
 v1.5.0 可收集皮肤已发布：代码 `c198fd74a0b9b6a2dedec163f943004e42299186`，Pages `38217295543` 成功，线上构建 `8df805cd6e78`。默认采用创意资产实验室 24「奶纸晴蓝」，保留经典皮肤；09「雾林茶奶」、10「湖畔暮桃」、16「纸白葡萄」分别由 3 个新句、5 次到期复习、7 个累计练习日解锁。花园有单屏换装入口，达标在完成奖励页提示，偏好本机保存并支持离线，学习/复习/花园规则与三套音频未改。来源、许可、恢复旧备份时的行为见 docs/SKINS.md。
 
 新增 src/skins.js（纯派生收集规则）、skin-picker.js（预览/偏好）、skins.css（全界面配色），均纳入核心缓存。本地最终候选 `3a3279d70972`：npm test 133/133、构建通过；功能回归 tests/browser.cjs 36/36，5视口布局 focus-browser 265/265，皮肤专项 skins-browser 40/40（真实坐标操作、解锁、保存失败、导入回退、离线）。报告 test-results/local-v150-skins、focus-v150、skins-v150；正式站换肤专项和 release-focus 也已通过：三声音真实播放、复习→新学→花园、免费/解锁换肤与离线重载，记录与头像保持；见 test-results/skins-live-v150.json、live-v150/results.json。手机视口不是实体手机验收。
 
-六个内置 imagegen 动物头像候选（兔/猫/熊/狐/熊猫/蛙）已保存在 design/avatar-candidates-20261012，候选头像.html 为可点选比较页，prompts.json 保留实际提示词。候选未替换正式头像，等待用户选择；此设计目录不进入 dist。
+六个内置 imagegen 动物头像原图（兔/猫/熊/狐/熊猫/蛙）保存在 design/avatar-candidates-20261012，候选头像.html 为可点选比较页，prompts.json 保留实际提示词和整套批准状态。此设计目录不进入 dist，正式资源单独放在 public/avatars。
 
 ### 上一正式版
 
