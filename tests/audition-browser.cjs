@@ -12,7 +12,7 @@ async function context(options={}){
   await c.addInitScript(()=>{window.qa={audio:[],played:[],errors:[]};const Native=window.Audio;window.Audio=function(...args){const a=new Native(...args);qa.audio.push(a);a.qaPlayCalls=0;a.qaLoadCalls=0;const play=a.play.bind(a),load=a.load.bind(a);a.play=(...args)=>{a.qaPlayCalls++;return play(...args);};a.load=(...args)=>{a.qaLoadCalls++;return load(...args);};a.addEventListener('playing',()=>qa.played.push({src:a.src,seconds:a.duration}));return a;};window.Audio.prototype=Native.prototype;window.addEventListener('error',e=>qa.errors.push(e.message));window.addEventListener('unhandledrejection',e=>qa.errors.push(String(e.reason)));});
   return c;
 }
-async function open(page){if(!await page.locator('[data-voice-audition]').count())await page.locator('[data-go="parent"]:visible').first().click();await page.locator('[data-voice-audition]').first().click();await page.locator('[data-audition-play="pogo"]').waitFor();}
+async function open(page){if(!await page.locator('[data-voice-audition]').count()){await page.locator('[data-go="parent"]:visible').first().click();await page.locator('[data-parent-panel="voice"]').click();}await page.locator('[data-voice-audition]').first().click();await page.locator('[data-audition-play="pogo"]').waitFor();}
 async function play(page,id,lesson=catalog.lessons[0].id,part=''){
   const file=['aiden','ryan'].includes(id)?`audio/${id==='ryan'?'ryan/':''}${lesson}.mp3`:catalog.candidates.find(c=>c.id===id).samples[lesson];
   const before=await page.evaluate(()=>qa.played.length);
@@ -67,21 +67,21 @@ async function play(page,id,lesson=catalog.lessons[0].id,part=''){
     assert.equal(await p.locator('.audition-card .audition-availability').filter({hasText:'仅供样音对照'}).count(),3);
     await play(p,'milo');await p.locator('[data-audition-close]').click();await p.locator('.voice-audition').waitFor({state:'detached'});
     assert.equal(await p.evaluate(()=>qa.audio.filter(a=>!a.paused&&!a.ended).length),0);
-    await p.reload({waitUntil:'domcontentloaded'});await p.locator('[data-voice-audition]').waitFor();await open(p);
+    await p.reload({waitUntil:'domcontentloaded'});await p.locator('[data-parent-panel="voice"]').waitFor();await open(p);
     assert.equal(await p.locator('[data-audition-pick]').count(),0);assert.deepEqual(await p.evaluate(()=>qa.played),[]);
     return {formalVoices:['aiden','ryan','pip'],otherSampleOnly:3};
   });
-  await check('320px dialog scrolls internally while close and playback state stay visible',async()=>{
-    await p.setViewportSize({width:320,height:640});await p.locator('[data-audition-play="pip"]').scrollIntoViewIfNeeded();
-    const geometry=await p.evaluate(()=>{const d=document.querySelector('.voice-audition'),close=d.querySelector('[data-audition-close]').getBoundingClientRect(),footer=d.querySelector('.audition-player').getBoundingClientRect();return {width:innerWidth,bodyWidth:document.body.scrollWidth,dialogWidth:d.scrollWidth,rect:d.getBoundingClientRect().width,closeTop:close.top,closeBottom:close.bottom,footerBottom:footer.bottom,height:innerHeight};});
-    assert.ok(geometry.bodyWidth<=320);assert.ok(geometry.dialogWidth<=geometry.rect+1);assert.ok(geometry.closeTop>=0&&geometry.closeBottom<geometry.height);assert.ok(geometry.footerBottom<=geometry.height);
+  await check('320px dialog exposes voices and playback controls without scrolling',async()=>{
+    await p.setViewportSize({width:320,height:568});
+    const geometry=await p.evaluate(()=>{const d=document.querySelector('.voice-audition'),close=d.querySelector('[data-audition-close]').getBoundingClientRect(),footer=d.querySelector('.audition-player').getBoundingClientRect();return {width:innerWidth,bodyWidth:document.body.scrollWidth,dialogWidth:d.scrollWidth,rect:d.getBoundingClientRect().width,closeTop:close.top,closeBottom:close.bottom,footerBottom:footer.bottom,height:innerHeight,scrolling:[d,...d.querySelectorAll('*')].filter(e=>e.clientHeight>0&&e.scrollHeight>e.clientHeight+3&&/(auto|scroll|hidden|clip)/.test(getComputedStyle(e).overflowY)).map(e=>e.className)};});
+    assert.deepEqual(geometry.scrolling,[]);assert.ok(geometry.bodyWidth<=320);assert.ok(geometry.dialogWidth<=geometry.rect+1);assert.ok(geometry.closeTop>=0&&geometry.closeBottom<geometry.height);assert.ok(geometry.footerBottom<=geometry.height);
     await p.screenshot({path:path.join(output,'audition-320.png')});await p.locator('[data-audition-close]').click();return geometry;
   });
   await check('Parent entry and saved previews work after an offline page reload',async()=>{
     await p.locator('[data-go="parent"]:visible').first().click();await open(p);await p.locator('[data-audition-close]').click();
     await p.evaluate(()=>navigator.serviceWorker.ready);await p.waitForFunction(()=>navigator.serviceWorker.controller!==null);
-    await p.locator('#offline-audio').click();await p.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes('段声音已保存'),null,{timeout:local?40000:240000});
-    await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('[data-voice-audition]').waitFor();await open(p);
+    await p.locator('[data-go="parent"]:visible').first().click();await p.locator('[data-parent-panel="offline"]').click();await p.locator('#offline-audio').click();await p.waitForFunction(()=>document.querySelector('#offline-status').textContent.includes('段声音已保存'),null,{timeout:local?40000:240000});
+    await c.setOffline(true);await p.reload({waitUntil:'domcontentloaded'});await p.locator('[data-parent-panel="voice"]').waitFor();await open(p);
     const results=[];for(const candidate of catalog.candidates)results.push(await play(p,candidate.id));
     await p.locator('[data-audition-close]').click();await c.setOffline(false);return results;
   });

@@ -77,18 +77,31 @@ let currentPicker = null;
 export function openAvatarPicker({onSave = () => {}, notify = () => {}} = {}) {
   if (currentPicker?.isConnected) { currentPicker.focus(); return currentPicker; }
   const originalFocus = document.activeElement;
-  let saved = readAvatar(), animal = saved.animal, mode = 'preset', source = null, sourceUrl = '', frame = null, generation = 0, frameGeneration = 0, closed = false, pending = false;
+  let saved = readAvatar(), animal = saved.animal, mode = 'preset', step = 'preset', source = null, sourceUrl = '', frame = null, generation = 0, frameGeneration = 0, closed = false, pending = false;
   const dialog = document.createElement('dialog');
   dialog.className = 'avatar-picker';
   dialog.setAttribute('aria-labelledby','avatar-title');
-  dialog.innerHTML = `<header class="avatar-picker-header"><div><small>这是我的小模样</small><h2 id="avatar-title">选一个动物伙伴</h2></div><button class="avatar-action avatar-close" id="avatar-close" aria-label="关闭头像选择">×</button></header><div class="avatar-modes" aria-label="头像方式"><button class="avatar-action" data-avatar-mode="preset" aria-pressed="true">动物伙伴</button><button class="avatar-action" data-avatar-mode="photo" aria-pressed="false">我的自拍</button></div><div class="avatar-preset-preview" id="avatar-current">${avatarMarkup(saved)}</div><div class="avatar-photo-panel" hidden><canvas id="avatar-canvas" width="400" height="400" aria-label="动物头套自拍预览"></canvas><p class="avatar-tip" id="avatar-photo-tip">选一张照片，把小脸放进头套里</p><div class="avatar-file-actions"><button class="avatar-action" id="avatar-take-photo">拍张照片</button><button class="avatar-action" id="avatar-choose-photo">选张照片</button></div><input type="file" id="avatar-camera-file" accept="image/jpeg,image/png,image/webp" capture="user" hidden><input type="file" id="avatar-photo-file" accept="image/jpeg,image/png,image/webp" hidden><div class="avatar-adjustments" hidden><label>大小<input id="avatar-zoom" type="range" min="1" max="3" step="0.01" value="1"></label><label>左右<input id="avatar-x" type="range" min="-1" max="1" step="0.01" value="0"></label><label>上下<input id="avatar-y" type="range" min="-1" max="1" step="0.01" value="0"></label></div></div><div class="avatar-animal-grid">${ANIMALS.map(item=>`<button class="avatar-action avatar-animal" data-avatar-animal="${item.id}" aria-pressed="${item.id===animal}" aria-label="选择${item.name}">${animalSvg(item.id)}<span>${item.name}</span><b aria-hidden="true">✓</b></button>`).join('')}</div><div class="avatar-photo-footer" hidden><button class="avatar-action avatar-save" id="avatar-save-photo" disabled>保存我的头像</button><button class="avatar-action avatar-delete" id="avatar-delete-photo" ${saved.kind==='photo'?'':'hidden'}>删除自拍，用动物头像</button></div><p id="avatar-message" role="status" aria-live="polite">点动物，马上换好</p><p class="avatar-privacy">照片只保存在这台设备，不上传，也不放入学习备份。</p>`;
+  dialog.innerHTML = `<header class="avatar-picker-header"><button class="avatar-action avatar-back" id="avatar-back" aria-label="返回上一步" hidden>‹</button><div><small id="avatar-step-label">这是我的小模样</small><h2 id="avatar-title" tabindex="-1">选一个动物伙伴</h2></div><button class="avatar-action avatar-close" id="avatar-close" aria-label="关闭头像选择">×</button></header><div class="avatar-modes" aria-label="头像方式"><button class="avatar-action" data-avatar-mode="preset" aria-pressed="true">动物伙伴</button><button class="avatar-action" data-avatar-mode="photo" aria-pressed="false">我的自拍</button></div><div class="avatar-picker-body"><div class="avatar-preset-preview" id="avatar-current">${avatarMarkup(saved)}</div><div class="avatar-photo-panel" hidden><canvas id="avatar-canvas" width="400" height="400" aria-label="动物头套自拍预览" hidden></canvas><p class="avatar-tip" id="avatar-photo-tip">请大人帮忙，选一张笑脸照片</p><div class="avatar-file-actions"><button class="avatar-action" id="avatar-take-photo"><span aria-hidden="true">📷</span>拍张照片</button><button class="avatar-action" id="avatar-choose-photo"><span aria-hidden="true">🖼️</span>选张照片</button></div><input type="file" id="avatar-camera-file" accept="image/jpeg,image/png,image/webp" capture="user" hidden><input type="file" id="avatar-photo-file" accept="image/jpeg,image/png,image/webp" hidden><div class="avatar-adjustments" hidden><label>大小<input id="avatar-zoom" type="range" min="1" max="3" step="0.01" value="1"></label><label>左右<input id="avatar-x" type="range" min="-1" max="1" step="0.01" value="0"></label><label>上下<input id="avatar-y" type="range" min="-1" max="1" step="0.01" value="0"></label></div></div><div class="avatar-animal-grid">${ANIMALS.map(item=>`<button class="avatar-action avatar-animal" data-avatar-animal="${item.id}" aria-pressed="${item.id===animal}" aria-label="选择${item.name}">${animalSvg(item.id)}<span>${item.name}</span><b aria-hidden="true">✓</b></button>`).join('')}</div><button class="avatar-action avatar-delete" id="avatar-delete-photo" hidden>删除自拍，换回动物</button></div><div class="avatar-photo-footer" hidden><button class="avatar-action" id="avatar-adjust-photo">调小脸</button><button class="avatar-action avatar-save" id="avatar-save-photo" disabled>保存头像 ✓</button></div><p id="avatar-message" role="status" aria-live="polite">点动物，马上换好</p><p class="avatar-privacy">照片只留在这台设备，不上传、不随学习备份。</p>`;
   const $ = selector => dialog.querySelector(selector);
   const canvas = $('#avatar-canvas'), ctx = canvas.getContext('2d');
   const say = (message,error=false) => { $('#avatar-message').textContent=message; $('#avatar-message').classList.toggle('is-error',error); };
+  const showStep = (next, focus = true) => {
+    step=next;dialog.dataset.avatarStep=step;
+    const editing=step==='hood'||step==='crop';
+    $('.avatar-modes').hidden=editing;$('#avatar-back').hidden=!editing;
+    $('#avatar-current').hidden=editing;$('.avatar-photo-panel').hidden=step==='preset';
+    canvas.hidden=!editing;$('#avatar-photo-tip').hidden=step!=='source';$('.avatar-file-actions').hidden=step!=='source';
+    $('.avatar-adjustments').hidden=step!=='crop';$('.avatar-animal-grid').hidden=step!=='preset'&&step!=='hood';
+    $('.avatar-photo-footer').hidden=!editing;$('#avatar-delete-photo').hidden=step!=='source'||saved.kind!=='photo';
+    $('#avatar-title').textContent={preset:'选一个动物伙伴',source:'选一张笑脸照片',hood:'戴哪个动物头套？',crop:'把小脸放中间'}[step];
+    $('#avatar-step-label').textContent={preset:'这是我的小模样',source:'1 · 选照片',hood:'2 · 选头套',crop:'调好就能保存啦'}[step];
+    $('#avatar-adjust-photo').textContent=step==='crop'?'换头套':'调小脸';
+    if(focus)$('#avatar-title').focus({preventScroll:true});
+  };
   const publish = (record,message) => {
     const result=saveAvatar(record);
     if (!result.ok) {say(result.message,true); return false;}
-    saved=result.avatar; $('#avatar-current').innerHTML=avatarMarkup(saved); $('#avatar-delete-photo').hidden=saved.kind!=='photo';
+    saved=result.avatar; $('#avatar-current').innerHTML=avatarMarkup(saved); $('#avatar-delete-photo').hidden=step!=='source'||saved.kind!=='photo';
     say(message); onSave(saved); notify(message); return true;
   };
   const draw = () => {
@@ -127,25 +140,29 @@ export function openAvatarPicker({onSave = () => {}, notify = () => {}} = {}) {
       if(sourceUrl)URL.revokeObjectURL(sourceUrl);
       source=image;sourceUrl=url;
       $('#avatar-zoom').value='1';$('#avatar-x').value='0';$('#avatar-y').value='0';
-      $('.avatar-adjustments').hidden=false; $('#avatar-photo-tip').textContent='调好小脸的位置，再点保存';
-      say('照片准备好了，可以换头套、调位置。'); updateFrame();
+      showStep('hood');say('点一个头套，喜欢就保存。'); updateFrame();
     }catch{URL.revokeObjectURL(url);if(!closed&&ticket===generation)say('这张照片暂时打不开，请换一张 JPG、PNG 或 WebP 照片。',true);}
     finally{if(!closed&&ticket===generation)setBusy(false);}
   };
   dialog.querySelectorAll('[data-avatar-mode]').forEach(button=>button.onclick=()=>{
     mode=button.dataset.avatarMode;
     dialog.querySelectorAll('[data-avatar-mode]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-    $('#avatar-current').hidden=mode==='photo';$('.avatar-photo-panel').hidden=mode!=='photo';$('.avatar-photo-footer').hidden=mode!=='photo';
-    $('#avatar-title').textContent=mode==='photo'?'戴上我的动物头套':'选一个动物伙伴';
-    say(mode==='photo'?'先拍照或选照片，再挑喜欢的头套。':'点动物，马上换好');
-    if(mode==='photo')updateFrame();
+    ++generation;setBusy(false);source=null;frame=null;++frameGeneration;
+    if(sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl='';}
+    showStep(mode==='photo'?'source':'preset');
+    say(mode==='photo'?'拍照或选照片，做自己的动物头像。':'点动物，马上换好');
   });
   dialog.querySelectorAll('[data-avatar-animal]').forEach(button=>button.onclick=()=>{
     animal=button.dataset.avatarAnimal;
     dialog.querySelectorAll('[data-avatar-animal]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-    if(mode==='preset')publish({version:1,kind:'preset',animal},`换好啦！现在是${ANIMALS.find(item=>item.id===animal).name}`);
-    else{updateFrame();say(source?'头套换好了，点保存就可以带走。':'头套选好了，再拍照或选一张照片。');}
+    if(mode==='preset'){if(publish({version:1,kind:'preset',animal},`换好啦！现在是${ANIMALS.find(item=>item.id===animal).name}`))dialog.close();}
+    else{updateFrame();say('头套换好了，喜欢就保存。');}
   });
+  $('#avatar-adjust-photo').onclick=()=>{showStep(step==='crop'?'hood':'crop');say(step==='crop'?'拖动滑杆，让小脸正好在中间。':'点一个头套，喜欢就保存。');};
+  $('#avatar-back').onclick=()=>{
+    if(step==='crop'){showStep('hood');say('点一个头套，喜欢就保存。');}
+    else{showStep('source');say('可以换一张照片，原头像还没有改变。');}
+  };
   $('#avatar-take-photo').onclick=()=>$('#avatar-camera-file').click();
   $('#avatar-choose-photo').onclick=()=>$('#avatar-photo-file').click();
   for(const input of dialog.querySelectorAll('input[type="file"]'))input.onchange=()=>{const file=input.files?.[0];input.value='';if(file)loadPhoto(file);};
@@ -165,11 +182,11 @@ export function openAvatarPicker({onSave = () => {}, notify = () => {}} = {}) {
   $('#avatar-delete-photo').onclick=()=>{
     if(publish({version:1,kind:'preset',animal},'自拍已删除，动物伙伴留下陪你。')){
       ++generation;source=null;if(sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl='';}
-      $('.avatar-adjustments').hidden=true;setBusy(false);updateFrame();
+      ++frameGeneration;frame=null;setBusy(false);showStep('source');
     }
   };
   $('#avatar-close').onclick=()=>dialog.close();
   dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}});
   dialog.addEventListener('close',()=>{closed=true;++generation;if(sourceUrl)URL.revokeObjectURL(sourceUrl);source=null;frame=null;dialog.remove();currentPicker=null;if(originalFocus?.isConnected)originalFocus.focus();},{once:true});
-  document.body.append(dialog);currentPicker=dialog;dialog.showModal();return dialog;
+  showStep('preset',false);document.body.append(dialog);currentPicker=dialog;dialog.showModal();return dialog;
 }
