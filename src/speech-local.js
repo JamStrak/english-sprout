@@ -8,9 +8,31 @@ const pending=new Set();
 const preparingListeners=new Set();
 function preparingStatus(message){for(const listener of preparingListeners)try{listener(message);}catch{}}
 
+// Keep Vosk's stable model URL for its IndexedDB path, while its worker reads
+// already-downloaded bytes. This also works before a service worker takes over.
+function modelFromArchive(Vosk,archive){
+  const archiveURL=URL.createObjectURL(archive),urls=[archiveURL];
+  const NativeWorker=window.Worker;
+  function CachedWorker(source,options){
+    const wrapper=`const target=${JSON.stringify(MODEL)},archive=${JSON.stringify(archiveURL)};
+const rewrite=value=>String(value)===target?archive:value;
+const nativeFetch=self.fetch.bind(self);self.fetch=(input,options)=>nativeFetch(rewrite(typeof input==='string'?input:input.url),options);
+const nativeOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url,...args){return nativeOpen.call(this,method,rewrite(url),...args);};
+importScripts(${JSON.stringify(String(source))});`;
+    const workerURL=URL.createObjectURL(new Blob([wrapper],{type:'text/javascript'}));urls.push(workerURL);
+    return new NativeWorker(workerURL,options);
+  }
+  CachedWorker.prototype=NativeWorker.prototype;
+  const cleanup=()=>urls.forEach(url=>URL.revokeObjectURL(url));
+  try{window.Worker=CachedWorker;return {value:new Vosk.Model(MODEL,-2),cleanup};}
+  catch(error){cleanup();throw error;}
+  finally{window.Worker=NativeWorker;}
+}
+
 function abortError(){return new DOMException('已取消这次跟读。','AbortError');}
 function releaseModel(value){
   if(!value)return;
+  value.sproutArchiveCleanup?.();value.sproutArchiveCleanup=null;
   // Pinned vosk-browser 0.0.8 exposes its Worker as this property. Terminating the
   // worker also interrupts a pending model download/inference, unlike its public
   // terminate() message, which waits behind the current synchronous WASM work.
@@ -69,13 +91,9 @@ export async function prepareSpeech({onStatus=()=>{},signal,background=false}={}
     const task=(async()=>{
       const Vosk=await loadLibrary(controller.signal);
       if(currentGeneration!==generation)throw abortError();
-      // The active service worker supplies this completed, separately cached
-      // archive to Vosk. Partial downloads survive page closes and retries.
-      if(navigator.serviceWorker?.controller){
-        await downloadSpeechAsset(MODEL,{signal:controller.signal,expectedBytes:41184862,onProgress:({loaded,total})=>preparingStatus(`小耳朵下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
-      }
+      const response=await downloadSpeechAsset(MODEL,{signal:controller.signal,expectedBytes:41184862,onProgress:({loaded,total})=>preparingStatus(`小耳朵下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
       if(currentGeneration!==generation)throw abortError();
-      const value=new Vosk.Model(MODEL,-2);model=value;
+      const {value,cleanup}=modelFromArchive(Vosk,await response.blob());value.sproutArchiveCleanup=cleanup;model=value;
       try{
         await new Promise((resolve,reject)=>{
           value.on('load',message=>message.result?resolve():reject(new Error('小耳朵没有准备好，请再试一次。')));
@@ -84,6 +102,7 @@ export async function prepareSpeech({onStatus=()=>{},signal,background=false}={}
         if(currentGeneration!==generation)throw abortError();
         return value;
       }catch(error){releaseModel(value);if(model===value)model=null;throw error;}
+      finally{cleanup();}
     })();
     preparing=task;
     task.catch(()=>{if(preparing===task)preparing=null;});
