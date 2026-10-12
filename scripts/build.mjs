@@ -32,5 +32,5 @@ const index=await fs.readFile(path.join(dist,'index.html'),'utf8');
 await fs.writeFile(path.join(dist,'index.html'),index.replace('__APP_BUILD__',version));
 sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
 await fs.writeFile(path.join(dist,'sw.js'),sw);
-await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.5.2',build:version}));
-console.log('Built English Sprout 1.5.2 · '+version);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.5.3',build:version}));
+console.log('Built English Sprout 1.5.3 · '+version);
