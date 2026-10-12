@@ -7,11 +7,12 @@ import {avatarMarkup,openAvatarPicker,AVATAR_STORAGE_KEY} from './avatars.js';
 import {installInteractionFeedback} from './feedback.js';
 import {openVoiceAudition} from './voice-audition.js';
 import {getTodayJourney} from './journey.js';
+import {startAutomaticUpdates} from './auto-update.js';
 
 const KEY='english-sprout-state-v1';
 const PUBLISHED_URL='https://jamstrak.github.io/english-sprout/';
 const app=document.querySelector('#app');
-let curriculum,state,view='home',session=null,libraryTheme='all',search='',recording=false,recordPending=false,recordedURL=null,toastTimer,offlineBusy=false,offlineDownloadGeneration=0,installEvent,waitingSW,screenGeneration=0;
+let curriculum,state,view='home',session=null,libraryTheme='all',search='',recording=false,recordPending=false,recordedURL=null,toastTimer,offlineBusy=false,offlineDownloadGeneration=0,installEvent,screenGeneration=0;
 let storageOK=true;
 let libraryPage=0,libraryMode='themes',searchOpen=false,parentPanel='menu',gardenPlot=0,gardenView='field';
 let soundDialog=null;
@@ -311,10 +312,10 @@ function renderParent(){
   const titles={menu:'家长小站',habits:'每天的练习节奏',voice:'声音伙伴和语速',offline:'准备离线小书',install:'放进口袋，随时练',backup:'保存与恢复进度',progress:'看看小芽的足迹',help:'怎样陪孩子练',about:'关于英语小芽'};
   const menus=[['habits','🌱','练习习惯'],['voice','🔊','声音与语速'],['offline','📥','离线与安装'],['backup','🧳','进度备份'],['progress','👣','学习足迹'],['help','💛','陪伴方法']];
   let content='';
-  if(parentPanel==='menu')content=`<p class="focus-sub">一次处理一件小事</p><div class="parent-menu">${menus.map(([id,symbol,label])=>`<button data-parent-panel="${id}"><span>${symbol}</span><strong>${label}</strong></button>`).join('')}</div>${waitingSW?'<button class="primary" id="update-app">新版本已准备好，重新打开</button>':''}`;
+  if(parentPanel==='menu')content=`<p class="focus-sub">一次处理一件小事</p><div class="parent-menu">${menus.map(([id,symbol,label])=>`<button data-parent-panel="${id}"><span>${symbol}</span><strong>${label}</strong></button>`).join('')}</div>`;
   if(parentPanel==='habits')content=`<section class="settings-card"><label class="field">小昵称<input id="nickname" value="${esc(state.settings.nickname)}" maxlength="32" autocomplete="off"><small>不需要真实姓名 · 最多 16 个字符</small></label><label class="field">每天最多复习几句<select id="daily-reviews">${Array.from({length:10},(_,i)=>i+1).map(n=>`<option value="${n}" ${state.settings.dailyReviews===n?'selected':''}>${n} 句${n===5?'（默认）':''}</option>`).join('')}</select></label><p>先复习，再学一个新句。漏一天不跳课，累了随时停。</p><button class="primary" id="save-settings">保存设置 ${icon('check')}</button></section>`;
   if(parentPanel==='voice')content=`<section class="settings-card">${voiceButtons()}${courseRateButtons()}${audioStatusMarkup()}${voiceAuditionEntry()}<p class="small-note">三位伙伴各有完整 120 句。录音与中文帮助保持原速。</p></section>`;
-  if(parentPanel==='offline')content=`<section class="settings-card"><div class="panel-symbol">📚</div><p>一次保存三位伙伴的整本小书，下次没网络也能听。</p><button class="primary" id="offline-audio" ${offlineBusy?'disabled':''}>${icon('download')} ${offlineBusy?'正在保存声音…':'保存全部离线声音'}</button><p id="offline-status" class="small-note" aria-live="polite">正在检查本机离线内容…</p><button class="secondary" data-parent-panel="install">安装到桌面 / 换到手机</button>${waitingSW?'<button class="secondary" id="update-app">新版本已准备好，重新打开</button>':''}</section>`;
+  if(parentPanel==='offline')content=`<section class="settings-card"><div class="panel-symbol">📚</div><p>一次保存三位伙伴的整本小书，下次没网络也能听。</p><button class="primary" id="offline-audio" ${offlineBusy?'disabled':''}>${icon('download')} ${offlineBusy?'正在保存声音…':'保存全部离线声音'}</button><p id="offline-status" class="small-note" aria-live="polite">正在检查本机离线内容…</p><button class="secondary" data-parent-panel="install">安装到桌面 / 换到手机</button></section>`;
   if(parentPanel==='install')content=`<section class="settings-card"><p>iPhone：Safari 分享 → 添加到主屏幕。Android：浏览器菜单 → 安装应用。</p><button class="primary" id="install-app">${icon('download')} 添加到主屏幕</button><div class="phone-share"><img src="./icons/phone-qr.png" width="112" height="112" alt="手机扫码打开英语小芽"><div><strong>手机扫码打开</strong><button class="text-button" id="copy-link">复制手机网址</button></div></div><p class="small-note">换设备后的进度，可用备份转移。</p></section>`;
   if(parentPanel==='backup')content=`<section class="settings-card"><div class="panel-symbol">🧳</div><p>记录保存在这台设备。换手机或清理浏览器前，先导出一份。</p><div class="button-row"><button class="primary" id="export-progress">${icon('download')} 导出进度</button><button class="secondary" id="import-progress">导入进度</button></div><input id="import-file" type="file" accept="application/json,.json" hidden><p id="import-status" class="small-note" aria-live="polite">导入会替换当前记录，不会合并。声音与头像分别保存。</p>${!storageOK?'<button class="secondary" id="export-raw">导出原始记录</button>':''}<button class="text-button danger" id="reset-progress">重新开始学习</button></section>`;
   if(parentPanel==='progress'){
@@ -322,7 +323,7 @@ function renderParent(){
     content=`<section class="settings-card"><div class="progress-total"><strong>${st.learnedCount}</strong><span>句已经练过 · 共 120 句</span></div><div class="week-days">${(st.last7Days||[]).map(d=>`<div class="week-day ${d.practiced?'practiced':''}"><span>${['日','一','二','三','四','五','六'][new Date(d.date+'T12:00:00').getDay()]}</span><i>${d.practiced?'✓':'·'}</i></div>`).join('')}</div><p>${last?`最近小游戏：首次听懂 ${last[1].filter(r=>r.meaning).length} / ${last[1].length}，自己说出 ${last[1].filter(r=>r.spoken==='good').length} / ${last[1].length}`:'练过的句子会隔一段时间回来，帮助孩子主动想起。'}</p>${check.due?'<button class="primary" id="start-checkup">玩今天的记忆小游戏</button>':`<p class="small-note">${check.nextDate>dayKey()?check.nextDate+' 再来玩记忆小游戏':'先积累熟悉的短句，再来玩小游戏'}</p>`}<p class="small-note">记录练习与家长观察，不代表发音评分或完全掌握。</p></section>`;
   }
   if(parentPanel==='help')content=`<section class="settings-card"><ol class="parent-tips"><li><strong>复习先想。</strong>先看图自己说，再按需听提示。</li><li><strong>新句先听。</strong>做动作、选图片，再开口模仿。</li><li><strong>根据实际反馈。</strong>家长选择“还要练练 / 提示后会说 / 自己会说”。</li></ol><p class="small-note">答对图片不等于会说。录音只是可选回听，不自动评分，也不上传。</p><button class="secondary" data-parent-panel="about">关于与隐私</button></section>`;
-  if(parentPanel==='about')content=`<section class="settings-card"><div class="panel-symbol">🌱</div><h2>英语小芽 v1.4.0</h2><p>120 个生活短句 · 三位声音伙伴<br>无广告 · 无账户 · 无付费 API</p><p class="small-note">头像与学习记录留在本机，录音离开练习卡即删除。示范为预先合成配音。托管方会收到正常网站访问请求。</p><p class="small-note">间隔复习是练习安排，不保证特定学习效果；建议 4—7 岁亲子共学。</p><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">了解间隔回想 ↗</a></section>`;
+  if(parentPanel==='about')content=`<section class="settings-card"><div class="panel-symbol">🌱</div><h2>英语小芽 v1.4.1</h2><p>120 个生活短句 · 三位声音伙伴<br>无广告 · 无账户 · 无付费 API</p><p class="small-note">头像与学习记录留在本机，录音离开练习卡即删除。示范为预先合成配音。托管方会收到正常网站访问请求。</p><p class="small-note">间隔复习是练习安排，不保证特定学习效果；建议 4—7 岁亲子共学。</p><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">了解间隔回想 ↗</a></section>`;
   shell(`<section class="focus-screen focus-parent" data-parent-screen="${parentPanel}"><div class="screen-heading"><button class="back-button" data-parent-back ${parentPanel==='menu'?'hidden':''} aria-label="返回家长小站">←</button><h1>${titles[parentPanel]||titles.menu}</h1></div>${content}</section>`);
   document.querySelector('[data-parent-back]').onclick=()=>{stopPlayback();parentPanel='menu';renderParent();};
   document.querySelectorAll('[data-parent-panel]').forEach(b=>b.onclick=()=>{stopPlayback();parentPanel=b.dataset.parentPanel;renderParent();});
@@ -341,7 +342,6 @@ function renderParent(){
   document.querySelector('#import-file')?.addEventListener('change',importProgress);
   document.querySelector('#reset-progress')?.addEventListener('click',()=>confirmDialog('重新开始学习？','会清除这台设备的学习记录。建议先导出备份，声音缓存会保留。','清除并重新开始',()=>{state=createState(dayKey());storageOK=true;document.querySelector('#storage-warning').hidden=true;const saved=save();navigate('home');if(saved)toast('新的小花园准备好了');}));
   document.querySelector('#start-checkup')?.addEventListener('click',startCheckup);
-  document.querySelector('#update-app')?.addEventListener('click',()=>{navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});waitingSW?.postMessage('ACTIVATE_UPDATE');});
   if(parentPanel==='voice')warmLessons([daily().newLessonId||curriculum.lessons[0].id]);
 }
 async function downloadOffline(){
@@ -382,7 +382,7 @@ window.addEventListener('storage',e=>{if(e.key===COURSE_RATE_KEY){applyCourseRat
 async function init(){
   try{const response=await fetch('./data/curriculum.json');if(!response.ok)throw new Error('课程读取失败');curriculum=await response.json();state=load();view=['library','garden','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';render();
     if(new URLSearchParams(location.search).get('audition')==='1')openVoiceAudition();
-    if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js').then(reg=>{if(reg.waiting)waitingSW=reg.waiting;reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){waitingSW=w;toast('小芽有新版本啦，可在家长页更新。');}});});}).catch(()=>toast('离线功能暂未准备好，联网练习仍可使用。'));}
+    startAutomaticUpdates({build:document.querySelector('meta[name="app-build"]')?.content,isSafe:()=>storageOK&&!document.hidden&&!session&&!recording&&!recordPending&&!offlineBusy&&!document.querySelector('dialog[open],.completion')&&!(view==='parent'&&parentPanel!=='menu')&&!['loading','playing'].includes(document.body.dataset.playing)&&!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'),onUnavailable:()=>toast('离线功能暂未准备好，联网练习仍可使用。')});
   }catch{app.innerHTML='<div class="boot"><span>🌱</span><h1>小芽还没准备好</h1><p>请检查网络，重新打开。如果尚未下载离线内容，需要先联网一次。</p><button class="primary" id="retry">重新打开</button></div>';document.querySelector('#retry').onclick=()=>location.reload();}
 }
 installInteractionFeedback();

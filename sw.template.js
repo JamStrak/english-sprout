@@ -51,8 +51,22 @@ async function migrateLegacyAudio(){
   }catch{}
   // Retain both old caches as offline fallbacks if copying was unavailable.
 }
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE))));
-self.addEventListener('message',event=>{if(event.data==='ACTIVATE_UPDATE')self.skipWaiting();});
+self.addEventListener('install',event=>event.waitUntil((async()=>{
+  const cache=await caches.open(CACHE);
+  // Avoid stale HTTP-cache files when a new release has just been published.
+  await cache.addAll(CORE.map(file=>new Request(new URL(file,self.registration.scope),{cache:'reload'})));
+  for(const file of ['./','./index.html']){
+    const index=await cache.match(new URL(file,self.registration.scope).href);
+    const pageBuild=(await index?.text())?.match(/<meta name="app-build" content="([a-f0-9]{12})">/)?.[1];
+    if(pageBuild!==CACHE.slice(PREFIX.length))throw new Error('The release page is not ready yet');
+  }
+  // A failed or partial download must never replace the working offline app.
+  await self.skipWaiting();
+})()));
+self.addEventListener('message',event=>{
+  if(event.data==='ACTIVATE_UPDATE')self.skipWaiting(); // Compatibility with older pages.
+  if(event.data==='GET_BUILD')event.ports?.[0]?.postMessage({type:'APP_BUILD',build:CACHE.slice(PREFIX.length)});
+});
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
   for(const key of await caches.keys())if(key.startsWith(PREFIX)&&key!==CACHE)await caches.delete(key);
   await migrateLegacyAudio();
