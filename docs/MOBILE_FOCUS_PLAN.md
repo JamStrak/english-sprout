@@ -2,7 +2,7 @@
 
 更新：2026-10-12。用户授权保存当前版本后进行全 App 深度优化，并沿用发布授权。改版前的稳定保存标签为 `v1.3.0-before-mobile-redesign-20261012`，指向 `3999dcb`，已推送。
 
-本轮实现与本地验证完成；正式部署由发布流程继续，线上版本以 [PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md) 为准。
+本轮实现、本地验证和正式站复验均已完成。v1.4.0 代码 `3d969a5`，Pages 任务 `38208510562`，线上构建 `ac13af5b07c0`；发布记录见 [PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)。
 
 ## 已实现的使用顺序
 
@@ -38,4 +38,4 @@
 
 保留并新增了关键异步回归：缓存统计迟到不能覆盖已下载状态或新页面；音频失败可重试；触点反馈不能挡住操作；迟到的备份读取不能覆盖练习中的录音页；退出或转后台后，迟到的麦克风授权不能开始录音。
 
-证据：`test-results/local-v140-focus/browser-results.json`、`test-results/focus-mobile/results.json`；摘要 [UI_QA_local-v140-focus.md](UI_QA_local-v140-focus.md)。本地浏览器模拟不代替实体 iPhone/Android、系统大字体与软键盘组合验收，也不等于真人逐句听音或儿童学习效果实验。正式站部署及复验尚待发布流程记录。
+证据：`test-results/local-v140-focus/browser-results.json`、`test-results/focus-mobile/results.json`；摘要 [UI_QA_local-v140-focus.md](UI_QA_local-v140-focus.md)。本地浏览器模拟不代替实体 iPhone/Android、系统大字体与软键盘组合验收，也不等于真人逐句听音或儿童学习效果实验。正式站已通过三角色实际播放、Pip 0.9×、复习→新学→花园、断网重载播放与记录核对，证据 test-results/live-focus/results.json。

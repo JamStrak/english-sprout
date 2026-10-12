@@ -4,7 +4,7 @@
 
 ## 当前交付
 
-适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。当前完成 v1.4.0 手机单屏改版，本地构建 `57a8f28a8efd` 已通过回归，正在发布。课程 1.1、学习状态 v1、三套完整配音和声音缓存 v5 均保持不变。
+适合 4—7 岁孩子和家长的每日一句、间隔复习、看图听说与简单花园收集。已发布 v1.4.0 手机单屏改版，代码提交 `3d969a5a402b1927447892783f2634f947f3c484`；GitHub Pages 任务 `38208510562` 成功，正式站构建 `ac13af5b07c0` 已验证。本地构建 `57a8f28a8efd` 与线上哈希不同源于 Git 换行规范化，已按提交字节复算核对。课程 1.1、学习状态 v1、三套完整配音和声音缓存 v5 均保持不变。
 
 正式网址 https://jamstrak.github.io/english-sprout/ ，源码 https://github.com/JamStrak/english-sprout 。改版前 v1.3.0 已提交并上线（代码 `845b16b`，状态文档 `3999dcb`，线上构建 `17e9beb9937e`）；本轮另推送稳定标签 `v1.3.0-before-mobile-redesign-20261012`，指向 `3999dcb`，可回看或恢复。
 
@@ -50,6 +50,6 @@
 - tests/focus-browser.cjs：265/265。320×568、320×640、390×844、430×932、1440×1000，检查每个屏幕无文档横纵滚动、无隐藏裁切、按钮中心无遮挡；采用实际坐标操作，含最长文案、真实播放和录音前中后。明细 test-results/focus-mobile。
 - tests/avatar-focus.cjs：14/14。动物头像及自拍分步在 320×568、390×844 的布局、保存、取消、删除与晚到响应。明细 test-results/avatar-focus。
 - tests/audition-browser.cjs：10/10。样音和双声对照、即时语速、离线重载、失败重试、320×568 一屏及导航停止。明细 test-results/audition-local。
-- tests/release-focus.cjs 本地预演通过：三声音 → 到期复习 → 新句 → 花园 → 离线重载实际播放，学习记录准确、无页面异常。明细 test-results/release-focus-local。正式站发布后用相同脚本核验。
+- tests/release-focus.cjs 本地预演通过：三声音 → 到期复习 → 新句 → 花园 → 离线重载实际播放，学习记录准确、无页面异常。明细 test-results/release-focus-local。正式站同一脚本也已通过，线上 v1.4.0 / `ac13af5b07c0` 与提交一致；三角色真实播放、Pip 0.9×、复习→新学→花园、断网重载后播放、390×844 无滚动及学习记录均正确，无页面错误。明细 test-results/live-focus/results.json。
 
 手机视口和浏览器播放检查不是实体 iPhone / Android 真机验收，也不等于真人听感或儿童学习效果验证。大字体、软键盘及不同浏览器安全区仍以实际设备反馈为准。
