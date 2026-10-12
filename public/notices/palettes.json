@@ -1,0 +1,110 @@
+{
+  "source": "创意资产实验室",
+  "version": "2026.09.26.2",
+  "items": [
+    {
+      "id": "tea-milk",
+      "number": 9,
+      "name": "雾林茶奶",
+      "category": "game",
+      "tags": [
+        "治愈",
+        "插画",
+        "自然"
+      ],
+      "description": "奶纸色与灰绿适合成人向的安静探索和收藏插画。",
+      "roles": {
+        "background": "#EFEADF",
+        "surface": "#CCD4BD",
+        "subject": "#344B45",
+        "secondary": "#749986",
+        "accent": "#D08D6C",
+        "danger": "#A94948"
+      },
+      "guidance": "奶纸背景色用于天空、地面与留白，雾绿次级底色用于建筑大面或面板，深茶色勾出主体；灰绿组织植被，陶桃只点缀花、灯或收藏物。暖红仅用于必要警示，角色的深色轮廓不要被大量树枝切碎。",
+      "source_ids": [
+        "original"
+      ],
+      "license": "Original palette and role mapping",
+      "version": "1"
+    },
+    {
+      "id": "lake-peach",
+      "number": 10,
+      "name": "湖畔暮桃",
+      "category": "game",
+      "tags": [
+        "治愈",
+        "插画",
+        "冷暖平衡"
+      ],
+      "description": "雾蓝和暮桃能在保持安静的同时给小物件温度。",
+      "roles": {
+        "background": "#E7ECEF",
+        "surface": "#C1D1D2",
+        "subject": "#304A5D",
+        "secondary": "#749CA9",
+        "accent": "#D6A08C",
+        "danger": "#AB5361"
+      },
+      "guidance": "浅雾蓝背景色作天空、地面与留白，灰湖次级底色作建筑大面或面板，深蓝承托人物与文字；低饱和蓝用于次要景物，暮桃仅作少量故事焦点。避免所有屋顶、人物与花朵一起变成桃色，保持主次。",
+      "source_ids": [
+        "original"
+      ],
+      "license": "Original palette and role mapping",
+      "version": "1"
+    },
+    {
+      "id": "open-paper-grape",
+      "number": 16,
+      "name": "纸白葡萄",
+      "category": "tool",
+      "tags": [
+        "工具UI",
+        "浅色",
+        "创意"
+      ],
+      "description": "干净纸白搭配少量葡萄紫，适合素材和灵感管理工具。",
+      "roles": {
+        "background": "#F8F9FA",
+        "surface": "#F1F3F5",
+        "subject": "#212529",
+        "secondary": "#9C36B5",
+        "accent": "#BE4BDB",
+        "danger": "#E03131"
+      },
+      "guidance": "灰白作背景与卡片，深灰作正文，深葡萄可作链接；较亮葡萄仅用于选中或主按钮，红色表示错误。避免浅紫正文与浅灰底直接相邻，内容缩略图仍是视觉主角。",
+      "source_ids": [
+        "open-color"
+      ],
+      "license": "MIT (upstream colors); Original role mapping",
+      "version": "1"
+    },
+    {
+      "id": "catppuccin-latte-blue",
+      "number": 24,
+      "name": "奶纸晴蓝",
+      "category": "tool",
+      "tags": [
+        "工具UI",
+        "浅色",
+        "柔和"
+      ],
+      "description": "Latte 的浅灰奶纸底与清楚的蓝色操作适合轻量工作台。",
+      "roles": {
+        "background": "#EFF1F5",
+        "surface": "#E6E9EF",
+        "subject": "#4C4F69",
+        "secondary": "#6C6F85",
+        "accent": "#1E66F5",
+        "danger": "#D20F39"
+      },
+      "guidance": "Base作工作区，Mantle作面板，Text作正文，Subtext 0作说明；蓝色只用于主操作与选中，红色用于错误。卡片之间主要用留白和轻边界分隔，避免把每个图标都上成不同粉彩。",
+      "source_ids": [
+        "catppuccin"
+      ],
+      "license": "MIT (upstream colors); Original role mapping",
+      "version": "1"
+    }
+  ]
+}

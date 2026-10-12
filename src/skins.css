@@ -1,0 +1,328 @@
+/* Collectible palettes from Creative Asset Laboratory. Keep the one-screen geometry. */
+:root[data-skin] {
+  --skin-bg: #eff1f5;
+  --skin-surface: #e6e9ef;
+  --skin-ink: #4c4f69;
+  --skin-secondary: #6c6f85;
+  --skin-accent: #1e66f5;
+  --skin-danger: #d20f39;
+  --skin-primary: #195cdb;
+  --skin-primary-shadow: #1245a8;
+  --skin-card: #fff;
+  --skin-success: #356544;
+  --skin-success-soft: #e5f1e7;
+  --skin-warm: #fff1cd;
+  --skin-warm-ink: #775421;
+}
+:root[data-skin=sunny] {
+  --skin-bg: #eff1f5;
+  --skin-surface: #e6e9ef;
+  --skin-ink: #4c4f69;
+  --skin-secondary: #6c6f85;
+  --skin-accent: #1e66f5;
+  --skin-danger: #d20f39;
+  --skin-primary: #195cdb;
+  --skin-primary-shadow: #1245a8;
+}
+:root[data-skin=meadow] {
+  --skin-bg: #efeadf;
+  --skin-surface: #ccd4bd;
+  --skin-ink: #344b45;
+  --skin-secondary: #749986;
+  --skin-accent: #d08d6c;
+  --skin-danger: #a94948;
+  --skin-primary: #344b45;
+  --skin-primary-shadow: #233831;
+  --skin-card: #fffdf7;
+}
+:root[data-skin=peach] {
+  --skin-bg: #e7ecef;
+  --skin-surface: #c1d1d2;
+  --skin-ink: #304a5d;
+  --skin-secondary: #749ca9;
+  --skin-accent: #d6a08c;
+  --skin-danger: #ab5361;
+  --skin-primary: #304a5d;
+  --skin-primary-shadow: #213748;
+  --skin-card: #fffdf9;
+}
+:root[data-skin=grape] {
+  --skin-bg: #f8f9fa;
+  --skin-surface: #f1f3f5;
+  --skin-ink: #212529;
+  --skin-secondary: #9c36b5;
+  --skin-accent: #be4bdb;
+  --skin-danger: #e03131;
+  --skin-primary: #8e2da6;
+  --skin-primary-shadow: #652078;
+  --skin-card: #fff;
+}
+:root[data-skin=classic] {
+  --skin-bg: #fcf9f2;
+  --skin-surface: #eaf0df;
+  --skin-ink: #2d483b;
+  --skin-secondary: #70776a;
+  --skin-accent: #d9896b;
+  --skin-danger: #a94948;
+  --skin-primary: #315e49;
+  --skin-primary-shadow: #244834;
+  --skin-card: #fffefa;
+}
+:root[data-skin] {
+  --skin-muted: color-mix(in srgb, var(--skin-ink) 79%, var(--skin-bg));
+  --skin-tint: color-mix(in srgb, var(--skin-accent) 12%, var(--skin-card));
+  --skin-line: color-mix(in srgb, var(--skin-secondary) 33%, var(--skin-bg));
+  --skin-edge: color-mix(in srgb, var(--skin-secondary) 45%, var(--skin-bg));
+  --skin-soft: color-mix(in srgb, var(--skin-surface) 67%, var(--skin-card));
+  --skin-scene: color-mix(in srgb, var(--skin-accent) 10%, var(--skin-bg));
+  --skin-ring: color-mix(in srgb, var(--skin-accent) 24%, transparent);
+  --paper: var(--skin-bg);
+  --white: var(--skin-card);
+  --ink: var(--skin-ink);
+  --muted: var(--skin-muted);
+  --green: var(--skin-primary);
+  --green-light: var(--skin-tint);
+  --yellow: var(--skin-accent);
+  --coral: var(--skin-accent);
+  --line: var(--skin-line);
+  --focus-line: var(--skin-line);
+  --focus-sand: var(--skin-tint);
+  --shadow: 0 8px 24px color-mix(in srgb, var(--skin-ink) 6%, transparent);
+  color: var(--ink);
+  background: var(--paper);
+}
+
+/* The quiet paper texture stays behind the single, prominent lesson picture. */
+:root[data-skin] body {
+  color: var(--ink);
+  background: radial-gradient(circle, color-mix(in srgb, var(--skin-secondary) 8%, transparent) .8px, transparent 1px) 0 0/22px 22px, var(--paper);
+}
+:root[data-skin] #app>.header { border-color: var(--line); }
+:root[data-skin] #app>.bottom-nav {
+  background: var(--white);
+  border-color: var(--line);
+  box-shadow: 0 -4px 20px color-mix(in srgb, var(--skin-ink) 4%, transparent);
+}
+:root[data-skin] .bottom-nav button { color: var(--muted); }
+:root[data-skin] .bottom-nav button.active {
+  background: var(--skin-tint);
+  color: var(--skin-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 28%, transparent);
+}
+:root[data-skin] .header .profile-button {
+  box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--skin-line);
+}
+:root[data-skin] :is(button,a,input,select):focus-visible {
+  outline-color: var(--skin-primary);
+}
+:root[data-skin] :is(.primary,.focus-screen .primary,.practice-main .primary,.avatar-save) {
+  color: #fff;
+  background: var(--skin-primary);
+  box-shadow: 0 4px 0 var(--skin-primary-shadow), inset 0 1px 0 #ffffff26;
+}
+:root[data-skin] .primary:active:not(:disabled) {
+  box-shadow: 0 2px 0 var(--skin-primary-shadow), inset 0 1px 0 #ffffff26;
+}
+:root[data-skin] :is(.secondary,.screen-heading>button,.page-controls button,.circle-btn,.help-button,.plot-tabs button) {
+  color: var(--skin-ink);
+  background: var(--skin-soft);
+  border-color: var(--skin-line);
+}
+:root[data-skin] .screen-heading .back-button { background: transparent; }
+:root[data-skin] :is(.text-button,.parent-link,.focus-sub,.focus-caption span,.next-task,.journey-trail,.page-controls,.library-search label,.focus-library .results-count,.practice-scene,.practice-chinese,.practice-bottom,.course-rate-note,.audio-status,.theme-card>small,.parent-menu>button small,.focus-parent .settings-card>p,.focus-parent .progress-total span,.sound-dialog>p,.sound-dialog .small-note) {
+  color: var(--skin-muted);
+}
+:root[data-skin] :is(.journey-trail .current,.journey-trail .active,.focus-parent .progress-total,.task-check) { color: var(--skin-primary); }
+:root[data-skin] .journey-trail .done { color: var(--skin-success); }
+:root[data-skin] :is(.badge,.focus-heading .badge,.action-note,.milestone-note,.completion-flower) {
+  background: var(--skin-tint);
+  color: var(--skin-ink);
+}
+:root[data-skin] .focus-heading .badge {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 25%, transparent);
+}
+:root[data-skin] :is(.focus-scene,.scene-picture) {
+  background: linear-gradient(155deg, var(--white), var(--skin-scene));
+  border-color: var(--skin-edge);
+  box-shadow: 0 5px 0 var(--skin-line), inset 0 0 0 5px color-mix(in srgb, var(--white) 70%, transparent);
+}
+:root[data-skin] :is(.picture-play,.focus-scene .picture-play,.help-button>span,.choice>i) {
+  background: var(--white);
+  color: var(--skin-primary);
+}
+:root[data-skin] :is(.focus-scene.is-playing,.scene-picture.is-playing,.listening-cue.is-playing) {
+  border-color: var(--skin-primary);
+  box-shadow: 0 0 0 4px var(--skin-ring), 0 5px 0 var(--skin-line);
+}
+:root[data-skin] :is(.is-playing .picture-play,.listening-cue,.sound-settings.is-playing) {
+  background: var(--skin-tint);
+  border-color: var(--skin-primary);
+  color: var(--skin-primary);
+}
+:root[data-skin] .sound-settings {
+  color: var(--skin-ink);
+  background: var(--white);
+  border-color: var(--skin-line);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--skin-line) 55%, transparent);
+}
+:root[data-skin] .sound-settings>span { color: var(--skin-muted); }
+:root[data-skin] .sound-settings.is-playing { box-shadow: 0 0 0 2px var(--skin-ring); }
+:root[data-skin] .sound-settings.is-playing::before {
+  background: linear-gradient(currentColor,currentColor) left center/2px 7px no-repeat,linear-gradient(currentColor,currentColor) center/2px 15px no-repeat,linear-gradient(currentColor,currentColor) right center/2px 10px no-repeat;
+}
+:root[data-skin] .sound-settings.is-playing>span { color: var(--skin-primary); }
+:root[data-skin] :is(.audio-status[data-audio-state=playing],.audition-card-state) { color: var(--skin-primary); }
+:root[data-skin] .audio-status[data-audio-state=loading] { color: var(--skin-warm-ink); }
+:root[data-skin] :is(.audio-status[data-audio-state=error],.danger,.voice-audition .is-error,.avatar-picker #avatar-message.is-error) { color: var(--skin-danger); }
+
+/* Book cards, garden materials and parent controls use the same paper family. */
+:root[data-skin] :is(.theme-card,.theme-card:nth-child(3n+2),.theme-card:nth-child(3n),.parent-menu>button) {
+  background: var(--white);
+  border-color: var(--skin-line);
+  color: var(--skin-ink);
+  box-shadow: 0 3px 0 var(--skin-line);
+}
+:root[data-skin] .theme-card:nth-child(3n+2) { background: var(--skin-soft); }
+:root[data-skin] .theme-card:nth-child(3n) { background: var(--skin-tint); }
+:root[data-skin] :is(.phrase-tile,.material-inventory,.settings-card,.week-card,.rating-buttons>button:not(.primary)) {
+  background: var(--white);
+  border-color: var(--skin-line);
+}
+:root[data-skin] .tile-bottom { color: var(--skin-muted); }
+:root[data-skin] :is(.plot-tabs button[aria-pressed=true],.rating-buttons>button:last-child:not(.primary)) {
+  background: var(--skin-tint);
+  border-color: var(--skin-primary);
+  color: var(--skin-primary);
+}
+:root[data-skin] .focus-garden>.garden-plot {
+  background: linear-gradient(155deg, var(--white), var(--skin-soft));
+  border-color: var(--skin-edge);
+  box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--white) 60%, transparent);
+}
+:root[data-skin] .growth-dots i { background: var(--skin-line); }
+:root[data-skin] .growth-dots .grown { background: var(--skin-primary); }
+:root[data-skin] .collection-item { background: var(--skin-soft); border-color: var(--skin-line); }
+:root[data-skin] .collection-item.collected { background: var(--skin-tint); border-color: var(--skin-edge); }
+:root[data-skin] :is(.earned-rewards .material-inventory,.checkup-scores>div) { background: var(--skin-tint); border-color: var(--skin-line); }
+:root[data-skin] .week-day i { background: var(--skin-soft); color: var(--muted); }
+:root[data-skin] .week-day.practiced i { background: var(--skin-tint); color: var(--skin-primary); }
+:root[data-skin] :is(input,select) { background: var(--white); border-color: var(--skin-line); color: var(--ink); }
+:root[data-skin] .progress-track { background: var(--skin-line); }
+:root[data-skin] .progress-track i { background: var(--skin-primary); }
+:root[data-skin] .choice { background: var(--white); border-color: var(--skin-line); }
+:root[data-skin] .choice.correct { background: var(--skin-success-soft); border-color: var(--skin-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skin-success) 24%, transparent); }
+:root[data-skin] .quiz-feedback.correct { background: var(--skin-success-soft); color: var(--skin-success); }
+:root[data-skin] :is(.choice.try-again,.choice.incorrect,.quiz-feedback.gentle) { background: var(--skin-warm); color: var(--skin-warm-ink); border-color: #bc944e; }
+:root[data-skin] .choice.try-again { box-shadow: 0 0 0 3px #bc944e30; }
+:root[data-skin] .record-button { color: var(--skin-ink); background: var(--skin-tint); }
+:root[data-skin] .record-button.recording { color: white; background: var(--skin-danger); box-shadow: 0 0 0 5px color-mix(in srgb, var(--skin-danger) 18%, transparent); }
+:root[data-skin] #toast { background: var(--skin-ink); }
+:root[data-skin] .interaction-feedback-ring { border-color: var(--skin-primary); background: var(--skin-ring); }
+:root[data-skin] :is(.interaction-feedback-star,.interaction-feedback-star-2) { color: var(--skin-accent); }
+
+/* Voice and avatar rooms inherit the chosen world without recolouring characters. */
+:root[data-skin] :is(.sound-dialog,.confirm-dialog,.avatar-picker,.voice-audition,.skin-dialog) {
+  color: var(--ink);
+  background: var(--white);
+  border-color: var(--skin-edge);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--skin-ink) 28%, transparent);
+}
+:root[data-skin] :is(.sound-dialog,.confirm-dialog,.avatar-picker,.voice-audition,.skin-dialog)::backdrop {
+  background: color-mix(in srgb, var(--skin-ink) 55%, transparent);
+  backdrop-filter: blur(4px);
+}
+:root[data-skin] :is(.sound-dialog .circle-btn,.avatar-action,.avatar-close,.avatar-back,.avatar-modes,.audition-close,.audition-header,.audition-player) {
+  background: var(--skin-soft);
+  color: var(--ink);
+  border-color: var(--skin-line);
+}
+:root[data-skin] :is(.voice-button,.course-rate-buttons button,.audition-rate-buttons button,.avatar-animal,.audition-card,.audition-card:nth-child(2n),.audition-phrase-chips button,.audition-player button,.audition-pick,.audition-availability) {
+  background: var(--white);
+  color: var(--skin-muted);
+  border-color: var(--skin-line);
+}
+:root[data-skin] .voice-button { box-shadow: 0 3px 0 var(--skin-line); }
+:root[data-skin] :is(.voice-button.selected,.course-rate-buttons [aria-pressed=true],.audition-rate-buttons [aria-pressed=true],.avatar-animal[aria-pressed=true],.avatar-modes [aria-pressed=true],.audition-phrase-chips [aria-pressed=true]) {
+  background: var(--skin-tint);
+  border-color: var(--skin-primary);
+  color: var(--skin-primary);
+  box-shadow: 0 2px 0 var(--skin-line);
+}
+:root[data-skin] .voice-speaking { outline-color: var(--skin-accent); }
+:root[data-skin] .voice-tick { color: var(--skin-primary); background: var(--skin-tint); }
+:root[data-skin] :is(.avatar-animal b,.audition-phrase-chips [aria-pressed=true] b,.audition-pick[aria-pressed=true]) { background: var(--skin-primary); color: white; }
+:root[data-skin] :is(.avatar-file-actions .avatar-action,.voice-audition-entry,.audition-choices) { background: var(--skin-tint); color: var(--ink); border-color: var(--skin-line); }
+:root[data-skin] .voice-audition-entry { box-shadow: 0 3px 0 var(--skin-line); }
+:root[data-skin] :is(.avatar-picker-header small,.avatar-tip,.avatar-privacy,.avatar-adjustments label,.avatar-delete,.voice-audition-entry small,.audition-header small,.audition-intro,.audition-translation,.audition-section-title>span,.audition-tagline,.audition-description,.audition-originals h3,.audition-speed [data-audition-rate-note]) { color: var(--skin-muted); }
+:root[data-skin] .avatar-adjustments input { accent-color: var(--skin-primary); }
+:root[data-skin] .avatar-picker #avatar-message { color: var(--skin-primary); }
+:root[data-skin] .avatar-save { background: var(--skin-primary); color: white; box-shadow: 0 3px 0 var(--skin-primary-shadow); }
+:root[data-skin] .audition-animal.is-current { border-color: var(--skin-edge); background: var(--skin-soft); }
+:root[data-skin] .audition-animal.is-speaking { border-color: var(--skin-primary); background: var(--skin-tint); box-shadow: inset 0 0 0 2px var(--skin-ring); }
+:root[data-skin] :is(.audition-animal.is-loading,.audition-player[data-audition-state=loading]) { background: var(--skin-warm); border-color: #bc944e; }
+:root[data-skin] .audition-adopted .audition-availability { background: var(--skin-tint); color: var(--skin-primary); border-color: var(--skin-line); }
+:root[data-skin] .audition-card-name small { background: var(--skin-soft); color: var(--muted); }
+:root[data-skin] .audition-wave i { background: var(--skin-primary); }
+
+/* One collectible world at a time. All buttons remain reachable at 320 x 568. */
+.skin-entry {
+  width: 100%; min-height: 48px; flex: none; display: flex; align-items: center;
+  gap: 9px; padding: 7px 12px; border: 1px solid var(--skin-edge); border-radius: 17px;
+  background: var(--white); color: var(--ink); text-align: left;
+  box-shadow: 0 2px 0 var(--skin-line);
+}
+.skin-entry>span:first-child { font-size: 24px; line-height: 1.2; flex: none; }
+.skin-entry>span:nth-child(2) { flex: 1; min-width: 0; }
+.skin-entry strong { display: block; font-size: 13px; line-height: 1.3; }
+.skin-entry small { display: block; font-size: 10px; line-height: 1.4; color: var(--muted); }
+.skin-entry>.icon { width: 18px; height: 18px; }
+.skin-unlock-note {
+  min-height: 44px; width: 100%; display: flex; align-items: center; justify-content: center;
+  flex: none; gap: 7px; padding: 8px 12px; border: 1px solid var(--skin-edge);
+  border-radius: 14px; background: var(--skin-tint); color: var(--skin-ink);
+  font-size: 12px; font-weight: 700; line-height: 1.4;
+}
+.skin-dialog.focus-dialog {
+  width: min(440px,calc(100vw - 20px)); height: min(650px,calc(100dvh - 20px));
+  max-height: calc(100dvh - 20px); padding: 18px; border: 2px solid var(--skin-edge);
+  border-radius: 28px; overflow: visible; overscroll-behavior: contain;
+}
+.skin-dialog[open] { display: flex; flex-direction: column; gap: 10px; }
+.skin-dialog>header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: none; min-height: 44px; }
+.skin-dialog>header h2 { font-size: 22px; line-height: 1.3; letter-spacing: 0; }
+.skin-dialog>header button { flex: none; min-width: 44px; min-height: 44px; width: 44px; height: 44px; border-radius: 50%; font-size: 26px; background: var(--skin-soft); color: var(--ink); }
+.skin-status { flex: none; margin: 0; text-align: center; color: var(--skin-primary); font-size: 11px; font-weight: 700; line-height: 1.4; }
+.skin-preview {
+  display: flex; align-items: center; justify-content: center; flex: 1; min-height: 90px;
+  width: 100%; padding: 10px; border-radius: 23px; border: 1px solid var(--preview-surface,var(--skin-line));
+  background: var(--preview-bg,var(--skin-bg)); color: var(--preview-ink,var(--ink));
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--preview-surface,var(--skin-surface)) 58%, transparent);
+}
+.skin-preview svg { display: block; width: 100%; height: 100%; max-height: 100%; min-height: 0; object-fit: contain; }
+.skin-dialog .skin-name { flex: none; font-size: 23px; line-height: 1.3; text-align: center; margin: 0; }
+.skin-dialog .skin-rule { flex: none; font-size: 12px; line-height: 1.45; text-align: center; color: var(--muted); margin: 0; }
+.skin-progress { flex: none; display: block; width: 100%; height: 9px; border: 0; border-radius: 12px; overflow: hidden; appearance: none; background: var(--skin-soft); color: var(--skin-primary); }
+.skin-progress::-webkit-progress-bar { background: var(--skin-soft); border-radius: 12px; }
+.skin-progress::-webkit-progress-value { background: var(--skin-primary); border-radius: 12px; }
+.skin-progress::-moz-progress-bar { background: var(--skin-primary); border-radius: 12px; }
+.skin-pagination { flex: none; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
+.skin-pagination button { min-width: 64px; min-height: 44px; padding: 8px 12px; border-radius: 14px; border: 1px solid var(--skin-line); background: var(--skin-soft); color: var(--ink); font-size: 12px; }
+.skin-dialog button.primary[data-use-skin] { flex: none; width: 100%; min-height: 48px; border-radius: 16px; margin: 0 0 4px; padding: 10px; font-size: 15px; }
+.skin-source { flex: none; font-size: 9px; line-height: 1.4; margin: 0; color: var(--muted); text-align: center; }
+@media(max-height:700px) {
+  .skin-entry { min-height: 44px; padding: 5px 10px; border-radius: 14px; gap: 7px; }
+  .skin-entry strong { font-size: 12px; }
+  .skin-entry small { font-size: 9px; }
+  .skin-entry>span:first-child { font-size: 21px; }
+  .skin-dialog.focus-dialog { padding: 12px; border-radius: 23px; }
+  .skin-dialog[open] { gap: 7px; }
+  .skin-dialog>header h2 { font-size: 20px; }
+  .skin-dialog .skin-name { font-size: 21px; }
+  .skin-dialog .skin-rule { font-size: 11px; }
+  .skin-preview { padding: 6px; min-height: 72px; border-radius: 20px; }
+  .skin-source { display: none; }
+  .skin-unlock-note { padding: 6px 8px; font-size: 11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  :root[data-skin] :is(.voice-speaking,.is-playing.scene-picture) { outline-color: var(--skin-primary); }
+}
