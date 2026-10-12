@@ -5,7 +5,7 @@
 .animal-avatar>.avatar-preset-art{padding:4%;object-fit:contain}
 .profile-button [data-user-avatar]{width:54px;height:54px;flex:none}
 .avatar-settings [data-user-avatar]{width:76px;height:76px;flex:none}
-.avatar-picker{box-sizing:border-box;width:min(440px,calc(100vw - 16px));height:min(570px,calc(100dvh - 16px));max-height:calc(100dvh - 16px);padding:14px;border:2px solid #e4d9bf;border-radius:25px;background:#fffdf5;color:#2d483b;box-shadow:0 25px 80px #21362944;overflow:visible;overscroll-behavior:contain}
+.avatar-picker{box-sizing:border-box;width:min(440px,calc(100vw - 16px));height:min(570px,calc(var(--app-viewport-height,100vh) - 16px));height:min(570px,calc(100dvh - 16px));max-height:calc(var(--app-viewport-height,100vh) - 16px);max-height:calc(100dvh - 16px);padding:14px;border:2px solid #e4d9bf;border-radius:25px;background:#fffdf5;color:#2d483b;box-shadow:0 25px 80px #21362944;overflow:visible;overscroll-behavior:contain}
 .avatar-picker[open]{display:flex;flex-direction:column;gap:8px}
 .avatar-picker::backdrop{background:#233c35a6;backdrop-filter:blur(4px)}
 .avatar-picker [hidden]{display:none!important}

@@ -1,3 +1,4 @@
+import {showDialog} from './dialog.js';
 export const AVATAR_STORAGE_KEY = 'english-sprout-avatar-v1';
 export const MAX_AVATAR_BYTES = 200 * 1024;
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -197,5 +198,5 @@ export function openAvatarPicker({onSave = () => {}, notify = () => {}} = {}) {
   $('#avatar-close').onclick=()=>dialog.close();
   dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)dialog.close();}});
   dialog.addEventListener('close',()=>{closed=true;++generation;if(sourceUrl)URL.revokeObjectURL(sourceUrl);source=null;frame=null;dialog.remove();currentPicker=null;if(originalFocus?.isConnected)originalFocus.focus();},{once:true});
-  showStep('preset',false);document.body.append(dialog);currentPicker=dialog;dialog.showModal();return dialog;
+  showStep('preset',false);document.body.append(dialog);currentPicker=dialog;showDialog(dialog);return dialog;
 }

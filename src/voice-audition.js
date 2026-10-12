@@ -1,3 +1,4 @@
+import {showDialog} from './dialog.js';
 import {animalSvg} from './avatars.js';
 import {playFile,stopAudio,preloadAudio,isAudioLoading,setPlaybackRate} from './media.js';
 import {voiceAudioPath,VOICE_STORAGE_KEY,AUDITION_RATE_KEY,PLAYBACK_RATES,PLAYBACK_RATE_LABELS,readStoredRate,saveStoredRate} from './voices.js';
@@ -151,6 +152,6 @@ export function openVoiceAudition(){
   dialog.addEventListener('close',cleanup,{once:true});
   document.addEventListener('visibilitychange',onHide);window.addEventListener('pagehide',onPageHide);
   window.addEventListener('hashchange',onNavigate);window.addEventListener('storage',onStorage);
-  document.body.append(dialog);currentDialog=dialog;dialog.showModal();$('[data-audition-close]').focus();load();
+  document.body.append(dialog);currentDialog=dialog;showDialog(dialog);$('[data-audition-close]').focus();load();
   return dialog;
 }

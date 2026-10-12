@@ -13,6 +13,15 @@
   --skin-success-soft: #e5f1e7;
   --skin-warm: #fff1cd;
   --skin-warm-ink: #775421;
+  /* Precomputed sRGB palette roles also work before color-mix was supported. */
+  --skin-muted: #6e7186;
+  --skin-tint: #e4edfe;
+  --skin-line: #c4c6d0;
+  --skin-edge: #b4b7c3;
+  --skin-soft: #eef0f4;
+  --skin-scene: #dae3f5;
+  --skin-ring: #1e66f53d;
+  --shadow: 0 8px 24px #2736450f;
 }
 :root[data-skin=sunny] {
   --skin-bg: #eff1f5;
@@ -34,6 +43,13 @@
   --skin-primary: #344b45;
   --skin-primary-shadow: #233831;
   --skin-card: #fffdf7;
+  --skin-muted: #5b6c65;
+  --skin-tint: #f9f0e6;
+  --skin-line: #c6cfc2;
+  --skin-edge: #b8c6b7;
+  --skin-soft: #dde2d0;
+  --skin-scene: #ece1d4;
+  --skin-ring: #d08d6c3d;
 }
 :root[data-skin=peach] {
   --skin-bg: #e7ecef;
@@ -45,6 +61,13 @@
   --skin-primary: #304a5d;
   --skin-primary-shadow: #213748;
   --skin-card: #fffdf9;
+  --skin-muted: #566c7c;
+  --skin-tint: #faf2ec;
+  --skin-line: #c1d2d8;
+  --skin-edge: #b3c8d0;
+  --skin-soft: #d5e0df;
+  --skin-scene: #e5e4e5;
+  --skin-ring: #d6a08c3d;
 }
 :root[data-skin=grape] {
   --skin-bg: #f8f9fa;
@@ -56,6 +79,13 @@
   --skin-primary: #8e2da6;
   --skin-primary-shadow: #652078;
   --skin-card: #fff;
+  --skin-muted: #4e5255;
+  --skin-tint: #f7e9fb;
+  --skin-line: #dab9e3;
+  --skin-edge: #cfa1db;
+  --skin-soft: #f6f7f8;
+  --skin-scene: #f2e8f7;
+  --skin-ring: #be4bdb3d;
 }
 :root[data-skin=classic] {
   --skin-bg: #fcf9f2;
@@ -67,7 +97,15 @@
   --skin-primary: #315e49;
   --skin-primary-shadow: #244834;
   --skin-card: #fffefa;
+  --skin-muted: #586d61;
+  --skin-tint: #faf0e9;
+  --skin-line: #cecec5;
+  --skin-edge: #bdbfb5;
+  --skin-soft: #f1f5e8;
+  --skin-scene: #f9eee5;
+  --skin-ring: #d9896b3d;
 }
+@supports (color: color-mix(in srgb, black, white)) {
 :root[data-skin] {
   --skin-muted: color-mix(in srgb, var(--skin-ink) 79%, var(--skin-bg));
   --skin-tint: color-mix(in srgb, var(--skin-accent) 12%, var(--skin-card));
@@ -76,6 +114,10 @@
   --skin-soft: color-mix(in srgb, var(--skin-surface) 67%, var(--skin-card));
   --skin-scene: color-mix(in srgb, var(--skin-accent) 10%, var(--skin-bg));
   --skin-ring: color-mix(in srgb, var(--skin-accent) 24%, transparent);
+  --shadow: 0 8px 24px color-mix(in srgb, var(--skin-ink) 6%, transparent);
+}
+}
+:root[data-skin] {
   --paper: var(--skin-bg);
   --white: var(--skin-card);
   --ink: var(--skin-ink);
@@ -87,7 +129,6 @@
   --line: var(--skin-line);
   --focus-line: var(--skin-line);
   --focus-sand: var(--skin-tint);
-  --shadow: 0 8px 24px color-mix(in srgb, var(--skin-ink) 6%, transparent);
   color: var(--ink);
   background: var(--paper);
 }
@@ -95,19 +136,29 @@
 /* The quiet paper texture stays behind the single, prominent lesson picture. */
 :root[data-skin] body {
   color: var(--ink);
-  background: radial-gradient(circle, color-mix(in srgb, var(--skin-secondary) 8%, transparent) .8px, transparent 1px) 0 0/22px 22px, var(--paper);
+  background: var(--paper);
+}
+@supports (color: color-mix(in srgb, black, white)) {
+/* The quiet paper texture stays behind the single, prominent lesson picture. */
+:root[data-skin] body { background: radial-gradient(circle, color-mix(in srgb, var(--skin-secondary) 8%, transparent) .8px, transparent 1px) 0 0/22px 22px, var(--paper); }
 }
 :root[data-skin] #app>.header { border-color: var(--line); }
 :root[data-skin] #app>.bottom-nav {
   background: var(--white);
   border-color: var(--line);
-  box-shadow: 0 -4px 20px color-mix(in srgb, var(--skin-ink) 4%, transparent);
+  box-shadow: 0 -4px 20px #2736450a;
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] #app>.bottom-nav { box-shadow: 0 -4px 20px color-mix(in srgb, var(--skin-ink) 4%, transparent); }
 }
 :root[data-skin] .bottom-nav button { color: var(--muted); }
 :root[data-skin] .bottom-nav button.active {
   background: var(--skin-tint);
   color: var(--skin-primary);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 28%, transparent);
+  box-shadow: inset 0 0 0 1px var(--skin-ring);
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .bottom-nav button.active { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 28%, transparent); }
 }
 :root[data-skin] .header .profile-button {
   box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--skin-line);
@@ -139,12 +190,18 @@
   color: var(--skin-ink);
 }
 :root[data-skin] .focus-heading .badge {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 25%, transparent);
+  box-shadow: inset 0 0 0 1px var(--skin-ring);
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .focus-heading .badge { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--skin-accent) 25%, transparent); }
 }
 :root[data-skin] :is(.focus-scene,.scene-picture) {
   background: linear-gradient(155deg, var(--white), var(--skin-scene));
   border-color: var(--skin-edge);
-  box-shadow: 0 5px 0 var(--skin-line), inset 0 0 0 5px color-mix(in srgb, var(--white) 70%, transparent);
+  box-shadow: 0 5px 0 var(--skin-line), inset 0 0 0 5px #ffffffb3;
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] :is(.focus-scene,.scene-picture) { box-shadow: 0 5px 0 var(--skin-line), inset 0 0 0 5px color-mix(in srgb, var(--white) 70%, transparent); }
 }
 :root[data-skin] :is(.picture-play,.focus-scene .picture-play,.help-button>span,.choice>i) {
   background: var(--white);
@@ -163,7 +220,10 @@
   color: var(--skin-ink);
   background: var(--white);
   border-color: var(--skin-line);
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--skin-line) 55%, transparent);
+  box-shadow: 0 2px 0 var(--skin-line);
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .sound-settings { box-shadow: 0 2px 0 color-mix(in srgb, var(--skin-line) 55%, transparent); }
 }
 :root[data-skin] .sound-settings>span { color: var(--skin-muted); }
 :root[data-skin] .sound-settings.is-playing { box-shadow: 0 0 0 2px var(--skin-ring); }
@@ -197,7 +257,10 @@
 :root[data-skin] .focus-garden>.garden-plot {
   background: linear-gradient(155deg, var(--white), var(--skin-soft));
   border-color: var(--skin-edge);
-  box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--white) 60%, transparent);
+  box-shadow: inset 0 0 0 4px #ffffff99;
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .focus-garden>.garden-plot { box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--white) 60%, transparent); }
 }
 :root[data-skin] .growth-dots i { background: var(--skin-line); }
 :root[data-skin] .growth-dots .grown { background: var(--skin-primary); }
@@ -210,12 +273,18 @@
 :root[data-skin] .progress-track { background: var(--skin-line); }
 :root[data-skin] .progress-track i { background: var(--skin-primary); }
 :root[data-skin] .choice { background: var(--white); border-color: var(--skin-line); }
-:root[data-skin] .choice.correct { background: var(--skin-success-soft); border-color: var(--skin-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skin-success) 24%, transparent); }
+:root[data-skin] .choice.correct { background: var(--skin-success-soft); border-color: var(--skin-success); box-shadow: 0 0 0 3px #3565443d; }
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .choice.correct { box-shadow: 0 0 0 3px color-mix(in srgb, var(--skin-success) 24%, transparent); }
+}
 :root[data-skin] .quiz-feedback.correct { background: var(--skin-success-soft); color: var(--skin-success); }
 :root[data-skin] :is(.choice.try-again,.choice.incorrect,.quiz-feedback.gentle) { background: var(--skin-warm); color: var(--skin-warm-ink); border-color: #bc944e; }
 :root[data-skin] .choice.try-again { box-shadow: 0 0 0 3px #bc944e30; }
 :root[data-skin] .record-button { color: var(--skin-ink); background: var(--skin-tint); }
-:root[data-skin] .record-button.recording { color: white; background: var(--skin-danger); box-shadow: 0 0 0 5px color-mix(in srgb, var(--skin-danger) 18%, transparent); }
+:root[data-skin] .record-button.recording { color: white; background: var(--skin-danger); box-shadow: 0 0 0 5px #b4444430; }
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] .record-button.recording { box-shadow: 0 0 0 5px color-mix(in srgb, var(--skin-danger) 18%, transparent); }
+}
 :root[data-skin] #toast { background: var(--skin-ink); }
 :root[data-skin] .interaction-feedback-ring { border-color: var(--skin-primary); background: var(--skin-ring); }
 :root[data-skin] :is(.interaction-feedback-star,.interaction-feedback-star-2) { color: var(--skin-accent); }
@@ -225,11 +294,18 @@
   color: var(--ink);
   background: var(--white);
   border-color: var(--skin-edge);
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--skin-ink) 28%, transparent);
+  box-shadow: 0 24px 70px #27364547;
+}
+@supports (color: color-mix(in srgb, black, white)) {
+/* Voice and avatar rooms inherit the chosen world without recolouring characters. */
+:root[data-skin] :is(.sound-dialog,.confirm-dialog,.avatar-picker,.voice-audition,.skin-dialog) { box-shadow: 0 24px 70px color-mix(in srgb, var(--skin-ink) 28%, transparent); }
 }
 :root[data-skin] :is(.sound-dialog,.confirm-dialog,.avatar-picker,.voice-audition,.skin-dialog)::backdrop {
-  background: color-mix(in srgb, var(--skin-ink) 55%, transparent);
+  background: #2736458c;
   backdrop-filter: blur(4px);
+}
+@supports (color: color-mix(in srgb, black, white)) {
+:root[data-skin] :is(.sound-dialog,.confirm-dialog,.avatar-picker,.voice-audition,.skin-dialog)::backdrop { background: color-mix(in srgb, var(--skin-ink) 55%, transparent); }
 }
 :root[data-skin] :is(.sound-dialog .circle-btn,.avatar-action,.avatar-close,.avatar-back,.avatar-modes,.audition-close,.audition-header,.audition-player) {
   background: var(--skin-soft);
@@ -283,8 +359,8 @@
   font-size: 12px; font-weight: 700; line-height: 1.4;
 }
 .skin-dialog.focus-dialog {
-  width: min(440px,calc(100vw - 20px)); height: min(650px,calc(100dvh - 20px));
-  max-height: calc(100dvh - 20px); padding: 18px; border: 2px solid var(--skin-edge);
+  width: min(440px,calc(100vw - 20px)); height:min(650px,calc(var(--app-viewport-height,100vh) - 20px));height:min(650px,calc(100dvh - 20px));
+  max-height:calc(var(--app-viewport-height,100vh) - 20px);max-height:calc(100dvh - 20px); padding: 18px; border: 2px solid var(--skin-edge);
   border-radius: 28px; overflow: visible; overscroll-behavior: contain;
 }
 .skin-dialog[open] { display: flex; flex-direction: column; gap: 10px; }
@@ -296,7 +372,10 @@
   display: flex; align-items: center; justify-content: center; flex: 1; min-height: 90px;
   width: 100%; padding: 10px; border-radius: 23px; border: 1px solid var(--preview-surface,var(--skin-line));
   background: var(--preview-bg,var(--skin-bg)); color: var(--preview-ink,var(--ink));
-  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--preview-surface,var(--skin-surface)) 58%, transparent);
+  box-shadow: inset 0 0 0 5px var(--preview-surface,var(--skin-surface));
+}
+@supports (color: color-mix(in srgb, black, white)) {
+.skin-preview { box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--preview-surface,var(--skin-surface)) 58%, transparent); }
 }
 .skin-preview svg { display: block; width: 100%; height: 100%; max-height: 100%; min-height: 0; object-fit: contain; }
 .skin-dialog .skin-name { flex: none; font-size: 23px; line-height: 1.3; text-align: center; margin: 0; }

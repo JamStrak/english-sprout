@@ -1,4 +1,5 @@
 /** A replayable garden ledger. Learning history is the only source of rewards. */
+import {last,cloneData} from './compat.js';
 export const PLANTS = Object.freeze([
   Object.freeze({ id: 'sunflower', name: '向日葵', color: '#efb72e', emoji: '🌻' }),
   Object.freeze({ id: 'tulip', name: '郁金香', color: '#ec739b', emoji: '🌷' }),
@@ -137,7 +138,7 @@ function replay(actions, rewards, start, today = '9999-12-31') {
   grantThrough(today);
   return { inventory, earned, plots: plots.map((plot, index) => plot && {
     ...plot, lastWaterDate: care[index].water, lastFertilizeDate: care[index].fertilizer,
-    lastCareDate: [care[index].water, care[index].fertilizer].filter(Boolean).sort().at(-1) ?? null,
+    lastCareDate: last([care[index].water, care[index].fertilizer].filter(Boolean).sort()) ?? null,
     canWater: plot.growth < 3 && inventory.water > 0 && care[index].water !== today,
     canFertilize: plot.growth < 3 && inventory.fertilizer > 0 && care[index].fertilizer !== today,
     canHarvest: plot.growth === 3,
@@ -168,11 +169,11 @@ export function getGarden(state, today) {
 export function recordGardenAction(state, action, today) {
   calendar(today);
   const clean = validateGarden(state.garden, state);
-  if (today < state.startedAt || today < (clean.actions.at(-1)?.date ?? state.startedAt)) fail('操作日期早于已有记录，请检查设备日期');
+  if (today < state.startedAt || today < (last(clean.actions)?.date ?? state.startedAt)) fail('操作日期早于已有记录，请检查设备日期');
   if (clean.actions.length >= MAX_GARDEN_ACTIONS) fail('操作数量已达到上限');
   clean.actions.push({ date: today, ...cleanAction(action, false) });
   const garden = validateGarden(clean, state);
-  const next = structuredClone(state);
+  const next = cloneData(state);
   next.garden = garden;
   return next;
 }

@@ -1,0 +1,13 @@
+/* Only used on browsers without showModal (including iPadOS 15.1). */
+.dialog-fallback-backdrop{position:fixed;inset:0;background:#233c35a6;touch-action:none;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.dialog-fallback{display:block;position:fixed;top:calc(var(--app-viewport-height,100vh) / 2);left:50%;right:auto;bottom:auto;margin:0;transform:translate(-50%,-50%);box-sizing:border-box;max-height:calc(var(--app-viewport-height,100vh) - 24px)}
+.dialog-fallback:not([open]){display:none}
+.dialog-fallback.avatar-picker{height:min(570px,calc(var(--app-viewport-height,100vh) - 16px));max-height:calc(var(--app-viewport-height,100vh) - 16px)}
+.dialog-fallback.skin-dialog{height:min(650px,calc(var(--app-viewport-height,100vh) - 20px));max-height:calc(var(--app-viewport-height,100vh) - 20px)}
+.dialog-fallback.sound-dialog,.dialog-fallback.voice-audition{max-height:calc(var(--app-viewport-height,100vh) - 24px)}
+@supports(height:100dvh){
+  .dialog-fallback{top:50dvh;max-height:calc(100dvh - 24px)}
+  .dialog-fallback.avatar-picker{height:min(570px,calc(100dvh - 16px));max-height:calc(100dvh - 16px)}
+  .dialog-fallback.skin-dialog{height:min(650px,calc(100dvh - 20px));max-height:calc(100dvh - 20px)}
+  .dialog-fallback.sound-dialog,.dialog-fallback.voice-audition{max-height:calc(100dvh - 24px)}
+}

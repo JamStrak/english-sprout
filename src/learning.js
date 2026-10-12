@@ -1,5 +1,6 @@
 /** Local-first learning state. Dates are local calendar labels, never UTC days. */
 import {createGarden,validateGarden} from './garden.js';
+import {hasOwn,last} from './compat.js';
 export const REVIEW_INTERVALS = Object.freeze([1, 3, 7, 14, 30, 60, 90]);
 const RATINGS = new Set(['again', 'help', 'good']);
 const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -92,14 +93,14 @@ function cloneState(state) {
 }
 
 function dayEntry(state, today) {
-  return Object.hasOwn(state.days, today) ? state.days[today]
+  return hasOwn(state.days, today) ? state.days[today]
     : { newId: null, newDone: false, reviewed: [], results: [] };
 }
 
 function allDueIds(state, ids, today) {
   const order = new Map(ids.map((id, index) => [id, index]));
   return ids.filter((id) => {
-    const card = Object.hasOwn(state.cards, id) ? state.cards[id] : null;
+    const card = hasOwn(state.cards, id) ? state.cards[id] : null;
     return card && effectiveDue(state,id,card) <= today && card.lastReviewed < today;
   }).sort((a, b) => effectiveDue(state,a,state.cards[a]).localeCompare(effectiveDue(state,b,state.cards[b])) || order.get(a) - order.get(b));
 }
@@ -124,11 +125,11 @@ function introductionDates(state){
 export function getCheckupPlan(state,lessons,today=dayKey()){
   dateParts(today);
   const dates=Object.keys(state.checkups||{}).filter(d=>d<=today).sort();
-  const lastDate=dates.at(-1)||null;
+  const lastDate=last(dates)||null;
   const nextDate=addDays(lastDate||state.startedAt,7);
   const introduced=introductionDates(state),order=new Map(lessonIds(lessons).map((id,i)=>[id,i]));
   const candidates=[...order.keys()].filter(id=>state.cards[id]&&introduced[id]&&introduced[id]<=addDays(today,-3)&&state.cards[id].lastReviewed<today);
-  const lastSeen=id=>dates.filter(date=>state.checkups[date].some(r=>r.lessonId===id)).at(-1)||state.startedAt;
+  const lastSeen=id=>last(dates.filter(date=>state.checkups[date].some(r=>r.lessonId===id)))||state.startedAt;
   candidates.sort((a,b)=>lastSeen(a).localeCompare(lastSeen(b))||effectiveDue(state,a,state.cards[a]).localeCompare(effectiveDue(state,b,state.cards[b]))||order.get(a)-order.get(b));
   const due=today>=nextDate&&candidates.length>0;
   return {due,ids:due?candidates.slice(0,3):[],lastDate,nextDate};
@@ -138,7 +139,7 @@ export function getCheckupPlan(state,lessons,today=dayKey()){
 export function recordCheckup(state,lessons,results,today=dayKey()){
   dateParts(today);
   if(today<state.startedAt||Object.keys(state.checkups||{}).some(date=>date>today))fail('小测日期早于已有记录');
-  if(Object.hasOwn(state.checkups||{},today))return cloneState(state);
+  if(hasOwn(state.checkups||{},today))return cloneState(state);
   const plan=getCheckupPlan(state,lessons,today);
   if(!plan.due||!Array.isArray(results)||results.length!==plan.ids.length)fail('小测尚未到期或结果数量不正确');
   const seen=new Set();
@@ -158,7 +159,7 @@ export function getDailyPlan(state, lessons, today = dayKey()) {
   const due = allDueIds(state, ids, today);
   const slots = Math.max(0, state.settings.dailyReviews - entry.reviewed.length);
   return {
-    newLessonId: entry.newId ?? ids.find((id) => !Object.hasOwn(state.cards, id)) ?? null,
+    newLessonId: entry.newId ?? ids.find((id) => !hasOwn(state.cards, id)) ?? null,
     dueIds: due.slice(0, slots),
     extraDueCount: Math.max(0, due.length - slots),
     newDone: entry.newDone,
@@ -190,7 +191,7 @@ export function recordResult(state, lessonId, rating, today = dayKey(), { isNew 
   const result = cloneState(state);
   const entry = dayEntry(result, today);
   if (entry.results.some((item) => item.lessonId === lessonId)) return result;
-  const previous = Object.hasOwn(result.cards, lessonId) ? result.cards[lessonId] : null;
+  const previous = hasOwn(result.cards, lessonId) ? result.cards[lessonId] : null;
   if (previous && previous.lastReviewed >= today) fail('设备日期早于已有练习，请检查设备日期');
   if (isNew) {
     if (previous) fail('这句已经学过，请从复习进入');
@@ -212,7 +213,7 @@ export function recordResult(state, lessonId, rating, today = dayKey(), { isNew 
 export function getStats(state, lessons, today = dayKey()) {
   dateParts(today);
   const ids = lessonIds(lessons);
-  const learned = ids.filter((id) => Object.hasOwn(state.cards, id));
+  const learned = ids.filter((id) => hasOwn(state.cards, id));
   const plan = getDailyPlan(state, lessons, today);
   const practiced = Object.entries(state.days).filter(([date, entry]) => date <= today && entry.results.length > 0);
   const checkups = Object.entries(state.checkups || {}).filter(([date, results]) => date <= today && results.length > 0);
@@ -245,7 +246,7 @@ function exactKeys(object, required, label) {
   if (!isRecord(object)) fail(`${label}应是对象`);
   const keys = Object.keys(object);
   if (keys.length !== required.length || keys.some((key) => !required.includes(key))) fail(`${label}字段不正确`);
-  for (const key of required) if (!Object.hasOwn(object, key)) fail(`${label}缺少字段`);
+  for (const key of required) if (!hasOwn(object, key)) fail(`${label}缺少字段`);
 }
 
 function integer(value, min, max, label) {
@@ -289,7 +290,7 @@ export function validateImport(input, lessons) {
     if (input.length > MAX_IMPORT_BYTES) fail('备份超过 5 MB');
     try { input = JSON.parse(input); } catch { fail('不是有效的 JSON 文件'); }
   }
-  exactKeys(input, ['version', 'startedAt', 'settings', 'cards', 'days',...['checkups','garden'].filter(key=>Object.hasOwn(input||{},key))], '备份');
+  exactKeys(input, ['version', 'startedAt', 'settings', 'cards', 'days',...['checkups','garden'].filter(key=>hasOwn(input||{},key))], '备份');
   if (input.version !== 1) fail('备份版本不受支持');
   dateParts(input.startedAt);
   exactKeys(input.settings, ['nickname', 'dailyReviews'], '设置');
@@ -313,7 +314,7 @@ export function validateImport(input, lessons) {
     clean.cards[id] = { ...card };
   }
   const replay = {};
-  if(Object.hasOwn(input,'checkups')){
+  if(hasOwn(input,'checkups')){
     if(!isRecord(input.checkups)||Object.keys(input.checkups).length>MAX_HISTORY_DAYS)fail('小测记录不正确');
     let previousDate=null;
     for(const date of Object.keys(input.checkups).sort()){
@@ -324,7 +325,7 @@ export function validateImport(input, lessons) {
       const seen=new Set();
       clean.checkups[date]=results.map(result=>{
         exactKeys(result,['lessonId','meaning','spoken'],'小测结果');
-        if(!known.has(result.lessonId)||!Object.hasOwn(clean.cards,result.lessonId)||seen.has(result.lessonId)||typeof result.meaning!=='boolean'||!RATINGS.has(result.spoken))fail('小测结果不正确');
+        if(!known.has(result.lessonId)||!hasOwn(clean.cards,result.lessonId)||seen.has(result.lessonId)||typeof result.meaning!=='boolean'||!RATINGS.has(result.spoken))fail('小测结果不正确');
         seen.add(result.lessonId);return {...result};
       });
       previousDate=date;
@@ -345,7 +346,7 @@ export function validateImport(input, lessons) {
     let newCount = 0;
     const results = entry.results.map((item) => {
       exactKeys(item, ['lessonId', 'rating', 'isNew'], '练习结果');
-      if (!known.has(item.lessonId) || !Object.hasOwn(clean.cards, item.lessonId) || !RATINGS.has(item.rating) || typeof item.isNew !== 'boolean' || seen.has(item.lessonId)) fail('练习结果内容不正确');
+      if (!known.has(item.lessonId) || !hasOwn(clean.cards, item.lessonId) || !RATINGS.has(item.rating) || typeof item.isNew !== 'boolean' || seen.has(item.lessonId)) fail('练习结果内容不正确');
       seen.add(item.lessonId);
       if (item.isNew) {
         newCount += 1;
@@ -355,14 +356,14 @@ export function validateImport(input, lessons) {
         if (!introduced.has(item.lessonId) || effectiveDue(clean,item.lessonId,replay[item.lessonId]) > date) fail('复习早于学习或预约日期');
         reviews.push(item.lessonId);
       }
-      replay[item.lessonId] = nextCard(Object.hasOwn(replay, item.lessonId) ? replay[item.lessonId] : null, item.rating, date);
+      replay[item.lessonId] = nextCard(hasOwn(replay, item.lessonId) ? replay[item.lessonId] : null, item.rating, date);
       return { lessonId: item.lessonId, rating: item.rating, isNew: item.isNew };
     });
     if (newCount !== Number(entry.newDone) || reviews.length !== entry.reviewed.length || reviews.some((id, index) => id !== entry.reviewed[index])) fail('每日结果与完成数量不一致');
     clean.days[date] = { newId: entry.newId, newDone: entry.newDone, reviewed: [...entry.reviewed], results };
   }
   for (const [id, card] of Object.entries(clean.cards)) {
-    if (!Object.hasOwn(replay, id) || Object.keys(card).some((key) => card[key] !== replay[id][key])) fail('课程进度与练习历史不一致');
+    if (!hasOwn(replay, id) || Object.keys(card).some((key) => card[key] !== replay[id][key])) fail('课程进度与练习历史不一致');
   }
   const introductions=introductionDates(clean);
   for(const [date,results] of Object.entries(clean.checkups))for(const result of results){

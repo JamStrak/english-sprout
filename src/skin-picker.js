@@ -1,3 +1,4 @@
+import {showDialog} from './dialog.js';
 import {SKINS,SKIN_STORAGE_KEY,DEFAULT_SKIN_ID,getSkinProgress,resolveSelectedSkin} from './skins.js';
 
 // Frozen source roles from Creative Asset Lab palette library 2026.09.26.2.
@@ -48,5 +49,5 @@ export function openSkinPicker({getState,today,notify=()=>{},onChange=()=>{},ini
   }
   draw();document.body.append(d);skinDialog=d;
   d.onclose=()=>{d.remove();skinDialog=null;if(prior?.isConnected)prior.focus({preventScroll:true});};
-  d.showModal();d.querySelector('[data-close-skins]').focus({preventScroll:true});
+  showDialog(d);d.querySelector('[data-close-skins]').focus({preventScroll:true});
 }

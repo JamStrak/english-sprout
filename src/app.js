@@ -10,6 +10,8 @@ import {getTodayJourney} from './journey.js';
 import {startAutomaticUpdates} from './auto-update.js';
 import {SKIN_STORAGE_KEY,getSkinProgress} from './skins.js';
 import {applySavedSkin,skinEntryMarkup,skinRewardMarkup,openSkinPicker,closeSkinPicker} from './skin-picker.js';
+import {loadCurriculum,installViewportFallback} from './startup.js';
+import {showDialog} from './dialog.js';
 
 const KEY='english-sprout-state-v1';
 const PUBLISHED_URL='https://jamstrak.github.io/english-sprout/';
@@ -22,6 +24,7 @@ let selectedVoice=readVoicePreference();
 let selectedRate=readCourseRate(),activeCourseAudio=null;
 let audioSequence=Promise.resolve(),audioGeneration=0;
 let audioWaitTimer;
+let bootPending=null,bootReady=false,bootFailure=null;
 const icons={
  home:'<path d="m3 10 9-7 9 7v10H5V10m4 10v-7h6v7"/>',
  book:'<path d="M12 5v16M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/>',
@@ -102,7 +105,7 @@ function openSoundSettings(){
   if(soundDialog?.isConnected)return;
   const prior=document.activeElement,d=document.createElement('dialog');d.className='sound-dialog focus-dialog';d.setAttribute('aria-labelledby','sound-title');
   d.innerHTML=`<header><div><span class="eyebrow">一起说英语</span><h2 id="sound-title">让谁陪你说？</h2></div><button class="circle-btn" data-close-sound aria-label="回到练习">${icon('close')}</button></header>${voiceButtons()}${courseRateButtons()}${audioStatusMarkup()}${session?'<button class="secondary" data-listen="slow">这一次，慢慢听 0.8×</button>':''}<p class="small-note">点名字就能试听；播放中也能直接换语速。</p><button class="primary" data-sound-done>选好啦，继续</button>`;
-  document.body.append(d);soundDialog=d;d.showModal();const plan=journey();bindVoiceSelectors(plan.kind==='checkup'?curriculum.lessons.find(l=>!plan.ids.includes(l.id)):lessonById(plan.lessonId)||lessonById(daily().newLessonId));
+  document.body.append(d);soundDialog=d;showDialog(d);const plan=journey();bindVoiceSelectors(plan.kind==='checkup'?curriculum.lessons.find(l=>!plan.ids.includes(l.id)):lessonById(plan.lessonId)||lessonById(daily().newLessonId));
   if(session)bindListeningButtons(sessionCurrent());
   d.querySelector('[data-close-sound]').onclick=()=>d.close();d.querySelector('[data-sound-done]').onclick=()=>d.close();
   d.addEventListener('close',()=>{d.remove();soundDialog=null;if(prior?.isConnected)prior.focus();},{once:true});
@@ -327,7 +330,7 @@ function renderParent(){
     content=`<section class="settings-card"><div class="progress-total"><strong>${st.learnedCount}</strong><span>句已经练过 · 共 120 句</span></div><div class="week-days">${(st.last7Days||[]).map(d=>`<div class="week-day ${d.practiced?'practiced':''}"><span>${['日','一','二','三','四','五','六'][new Date(d.date+'T12:00:00').getDay()]}</span><i>${d.practiced?'✓':'·'}</i></div>`).join('')}</div><p>${last?`最近小游戏：首次听懂 ${last[1].filter(r=>r.meaning).length} / ${last[1].length}，自己说出 ${last[1].filter(r=>r.spoken==='good').length} / ${last[1].length}`:'练过的句子会隔一段时间回来，帮助孩子主动想起。'}</p>${check.due?'<button class="primary" id="start-checkup">玩今天的记忆小游戏</button>':`<p class="small-note">${check.nextDate>dayKey()?check.nextDate+' 再来玩记忆小游戏':'先积累熟悉的短句，再来玩小游戏'}</p>`}<p class="small-note">记录练习与家长观察，不代表发音评分或完全掌握。</p></section>`;
   }
   if(parentPanel==='help')content=`<section class="settings-card"><ol class="parent-tips"><li><strong>复习先想。</strong>先看图自己说，再按需听提示。</li><li><strong>新句先听。</strong>做动作、选图片，再开口模仿。</li><li><strong>根据实际反馈。</strong>家长选择“还要练练 / 提示后会说 / 自己会说”。</li></ol><p class="small-note">答对图片不等于会说。录音只是可选回听，不自动评分，也不上传。</p><button class="secondary" data-parent-panel="about">关于与隐私</button></section>`;
-  if(parentPanel==='about')content=`<section class="settings-card"><div class="panel-symbol">🌱</div><h2>英语小芽 v1.5.1</h2><p>120 个生活短句 · 三位声音伙伴<br>无广告 · 无账户 · 无付费 API</p><p class="small-note">头像与学习记录留在本机，录音离开练习卡即删除。示范为预先合成配音。托管方会收到正常网站访问请求。</p><p class="small-note">间隔复习是练习安排，不保证特定学习效果；建议 4—7 岁亲子共学。</p><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">了解间隔回想 ↗</a></section>`;
+  if(parentPanel==='about')content=`<section class="settings-card"><div class="panel-symbol">🌱</div><h2>英语小芽 v1.5.2</h2><p>120 个生活短句 · 三位声音伙伴<br>无广告 · 无账户 · 无付费 API</p><p class="small-note">头像与学习记录留在本机，录音离开练习卡即删除。示范为预先合成配音。托管方会收到正常网站访问请求。</p><p class="small-note">间隔复习是练习安排，不保证特定学习效果；建议 4—7 岁亲子共学。</p><a class="text-button" href="https://www.learningscientists.org/blog/2022/2/3-1" target="_blank" rel="noopener noreferrer">了解间隔回想 ↗</a></section>`;
   shell(`<section class="focus-screen focus-parent" data-parent-screen="${parentPanel}"><div class="screen-heading"><button class="back-button" data-parent-back ${parentPanel==='menu'?'hidden':''} aria-label="返回家长小站">←</button><h1>${titles[parentPanel]||titles.menu}</h1></div>${content}</section>`);
   document.querySelector('[data-parent-back]').onclick=()=>{stopPlayback();parentPanel='menu';renderParent();};
   document.querySelectorAll('[data-parent-panel]').forEach(b=>b.onclick=()=>{stopPlayback();parentPanel=b.dataset.parentPanel;renderParent();});
@@ -375,19 +378,36 @@ async function importProgress(event){
   }catch(e){if(!current())return;const message='没有导入：'+(e.message||'文件内容无法识别，原有进度没有改变。');const status=document.querySelector('#import-status');if(status)status.textContent=message;else toast(message);}
 }
 function confirmDialog(title,body,label,onConfirm){
-  const d=document.createElement('dialog');d.className='confirm-dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(body)}</p><div class="button-row"><button class="secondary" data-cancel>先不改</button><button class="primary" data-confirm>${esc(label)}</button></div>`;document.body.append(d);d.showModal();d.querySelector('[data-cancel]').onclick=()=>d.close();d.querySelector('[data-confirm]').onclick=()=>{d.close();onConfirm();};d.onclose=()=>d.remove();
+  const d=document.createElement('dialog');d.className='confirm-dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(body)}</p><div class="button-row"><button class="secondary" data-cancel>先不改</button><button class="primary" data-confirm>${esc(label)}</button></div>`;document.body.append(d);showDialog(d);d.querySelector('[data-cancel]').onclick=()=>d.close();d.querySelector('[data-confirm]').onclick=()=>{d.close();onConfirm();};d.onclose=()=>d.remove();
 }
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installEvent=event;});
-window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(['home','library','garden','parent'].includes(v)&&v!==view){closeSkinPicker();closeSoundSettings();resetRecording();stopPlayback();session=null;view=v;if(v==='parent')parentPanel='menu';render();}});
-window.addEventListener('online',()=>{if(!session)render();});window.addEventListener('offline',()=>{if(!session)render();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayback();if(recordPending)resetRecording();else if(recording)stopRecording();}else if(!session)render();});
+window.addEventListener('hashchange',()=>{if(!bootReady)return;const v=location.hash.slice(1);if(['home','library','garden','parent'].includes(v)&&v!==view){closeSkinPicker();closeSoundSettings();resetRecording();stopPlayback();session=null;view=v;if(v==='parent')parentPanel='menu';render();}});
+window.addEventListener('online',()=>{if(!bootReady){init();return;}if(!session)render();});window.addEventListener('offline',()=>{if(bootReady&&!session)render();});
+document.addEventListener('visibilitychange',()=>{if(!bootReady){if(!document.hidden&&bootFailure==='course'&&navigator.onLine!==false)init();return;}if(document.hidden){stopPlayback();if(recordPending)resetRecording();else if(recording)stopRecording();}else if(!session)render();});
 window.addEventListener('pagehide',()=>{stopPlayback();resetRecording();});
-window.addEventListener('storage',e=>{if(e.key===SKIN_STORAGE_KEY){closeSkinPicker();applySavedSkin(state,dayKey());return;}if(e.key===COURSE_RATE_KEY){applyCourseRate(readCourseRate(),false);return;}if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){closeSkinPicker();closeSoundSettings();stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
-async function init(){
-  try{const response=await fetch('./data/curriculum.json');if(!response.ok)throw new Error('课程读取失败');curriculum=await response.json();state=load();view=['library','garden','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';render();
-    if(new URLSearchParams(location.search).get('audition')==='1')openVoiceAudition();
-    startAutomaticUpdates({build:document.querySelector('meta[name="app-build"]')?.content,isSafe:()=>storageOK&&!document.hidden&&!session&&!recording&&!recordPending&&!offlineBusy&&!document.querySelector('dialog[open],.completion')&&!(view==='parent'&&parentPanel!=='menu')&&!['loading','playing'].includes(document.body.dataset.playing)&&!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'),onUnavailable:()=>toast('离线功能暂未准备好，联网练习仍可使用。')});
-  }catch{app.innerHTML='<div class="boot"><span>🌱</span><h1>小芽还没准备好</h1><p>请检查网络，重新打开。如果尚未下载离线内容，需要先联网一次。</p><button class="primary" id="retry">重新打开</button></div>';document.querySelector('#retry').onclick=()=>location.reload();}
+window.addEventListener('storage',e=>{if(!bootReady)return;if(e.key===SKIN_STORAGE_KEY){closeSkinPicker();applySavedSkin(state,dayKey());return;}if(e.key===COURSE_RATE_KEY){applyCourseRate(readCourseRate(),false);return;}if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){closeSkinPicker();closeSoundSettings();stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
+function showBootFailure(kind,error){
+  bootFailure=kind;app.dataset.startup='error';console.error('English Sprout startup: '+kind,error);
+  const message=kind==='course'?'连接有点慢，点一下再试。网络恢复后也会自动继续。':'页面暂时没打开完整，点一下再试。已有学习记录会保留。';
+  app.innerHTML=`<div class="boot"><span>🌱</span><h1>再给小芽一点时间</h1><p>${message}</p><button class="primary" id="retry">再试一次</button></div>`;
+  document.querySelector('#retry').onclick=()=>init();
 }
+function init(){
+  if(bootReady)return Promise.resolve();if(bootPending)return bootPending;
+  bootFailure=null;app.dataset.startup='loading';
+  app.innerHTML='<div class="boot"><span>🌱</span><h1>英语小芽</h1><p>正在打开今天的小世界…</p></div>';
+  bootPending=(async()=>{
+    try{curriculum=await loadCurriculum();}catch(error){showBootFailure('course',error);return;}
+    try{
+      state=load();view=['library','garden','parent'].includes(location.hash.slice(1))?location.hash.slice(1):'home';render();
+      bootReady=true;app.dataset.startup='ready';window.dispatchEvent(new Event('sprout-ready'));
+    }catch(error){showBootFailure('interface',error);return;}
+    // Optional offline preparation and audition must never replace a usable home.
+    try{startAutomaticUpdates({build:document.querySelector('meta[name="app-build"]')?.content,isSafe:()=>storageOK&&!document.hidden&&!session&&!recording&&!recordPending&&!offlineBusy&&!document.querySelector('dialog[open],.completion')&&!(view==='parent'&&parentPanel!=='menu')&&!['loading','playing'].includes(document.body.dataset.playing)&&!document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'),onUnavailable:()=>toast('离线保存暂时不可用，可以直接联网练习。')});}catch(error){console.warn('Offline preparation unavailable',error);}
+    if(new URLSearchParams(location.search).get('audition')==='1'){try{openVoiceAudition();}catch(error){console.warn('Audition unavailable',error);toast('试听暂时没打开，可以先学今天这句。');}}
+  })().finally(()=>{bootPending=null;});
+  return bootPending;
+}
+installViewportFallback();
 installInteractionFeedback();
 init();
