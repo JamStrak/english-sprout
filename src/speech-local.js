@@ -1,10 +1,12 @@
 import {scoreSpeech} from './speech-match.js';
+import {downloadSpeechAsset} from './speech-download.js';
 
 const LIBRARY=new URL('../speech/vosk-0.0.8.js',import.meta.url).href;
 const MODEL=new URL('../speech/model-en-us-0.15.tar.gz',import.meta.url).href;
-const CACHE='english-sprout-speech-v1';
-let model=null, preparing=null, generation=0, libraryPromise=null;
+let model=null, preparing=null, generation=0, libraryPromise=null,assetController=null;
 const pending=new Set();
+const preparingListeners=new Set();
+function preparingStatus(message){for(const listener of preparingListeners)try{listener(message);}catch{}}
 
 function abortError(){return new DOMException('已取消这次跟读。','AbortError');}
 function releaseModel(value){
@@ -17,17 +19,18 @@ function releaseModel(value){
 }
 export function disposeSpeechAssessment(){
   generation++;
+  assetController?.abort();assetController=null;preparingListeners.clear();
   for(const cancel of [...pending])cancel();
   releaseModel(model);model=null;preparing=null;
 }
 
-function bounded(work,{signal,timeout=60000}={}){
+function bounded(work,{signal,timeout=60000,disposeOnTimeout=true}={}){
   return new Promise((resolve,reject)=>{
     let finished=false;
     const finish=(fn,value)=>{if(finished)return;finished=true;clearTimeout(timer);pending.delete(cancel);signal?.removeEventListener('abort',onAbort);fn(value);};
     const cancel=()=>finish(reject,abortError());
     const onAbort=()=>{cancel();disposeSpeechAssessment();};
-    const timer=setTimeout(()=>{finish(reject,new Error('小耳朵还没准备好，可以稍后再试或先去花园。'));disposeSpeechAssessment();},timeout);
+    const timer=setTimeout(()=>{finish(reject,new Error('小耳朵还没准备好，可以稍后再试或先去花园。'));if(disposeOnTimeout)disposeSpeechAssessment();},timeout);
     pending.add(cancel);
     if(signal?.aborted){onAbort();return;}
     signal?.addEventListener('abort',onAbort,{once:true});
@@ -35,18 +38,10 @@ function bounded(work,{signal,timeout=60000}={}){
   });
 }
 
-async function loadLibrary(){
+async function loadLibrary(signal){
   if(window.Vosk)return window.Vosk;
   if(!libraryPromise)libraryPromise=(async()=>{
-    let cache,response;
-    try{cache=await caches.open(CACHE);response=await cache.match(LIBRARY);}catch{}
-    if(!response){
-      const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),45000);
-      try{response=await fetch(LIBRARY,{signal:controller.signal});}finally{clearTimeout(timer);}
-      if(!response.ok)throw new Error('小耳朵暂时没有下载好，请联网后再试。');
-      try{await cache?.put(LIBRARY,response.clone());}catch{}
-    }
+    const response=await downloadSpeechAsset(LIBRARY,{signal,onProgress:({loaded,total})=>preparingStatus(`声音工具下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
     const url=URL.createObjectURL(new Blob([await response.text()],{type:'text/javascript'}));
     try{
       await new Promise((resolve,reject)=>{
@@ -62,15 +57,23 @@ async function loadLibrary(){
   return libraryPromise;
 }
 
-export async function prepareSpeech({onStatus=()=>{},signal}={}){
+export async function prepareSpeech({onStatus=()=>{},signal,background=false}={}){
   if(signal?.aborted)throw abortError();
   if(model?.ready)return model;
   if(!window.WebAssembly||!window.Worker||!(window.AudioContext||window.webkitAudioContext))throw new Error('这个浏览器暂时不能听懂跟读，可以继续听示范或照顾花园。');
   onStatus('准备小耳朵…首次需要下载约47MB，之后保存在这台设备。');
+  preparingListeners.add(onStatus);
   const currentGeneration=generation;
   if(!preparing){
+    const controller=new AbortController();assetController=controller;
     const task=(async()=>{
-      const Vosk=await loadLibrary();
+      const Vosk=await loadLibrary(controller.signal);
+      if(currentGeneration!==generation)throw abortError();
+      // The active service worker supplies this completed, separately cached
+      // archive to Vosk. Partial downloads survive page closes and retries.
+      if(navigator.serviceWorker?.controller){
+        await downloadSpeechAsset(MODEL,{signal:controller.signal,expectedBytes:41184862,onProgress:({loaded,total})=>preparingStatus(`小耳朵下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
+      }
       if(currentGeneration!==generation)throw abortError();
       const value=new Vosk.Model(MODEL,-2);model=value;
       try{
@@ -85,10 +88,11 @@ export async function prepareSpeech({onStatus=()=>{},signal}={}){
     preparing=task;
     task.catch(()=>{if(preparing===task)preparing=null;});
   }
-  const value=await bounded(preparing,{signal,timeout:60000});
-  if(currentGeneration!==generation)throw abortError();
-  onStatus('小耳朵准备好了');
-  return value;
+  try{
+    const value=await bounded(preparing,{signal,timeout:background?1800000:15000,disposeOnTimeout:background});
+    if(currentGeneration!==generation)throw abortError();
+    onStatus('小耳朵准备好了');return value;
+  }finally{preparingListeners.delete(onStatus);}
 }
 
 async function decodeRecording(url,signal){

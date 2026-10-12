@@ -162,7 +162,7 @@ async function waitOfflineSaved(p){
     const clips=[];for(const theme of curriculum.themes){const l=curriculum.lessons.find(l=>l.theme===theme.id);await openLesson(p,l.id);const e=await audio(p,'[data-listen="normal"]',.9);assert.ok(e.src.endsWith(`/characters/pip/${l.id}.mp3`));clips.push(l.id);await p.locator('#exit-session').click();}await setRate(p,1);assert.deepEqual(await state(p),before);return clips;
   });
   await test('Install page QR decodes as an image and copy action uses the official URL',async()=>{
-    await parent(p,'install');assert.equal(await p.locator('.phone-share img').evaluate(i=>i.complete&&i.naturalWidth>0),true);await p.evaluate(()=>{navigator.clipboard.writeText=async text=>window.__copied=text;});await p.locator('#copy-link').click();assert.equal(await p.evaluate(()=>window.__copied),'https://jamstrak.github.io/english-sprout/');
+    await parent(p,'install');assert.equal(await p.locator('.phone-share img').evaluate(async i=>{await i.decode();return i.complete&&i.naturalWidth>0;}),true);await p.evaluate(()=>{navigator.clipboard.writeText=async text=>window.__copied=text;});await p.locator('#copy-link').click();assert.equal(await p.evaluate(()=>window.__copied),'https://jamstrak.github.io/english-sprout/');
   });
   await test('Invalid import and cancelled valid import preserve existing progress',async()=>{
     await parent(p,'backup');const before=await state(p);await p.locator('#import-file').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"app":"wrong"}')});await p.waitForFunction(()=>document.querySelector('#import-status').textContent.includes('没有导入'));assert.deepEqual(await state(p),before);

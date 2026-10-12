@@ -61,6 +61,14 @@ test('unsatisfiable audio range is rejected with size, cached audio is reusable'
 test('worker never intercepts another project or third-party requests',async()=>{
   const w=worker();assert.equal(await w.request('https://example.test/another/'),undefined);assert.equal(await w.request('https://external.test/kids/'),undefined);
 });
+test('local speech uses its persistent cache, never matches partial chunks as a full archive',async()=>{
+  const events={},opened=[],matches=[];
+  const context={self:{registration:{scope:'https://example.test/kids/'},addEventListener:(name,fn)=>events[name]=fn},location:{origin:'https://example.test'},URL,Response,
+    caches:{open:async name=>{opened.push(name);return {match:async(request,options)=>{matches.push(options);return new Response('complete model');}};}},fetch:async()=>{throw Error('offline');}};
+  vm.runInNewContext(code,context);let response;
+  events.fetch({request:new Request('https://example.test/kids/speech/model-en-us-0.15.tar.gz'),respondWith:value=>response=value,waitUntil:()=>{}});
+  assert.equal(await (await response).text(),'complete model');assert.deepEqual(opened,['english-sprout-speech-v1']);assert.equal(matches[0].ignoreSearch,false);
+});
 
 function upgradeWorker({legacyV3=[],legacyV4=[],current=[],writeError=false,openError=false,failedOpenNames=[]}={}){
   const events={},stores=new Map([

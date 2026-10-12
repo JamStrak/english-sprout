@@ -20,8 +20,13 @@ accent, pronunciation accuracy, or mastery assessment.
   on 2026-10-12 with no differences. Original ZIP SHA-256:
   `30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498`.
 
-Assets are loaded only when the child opens a speaking practice. The script is
-cached separately in CacheStorage; Vosk stores the extracted model in IndexedDB.
+Assets are loaded only when the child opens a speaking practice. The script and compressed archive are
+cached separately in CacheStorage, in resumable 256 KB parts during download;
+Vosk stores the extracted model in IndexedDB. First preparation continues in the
+background without holding a child at the assessment step. A speaking attempt
+waits at most 15 seconds for preparation, then offers encouragement while the
+download can continue. Offline readiness still requires that initial download
+to complete.
 Neither is part of the mandatory first-page download or service-worker core
 installation. Preparing and assessing can be cancelled, with bounded waits.
 

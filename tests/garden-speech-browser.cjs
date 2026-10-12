@@ -13,13 +13,13 @@ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-i',path.join(ro
   let initial=learning.recordResult(learning.createState('2026-10-12'),'hello-01','good','2026-10-12',{isNew:true});
   const browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream',`--use-file-for-fake-audio-capture=${wav}`]});
   const checks=[];
-  const context=await browser.newContext({permissions:['microphone'],serviceWorkers:'block',viewport:{width:390,height:844},timezoneId:'Asia/Shanghai'});
+  const context=await browser.newContext({permissions:['microphone'],viewport:{width:390,height:844},timezoneId:'Asia/Shanghai'});
   const page=await context.newPage();page.setDefaultTimeout(65000);
   const errors=[],uploads=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))uploads.push({url:r.url(),method:r.method()});});
   try{
     await page.clock.setFixedTime(new Date('2026-10-12T10:00:00+08:00'));
     await context.addInitScript(({key,initial})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(initial));},{key,initial});
-    await page.goto(origin+'/#garden');await page.locator('[data-garden-practice]').click();
+    await page.goto(origin+'/#garden');await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await page.locator('[data-garden-practice]').click();
     await page.evaluate(()=>import('./src/speech-local.js').then(m=>m.prepareSpeech()));
     await page.locator('[data-step="speak"]').click();await page.locator('#record').click();
     await page.waitForFunction(()=>document.querySelector('#record').textContent.includes('停止录音'));

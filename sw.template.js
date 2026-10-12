@@ -78,12 +78,13 @@ self.addEventListener('fetch',event=>{
   if(u.pathname.endsWith('/__english_sprout_health'))return;
   // JSON manifests live beside MP3s but belong to the versioned core cache.
   const isAudio=/\/audio\/.+\.mp3$/i.test(u.pathname);
+  const isSpeech=/\/speech\/(?:vosk-0\.0\.8\.js|model-en-us-0\.15\.tar\.gz)$/.test(u.pathname);
   let cacheWrite=Promise.resolve();
   const responsePromise=(async()=>{
     let cache,found;
     // The CDN varies by Accept-Encoding. Media range requests may use identity
     // while prefetch uses gzip/br; the cached body is the same decoded MP3.
-    try{cache=await caches.open(isAudio?AUDIO:CACHE);found=await cache.match(event.request,{ignoreSearch:true,ignoreVary:isAudio});}catch{}
+    try{cache=await caches.open(isAudio?AUDIO:isSpeech?'english-sprout-speech-v1':CACHE);found=await cache.match(event.request,{ignoreSearch:!isSpeech,ignoreVary:isAudio});}catch{}
     if(!found&&isAudio)found=await findLegacyAudio(event.request);
     if(found){
       // iOS media can request a byte range even for fully cached short MP3s.

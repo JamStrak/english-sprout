@@ -20,7 +20,7 @@ const core=['./','./index.html','./src/app.js','./src/styles.css','./src/learnin
 const hash=crypto.createHash('sha256');
 core.push(...ANIMALS.map(animal=>animal.image));
 core.push('./src/startup.js','./src/compat.js','./src/dialog.js','./src/dialog.css');
-core.push('./src/garden-art.js','./src/garden-interaction.js','./src/garden-play.css','./src/speech-local.js','./src/speech-match.js');
+core.push('./src/garden-art.js','./src/garden-interaction.js','./src/garden-play.css','./src/speech-local.js','./src/speech-match.js','./src/speech-download.js');
 core.push('./src/skins.js','./src/skin-picker.js','./src/skins.css');
 core.push('./src/focus.css','./src/journey.js','./src/auto-update.js');
 core.push('./src/interaction.css','./src/avatars.js','./src/avatars.css','./src/feedback.js','./src/feedback.css');
@@ -33,5 +33,5 @@ const index=await fs.readFile(path.join(dist,'index.html'),'utf8');
 await fs.writeFile(path.join(dist,'index.html'),index.replace('__APP_BUILD__',version));
 sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
 await fs.writeFile(path.join(dist,'sw.js'),sw);
-await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.6.0',build:version}));
-console.log('Built English Sprout 1.6.0 · '+version);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.6.1',build:version}));
+console.log('Built English Sprout 1.6.1 · '+version);
