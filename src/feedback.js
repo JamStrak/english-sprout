@@ -62,7 +62,9 @@ export function installInteractionFeedback(){
     const ring=document.createElement('span');
     ring.className='interaction-feedback-ring';
     burst.append(ring);
-    for(let i=0;i<3;i++){
+    // A neutral tap ring marks the action; outcome stars belong to assessment.
+    const neutral=target.matches('#record,[data-choice],[data-world-tool],[data-garden-tool]');
+    for(let i=0;i<(neutral?0:3);i++){
       const star=document.createElement('span');
       star.className=`interaction-feedback-star interaction-feedback-star-${i+1}`;
       star.textContent='✦';

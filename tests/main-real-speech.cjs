@@ -41,7 +41,7 @@ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-i',path.join(ro
     await page.waitForTimeout(6500);await page.locator('#record').click();
     await page.locator('[data-speech-next]:visible').waitFor();
     assert.equal(await page.locator('.speech-stars').textContent(),'★★★');
-    assert.match(await page.locator('[data-speech-result]').innerText(),/这句听清/);
+    assert.match(await page.locator('[data-speech-result]').innerText(),/你说出来/);
     await page.screenshot({path:path.join(out,'real-main-stars.png')});
     pass('Real MediaRecorder capture is assessed by actual local Vosk and receives three matching stars in the normal daily path');
     await page.locator('[data-speech-next]').evaluate(button=>{button.click();button.click();});

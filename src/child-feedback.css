@@ -1,0 +1,25 @@
+/* Local successes are visible at the tapped object, without covering controls. */
+.child-celebration{position:fixed;width:0;height:0;z-index:1100;pointer-events:none;user-select:none;-webkit-user-select:none}
+.child-celebration>*{position:absolute;pointer-events:none}
+.child-celebration-icon{left:-25px;top:-25px;font-size:44px;line-height:50px;filter:drop-shadow(0 2px 1px #fff);animation:child-icon-pop 1s ease-out both}
+.child-celebration>i{left:-10px;top:-10px;width:20px;height:20px;font-style:normal;text-align:center;font-size:23px;line-height:20px;color:var(--burst-color);animation:child-spark-flight .9s ease-out both}
+.child-success{animation:child-success-pop .62s ease-out}
+.child-star{display:inline-block;font-style:normal;animation:child-star-pop .62s cubic-bezier(.2,.8,.3,1.25) both;animation-delay:calc(var(--star-index,0)*.12s);transform-origin:50% 65%}
+.child-celebration[data-child-feedback=retry] .child-celebration-icon{font-size:36px;animation:child-ear-wave .9s ease-out both}
+@keyframes child-icon-pop{0%{opacity:0;transform:translateY(5px) scale(.45)}20%{opacity:1;transform:translateY(-10px) scale(1.13)}45%{opacity:1;transform:translateY(-12px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-27px) scale(.9)}}
+@keyframes child-spark-flight{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}65%{opacity:1}100%{opacity:0;transform:translate(var(--burst-x),var(--burst-y)) rotate(var(--burst-turn)) scale(.8)}}
+@keyframes child-success-pop{0%{transform:scale(1)}35%{transform:scale(1.035)}65%{transform:scale(.995)}100%{transform:scale(1)}}
+@keyframes child-star-pop{0%{opacity:.3;transform:scale(.45) rotate(-12deg)}55%{opacity:1;transform:scale(1.23) rotate(6deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes child-ear-wave{0%{opacity:0;transform:scale(.85) rotate(-7deg)}25%{opacity:1;transform:scale(1) rotate(7deg)}50%{transform:rotate(-5deg)}80%{opacity:1;transform:rotate(0)}100%{opacity:0;transform:scale(.95)}}
+@media(prefers-reduced-motion:reduce){
+  .child-success,.child-star{animation:none;transform:none}
+  .child-success{outline:3px solid var(--skin-primary,#315e49);outline-offset:2px}
+  .child-celebration>i{display:none}
+  .child-celebration-icon,.child-celebration[data-child-feedback=retry] .child-celebration-icon{animation:none;transform:none;opacity:1}
+}
+
+/* The real three stars carry the success; particles never hide its caption. */
+.child-celebration[data-child-feedback=stars] .child-celebration-icon{display:none}
+canvas.child-success{animation:child-garden-glow .7s ease-out}
+@keyframes child-garden-glow{35%{box-shadow:inset 0 0 0 5px #edbf5e80}100%{box-shadow:inset 0 0 0 0px transparent}}
+@media(prefers-reduced-motion:reduce){canvas.child-success{animation:none}}
