@@ -39,7 +39,7 @@ test('due review takes priority over both a new sentence and a due checkup', () 
   assert.equal(getTodayJourney(reviewed, lessons, addDays(day, 1)).kind, 'review');
 });
 
-test('an already learned daily sentence is never offered as another new task', () => {
+test('after due reviews an optional next sentence is offered rather than repeating the first daily sentence', () => {
   const day = addDays(start, 8);
   let state = recordResult(introduce(3), 'lesson-4', 'help', day, { isNew: true });
   assert.equal(getDailyPlan(state, lessons, day).newLessonId, 'lesson-4');
@@ -47,7 +47,7 @@ test('an already learned daily sentence is never offered as another new task', (
   assert.equal(getTodayJourney(state, lessons, day).nextKind, 'checkup');
   state = reviewDue(state, day);
   assert.deepEqual(getTodayJourney(state, lessons, day), {
-    kind: 'garden', ids: [], lessonId: null, count: 0, nextKind: null,
+    kind: 'learn', ids: ['lesson-5'], lessonId: 'lesson-5', count: 1, nextKind: 'garden',
   });
 });
 
@@ -61,9 +61,10 @@ test('a due checkup follows learning when older cards are not yet due for review
   const journey = getTodayJourney(state, lessons, day);
   assert.equal(journey.kind, 'checkup');
   assert.deepEqual(journey.ids, ['lesson-1', 'lesson-2', 'lesson-3']);
-  assert.equal(journey.nextKind, 'garden');
+  assert.equal(journey.nextKind, 'learn');
   state = recordCheckup(state, lessons, journey.ids.map(lessonId => ({ lessonId, meaning: true, spoken: 'good' })), day);
-  assert.equal(getTodayJourney(state, lessons, day).kind, 'garden');
+  assert.equal(getTodayJourney(state, lessons, day).kind, 'learn');
+  assert.equal(getTodayJourney(state, lessons, day).lessonId, 'lesson-5');
 });
 
 test('missed days retain the next unlearned sentence rather than skipping or adding new work', () => {

@@ -8,12 +8,27 @@ export const PLANTS = Object.freeze([
 ]);
 
 const KINDS = new Set(PLANTS.map(plant => plant.id));
-const TYPES = new Set(['plant', 'water', 'fertilize', 'harvest', 'practice']);
+const TYPES = new Set(['plant', 'water', 'fertilize', 'harvest', 'practice', 'world-plant', 'world-water']);
 const ASSESSMENTS = new Set(['local-speech', 'practice-effort']);
 const RATINGS = new Set(['again', 'help', 'good']);
 const MILESTONES = [5, 10, 20, 40, 80, 120];
 export const MAX_GARDEN_ACTIONS = 30_000;
 export const GROWTH_GOAL = 12;
+export const WORLD_GROWTH_GOAL = 5;
+export const WORLD_CAPACITY = 1600;
+export const WORLD_MIN_DISTANCE = 120;
+
+/** Stable variation/reward selection: reloading never rerolls an earned round. */
+export function gardenHash(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) hash = Math.imul(hash ^ value.charCodeAt(index), 16777619) >>> 0;
+  return hash;
+}
+export function practiceReward(attemptId) { return { water: 2, seeds: Number(gardenHash(attemptId) % 3 === 0) }; }
+function identifier(value, label) {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{7,99}$/.test(value)) fail(`${label}编号不正确`);
+  return value;
+}
 
 function fail(message) { throw new Error(`花园记录无效：${message}`); }
 function object(value) {
@@ -36,10 +51,22 @@ function calendar(value) {
   return value;
 }
 
-export function createGarden() { return { version: 2, legacyCount: 0, actions: [] }; }
+export function createGarden() { return { version: 3, legacyCount: 0, classicCount: 0, actions: [] }; }
 
 function cleanAction(action, withDate, legacy = false) {
   if (!object(action) || !TYPES.has(action.type)) fail('操作类型不正确');
+  if (action.type === 'world-plant' || action.type === 'world-water') {
+    if (legacy) fail('旧版记录不支持花园广场');
+    const planting = action.type === 'world-plant';
+    exact(action, [...(withDate ? ['date'] : []), 'type', 'id', ...(planting ? ['kind', 'x', 'y'] : ['actionId'])], '花园广场操作');
+    identifier(action.id, '植物');
+    if (planting) {
+      if (!KINDS.has(action.kind)) fail('植物种类不正确');
+      if (![action.x, action.y].every(value => Number.isInteger(value) && value >= 0 && value <= 9999)) fail('种植位置不正确');
+    } else identifier(action.actionId, '浇水操作');
+    return {...(withDate ? {date: calendar(action.date)} : {}), type: action.type, id: action.id,
+      ...(planting ? {kind: action.kind, x: action.x, y: action.y} : {actionId: action.actionId})};
+  }
   if (action.type === 'practice') {
     if (legacy) fail('旧版记录不支持跟读奖励');
     exact(action, [...(withDate ? ['date'] : []), 'type', 'lessonId', 'attemptId', 'assessment'], '跟读');
@@ -61,20 +88,30 @@ function cleanAction(action, withDate, legacy = false) {
 function cleanGarden(garden) {
   if (garden === undefined) return createGarden();
   if (!object(garden)) fail('花园应是对象');
-  if (![1, 2].includes(garden.version)) fail('版本不受支持');
-  exact(garden, ['version', ...(garden.version === 2 ? ['legacyCount'] : []), 'actions'], '花园');
+  if (![1, 2, 3].includes(garden.version)) fail('版本不受支持');
+  exact(garden, ['version', ...(garden.version >= 2 ? ['legacyCount'] : []), ...(garden.version === 3 ? ['classicCount'] : []), 'actions'], '花园');
   if (!Array.isArray(garden.actions) || garden.actions.length > MAX_GARDEN_ACTIONS) fail('操作数量过多或格式不正确');
   const legacyCount = garden.version === 1 ? garden.actions.length : garden.legacyCount;
   if (!Number.isInteger(legacyCount) || legacyCount < 0 || legacyCount > garden.actions.length) fail('旧版操作范围不正确');
+  const classicCount = garden.version === 3 ? garden.classicCount : garden.actions.length;
+  if (!Number.isInteger(classicCount) || classicCount < legacyCount || classicCount > garden.actions.length) fail('历史操作范围不正确');
   // Array positions preserve the actual sequence of operations within the same date.
   // Sort the two eras separately so imported ordering never changes a plant's growth goal.
   const legacyActions = garden.actions.slice(0, legacyCount).map(action => cleanAction(action, true, true));
-  const currentActions = garden.actions.slice(legacyCount).map(action => cleanAction(action, true));
+  const classicActions = garden.actions.slice(legacyCount, classicCount).map(action => {
+    const clean = cleanAction(action, true);
+    if (clean.type.startsWith('world-')) fail('历史记录不支持花园广场');
+    return clean;
+  });
+  const currentActions = garden.actions.slice(classicCount).map(action => cleanAction(action, true));
   legacyActions.sort((a, b) => a.date.localeCompare(b.date));
+  classicActions.sort((a, b) => a.date.localeCompare(b.date));
   currentActions.sort((a, b) => a.date.localeCompare(b.date));
-  if (legacyActions.length && currentActions.length && last(legacyActions).date > currentActions[0].date) fail('新版操作日期早于旧版记录');
-  const actions = [...legacyActions, ...currentActions];
-  return { version: garden.version, ...(garden.version === 2 ? { legacyCount } : {}), actions };
+  const history = [...legacyActions, ...classicActions];
+  if (legacyActions.length && classicActions.length && last(legacyActions).date > classicActions[0].date) fail('新版操作日期早于旧版记录');
+  if (history.length && currentActions.length && last(history).date > currentActions[0].date) fail('新版操作日期早于旧版记录');
+  const actions = [...history, ...currentActions];
+  return { version: garden.version, ...(garden.version >= 2 ? { legacyCount } : {}), ...(garden.version === 3 ? { classicCount } : {}), actions };
 }
 
 function validResult(result) {
@@ -100,16 +137,19 @@ function rewardTimeline(state) {
       || checkup.some(result => !object(result) || typeof result.lessonId !== 'string' || !result.lessonId
         || typeof result.meaning !== 'boolean' || !RATINGS.has(result.spoken))
       || new Set(checkup.map(result => result.lessonId)).size !== checkup.length)) fail('小测历史不正确');
-    const fresh = Boolean(entry?.newDone && typeof entry.newId === 'string' && !introduced.has(entry.newId)
-      && results.some(result => result.isNew && result.lessonId === entry.newId));
-    if (fresh) introduced.add(entry.newId);
+    let fresh = 0;
+    for (const result of results) {
+      if (!result.isNew || introduced.has(result.lessonId)) continue;
+      introduced.add(result.lessonId);
+      fresh += 1;
+    }
     const practiced = results.length > 0 || Boolean(checkup);
     const reviewed = results.some(result => !result.isNew && entry.reviewed.includes(result.lessonId));
     const milestones = MILESTONES.filter(count => introduced.size >= count && !reached.has(count));
     milestones.forEach(count => reached.add(count));
-    return { date, seeds: Number(fresh) + Number(Boolean(checkup)) + 2 * milestones.length,
+    return { date, seeds: fresh + Number(Boolean(checkup)) + 2 * milestones.length,
       water: 2 * Number(practiced) + Number(reviewed), fertilizer: Number(Boolean(checkup)) + milestones.length,
-      newLessons: Number(fresh), practiceDays: Number(practiced), reviewDays: Number(reviewed),
+      newLessons: fresh, practiceDays: Number(practiced), reviewDays: Number(reviewed),
       checkups: Number(Boolean(checkup)), milestones: milestones.map(count => ({ count, date })) };
   });
 }
@@ -127,8 +167,11 @@ function practicedLessons(state) {
 function replay(garden, rewards, state, today = '9999-12-31') {
   const { actions } = garden;
   const legacyCount = garden.version === 1 ? actions.length : garden.legacyCount;
+  const classicCount = garden.version === 3 ? garden.classicCount : actions.length;
   const introduced = practicedLessons(state);
   const seenAttempts = new Set();
+  const seenWorldActions = new Set();
+  const world = new Map();
   const inventory = { seeds: 0, water: 0, fertilizer: 0 };
   const earned = { ...inventory, newLessons: 0, practiceDays: 0, reviewDays: 0, checkups: 0,
     practiceRounds: 0, practicePasses: 0, milestones: [] };
@@ -162,7 +205,33 @@ function replay(garden, rewards, state, today = '9999-12-31') {
       earned.practicePasses += Number(action.assessment === 'local-speech');
       inventory.water += 2;
       earned.water += 2;
-      if (earned.practiceRounds % 3 === 0) { inventory.seeds += 1; earned.seeds += 1; }
+      const seed = index < classicCount ? Number(earned.practiceRounds % 3 === 0) : practiceReward(action.attemptId).seeds;
+      inventory.seeds += seed;
+      earned.seeds += seed;
+      continue;
+    }
+    if (action.type === 'world-plant') {
+      if (world.has(action.id) || /^legacy-plot-[0-2]$/.test(action.id)) fail('植物编号重复');
+      if (world.size >= WORLD_CAPACITY) fail('花园广场已种满，可以继续照顾现有植物');
+      const occupied = [...world.values(), ...plots.map((plot, index) => plot && {x: 4000 + index * 1000, y: 4500}).filter(Boolean)];
+      if (occupied.some(plant => (plant.x - action.x) ** 2 + (plant.y - action.y) ** 2 < WORLD_MIN_DISTANCE ** 2)) fail('这里已有小苗，请在旁边播种');
+      spend('seeds');
+      world.set(action.id, {id: action.id, kind: action.kind, x: action.x, y: action.y,
+        growth: 0, growthGoal: WORLD_GROWTH_GOAL, variant: gardenHash(action.id) % 6,
+        plantedAt: action.date, lastWaterDate: null});
+      continue;
+    }
+    if (action.type === 'world-water') {
+      if (seenWorldActions.has(action.actionId)) fail('浇水操作重复，不能重复使用水壶');
+      seenWorldActions.add(action.actionId);
+      const legacyPlot = /^legacy-plot-([0-2])$/.exec(action.id);
+      const target = legacyPlot ? plots[Number(legacyPlot[1])] : world.get(action.id);
+      if (!target) fail('请先播种');
+      if (target.growth >= target.growthGoal) fail('植物已经成熟');
+      spend('water');
+      target.growth += 1;
+      if (legacyPlot) care[Number(legacyPlot[1])].water = action.date;
+      else target.lastWaterDate = action.date;
       continue;
     }
     const plot = plots[action.plot];
@@ -185,7 +254,17 @@ function replay(garden, rewards, state, today = '9999-12-31') {
     }
   }
   grantThrough(today);
-  return { inventory, earned, plots: plots.map((plot, index) => plot && {
+  const worldPlants = [...world.values()].map(plant => ({...plant, canWater: plant.growth < plant.growthGoal && inventory.water > 0}));
+  // Mature world flowers remain visible; their collection entry needs no extra harvest step.
+  for (const plant of world.values()) if (plant.growth === plant.growthGoal) counts[plant.kind] += 1;
+  for (let index = 0; index < plots.length; index++) {
+    const plot = plots[index];
+    if (!plot) continue;
+    worldPlants.push({...plot, id: `legacy-plot-${index}`, x: 4000 + index * 1000, y: 4500,
+      variant: index, sourcePlot: index, lastWaterDate: care[index].water,
+      canWater: plot.growth < plot.growthGoal && inventory.water > 0});
+  }
+  return { inventory, earned, worldPlants, worldCapacity: WORLD_CAPACITY, plots: plots.map((plot, index) => plot && {
     ...plot, lastWaterDate: care[index].water, lastFertilizeDate: care[index].fertilizer,
     lastCareDate: last([care[index].water, care[index].fertilizer].filter(Boolean).sort()) ?? null,
     canWater: plot.growth < plot.growthGoal && inventory.water > 0,
@@ -228,8 +307,21 @@ export function recordGardenAction(state, action, today) {
       return cloneData(state);
     }
   }
+  if (nextAction.type === 'world-plant' || nextAction.type === 'world-water') {
+    const previous = clean.actions.find(item => item.type === nextAction.type && (nextAction.type === 'world-plant'
+      ? item.id === nextAction.id : item.actionId === nextAction.actionId));
+    if (previous) {
+      const expected = {date: previous.date, ...nextAction};
+      if (JSON.stringify(previous) !== JSON.stringify(expected)) fail('花园操作已有不同结果');
+      return cloneData(state);
+    }
+  }
   if (clean.actions.length >= MAX_GARDEN_ACTIONS) fail('操作数量已达到上限');
-  if (clean.version === 1) { clean.version = 2; clean.legacyCount = clean.actions.length; }
+  if (clean.version !== 3) {
+    clean.legacyCount = clean.version === 1 ? clean.actions.length : clean.legacyCount;
+    clean.classicCount = clean.actions.length;
+    clean.version = 3;
+  }
   clean.actions.push({ date: today, ...nextAction });
   const garden = validateGarden(clean, state);
   const next = cloneData(state);

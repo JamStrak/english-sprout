@@ -127,3 +127,16 @@ test('older backups without checkups work and invalid requested calendar labels 
   assert.equal(progress(state, 'grape').current, 1);
   assert.throws(() => getSkinProgress(state, '2026-02-30'), /日历日期/);
 });
+
+
+test('three new sentences on the same calendar day unlock forest while counting one practice day', () => {
+  let state = createState(start);
+  for(const lesson of lessons.slice(0,3))state=recordResult(state,lesson.id,'good',start,{isNew:true,meaning:true});
+  assert.deepEqual(validateImport(state,lessons),state);
+  assert.equal(progress(state,'meadow').current,3);
+  assert.equal(progress(state,'meadow').unlocked,true);
+  assert.equal(progress(state,'grape').current,1);
+  assert.deepEqual(getSkinProgress(state,addDays(start,-1)).filter(skin=>skin.metric).map(skin=>skin.current),[0,0,0]);
+  state.days[start].results.push({...state.days[start].results[2]});
+  assert.equal(progress(state,'meadow').current,3);
+});

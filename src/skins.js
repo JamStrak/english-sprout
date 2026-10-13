@@ -23,7 +23,7 @@ function practiceCounts(state, today) {
     dayKey(date);
     if (date > today) continue;
     for (const result of entry.results || []) {
-      if (result.isNew && entry.newDone && entry.newId === result.lessonId) {
+      if (result.isNew === true && entry.newDone && entry.results.some(first => first.isNew === true && first.lessonId === entry.newId)) {
         introductions.add(result.lessonId);
         practicedDates.add(date);
       } else if (result.isNew === false && entry.reviewed?.includes(result.lessonId)) {

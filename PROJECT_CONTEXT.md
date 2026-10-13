@@ -1,8 +1,19 @@
 # 英语小芽 · 当前状态
 
-更新：2026-10-12（Asia/Shanghai）。
+更新：2026-10-13（Asia/Shanghai）。
 
 ## 当前交付
+
+### v1.7.0 多句学习与大花园
+
+本地最终构建4753ef740865。正常学习/复习开口直接跟读评星，复习说完再听音找图；首次理解错误记again次日再练，未经词句匹配的手动继续最多记help，不伪造自动通过。通常新增上限3句，仍有到期复习时1句，当日开始积压≥10句保持1句；完成后显眼“再学一句”，达到额度转花园/短句广场，自由听不加复习任务。规则是产品负荷安排，不是医学健康阈值。录音继续全在本机，没有接入专业发音评测或付费运行API。
+
+大花园3000×3000自由位置画布，最多1600株；拖种子、拖水壶或点选后点落点，平移/缩放/地图/回小苗，叶片及土壤均能浇水。新苗5水成熟，缩放/形态与随机外观变化，开花自动收藏且留在花园。每轮练习2水、约1/3机会种子，按attemptId固定奖励防重抽。学习状态v1保留首句兼容字段，多个新句在results，可选meaning证据；花园v3 legacyCount/classicCount保留旧v1/v2植物、余额、收藏、旧奖励，旧苗3/12成长目标不清零。核心缓存新增canvas/CSS/小模块，声音和audio-v5不变。
+
+已验证：单测178、构建、最终原功能36、旧Safari能力剥离/首用15、大花园浏览器10（含1600株单Canvas、3尺寸实际触屏/5水/刷新/图片真实解码）、正常学习专项21（真实录音/模拟ASR，3句额度、意思错题、提示、失败/迟到），最终复习双点1；真实录音→真实Vosk→正常学习/3星/一次奖励5，及真实词句/错误/静音/取消/离线烟测。模型烟测输入已有配音模拟麦克风；不等于真实儿童口音准确率或实体iPadOS15.1验收。完整首次约47MB本机识别包仍受公网下载速度影响，后台可续传，识别未准备好允许先练。新增每日额度奖励页/皮肤解锁三个尺寸、积压上限与真实SW离线大花园6项通过，同日多句皮肤累计计数已修复。证据test-results/daily-cap-layout、main-speech、main-real-speech、garden-world、local-v170-final、startup-browser；发布状态待最后定点验证。
+
+
+### v1.6.1 首次识别基线
 
 v1.6.1已发布：代码c14d72c4da4cac0f752d34ee6129c6b26c66fd67，Pages38270745716成功，正式构建ee2f25c4023a（版本接口与CI日志一致），本地9dcada29d9b0。修复正式站首个识别包被60秒上限反复打断的问题。真实GitHub下载完整41MB仅20–50KB/s，Range分段实际返回206、256KB约3.4秒；改用256KB/3并发/断线续传，独立缓存供SW/Vosk复用，worker直接读取已准备字节，首用不依赖Service Worker先控制页面，准备后台继续且儿童当轮等待最多15秒，再可领鼓励水。新增下载9项及压缩缓存/SW边界回归，总单测164项通过；本机真实识别与录音至领水重新通过；最终36项原功能回归通过（二维码测试等待真实decode修复竞态）。正式站768×1024隔离验收通过：播种、同日连续两次浇水、重复跟读领水、词句匹配与冷模型离线准备，无异常/上传；完整识别资产用与发布同字节的fixture避免慢网拖住检查，两个正式资产512字节前缀已实网比对，不能把fixture耗时称为首次公网下载耗时。证据test-results/garden-live-v161/results.json。没有换声或变更学习间隔规则。
 
@@ -63,7 +74,7 @@ v1.4.1 自动更新已发布：代码 `6ce5a32fcc2806fe5dbc604c9660c1d274bf975f`
 ## 技术不变量
 
 - 纯静态，无付费运行时 API、账户或云端儿童数据。录音仅内存回听或本机词句匹配，离开卡片关闭麦克风并清理；头像仅本机。
-- src/learning.js 是日期、复习、小测规则唯一实现；src/garden.js 重放奖励账本。v1.6.0更新花园账本，学习模块仅调整clone保留迁移标记。src/journey.js 只组合既有计划决定界面顺序。
+- src/learning.js 是日期、复习、小测规则唯一实现；src/garden.js 重放奖励账本。v1.7.0新增多句额度与meaning证据，花园v3保留旧前缀。src/journey.js 只组合既有计划决定界面顺序。
 - 稳定课程 ID、旧 v1 进度和备份兼容；选择题正确不等于发音准确或完全掌握。自由听书不刷学习记录和奖励；花园额外跟读单独记奖励，不推进复习或掌握阶段。
 - 学习备份导入替换不合并；声线、语速、头像与试听偏好独立，不随学习备份迁移。
 - 0.75× / 0.9× / 1× / 1.15× 即时保调语速，播放中不重播、不重开请求；临时慢听 0.8×，录音和中文帮助 1×。中文玩法仅主动点击后播放。
@@ -76,7 +87,7 @@ v1.4.1 自动更新已发布：代码 `6ce5a32fcc2806fe5dbc604c9660c1d274bf975f`
 - 界面：src/app.js；新单屏样式 src/focus.css（最后加载）；基础 styles.css / interaction.css；任务顺序 journey.js。
 - 媒体：src/media.js、voices.js；点按 feedback.js/css；头像 avatars.js/css；配图 illustrations.js。
 - 配音与试听：public/audio、src/voice-audition.js/css、public/data/character-voices.json；制作与核对说明 docs/VOICE_REVIEW.md。
-- 学习/收集：src/learning.js、garden.js；规则 docs/LEARNING.md，交互 docs/DESIGN.md。
+- 学习/收集：src/learning.js、garden.js；大花园canvas交互src/garden-canvas.js / garden-world.css；规则 docs/LEARNING.md，交互 docs/DESIGN.md。
 - 发布/离线：scripts/build.mjs、sw.template.js、.github/workflows/pages.yml。
 
 ## 当前验证

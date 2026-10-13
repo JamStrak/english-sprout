@@ -54,13 +54,13 @@
 @keyframes garden-tool-reward{0%,100%{transform:scale(1)}40%{transform:scale(1.08);box-shadow:0 0 0 5px var(--skin-ring,#d9896b3d)}}
 
 /* Speaking is another single task: big illustration, microphone, then a clear reward. */
-.is-garden-practice .speech-result{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:2px 7px;padding:8px 10px;border:1px solid var(--skin-line,#cecec5);border-radius:17px;background:var(--skin-warm,#fff1cd);min-height:63px;text-align:left;color:var(--ink,#2d483b)}
-.is-garden-practice .speech-result:empty{display:none}
-.is-garden-practice .speech-result>span{grid-column:1;grid-row:1 / 3;text-align:center;font-size:31px;line-height:1.2}
-.is-garden-practice .speech-result>.speech-stars{font-size:27px;letter-spacing:-2px;color:#a76b08;white-space:nowrap}
-.is-garden-practice .speech-result>strong{grid-column:2;min-width:0;font-size:13px;line-height:1.4}
-.is-garden-practice .speech-result>small{grid-column:2;font-size:10px;line-height:1.4;color:var(--skin-warm-ink,#775421)}
-.is-garden-practice .speech-listening{animation:speech-listening-bob 1.1s ease-in-out infinite}
+.is-speech-practice .speech-result{display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:2px 7px;padding:8px 10px;border:1px solid var(--skin-line,#cecec5);border-radius:17px;background:var(--skin-warm,#fff1cd);min-height:63px;text-align:left;color:var(--ink,#2d483b)}
+.is-speech-practice .speech-result:empty{display:none}
+.is-speech-practice .speech-result>span{grid-column:1;grid-row:1 / 3;text-align:center;font-size:31px;line-height:1.2}
+.is-speech-practice .speech-result>.speech-stars{font-size:27px;letter-spacing:-2px;color:#a76b08;white-space:nowrap}
+.is-speech-practice .speech-result>strong{grid-column:2;min-width:0;font-size:13px;line-height:1.4}
+.is-speech-practice .speech-result>small{grid-column:2;font-size:10px;line-height:1.4;color:var(--skin-warm-ink,#775421)}
+.is-speech-practice .speech-listening{animation:speech-listening-bob 1.1s ease-in-out infinite}
 .is-garden-practice [data-garden-claim]{width:100%;font-size:15px;min-height:48px}
 .is-garden-practice .practice-body>.text-button{min-height:44px;padding:6px 8px;font-size:11px;border-radius:13px;background:var(--skin-soft,#f1f5e8);color:var(--skin-muted,#586d61)}
 .is-garden-practice .record-button.recording{background:var(--skin-warm,#fff1cd);box-shadow:0 0 0 4px var(--skin-ring,#d9896b3d)}
@@ -80,16 +80,30 @@
   .garden-play .garden-drop-label{font-size:10px;min-height:16px;margin-bottom:1px}
   .is-garden-practice .practice-main{gap:4px}
   .is-garden-practice .practice-main[data-step=speak] .practice-body{gap:4px}
-  .is-garden-practice .speech-result{min-height:54px;padding:5px 8px;grid-template-columns:68px minmax(0,1fr);gap:1px 5px;border-radius:14px}
-  .is-garden-practice .speech-result>strong{font-size:12px}
-  .is-garden-practice .speech-result>small{font-size:9px}
-  .is-garden-practice .speech-result>.speech-stars{font-size:24px}
+  .is-speech-practice .speech-result{min-height:54px;padding:5px 8px;grid-template-columns:68px minmax(0,1fr);gap:1px 5px;border-radius:14px}
+  .is-speech-practice .speech-result>strong{font-size:12px}
+  .is-speech-practice .speech-result>small{font-size:9px}
+  .is-speech-practice .speech-result>.speech-stars{font-size:24px}
   .is-garden-practice [data-garden-claim]{min-height:44px;font-size:13px}
   .is-garden-practice .practice-main[data-step=speak] .practice-english{font-size:24px}
   .is-garden-practice .practice-main[data-step=speak] .practice-chinese{font-size:13px;margin-top:2px}
 }
 @media(prefers-reduced-motion:reduce){
   .garden-play .garden-drop,.garden-play .garden-drop::before,.garden-play .garden-tool{transition:none}
-  .garden-play .garden-stage.garden-celebrate .garden-drop,.garden-play .garden-reward-pop,.is-garden-practice .speech-listening{animation:none}
+  .garden-play .garden-stage.garden-celebrate .garden-drop,.garden-play .garden-reward-pop,.is-speech-practice .speech-listening{animation:none}
   .garden-play [data-garden-effect=water] .garden-splash,.garden-play [data-garden-effect=fertilize] .garden-drop::after{animation:none}
 }
+
+/* Stars belong in the normal speaking flow too. */
+.is-speech-practice .speech-result.is-idle{grid-template-columns:28px minmax(0,1fr);min-height:29px;padding:3px 7px;gap:0 5px;background:var(--skin-soft);}
+.is-speech-practice .speech-result.is-idle>span{font-size:20px;grid-row:1}
+.is-speech-practice .speech-result.is-idle>strong{font-size:10px}
+.is-speech-practice .speech-result.is-idle>small{display:none}
+.is-speech-practice [data-speech-next]{width:100%;min-height:44px;font-size:13px;padding:8px}
+.is-speech-practice .practice-body{gap:4px!important}
+.is-speech-practice .rating-buttons>button:not(.primary){min-height:44px;padding:4px;font-size:10px}
+.is-speech-practice .rating-buttons span{font-size:18px}
+@media(max-height:650px){.is-speech-practice .practice-main{gap:4px}.is-speech-practice .practice-main[data-step=speak] .scene-picture{min-height:44px}.is-speech-practice .speech-result{min-height:47px}.is-speech-practice .speech-result>small{font-size:9px}.is-speech-practice .speech-result>strong{font-size:11px}}
+
+.garden-world-footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:36px;font-size:9px;color:var(--skin-muted)}
+.garden-world-footer .text-button{min-height:36px;padding:5px;font-size:11px}

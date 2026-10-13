@@ -6,8 +6,9 @@ export function getTodayJourney(state, lessons, day = dayKey()) {
   const checkup = getCheckupPlan(state, lessons, day);
   const activities = [];
   if (daily.dueIds.length) activities.push({ kind: 'review', ids: [...daily.dueIds] });
-  if (daily.newLessonId && !daily.newDone) activities.push({ kind: 'learn', ids: [daily.newLessonId] });
+  if (daily.canLearnMore && !daily.newDone) activities.push({ kind: 'learn', ids: [daily.nextNewLessonId] });
   if (checkup.due) activities.push({ kind: 'checkup', ids: [...checkup.ids] });
+  if (daily.canLearnMore && daily.newDone) activities.push({ kind: 'learn', ids: [daily.nextNewLessonId] });
   activities.push({ kind: 'garden', ids: [] });
   const current = activities[0];
   // This describes the current plan only. Recompute after each completed activity:

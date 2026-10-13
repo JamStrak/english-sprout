@@ -1,17 +1,16 @@
-# 可反复练习花园 v1.6.0
+# 大花园 v1.7.0
 
-孩子循环：花园 → 练一句熟悉的 → 本机跟读结果 → 领取2次浇水 → 拖水壶给小花。每3轮另得种子。无需家长确认；自动词句匹配失败可自主开口练，领取标注清楚的鼓励水。
+首页显眼入口与学习/复习开口步骤均能跟读评星。完成匹配得到2壶水，有机会随机发现种子；轮次ID固定奖励，重复操作不能重领。识别未准备好可自主开口领明确标注的鼓励水，不依赖家长，不制造发音通过记录。
 
-种子、水壶、营养均有可拖放的大图标，中央花田有落点光圈、松手提示、水滴与成长反馈。保留点工具再点花田和键盘操作。取消、拖错、多指、重复结束事件不消耗或重复扣资源。12步长成新植物，每次照顾增加尺寸，分阶段更换植物形态，成熟点植物收进图鉴。旧植株及收藏保持原进度。
+大花园支持1600株自由位置植物。拖种子撒在绿色花田，拖水壶给小苗；也可点工具再点位置。拖空地平移，放缩/地图/回小苗控制视野。新苗5次浇水开花，逐次放大、换形态，开花自动进入收藏且保留在花园。四种花型各有外观变化；取消、误放、多指不扣资源。
 
 ## 状态边界
 
-- `src/garden.js`：奖励派生、v1/v2账本验证、迁移、12步生长、唯一attemptId去重。
-- `src/garden-interaction.js`：PointerEvent拖放与点选，仅触发动作回调，切屏cleanup。
-- `src/garden-art.js`、`garden-play.css`：图形、伸缩成长和单屏布局。
-- `src/speech-local.js`、`speech-match.js`：按需准备本机Vosk、临时录音解码、无目标约束识别、顺序词句匹配。正确识别句子可得三颗跟读星星；不是发音准确率。
-- 跟读记录仅保存日期、已学课程ID、attemptId、assessment（local-speech或practice-effort）。音频/临时文本仅内存，不上传、不进存档。额外跟读不改变cards/days/checkups。
-- 先成功保存，再返回花园及庆祝；存储失败回滚。独立录音请求代数阻止迟到权限/旧评测干扰新轮次。
+- src/garden.js：统一v1/v2/v3严格账本，随机奖励可重放，独立轮次与浇水动作去重；旧12格/3格苗不重置。
+- src/garden-canvas.js / garden-world.css：Canvas渲染与拖放、点选、视野；页面不生成上千个花朵DOM。旧苗也出现在大花园，“老花盆”保留原照顾/收获入口。
+- src/learning.js：学习与到期规则唯一来源，多句results与可选meaning证据；花园不改变复习间隔。
+- src/speech-local.js / speech-match.js：本机词句匹配，非发音准确率。录音/文本只在内存，不上传或入备份。
+- src/app.js：保存成功后再庆祝，失败回滚；切屏清理拖放和录音，迟到结果不能改变下一张卡。
 
 ## 离线和设备
 
@@ -19,4 +18,4 @@
 
 ## 验证
 
-`npm test`、`npm run build`、`tests/browser.cjs`为发布基线。新增garden-interaction、garden-play-browser、speech-local-browser、garden-speech-browser、garden-races-browser专项分别验证拖放、五尺寸单屏、实际模型、真实MediaRecorder到领水、取消竞态与存储失败。实际模型烟测使用已有课程配音和静音，不能替代真实儿童语音测试。测试记录在忽略发布的`test-results`目录。
+发布基线 npm test / npm run build / tests/browser.cjs。新增 tests/garden-world.test.js 验证1000株存档、五次成长和迁移；garden-world-browser.cjs 验证真实触屏拖放、取消/多指、1600株画布和三个尺寸主流程；main-speech-browser.cjs 使用真实MediaRecorder及模拟识别，验证多句、理解错误、奖励原子保存与迟到结果。speech-local-browser.cjs 用真实Vosk和课程音频/静音检查识别，不能替代真人儿童口音测试。

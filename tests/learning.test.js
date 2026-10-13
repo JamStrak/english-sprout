@@ -39,9 +39,9 @@ test('the same instant follows Asia/Shanghai and Los Angeles local dates indepen
   }
 });
 
-test('new state offers one first lesson and has no pretend practice', () => {
+test('new state offers the first sentence within a three-sentence budget and has no pretend practice', () => {
   const state = createState(initialDay);
-  assert.deepEqual(getDailyPlan(state, lessons, initialDay), { newLessonId: first, dueIds: [], extraDueCount: 0, newDone: false, reviewDone: 0, totalDone: 0 });
+  assert.deepEqual(getDailyPlan(state, lessons, initialDay), { newLessonId: first, dueIds: [], extraDueCount: 0, newDone: false, reviewDone: 0, totalDone: 0, nextNewLessonId: first, canLearnMore: true, newCount: 0, newLimit: 3, limitReason: null });
   assert.equal(getStats(state, lessons, initialDay).practicedDays, 0);
 });
 
@@ -110,11 +110,93 @@ test('missed days neither skip new lesson content nor add a punitive backlog of 
   assert.equal(reviewed.cards[first].due, '2026-11-23');
 });
 
-test('only one new lesson a day can be recorded', () => {
-  assert.throws(() => recordResult(learned(), second, 'good', initialDay, { isNew: true }), /今天的新句/);
-  const state = recordResult(learned(), second, 'good', '2026-10-09', { isNew: true });
-  assert.equal(getDailyPlan(state, lessons, '2026-10-09').newLessonId, second);
-  assert.equal(getDailyPlan(state, lessons, '2026-10-10').newLessonId, 'lesson-3');
+test('three new sentences can be recorded without replacing the first daily lesson or skipping IDs', () => {
+  let state = learned();
+  for (const id of [second, 'lesson-3']) state = recordResult(state, id, 'good', initialDay, {isNew: true, meaning: true});
+  const plan = getDailyPlan(state, lessons, initialDay);
+  assert.equal(plan.newLessonId, first);
+  assert.equal(plan.nextNewLessonId, 'lesson-4');
+  assert.equal(plan.newCount, 3);
+  assert.equal(plan.canLearnMore, false);
+  assert.equal(plan.limitReason, 'daily-limit');
+  assert.throws(() => recordResult(state, 'lesson-4', 'good', initialDay, {isNew: true}), /额度/);
+  assert.deepEqual(validateImport(JSON.stringify(state), lessons), state);
+  assert.deepEqual(getDailyPlan(state, lessons, '2026-10-09').dueIds, [first, second, 'lesson-3']);
+  for (const id of [first, second, 'lesson-3']) assert.equal(state.cards[id].due, '2026-10-09');
+});
+
+test('extra introductions wait for all due reviews, including work beyond the chosen daily review cap', () => {
+  const day = '2026-10-09';
+  let state = recordResult(learned(), second, 'good', day, {isNew: true});
+  assert.equal(getDailyPlan(state, lessons, day).newLimit, 1);
+  assert.equal(getDailyPlan(state, lessons, day).limitReason, 'review-first');
+  assert.throws(() => recordResult(state, 'lesson-3', 'good', day, {isNew: true}), /复习/);
+  state = recordResult(state, first, 'good', day);
+  assert.equal(getDailyPlan(state, lessons, day).newLimit, 3);
+  state = recordResult(state, 'lesson-3', 'good', day, {isNew: true});
+  assert.deepEqual(validateImport(state, lessons), state);
+  const reordered = clone(state);
+  reordered.days[day].results = [state.days[day].results[0], state.days[day].results[2], state.days[day].results[1]];
+  assert.throws(() => validateImport(reordered, lessons), /负荷/);
+
+  let overflow = backlog();
+  overflow.settings.dailyReviews = 2;
+  for (const id of getDailyPlan(overflow, lessons, '2026-11-01').dueIds) overflow = recordResult(overflow, id, 'good', '2026-11-01');
+  assert.equal(getDailyPlan(overflow, lessons, '2026-11-01').newLimit, 1);
+  assert.equal(getDailyPlan(overflow, lessons, '2026-11-01').extraDueCount, 6);
+});
+
+test('ten due cards at day start keep the new-sentence budget at one even after every review is cleared', () => {
+  let state = createState(initialDay);
+  for (let index = 0; index < 10; index++) state = recordResult(state, lessons[index].id, 'good', addDays(initialDay, index), {isNew: true});
+  const date = '2026-11-01';
+  state.settings.dailyReviews = 10;
+  for (const id of getDailyPlan(state, lessons, date).dueIds) state = recordResult(state, id, 'good', date);
+  assert.equal(getDailyPlan(state, lessons, date).newLimit, 1);
+  state = recordResult(state, 'lesson-11', 'good', date, {isNew: true});
+  assert.equal(getDailyPlan(state, lessons, date).limitReason, 'review-backlog');
+  assert.throws(() => recordResult(state, 'lesson-12', 'good', date, {isNew: true}), /复习/);
+  state.settings.dailyReviews = 1;
+  assert.deepEqual(validateImport(JSON.stringify(state), lessons), state);
+  assert.equal(getDailyPlan(state, lessons, date).newLimit, 1);
+});
+
+test('nine due cards restore the three-sentence budget after clearing them, independent of changed review settings', () => {
+  let state = createState(initialDay);
+  for (let index = 0; index < 9; index++) state = recordResult(state, lessons[index].id, 'good', addDays(initialDay, index), {isNew: true});
+  const date = '2026-11-01';
+  state.settings.dailyReviews = 9;
+  for (const id of getDailyPlan(state, lessons, date).dueIds) state = recordResult(state, id, 'good', date);
+  state.settings.dailyReviews = 1;
+  assert.equal(getDailyPlan(state, lessons, date).newLimit, 3);
+  for (const id of ['lesson-10', 'lesson-11', 'lesson-12']) state = recordResult(state, id, 'good', date, {isNew: true, meaning: true});
+  assert.equal(getDailyPlan(state, lessons, date).newCount, 3);
+  assert.deepEqual(validateImport(JSON.stringify(state), lessons), state);
+});
+
+test('meaning evidence is automatic but separate: a wrong picture prevents interval promotion', () => {
+  const state = recordResult(learned(), first, 'good', '2026-10-09', {meaning: false});
+  assert.equal(state.cards[first].stage, 0);
+  assert.equal(state.cards[first].due, '2026-10-10');
+  assert.equal(state.days['2026-10-09'].results[0].rating, 'again');
+  assert.equal(state.days['2026-10-09'].results[0].meaning, false);
+  assert.deepEqual(validateImport(state, lessons), state);
+  assert.deepEqual(recordResult(state, first, 'good', '2026-10-09', {meaning: true}), state);
+  assert.throws(() => recordResult(learned(), first, 'good', '2026-10-09', {meaning: 'yes'}));
+  const fabricated = clone(state);
+  fabricated.days['2026-10-09'].results[0].rating = 'good';
+  assert.throws(() => validateImport(fabricated, lessons), /意思/);
+  fabricated.days['2026-10-09'].results[0].rating = 'again';
+  fabricated.days['2026-10-09'].results[0].meaning = 1;
+  assert.throws(() => validateImport(fabricated, lessons), /意思/);
+});
+
+test('import rejects a fourth introduced sentence even when its card counters and daily flags are consistent', () => {
+  let state = learned();
+  for (const id of [second, 'lesson-3']) state = recordResult(state, id, 'good', initialDay, {isNew: true});
+  state.cards['lesson-4'] = {...state.cards[first]};
+  state.days[initialDay].results.push({lessonId: 'lesson-4', rating: 'good', isNew: true});
+  assert.throws(() => validateImport(state, lessons), /每日结果/);
 });
 
 function backlog() {

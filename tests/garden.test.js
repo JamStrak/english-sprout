@@ -19,7 +19,7 @@ function action(state, type, plot = 0, today = first, kind = 'sunflower') {
 
 test('old state starts with three empty plots and four collectable plant kinds', () => {
   const state = history(0);
-  assert.deepEqual(createGarden(), { version: 2, legacyCount: 0, actions: [] });
+  assert.deepEqual(createGarden(), { version: 3, legacyCount: 0, classicCount: 0, actions: [] });
   assert.deepEqual(getGarden(state, first).inventory, { seeds: 0, water: 0, fertilizer: 0 });
   assert.deepEqual(getGarden(state, first).plots, [null, null, null]);
   assert.equal(getGarden(state, first).collection.length, 4);
@@ -130,7 +130,8 @@ test('legacy mature plants and harvests survive migration; replanted flowers use
   assert.equal(mature.plots[1].growthGoal, 3);
   assert.equal(mature.collection[0].count, 1);
   let state = action(original, 'harvest', 1, date(6));
-  assert.equal(state.garden.version, 2);
+  assert.equal(state.garden.version, 3);
+  assert.equal(state.garden.classicCount, 9);
   assert.equal(state.garden.legacyCount, 9);
   state = action(state, 'plant', 1, date(6), 'bluebell');
   state = action(state, 'water', 1, date(6));
@@ -196,7 +197,7 @@ test('malicious backup balances, extra fields, prototypes and oversized ledgers 
   assert.throws(() => validateGarden({ version: 1, actions: [{ date: first, type: 'plant', plot: 0, kind: 'sunflower', cost: -1 }] }, state), /字段/);
   assert.throws(() => validateGarden(Object.assign(Object.create({ bypass: true }), createGarden()), state), /对象/);
   assert.throws(() => validateGarden({ version: 1, actions: new Array(MAX_GARDEN_ACTIONS + 1).fill(null) }, state), /数量/);
-  assert.throws(() => validateGarden({ version: 3, actions: [] }, state), /版本/);
+  assert.throws(() => validateGarden({ version: 4, actions: [] }, state), /版本/);
   assert.throws(() => validateGarden({ version: 1, actions: [{ date: first, type: 'water', plot: 0, kind: 'sunflower' }] }, state), /字段/);
 });
 
@@ -224,7 +225,7 @@ function practice(state, number, assessment = 'local-speech', today = first) {
   return recordGardenPractice(state, { lessonId: 'lesson-1', attemptId: `attempt-${number}`, assessment }, today);
 }
 
-test('repeat rounds earn water and every third round a seed without changing review, checkup or mastery records', () => {
+test('repeat rounds earn water and stable seed surprises without changing review, checkup or mastery records', () => {
   let state = practiceHistory();
   const baseline = structuredClone(state);
   state = action(state, 'plant');

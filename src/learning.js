@@ -97,6 +97,18 @@ function dayEntry(state, today) {
     : { newId: null, newDone: false, reviewed: [], results: [] };
 }
 
+/** Product workload budget, not a medical or pronunciation threshold. */
+function newLessonBudget(state, today) {
+  const entry = dayEntry(state, today);
+  const newCount = entry.results.filter(result => result.isNew).length;
+  const remainingDue = allDueIds(state, Object.keys(state.cards), today).length;
+  // Every completed review was due at the beginning of this local day. First
+  // exposures do not enter this count; same-day checkups only affect tomorrow.
+  const startDueCount = remainingDue + entry.reviewed.length;
+  const pressure = startDueCount >= 10 ? 'review-backlog' : remainingDue ? 'review-first' : null;
+  return {newCount, newLimit: pressure ? 1 : 3, pressure, startDueCount};
+}
+
 function allDueIds(state, ids, today) {
   const order = new Map(ids.map((id, index) => [id, index]));
   return ids.filter((id) => {
@@ -121,7 +133,7 @@ function introductionDates(state){
   return dates;
 }
 
-/** Brief weekly checkup: delayed recognition and parent-observed recall stay distinct. */
+/** Brief weekly checkup: delayed meaning and speaking evidence stay distinct. */
 export function getCheckupPlan(state,lessons,today=dayKey()){
   dateParts(today);
   const dates=Object.keys(state.checkups||{}).filter(d=>d<=today).sort();
@@ -151,13 +163,18 @@ export function recordCheckup(state,lessons,results,today=dayKey()){
   const next=cloneState(state);next.checkups[today]=results.map(r=>({...r}));return next;
 }
 
-/** dueIds contains remaining work only. Missed days never create extra new lessons. */
+/** Remaining reviews take priority. Extra new sentences use an explicit daily budget. */
 export function getDailyPlan(state, lessons, today = dayKey()) {
   dateParts(today);
   const ids = lessonIds(lessons);
   const entry = dayEntry(state, today);
   const due = allDueIds(state, ids, today);
   const slots = Math.max(0, state.settings.dailyReviews - entry.reviewed.length);
+  const budget = newLessonBudget(state, today);
+  const nextNewLessonId = ids.find((id) => !hasOwn(state.cards, id)) ?? null;
+  const canLearnMore = Boolean(nextNewLessonId) && budget.newCount < budget.newLimit;
+  const limitReason = !nextNewLessonId ? 'catalog-complete'
+    : budget.newCount >= budget.newLimit ? budget.pressure || 'daily-limit' : null;
   return {
     newLessonId: entry.newId ?? ids.find((id) => !hasOwn(state.cards, id)) ?? null,
     dueIds: due.slice(0, slots),
@@ -165,6 +182,11 @@ export function getDailyPlan(state, lessons, today = dayKey()) {
     newDone: entry.newDone,
     reviewDone: entry.reviewed.length,
     totalDone: entry.results.length,
+    nextNewLessonId,
+    canLearnMore,
+    newCount: budget.newCount,
+    newLimit: budget.newLimit,
+    limitReason,
   };
 }
 
@@ -184,19 +206,23 @@ function nextCard(previous, rating, today) {
 }
 
 /** First final rating per lesson/day wins. Repeated clicks cannot grow the interval. */
-export function recordResult(state, lessonId, rating, today = dayKey(), { isNew = false } = {}) {
+export function recordResult(state, lessonId, rating, today = dayKey(), { isNew = false, meaning } = {}) {
   dateParts(today);
   if (today < state.startedAt) fail('练习日期早于首次使用日期，请检查设备日期');
-  if (!validId(lessonId) || !RATINGS.has(rating) || typeof isNew !== 'boolean') fail('练习结果不正确');
+  if (!validId(lessonId) || !RATINGS.has(rating) || typeof isNew !== 'boolean' || (meaning !== undefined && typeof meaning !== 'boolean')) fail('练习结果不正确');
   const result = cloneState(state);
   const entry = dayEntry(result, today);
   if (entry.results.some((item) => item.lessonId === lessonId)) return result;
+  // A recognizable utterance cannot promote a sentence whose meaning was missed.
+  if (meaning === false) rating = 'again';
   const previous = hasOwn(result.cards, lessonId) ? result.cards[lessonId] : null;
   if (previous && previous.lastReviewed >= today) fail('设备日期早于已有练习，请检查设备日期');
   if (isNew) {
     if (previous) fail('这句已经学过，请从复习进入');
-    if (entry.newDone || (entry.newId !== null && entry.newId !== lessonId)) fail('今天的新句已完成');
-    entry.newId = lessonId;
+    const budget = newLessonBudget(result, today);
+    if (budget.newCount >= budget.newLimit) fail(budget.pressure ? '请先完成复习，今天先把已学的句子记牢' : '今天的新句额度已完成，请到短句广场自由练习');
+    if (!entry.newDone && entry.newId !== null && entry.newId !== lessonId) fail('今天的新句编号不一致');
+    if (!entry.newDone) entry.newId = lessonId;
     entry.newDone = true;
   } else {
     if (!previous) fail('请先完成这句的新句练习');
@@ -205,7 +231,7 @@ export function recordResult(state, lessonId, rating, today = dayKey(), { isNew 
     entry.reviewed.push(lessonId);
   }
   result.cards[lessonId] = nextCard(previous, rating, today);
-  entry.results.push({ lessonId, rating, isNew });
+  entry.results.push({ lessonId, rating, isNew, ...(meaning === undefined ? {} : {meaning}) });
   result.days[today] = entry;
   return result;
 }
@@ -255,7 +281,6 @@ function integer(value, min, max, label) {
 
 /** A checkup must fit at a real boundary between that day's recorded practice events. */
 function validateCheckupHistory(state, lessons) {
-  if (!Object.keys(state.checkups).length) return;
   const replay = createState(state.startedAt);
   const dates = [...new Set([...Object.keys(state.days), ...Object.keys(state.checkups)])].sort();
   for (const date of dates) {
@@ -273,7 +298,12 @@ function validateCheckupHistory(state, lessons) {
     acceptIfPossible();
     for (const result of state.days[date]?.results || []) {
       const entry = dayEntry(replay, date);
-      if (result.isNew) { entry.newId = result.lessonId; entry.newDone = true; }
+      if (result.isNew) {
+        const budget = newLessonBudget(replay, date);
+        if (budget.newCount >= budget.newLimit) fail('新句历史超过当天学习负荷额度');
+        if (!entry.newDone) entry.newId = result.lessonId;
+        entry.newDone = true;
+      }
       else entry.reviewed.push(result.lessonId);
       entry.results.push(result);
       replay.days[date] = entry;
@@ -340,26 +370,27 @@ export function validateImport(input, lessons) {
     if (entry.newId !== null && !known.has(entry.newId)) fail('新句编号不正确');
     if (typeof entry.newDone !== 'boolean' || (entry.newDone && entry.newId === null)) fail('新句完成状态不正确');
     if (!Array.isArray(entry.reviewed) || entry.reviewed.length > 10 || entry.reviewed.some((id) => !known.has(id)) || new Set(entry.reviewed).size !== entry.reviewed.length) fail('复习列表不正确');
-    if (!Array.isArray(entry.results) || entry.results.length > 11) fail('每日结果过多');
+    if (!Array.isArray(entry.results) || entry.results.length > 13) fail('每日结果过多');
     const seen = new Set();
     const reviews = [];
     let newCount = 0;
     const results = entry.results.map((item) => {
-      exactKeys(item, ['lessonId', 'rating', 'isNew'], '练习结果');
+      exactKeys(item, ['lessonId', 'rating', 'isNew', ...(hasOwn(item || {}, 'meaning') ? ['meaning'] : [])], '练习结果');
       if (!known.has(item.lessonId) || !hasOwn(clean.cards, item.lessonId) || !RATINGS.has(item.rating) || typeof item.isNew !== 'boolean' || seen.has(item.lessonId)) fail('练习结果内容不正确');
+      if (hasOwn(item, 'meaning') && (typeof item.meaning !== 'boolean' || (!item.meaning && item.rating !== 'again'))) fail('意思判断与练习结果不一致');
       seen.add(item.lessonId);
       if (item.isNew) {
         newCount += 1;
-        if (introduced.has(item.lessonId) || item.lessonId !== entry.newId || !entry.newDone) fail('新句历史不一致');
+        if (introduced.has(item.lessonId) || (newCount === 1 && item.lessonId !== entry.newId) || !entry.newDone) fail('新句历史不一致');
         introduced.add(item.lessonId);
       } else {
         if (!introduced.has(item.lessonId) || effectiveDue(clean,item.lessonId,replay[item.lessonId]) > date) fail('复习早于学习或预约日期');
         reviews.push(item.lessonId);
       }
       replay[item.lessonId] = nextCard(hasOwn(replay, item.lessonId) ? replay[item.lessonId] : null, item.rating, date);
-      return { lessonId: item.lessonId, rating: item.rating, isNew: item.isNew };
+      return { lessonId: item.lessonId, rating: item.rating, isNew: item.isNew, ...(hasOwn(item, 'meaning') ? {meaning: item.meaning} : {}) };
     });
-    if (newCount !== Number(entry.newDone) || reviews.length !== entry.reviewed.length || reviews.some((id, index) => id !== entry.reviewed[index])) fail('每日结果与完成数量不一致');
+    if (newCount > 3 || Boolean(newCount) !== entry.newDone || reviews.length !== entry.reviewed.length || reviews.some((id, index) => id !== entry.reviewed[index])) fail('每日结果与完成数量不一致');
     clean.days[date] = { newId: entry.newId, newDone: entry.newDone, reviewed: [...entry.reviewed], results };
   }
   for (const [id, card] of Object.entries(clean.cards)) {
