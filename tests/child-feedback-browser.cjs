@@ -48,7 +48,7 @@ function instrument(){
   await context.addInitScript(({key,initial})=>{if(!localStorage.getItem(key))localStorage.setItem(key,JSON.stringify(initial));},{key,initial});
   await context.addInitScript(instrument);
   if(options.noAudio)await context.addInitScript(()=>{window.AudioContext=undefined;window.webkitAudioContext=undefined;});
-  const page=await context.newPage();page.setDefaultTimeout(12000);page.qaErrors=[];page.qaRequests=[];
+  const page=await context.newPage();page.setDefaultTimeout(12000);page.setDefaultNavigationTimeout(45000);page.qaErrors=[];page.qaRequests=[];
   page.on('pageerror',e=>page.qaErrors.push(e.message));page.on('request',r=>{if(!['GET','HEAD'].includes(r.method())||(!r.url().startsWith(origin)&&!r.url().startsWith('blob:')&&!r.url().startsWith('data:')))page.qaRequests.push({method:r.method(),url:r.url()});});
   await page.clock.setFixedTime(new Date(today+'T10:00:00+08:00'));
   await page.route('**/src/speech-local.js',r=>r.fulfill({contentType:'text/javascript',body:asr}));
