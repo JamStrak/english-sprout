@@ -12,6 +12,8 @@ import {installInteractionFeedback} from './feedback.js';
 import {installChildFeedback,celebrate,stopChildFeedback} from './child-feedback.js';
 import {openVoiceAudition} from './voice-audition.js';
 import {getTodayJourney} from './journey.js';
+import {getAdventure} from './adventure.js';
+import {rankButton,walletMarkup,questSteps,treasureMarkup,openAdventurePassport} from './adventure-ui.js';
 import {startAutomaticUpdates} from './auto-update.js';
 import {SKIN_STORAGE_KEY,getSkinProgress} from './skins.js';
 import {applySavedSkin,skinEntryMarkup,skinRewardMarkup,openSkinPicker,closeSkinPicker} from './skin-picker.js';
@@ -35,6 +37,9 @@ let audioSequence=Promise.resolve(),audioGeneration=0;
 let audioWaitTimer;
 let bootPending=null,bootReady=false,bootFailure=null;
 let gardenCleanup=null,speechAttempt=null,gardenPracticeCursor=0,recordAttemptGeneration=0;
+let gameSnapshot=null;
+function gameView(){const today=dayKey();if(gameSnapshot?.state===state&&gameSnapshot.today===today)return gameSnapshot;const garden=getGarden(state,today);gameSnapshot={state,today,garden,adventure:getAdventure(state,curriculum.lessons,today,garden)};return gameSnapshot;}
+const adventureForToday=()=>gameView().adventure;
 const icons={
  home:'<path d="m3 10 9-7 9 7v10H5V10m4 10v-7h6v7"/>',
  book:'<path d="M12 5v16M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/>',
@@ -56,7 +61,7 @@ const lessonById=id=>curriculum.lessons.find(l=>l.id===id);
 const themeById=id=>curriculum.themes.find(t=>t.id===id)||{name:'生活英语',icon:'🌱',color:'#e9efd7'};
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),4400);}
 function storageWarning(message){const el=document.querySelector('#storage-warning');el.textContent=message;el.hidden=false;storageOK=false;}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch{storageWarning('浏览器未能保存进度。请在家长页导出备份，再检查存储空间或浏览器设置。');return false;}}
+function save(){gameSnapshot=null;try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch{storageWarning('浏览器未能保存进度。请在家长页导出备份，再检查存储空间或浏览器设置。');return false;}}
 function load(){
   const fresh=createState(dayKey());
   try{const raw=localStorage.getItem(KEY);return raw?validateImport(JSON.parse(raw),curriculum.lessons):fresh;}
@@ -81,9 +86,11 @@ function shell(content){
   gardenCleanup?.();gardenCleanup=null;
   applySavedSkin(state,dayKey());
   document.body.dataset.screen=view;
-  app.innerHTML=`<header class="header"><a href="#home" class="brand" aria-label="英语小芽首页"><img src="./icons/icon.svg" alt="" width="36" height="36"><span class="brand-copy"><strong>英语小芽</strong>${versionBadge()}</span></a><div class="header-actions"><button id="avatar-open" class="profile-button" aria-label="换我的动物头像"><span data-user-avatar>${avatarMarkup()}</span></button><button class="parent-link ${view==='parent'?'active':''}" data-go="parent" aria-label="家长陪伴">${icon('gear')}<span>家长</span></button></div></header><main id="main" tabindex="-1">${content}</main><nav class="bottom-nav" aria-label="主要导航">${navItems()}</nav>`;
+  const adventure=view==='parent'?null:adventureForToday();
+  app.innerHTML=`<header class="header"><a href="#home" class="brand" aria-label="英语小芽首页"><img src="./icons/icon.svg" alt="" width="36" height="36"><span class="brand-copy"><strong>英语小芽</strong>${versionBadge()}</span></a><div class="header-actions">${view==='parent'?'':rankButton(adventure)}<button id="avatar-open" class="profile-button" aria-label="换我的动物头像"><span data-user-avatar>${avatarMarkup()}</span></button><button class="parent-link ${view==='parent'?'active':''}" data-go="parent" aria-label="家长陪伴">${icon('gear')}<span>家长</span></button></div></header><main id="main" tabindex="-1">${content}</main><nav class="bottom-nav" aria-label="主要导航">${navItems()}</nav>`;
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));
   bindAvatar();bindSoundSettings();bindSkins();
+  document.querySelector('[data-adventure-passport]')?.addEventListener('click',()=>{stopPlayback();openAdventurePassport(adventure,avatarMarkup());});
 }
 function versionBadge(){const label={preparing:' · 新版准备中',waiting:' · 稍后自动更新',offline:' · 离线可用'}[releaseState]||'';return `<small data-app-version data-build="${esc(APP_BUILD)}">v${esc(APP_VERSION)}${label}</small>`;}
 function syncReleaseState(value){releaseState=value.state;for(const node of document.querySelectorAll('[data-app-version]')){const temp=document.createElement('span');temp.innerHTML=versionBadge();node.textContent=temp.firstChild.textContent;}}
@@ -91,7 +98,7 @@ function bindSkins(){document.querySelectorAll('[data-open-skins]').forEach(butt
 function bindAvatar(){document.querySelectorAll('#avatar-open,[data-edit-avatar]').forEach(button=>button.onclick=()=>{stopPlayback();openAvatarPicker({notify:toast,onSave:()=>document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup())});});}
 function voiceAuditionEntry(){return `<button class="voice-audition-entry" data-voice-audition><span aria-hidden="true">🎭</span><span><strong>配音对照试听</strong><small>Pip 已加入整本小书 · 保留其他伙伴的样音对照</small></span>${icon('speaker')}</button>`;}
 function bindVoiceAudition(){document.querySelectorAll('[data-voice-audition]').forEach(button=>button.onclick=()=>{stopPlayback();openVoiceAudition();});}
-function navItems(){return [['home','home','今日练习'],['library','book','短句广场'],['garden','sprout','成长花园']].map(([id,i,label])=>`<button data-go="${id}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}>${icon(i)}<span>${label}</span></button>`).join('');}
+function navItems(){return [['home','🧭','今日冒险'],['library','🎈','短句广场'],['garden','🌷','我的花园']].map(([id,symbol,label])=>`<button data-go="${id}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}><span class="nav-world-icon" aria-hidden="true">${symbol}</span><span>${label}</span></button>`).join('');}
 function navigate(next){closeSkinPicker();closeSoundSettings();stopPlayback();resetRecording();session=null;view=next;if(next==='parent')parentPanel='menu';location.hash=next;render();window.scrollTo({top:0,behavior:'instant'});}
 function render(){if(view==='home')renderHome();else if(view==='library')renderLibrary();else if(view==='garden')renderGarden();else if(view==='parent')renderParent();else renderHome();}
 const journey=()=>getTodayJourney(state,curriculum.lessons,dayKey());
@@ -103,11 +110,10 @@ function journeyCopy(j){return {
 }[j.kind];}
 function startJourney(){const j=journey();if(j.kind==='review')startReview();else if(j.kind==='learn')startNewLesson();else if(j.kind==='checkup')startCheckup();else navigate('garden');}
 function renderHome(){
-  const j=journey(),copy=journeyCopy(j),l=lessonById(j.lessonId),p=daily();
-  if(j.kind==='learn'&&p.newCount){copy.title='还想学？再发现一句';copy.button='再学一句';copy.sub=`今天第 ${p.newCount+1} 句 · 听懂，再跟着说`;}
-  if(j.kind==='garden'){copy.sub=dailyLimitCopy(p);}
-  const next={review:'接着复习老朋友',learn:'接着学今天的新句',checkup:'接着去玩记忆小游戏',garden:'接着去花园，种下小奖励'}[j.nextKind];
-  shell(`<section class="focus-screen focus-home" data-next-kind="${j.kind}"><div class="focus-heading"><span class="badge">${copy.symbol} ${copy.badge}</span><h1>${copy.title}</h1><p class="focus-sub">${copy.sub}</p></div><button class="focus-scene" id="daily-picture" aria-label="${copy.button}">${l?lessonIllustration(l.id):'<img src="./illustrations/garden.svg" alt="小兔的英语花园">'}<span class="picture-play">${icon(j.kind==='review'?'replay':j.kind==='garden'?'sprout':'speaker')} 点图片，一起开始</span></button><div class="focus-caption">${j.kind==='learn'?`<strong lang="en">${esc(l.english)}</strong><span>${esc(l.chinese)}</span>`:j.kind==='review'?`<strong>${esc(l.chinese)}</strong><span>先看图想一想，想不起来也没关系</span>`:j.kind==='checkup'?'<strong>让熟悉的图片带你想起来</strong>':'<strong>小种子在等你啦</strong>'}</div><div class="focus-action"><button class="primary" id="hero-start">${copy.button} ${icon('arrow')}</button><p class="next-task">${next||'还想听？短句广场里有更多有趣的话'}</p></div><div class="journey-trail" aria-label="今天的顺序"><span class="${j.kind==='review'?'current':!p.dueIds.length?'finished':''}">🌿 先复习</span><span class="${j.kind==='learn'?'current':p.newDone?'finished':''}">🌱 新句 ${p.newCount}/${p.newLimit}</span><span class="${j.kind==='garden'?'current':''}">🌻 小花园</span></div><div class="screen-tools">${soundSettingsButton()}<button class="text-button" id="repeat-today" data-home-speech>⭐ 跟读评星</button></div></section>`);
+  const j=journey(),l=lessonById(j.lessonId),p=daily(),adventure=adventureForToday(),q=adventure.quest;
+  const title=j.kind==='learn'&&p.newCount?'再发现一句新魔法':q.title;
+  const button=j.kind==='learn'&&p.newCount?'再学一句':q.button;
+  shell(`<section class="focus-screen focus-home adventure-home" data-next-kind="${j.kind}"><div class="focus-heading"><span class="badge">${q.symbol} ${j.kind==='review'?'今天先复习':j.kind==='garden'?'今天的任务完成啦':'小芽花园 · 今日冒险'}</span><h1>${esc(title)}</h1><p class="focus-sub">${j.kind==='garden'?dailyLimitCopy(p):esc(q.hint)}</p></div><button class="focus-scene adventure-map" id="daily-picture" aria-label="${esc(button)}"><img class="adventure-background" src="./illustrations/adventure-world.webp" alt="" draggable="false">${walletMarkup(adventure)}<span class="adventure-portal">${l?lessonIllustration(l.id):'<img src="./illustrations/garden.svg" alt="">'}<span class="portal-play" aria-hidden="true">▶</span></span><span class="adventure-companion"><span data-user-avatar>${avatarMarkup()}</span><span class="companion-bubble">${j.kind==='garden'?'去种花吧！':'一起出发！'}</span></span><span class="map-sign" aria-hidden="true">${q.symbol} ${j.kind==='review'?'回忆小径':j.kind==='learn'?'新发现小屋':j.kind==='checkup'?'记忆寻宝':'花园乐园'}</span><span class="picture-play">${icon(j.kind==='garden'?'sprout':'arrow')} 点画面，开始冒险</span></button><div class="focus-caption">${j.kind==='learn'?`<strong lang="en">${esc(l.english)}</strong><span>${esc(l.chinese)}</span>`:j.kind==='review'?`<strong>${esc(l.chinese)}</strong><span>看图想一想，再来开口说</span>`:j.kind==='checkup'?'<strong>找回藏在记忆里的朋友</strong>':`<strong>${esc(adventure.nextGoal.title)}</strong>`}</div><div class="focus-action"><button class="primary" id="hero-start"><span aria-hidden="true">${q.symbol}</span> ${esc(button)} ${icon('arrow')}</button></div><div class="journey-trail adventure-trail" aria-label="今天的顺序"><span class="${j.kind==='review'?'current':!p.dueIds.length?'finished':''}"><i>🌿</i> 先复习</span><b aria-hidden="true">···</b><span class="${j.kind==='learn'?'current':p.newDone?'finished':''}"><i>✨</i> 新句 ${p.newCount}/${p.newLimit}</span><b aria-hidden="true">···</b><span class="${j.kind==='garden'?'current':''}"><i>🌷</i> 去种花</span></div><div class="screen-tools">${soundSettingsButton()}<button class="text-button" id="repeat-today" data-home-speech>🎤 跟读得水</button></div></section>`);
   document.querySelector('#hero-start').onclick=startJourney;document.querySelector('#daily-picture').onclick=startJourney;
   document.querySelector('[data-home-speech]').onclick=()=>stats().learnedCount?startGardenPractice(state.cards[p.newLessonId]?p.newLessonId:undefined):startNewLesson();
   warmLessons([j.lessonId,p.newLessonId,...p.dueIds.slice(0,1)]);
@@ -208,12 +214,12 @@ function bindListeningButtons(l){document.querySelectorAll('[data-listen]').forE
 function renderSession(){
   if(!session)return;closeSoundSettings();screenGeneration++;stopPlayback();resetRecording();
   gardenCleanup?.();gardenCleanup=null;
-  document.body.dataset.screen='practice';session.rewardStart??=getGarden(state,session.day).earned;session.skinsStart??=getSkinProgress(state,session.day).filter(s=>s.unlocked).map(s=>s.id);
+  document.body.dataset.screen='practice';session.rankStart??=adventureForToday().rank.level;session.rewardStart??=getGarden(state,session.day).earned;session.skinsStart??=getSkinProgress(state,session.day).filter(s=>s.unlocked).map(s=>s.id);
   const l=sessionCurrent(),isReview=l.id!==session.newId&&!session.preview&&!session.gardenPractice;
   session.speechResult=null;session.speechIds??={};session.speechIds[l.id]??='speech-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
-  const label={listen:'先听一听',choose:'听到的是哪张图？',remember:'还记得怎么说吗？',speak:'跟读，点亮小星星'}[session.step];
+  const label={listen:'听听朋友说什么',choose:'把声音和图片配对',remember:'老朋友，你还记得吗？',speak:'用你的声音点亮星星'}[session.step];
   const hint=session.step==='remember'||session.checkup&&!session.revealed;
-  app.innerHTML=`<div class="practice-shell ${session.gardenPractice?'is-garden-practice':''} ${session.step==='speak'?'is-speech-practice':''} ${session.checkup?'is-checkup':''}"><header class="practice-header"><button class="circle-btn" id="exit-session" aria-label="退出练习">${icon('close')}</button><div class="practice-progress">${versionBadge()}<span>${session.gardenPractice?'说一句，给小花喝水':session.preview?'随便听，随便说':`${session.checkup?'记忆小游戏 · ':isReview?'复习 · ':''}${session.index+1} / ${session.ids.length}`}</span><div class="progress-track"><i style="width:${(session.index+1)/session.ids.length*100}%"></i></div></div><button class="help-button" id="guide-audio" aria-label="听中文引导">? 听玩法</button></header><main class="practice-main" data-lesson-id="${l.id}" data-step="${session.step}"><div class="practice-label"><span class="badge">${session.gardenPractice?'💧 跟读小水壶':session.checkup?'🧩 记忆小游戏':session.preview?'📖 自由练习':isReview?'🌿 想起老朋友':'🌱 认识新朋友'}</span></div><h1 class="practice-title">${label}</h1><p class="practice-scene">${session.checkup?'看图自己想，想不起来再听提示':session.step==='choose'?'点一点，找出刚才听到的意思':esc(l.scene)}</p><div class="practice-content">${session.step==='choose'?`<button class="listening-cue" data-listen="normal" aria-label="重听短句">${icon('speaker')}<span>再听一次</span></button>`:`<button class="scene-picture" data-listen="normal" data-audio-lesson="${l.id}" aria-label="${hint?'听提示：':'播放：'}${esc(l.chinese)}">${lessonIllustration(l.id)}<span class="picture-play">${icon('speaker')} ${hint?'想不起来？点图听提示':'点画面，再听一次'}</span></button>`}<div class="practice-body">${practiceBody(l)}</div></div><div class="practice-tools">${soundSettingsButton()}${audioStatusMarkup()}</div></main></div>`;
+  app.innerHTML=`<div class="practice-shell game-practice ${session.gardenPractice?'is-garden-practice':''} ${session.step==='speak'?'is-speech-practice':''} ${session.checkup?'is-checkup':''}"><header class="practice-header"><button class="circle-btn" id="exit-session" aria-label="退出练习">${icon('close')}</button><div class="practice-progress">${versionBadge()}<span>${session.gardenPractice?'说一句，给小花喝水':session.preview?'随便听，随便说':`${session.checkup?'记忆小游戏 · ':isReview?'复习 · ':''}${session.index+1} / ${session.ids.length}`}</span><div class="progress-track"><i style="width:${(session.index+1)/session.ids.length*100}%"></i></div></div><button class="help-button" id="guide-audio" aria-label="听中文引导">? 听玩法</button></header><main class="practice-main" data-lesson-id="${l.id}" data-step="${session.step}">${questSteps(session)}<h1 class="practice-title">${label}</h1><p class="practice-scene">${session.checkup?'看图自己想，想不起来再听提示':session.step==='choose'?'点一点，找出刚才听到的意思':esc(l.scene)}</p><div class="practice-content">${session.step==='choose'?`<button class="listening-cue" data-listen="normal" aria-label="重听短句">${icon('speaker')}<span>再听一次</span></button>`:`<button class="scene-picture" data-listen="normal" data-audio-lesson="${l.id}" aria-label="${hint?'听提示：':'播放：'}${esc(l.chinese)}">${lessonIllustration(l.id)}<span class="picture-play">${icon('speaker')} ${hint?'想不起来？点图听提示':'点画面，再听一次'}</span></button>`}<div class="practice-body">${practiceBody(l)}</div></div><div class="practice-tools">${soundSettingsButton()}${audioStatusMarkup()}</div></main></div>`;
   document.querySelector('#exit-session').onclick=()=>{closeSoundSettings();resetRecording();stopPlayback();session=null;render();};
   document.querySelector('#guide-audio').onclick=()=>playPrompt(({listen:'listen',choose:'choose',remember:'review',speak:session.checkup&&!session.revealed?'checkup':'speak'})[session.step]);
   bindListeningButtons(l);bindSoundSettings();
@@ -234,7 +240,7 @@ function practiceBody(l){
   if(session.gardenPractice)return gardenPracticeBody(l);
   if(session.step==='listen')return `<div class="phrase-box">${phraseMarkup(l)}</div><p class="action-note">${esc(l.action)}</p><button class="primary next-button" data-step="choose">听过啦，来试试 ${icon('arrow')}</button>`;
   if(session.step==='remember')return `<div class="recall-box"><p class="practice-chinese">${esc(l.chinese)}</p><p>先试着自己说，再听提示</p></div><button class="primary next-button" data-step="speak">我来说一说 ${icon('mic')}</button>`;
-  if(session.step==='choose')return `<div class="choices">${choiceOrder(l).map((choiceIndex,i)=>{const c=l.choices[choiceIndex],picture=curriculum.lessons.find(lesson=>lesson.chinese===c.label);return `<button class="choice" data-choice="${choiceIndex}" aria-label="${esc(c.label)}">${picture?lessonIllustration(picture.id):''}<strong>${esc(c.label)}</strong><i>${String.fromCharCode(65+i)}</i></button>`;}).join('')}</div><div id="quiz-feedback" class="quiz-feedback" aria-live="polite"></div><button id="quiz-next" class="primary next-button" ${session.checkup?'data-checkup-next':session.meaningAfterSpeech?'data-review-next':'data-step="speak"'} hidden>${session.checkup?'继续下一步':session.meaningAfterSpeech?'听懂啦，收下小奖励':'轮到你说'} ${icon('arrow')}</button>`;
+  if(session.step==='choose')return `<div class="choices">${choiceOrder(l).map((choiceIndex,i)=>{const c=l.choices[choiceIndex],picture=curriculum.lessons.find(lesson=>lesson.chinese===c.label);return `<button class="choice" data-choice="${choiceIndex}" aria-label="${esc(c.label)}">${picture?lessonIllustration(picture.id):''}<strong>${esc(c.label)}</strong><i aria-hidden="true">✦</i></button>`;}).join('')}</div><div id="quiz-feedback" class="quiz-feedback" aria-live="polite"></div><button id="quiz-next" class="primary next-button" ${session.checkup?'data-checkup-next':session.meaningAfterSpeech?'data-review-next':'data-step="speak"'} hidden>${session.checkup?'继续下一步':session.meaningAfterSpeech?'听懂啦，收下小奖励':'轮到你说'} ${icon('arrow')}</button>`;
   const hiddenAnswer=!session.revealed&&!session.preview&&(session.checkup||l.id!==session.newId);
   return `<div id="answer-area" class="phrase-box">${hiddenAnswer?(session.checkup?'<p class="soft-copy">看图，试着自己说</p>':`<p class="practice-chinese">${esc(l.chinese)}</p>`):phraseMarkup(l)}</div>${hiddenAnswer?'<button id="reveal" class="text-button centered">'+icon('speaker')+' 想不起来，听提示</button>':''}<div class="record-box"><button id="record" class="record-button">${icon('mic')} <span>跟读评星</span></button><button id="replay-record" class="secondary" disabled>${icon('replay')} 听听自己</button><p id="record-status">点麦克风说一句，说完再点一下</p></div><div class="speech-result is-idle" data-speech-result aria-live="polite"><span>⭐</span><strong>说完自动评星</strong><small data-speech-preparing>录音留在本机</small></div><button class="primary" data-speech-next hidden>点亮啦，继续练习 ${icon('arrow')}</button><div class="rating-label">${session.preview?'不用录音，也可以直接开口练':'小耳朵没准备好？这次先开口练'}</div><div class="rating-buttons">${session.preview?'<button class="primary" data-rating="good">练习好了 ✓</button>':`<button data-rating="again"><span>🌱</span>还要练练</button><button data-rating="help"><span>🌿</span>听提示练过</button><button data-rating="good" ${session.checkup&&session.revealed?'disabled':''}><span>🌸</span>练过啦，继续</button>`}</div>`;
 }
@@ -377,19 +383,19 @@ function finishCheckupCard(){
   if(results.length===session.ids.length){
     const previous=state;
     try{state=recordCheckup(state,curriculum.lessons,results,session.day);for(const reward of session.speechRewards||[])state=recordGardenPractice(state,reward,session.day);if(!storageOK||!save()){state=previous;toast('还没保存成功，请先检查存储空间。');return;}}catch(e){state=previous;toast(e.message);return;}
-    const rewards=rewardMarkup(session);session=null;stopPlayback();resetRecording();
-    renderFinish('记忆小游戏完成啦',results.length,rewards,`首次听懂 ${results.filter(r=>r.meaning).length} 句`);return;
+    const rewards=rewardMarkup(session),rankStart=session.rankStart;session=null;stopPlayback();resetRecording();
+    renderFinish('记忆小游戏完成啦',results.length,rewards,`首次听懂 ${results.filter(r=>r.meaning).length} 句`,rankStart);return;
   }
   session.results=results;session.index++;session.step='speak';session.revealed=false;session.firstTryCorrect=null;session.spoken=null;renderSession();
 }
 function renderCompletion(){
-  const count=session.ids.length,rewards=rewardMarkup(session),review=!session.newId;
+  const count=session.ids.length,rewards=rewardMarkup(session),review=!session.newId,rankStart=session.rankStart;
   session=null;closeSoundSettings();stopPlayback();resetRecording();
-  renderFinish(review?'老朋友，又见面啦！':'今天又练了一句！',count,rewards);
+  renderFinish(review?'老朋友，又见面啦！':'今天又练了一句！',count,rewards,'',rankStart);
 }
-function renderFinish(title,count,rewards,score=''){
-  const next=journey(),copy=journeyCopy(next);
-  shell(`<section class="focus-screen completion" data-next-kind="${next.kind}"><span class="badge">✓ 这一小步完成啦</span><div class="completion-flower">🌻</div><h1>${title}</h1><p>${count} 句练习已记好${score?` · ${score}`:''}</p>${rewards}<div class="focus-action"><p class="next-task">${next.kind==='learn'?'再学一句，把新发现放进记忆小口袋':next.kind==='checkup'?'还有一个小小的记忆游戏':next.kind==='review'?'还有几位老朋友在等你':'今天的任务完成啦，去种一点快乐'}</p><button class="primary" id="completion-next">${next.kind==='learn'?'再学一句':copy.button} ${icon('arrow')}</button>${next.kind==='garden'?'<button class="secondary" data-go="library">去短句广场，自由听听</button>':''}<button class="text-button" data-go="home">先休息，回到今天</button></div></section>`);
+function renderFinish(title,count,rewards,score='',rankStart=Infinity){
+  const next=journey(),copy=journeyCopy(next),adventure=adventureForToday(),rankUp=adventure.rank.level>rankStart;
+  shell(`<section class="focus-screen completion game-completion" data-next-kind="${next.kind}"><span class="badge">✦ 冒险完成 · 奖励已放进背包</span><div class="completion-flower">${treasureMarkup()}</div><h1>${title}</h1><p>${count} 句练习已记好${score?` · ${score}`:''}</p>${rewards}<div class="completion-goal ${rankUp?'rank-unlocked':''}" ${rankUp?'data-rank-unlocked role="status"':''}><span>${rankUp?adventure.rank.icon:'🌷'}</span><strong>${rankUp?`新称号 · ${esc(adventure.rank.title)}`:esc(adventure.nextGoal.title)}</strong></div><div class="focus-action"><p class="next-task">${next.kind==='learn'?'还想探索？再发现一句，也可以带着补给去种花':next.kind==='checkup'?'熟悉的朋友藏起来啦，接着玩记忆寻宝':next.kind==='review'?'还有老朋友在等你，先走完回忆小径':'今天的任务完成啦，去种一点快乐'}</p><button class="primary" id="completion-next">${next.kind==='learn'?'再学一句':copy.button} ${icon('arrow')}</button><div class="completion-exits">${next.kind==='garden'?'<button class="secondary" data-go="library">🎈 自由听听</button>':'<button class="secondary" data-go="garden">🌷 带回花园</button>'}<button class="text-button" data-go="home">先休息</button></div></div></section>`);
   document.querySelector('#completion-next').onclick=startJourney;
   if(next.kind==='garden')document.querySelector('.next-task').textContent=dailyLimitCopy(daily());
   celebrate('reward',{target:document.querySelector('.completion-flower')});
@@ -402,7 +408,7 @@ function renderLibrary(){
   const filtered=curriculum.lessons.filter(l=>(libraryTheme==='all'||l.theme===libraryTheme)&&(!search||`${l.english} ${l.chinese}`.toLowerCase().includes(search.toLowerCase())));
   const items=themes?curriculum.themes:filtered,size=themes?6:searchOpen?2:4,pages=Math.max(1,Math.ceil(items.length/size));libraryPage=Math.min(libraryPage,pages-1);
   const visible=items.slice(libraryPage*size,(libraryPage+1)*size),title=themes?'想去哪里玩？':libraryTheme==='all'?'找一句话':themeById(libraryTheme).name;
-  shell(`<section class="focus-screen focus-library"><div class="screen-heading"><button class="back-button" data-library-back ${themes?'hidden':''} aria-label="回到主题">←</button><h1>${esc(title)}</h1><button class="circle-btn" id="search-open" aria-label="${searchOpen?'关闭搜索':'搜索短句'}" aria-expanded="${searchOpen}">${searchOpen?'×':'⌕'}</button></div><div class="library-search" ${searchOpen?'':'hidden'}><label for="phrase-search">中文或英文都能找</label><input id="phrase-search" type="search" placeholder="例如：喝水 / water" value="${esc(search)}" maxlength="60"></div><p class="results-count">${themes?'短句广场 · 自由听听，不增加复习任务':`${filtered.length} 个短句 · 随便听，不改变复习计划`}</p>${themes?`<div class="theme-grid">${visible.map(t=>`<button class="theme-card" data-theme-open="${t.id}" style="--theme-color:${esc(t.color)}"><span>${esc(t.icon)}</span><strong>${esc(t.name)}</strong></button>`).join('')}</div>`:`<div class="phrase-grid">${visible.map(l=>`<button class="phrase-tile" data-preview="${l.id}" aria-label="${esc(l.chinese)}"><div class="tile-top">${lessonIllustration(l.id)}</div><strong lang="en">${esc(l.english)}</strong><span class="tile-translation">${esc(l.chinese)}</span></button>`).join('')}</div>${!filtered.length?'<div class="empty-state">没有找到，换个词试试吧</div>':''}`}${pageControls(libraryPage,pages)}</section>`);
+  shell(`<section class="focus-screen focus-library adventure-library"><div class="screen-heading"><button class="back-button" data-library-back ${themes?'hidden':''} aria-label="回到主题">←</button><h1>${esc(title)}</h1><button class="circle-btn" id="search-open" aria-label="${searchOpen?'关闭搜索':'搜索短句'}" aria-expanded="${searchOpen}">${searchOpen?'×':'⌕'}</button></div><div class="library-search" ${searchOpen?'':'hidden'}><label for="phrase-search">中文或英文都能找</label><input id="phrase-search" type="search" placeholder="例如：喝水 / water" value="${esc(search)}" maxlength="60"></div><p class="results-count">${themes?'短句广场 · 自由听听，不增加复习任务':`${filtered.length} 个短句 · 随便听，不改变复习计划`}</p>${themes?`<div class="theme-grid">${visible.map(t=>`<button class="theme-card" data-theme-open="${t.id}" style="--theme-color:${esc(t.color)}"><span class="theme-island" aria-hidden="true">${esc(t.icon)}</span><strong>${esc(t.name)}</strong><small>${curriculum.lessons.filter(l=>l.theme===t.id&&state.cards[l.id]).length} / ${curriculum.lessons.filter(l=>l.theme===t.id).length} 个新发现</small></button>`).join('')}</div>`:`<div class="phrase-grid">${visible.map(l=>`<button class="phrase-tile" data-preview="${l.id}" aria-label="${esc(l.chinese)}"><div class="tile-top">${lessonIllustration(l.id)}</div><strong lang="en">${esc(l.english)}</strong><span class="tile-translation">${esc(l.chinese)}</span></button>`).join('')}</div>${!filtered.length?'<div class="empty-state">没有找到，换个词试试吧</div>':''}`}${pageControls(libraryPage,pages)}</section>`);
   document.querySelector('[data-library-back]').onclick=()=>{search='';searchOpen=false;libraryMode='themes';libraryPage=0;renderLibrary();};
   document.querySelector('#search-open').onclick=()=>{searchOpen=!searchOpen;search='';libraryPage=0;libraryTheme='all';libraryMode=searchOpen?'phrases':'themes';renderLibrary();if(searchOpen)document.querySelector('#phrase-search').focus();};
   document.querySelector('#phrase-search').oninput=e=>{const pos=e.target.selectionStart;search=e.target.value;libraryPage=0;renderLibrary();const input=document.querySelector('#phrase-search');input.focus({preventScroll:true});try{input.setSelectionRange(pos,pos);}catch{}};
@@ -416,7 +422,7 @@ function materialInventory(values,reward=false){return `<div class="material-inv
 function rewardMarkup(active){const earned=getGarden(state,active.day).earned,values=Object.fromEntries(['seeds','water','fertilizer'].map(kind=>[kind,Math.max(0,earned[kind]-(active.rewardStart?.[kind]||0))])),skinReward=skinRewardMarkup(state,active.day,active.skinsStart||[]);return Object.values(values).some(Boolean)?`<section class="earned-rewards">${skinReward||'<h2>送给你的小花田</h2>'}${materialInventory(values,true)}</section>`:skinReward;}
 function nextPlant(garden){const active=new Set(garden.plots.filter(Boolean).map(plot=>plot.kind));return PLANTS.find(plant=>!active.has(plant.id)&&garden.collection.find(item=>item.kind===plant.id)?.count===0)?.id||PLANTS[(state.garden?.actions.filter(action=>action.type==='plant').length||0)%PLANTS.length].id;}
 function renderGarden(){
- const today=dayKey(),garden=getGarden(state,today),plot=garden.plots[gardenPlot],plant=plot&&PLANTS.find(p=>p.id===plot.kind),goal=plot?.growthGoal||12,growth=plot?.growth||0;
+ const today=dayKey(),garden=gameView().garden,plot=garden.plots[gardenPlot],plant=plot&&PLANTS.find(p=>p.id===plot.kind),goal=plot?.growthGoal||12,growth=plot?.growth||0;
  if(gardenView==='world'){
    shell(`<section class="focus-screen focus-garden garden-world-screen">${gardenWorldMarkup(garden)}<div class="garden-world-footer">${garden.plots.some(Boolean)?'<button class="text-button" data-old-plots>🪴 老花盆</button>':'<span>每次练习 2 壶水 · 有机会发现种子</span>'}<button class="text-button" data-open-skins>🎨 换装</button></div></section>`);
    document.querySelector('[data-old-plots]')?.addEventListener('click',()=>{gardenView='field';renderGarden();});
@@ -451,12 +457,14 @@ function performGardenAction(type){
 }
 function performWorldAction(action){
  if(!storageOK){toast('记录暂时无法保存，请在家长页检查存储空间');return false;}
- const previous=state;
+ const previous=state,rankBefore=adventureForToday().rank.level;
  try{
    state=recordGardenAction(state,action,dayKey());
    if(!save()){state=previous;toast('这次还没保存成功，请检查存储空间');return false;}
-   const bloomed=action.type==='world-water'&&getGarden(state,dayKey()).worldPlants.some(plant=>plant.id===action.id&&plant.growth===plant.growthGoal);
-   renderGarden();toast(action.type==='world-plant'?'种下啦！给小苗浇水，看它长大':bloomed?'开花啦！你把小苗养大了':'咕嘟咕嘟！小苗又长大了一点');celebrate(action.type==='world-plant'?'plant':bloomed?'bloom':'water',{target:document.querySelector('[data-garden-world]')});return true;
+   const bloomed=action.type==='world-water'&&gameView().garden.worldPlants.some(plant=>plant.id===action.id&&plant.growth===plant.growthGoal);
+   const rank=adventureForToday().rank;
+   renderGarden();if(rank.level>rankBefore){const note=document.querySelector('[data-world-instruction]');if(note){note.textContent=`开花啦！获得新称号：${rank.title}`;note.classList.add('rank-unlocked');note.setAttribute('data-rank-unlocked','');}}
+   toast(rank.level>rankBefore?`开花啦！你现在是${rank.title}！`:action.type==='world-plant'?'种下啦！给小苗浇水，看它长大':bloomed?'开花啦！你把小苗养大了':'咕嘟咕嘟！小苗又长大了一点');celebrate(action.type==='world-plant'?'plant':bloomed?'bloom':'water',{target:document.querySelector('[data-garden-world]')});return true;
  }catch(error){state=previous;toast(error.message);return false;}
 }
 function renderParent(){

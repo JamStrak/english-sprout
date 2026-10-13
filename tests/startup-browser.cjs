@@ -2,7 +2,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {pathToFileURL}=require('node:url');
-const root=path.resolve(__dirname,'..'),dist=path.join(root,'dist'),output=path.join(root,'test-results','startup-browser');
+const root=path.resolve(__dirname,'..'),dist=path.join(root,'dist'),output=path.join(root,'test-results',process.env.REPORT_NAME||'startup-browser');
 const stateKey='english-sprout-state-v1',avatarKey='english-sprout-avatar-v1',skinKey='english-sprout-skin-v1';
 const course=JSON.parse(fs.readFileSync(path.join(dist,'data/curriculum.json'),'utf8'));
 const version=JSON.parse(fs.readFileSync(path.join(dist,'version.json'),'utf8'));
@@ -99,7 +99,7 @@ async function storedAudio(page,file){
       assert.equal(await page.locator('.focus-home').getAttribute('data-next-kind'),'learn');assert.deepEqual(await page.evaluate(()=>qa.plays),[]);
       const homeGeometry=await geometry(page),before=await page.evaluate(()=>qa.plays.length);await page.locator('#hero-start').click();const audio=await played(page,before,'/audio/hello-01.mp3');
       await page.locator('button[data-step="choose"]').click();await page.locator(`[data-choice="${course.lessons[0].answerIndex}"]`).click();await page.locator('#quiz-next').click();await page.locator('[data-rating="good"]').click();
-      assert.equal(await page.locator('.completion').getAttribute('data-next-kind'),'learn');await page.locator('[data-go="garden"]').click();await page.locator('[data-world-tool="plant"]').click();await page.locator('[data-garden-world]').click({position:{x:100,y:100}});
+      assert.equal(await page.locator('.completion').getAttribute('data-next-kind'),'learn');await page.locator('.completion [data-go="garden"]').click();await page.locator('[data-world-tool="plant"]').click();await page.locator('[data-garden-world]').click({position:{x:100,y:100}});
       const state=await saved(page);assert.equal(Object.keys(state.cards).length,1);assert.equal(state.cards['hello-01'].lastReviewed,'2026-10-12');assert.equal(state.garden.actions.length,1);assert.equal(state.garden.actions[0].type,'world-plant');
       const gardenGeometry=await geometry(page);await page.screenshot({path:path.join(output,tag+'-legacy-planted.png')});await clean(f);return{homeGeometry,gardenGeometry,audio};
     });

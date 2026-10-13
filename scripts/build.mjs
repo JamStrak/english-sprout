@@ -19,6 +19,7 @@ await fs.writeFile(path.join(dist,'index.html'),template.replace('<!-- APP_CURRI
 await fs.writeFile(path.join(dist,'.nojekyll'),'');
 const core=['./','./index.html','./src/app.js','./src/styles.css','./src/learning.js','./src/media.js','./src/voices.js','./src/illustrations.js','./src/garden.js','./data/curriculum.json','./manifest.webmanifest','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png','./icons/phone-qr.png','./illustrations/garden.svg'];
 const hash=crypto.createHash('sha256');
+core.push('./src/adventure.js','./src/adventure-ui.js','./src/adventure.css','./illustrations/adventure-world.webp');
 core.push(...ANIMALS.map(animal=>animal.image));
 core.push('./src/startup.js','./src/compat.js','./src/dialog.js','./src/dialog.css');
 core.push('./src/child-feedback.js','./src/child-feedback.css');
