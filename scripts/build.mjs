@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {ANIMALS} from '../src/avatars.js';
 import {serializeCurriculum} from '../src/startup.js';
+const appVersion=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root,'dist');
 // Only replace this project's generated dist directory.
@@ -29,11 +30,24 @@ core.push('./src/interaction.css','./src/avatars.js','./src/avatars.css','./src/
 core.push('./src/voice-audition.js','./src/voice-audition.css','./data/character-voices.json','./audio/pip-manifest.json');
 for (const f of core.slice(1)) hash.update(await fs.readFile(path.join(dist,f)));
 let sw=await fs.readFile(path.join(root,'sw.template.js'),'utf8');
-hash.update(sw);
+hash.update(sw);hash.update(appVersion);
 const version=hash.digest('hex').slice(0,12);
-const index=await fs.readFile(path.join(dist,'index.html'),'utf8');
-await fs.writeFile(path.join(dist,'index.html'),index.replace('__APP_BUILD__',version));
-sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(core));
+// New releases never request the old worker's unversioned JS/CSS keys.
+const release=`releases/${version}/src`;
+await fs.mkdir(path.join(dist,release),{recursive:true});
+await fs.cp(path.join(dist,'src'),path.join(dist,release),{recursive:true});
+const index=(await fs.readFile(path.join(dist,'index.html'),'utf8'))
+  .replace('__APP_BUILD__',version).replace('__APP_VERSION__',appVersion)
+  .replace(/(?:href|src)="\.\/src\/([^"<>]+)"/g,match=>match.replace('./src/',`./${release}/`));
+await fs.writeFile(path.join(dist,'index.html'),index);
+const releasedCore=core.map(file=>file.startsWith('./src/')?file.replace('./src/',`./${release}/`):file);
+const integrity={};
+for(const file of releasedCore){
+ const bytes=await fs.readFile(path.join(dist,file==='./'?'index.html':file));
+ integrity[file]=crypto.createHash('sha256').update(bytes).digest('hex');
+}
+sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(releasedCore))
+ .replace('/*__CORE_INTEGRITY__*/{}',JSON.stringify(integrity)).replace('__APP_VERSION__',appVersion);
 await fs.writeFile(path.join(dist,'sw.js'),sw);
-await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:'1.7.1',build:version}));
-console.log('Built English Sprout 1.7.1 · '+version);
+await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:appVersion,build:version}));
+console.log('Built English Sprout '+appVersion+' · '+version);

@@ -23,10 +23,10 @@ test('a matching controller cancels a stale update without navigation',()=>{
 });
 
 function installer({fail=false,staleHTML=false}={}){
-  const events={},order=[],requests=[];
+  const events={},order=[],requests=[],delays=[];let attempts=0;
   const source=fs.readFileSync(new URL('../sw.template.js',import.meta.url),'utf8').replace('__BUILD_ID__','123456abcdef').replace('__CORE_FILES__',JSON.stringify(['./','./index.html','./src/app.js']));
-  vm.runInNewContext(source,{URL,Request,self:{registration:{scope:'https://example.test/kids/'},addEventListener:(name,fn)=>events[name]=fn,skipWaiting:async()=>order.push('activate')},caches:{open:async()=>({match:async url=>new Response(`<meta name="app-build" content="${staleHTML&&(staleHTML===true||url.endsWith(staleHTML))?'111111111111':'123456abcdef'}">`),addAll:async files=>{requests.push(...files);if(fail)throw Error('partial download');order.push('cached');}})}});
-  return {order,requests,events,install(){let done;events.install({waitUntil:p=>done=p});return done;}};
+  vm.runInNewContext(source,{URL,Request,setTimeout(fn,ms){delays.push(ms);queueMicrotask(fn);},self:{registration:{scope:'https://example.test/kids/'},addEventListener:(name,fn)=>events[name]=fn,skipWaiting:async()=>order.push('activate')},caches:{open:async()=>({match:async url=>new Response(`<meta name="app-build" content="${staleHTML&&(staleHTML===true||url.endsWith(staleHTML))?'111111111111':'123456abcdef'}">`),addAll:async files=>{requests.push(...files);attempts++;if(fail===true||attempts<=fail)throw Error('partial download');order.push('cached');}})}});
+  return {order,requests,delays,events,install(){let done;events.install({waitUntil:p=>done=p});return done;}};
 }
 test('automatic activation follows complete fresh precaching, including the subdirectory root',async()=>{
   const w=installer();await w.install();assert.deepEqual(w.order,['cached','activate']);
@@ -34,12 +34,16 @@ test('automatic activation follows complete fresh precaching, including the subd
   assert.ok(w.requests.every(r=>r.cache==='reload'));
 });
 test('a failed release download never activates over the working offline app',async()=>{
-  const w=installer({fail:true});await assert.rejects(w.install(),/partial download/);assert.deepEqual(w.order,[]);
+  const w=installer({fail:true});await assert.rejects(w.install(),/partial download/);assert.deepEqual(w.order,[]);assert.deepEqual(w.delays,[5000,10000,20000,40000,60000,60000]);
 });
 test('an HTTP 200 with stale HTML cannot activate or create a reload loop',async()=>{
   for(const path of ['/kids/','index.html']){
-    const w=installer({staleHTML:path});await assert.rejects(w.install(),/release page is not ready/);assert.deepEqual(w.order,['cached']);
+    const w=installer({staleHTML:path});await assert.rejects(w.install(),/release page is not ready/);assert.deepEqual(w.order,Array(7).fill('cached'));
   }
+});
+
+test('a legacy page installation retries transient failures before complete activation',async()=>{
+  const w=installer({fail:2});await w.install();assert.deepEqual(w.delays,[5000,10000]);assert.equal(w.requests.length,9);assert.deepEqual(w.order,['cached','activate']);
 });
 test('the controller identifies its actual build and still accepts legacy activation',()=>{
   const w=installer();let reply;w.events.message({data:'GET_BUILD',ports:[{postMessage:data=>reply=data}]});

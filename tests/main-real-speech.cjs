@@ -32,7 +32,7 @@ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-i',path.join(ro
     await page.evaluate(()=>navigator.serviceWorker.ready);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
     await page.locator('#hero-start').click();
     assert.equal(await page.locator('[data-lesson-id]').getAttribute('data-lesson-id'),'hello-01');
-    await page.evaluate(()=>import('./src/speech-local.js').then(speech=>speech.prepareSpeech()));
+    await page.evaluate(()=>import(document.querySelector('#app-module').src.replace('/app.js','/speech-local.js')).then(speech=>speech.prepareSpeech()));
     await page.locator('[data-step="choose"]').click();
     const lesson=curriculum.lessons.find(item=>item.id==='hello-01');
     await page.locator(`[data-choice="${lesson.answerIndex}"]`).click();await page.locator('#quiz-next').click();
@@ -61,7 +61,7 @@ execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-y','-i',path.join(ro
     pass('Reload preserves the completed normal-flow assessment and reward without replaying it');
     // A new page in the same browser starts the local model offline after shell/module loading.
     const offline=await context.newPage();await offline.goto(origin+'/#home');
-    await offline.evaluate(()=>import('./src/speech-local.js').then(speech=>window.localSpeech=speech));
+    await offline.evaluate(()=>import(document.querySelector('#app-module').src.replace('/app.js','/speech-local.js')).then(speech=>window.localSpeech=speech));
     await context.setOffline(true);
     assert.equal(await offline.evaluate(async()=>{await window.localSpeech.prepareSpeech();window.localSpeech.disposeSpeechAssessment();return true;}),true);
     pass('Previously downloaded model prepares in a cold page while offline');

@@ -1,8 +1,10 @@
 import {scoreSpeech} from './speech-match.js';
 import {downloadSpeechAsset} from './speech-download.js';
 
-const LIBRARY=new URL('../speech/vosk-0.0.8.js',import.meta.url).href;
-const MODEL=new URL('../speech/model-en-us-0.15.tar.gz',import.meta.url).href;
+// Model assets keep one stable cache/IndexedDB address across code releases.
+const ASSET_BASE=globalThis.document?.baseURI||new URL('../',import.meta.url).href;
+const LIBRARY=new URL('speech/vosk-0.0.8.js',ASSET_BASE).href;
+const MODEL=new URL('speech/model-en-us-0.15.tar.gz',ASSET_BASE).href;
 let model=null, preparing=null, generation=0, libraryPromise=null,assetController=null;
 const pending=new Set();
 const preparingListeners=new Set();

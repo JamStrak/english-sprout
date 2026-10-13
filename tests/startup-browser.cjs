@@ -17,7 +17,7 @@ const server=http.createServer(async(req,res)=>{
   requests.push({path:pathname,method:req.method,time:Date.now()});
   if(networkDown){res.destroy();return;}
   let data=source.get(pathname);if(!data){res.writeHead(404);res.end();return;}
-  if(pathname===mode.moduleFailure){res.writeHead(503);res.end('Module temporarily unavailable');return;}
+  if(pathname===mode.moduleFailure||mode.moduleFailure&&pathname.endsWith('/'+mode.moduleFailure)){res.writeHead(503);res.end('Module temporarily unavailable');return;}
   if(pathname==='data/curriculum.json'){
     const count=requests.filter(r=>r.path===pathname).length;
     if(mode.delayCourse)await new Promise(resolve=>{releaseCourse=resolve;});
@@ -26,7 +26,7 @@ const server=http.createServer(async(req,res)=>{
   }
   if(pathname==='index.html'&&mode.removeEmbedded)data=Buffer.from(data.toString().replace(/<script\b[^>]*id=["']curriculum-data["'][^>]*>[\s\S]*?<\/script>/i,''));
   // Deliberately throw in render, after successful course loading, to check error classification.
-  if(pathname==='src/app.js'&&mode.renderError){
+  if(pathname.endsWith('src/app.js')&&mode.renderError){
     const text=data.toString();assert.ok(text.includes('function render(){'),'render injection point');
     data=Buffer.from(text.replace('function render(){','function render(){throw new Error("QA render fault");'));
   }
@@ -145,7 +145,7 @@ async function storedAudio(page,file){
       await page.locator('#retry').waitFor({state:'visible',timeout:15000});
       assert.equal(await page.locator('#app').getAttribute('data-startup'),'modules-error');
       const text=await page.locator('#app').innerText();assert.doesNotMatch(text,/需要先联网一次|尚未下载离线|先下载离线/);assert.match(text,/再试/);
-      assert.equal(await page.locator('#hero-start').count(),0);assert.ok(requests.some(r=>r.path===moduleFailure));
+      assert.equal(await page.locator('#hero-start').count(),0);assert.ok(requests.some(r=>r.path===moduleFailure||r.path.endsWith('/'+moduleFailure)));
       await page.screenshot({path:path.join(output,moduleFailure==='src/app.js'?'missing-app-module.png':'missing-dependent-module.png')});
       mode.moduleFailure=null;await page.locator('#retry').click();await home(page);
       outcomes.push({moduleFailure,text,retryRecovered:true});await clean(f);await context.close();contexts.delete(context);

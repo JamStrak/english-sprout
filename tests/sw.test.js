@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const code=fs.readFileSync(new URL('../sw.template.js',import.meta.url),'utf8').replace('__BUILD_ID__','test').replace('__CORE_FILES__','[]');
+
+test('old worker never prunes a newer installing, waiting or newly active release cache',async()=>{
+  for(const phase of ['installing','waiting','active-changed','different-active','safe']){
+    const events={},deleted=[],registration={scope:'https://example.test/kids/'};
+    class Channel{constructor(){this.port1={onmessage:null,close(){}};this.port2={reply:data=>this.port1.onmessage?.({data}),close(){}};}}
+    registration.active={postMessage(_message,ports){queueMicrotask(()=>ports[0].reply({type:'APP_BUILD',build:phase==='different-active'?'newer':'test'}));}};
+    if(phase==='installing'||phase==='waiting')registration[phase]={};
+    const context={URL,MessageChannel:Channel,setTimeout,clearTimeout,
+      self:{registration,clients:{claim:async()=>{},matchAll:async()=>{if(phase==='active-changed')registration.active={};return [];}},addEventListener:(name,fn)=>events[name]=fn},
+      caches:{keys:async()=>['english-sprout-core-test','english-sprout-core-other'],open:async()=>({}),delete:async name=>deleted.push(name)}};
+    vm.runInNewContext(code,context);let done;events.activate({waitUntil:value=>done=value});await done;
+    assert.deepEqual(deleted,phase==='safe'?['english-sprout-core-other']:[],phase);
+  }
+});
 function worker({cached=null,writeError=false,writeGate=null,openError=false,networkError=false,networkResponse=null}={}){
   const events={},lifetimes=[];let writes=0,storedBody;
   const context={self:{registration:{scope:'https://example.test/kids/'},addEventListener:(n,f)=>events[n]=f},location:{origin:'https://example.test'},URL,Response,caches:{open:async()=>{if(openError)throw Error('storage disabled');return {match:async()=>cached?.clone(),put:async(_request,response)=>{writes++;if(writeGate)await writeGate;if(writeError)throw Error('quota exceeded');storedBody=await response.text();}}; }},fetch:async()=>{if(networkError)throw Error('offline');return networkResponse||new Response('network data',{status:200});}};
@@ -79,7 +93,7 @@ function upgradeWorker({legacyV3=[],legacyV4=[],current=[],writeError=false,open
   ]);
   let claims=0,networkRequests=0;
   const keyOf=request=>typeof request==='string'?request:request.url;
-  const context={self:{registration:{scope:'https://example.test/kids/'},clients:{claim:async()=>{claims++;}},addEventListener:(name,fn)=>events[name]=fn},location:{origin:'https://example.test'},URL,Response,
+  const context={self:{registration:{scope:'https://example.test/kids/'},clients:{claim:async()=>{claims++;},matchAll:async()=>[]},addEventListener:(name,fn)=>events[name]=fn},location:{origin:'https://example.test'},URL,Response,
     caches:{keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name),open:async name=>{
       if((openError&&name==='english-sprout-audio-v5')||failedOpenNames.includes(name))throw Error('cache unavailable');
       if(!stores.has(name))stores.set(name,new Map());const entries=stores.get(name);
