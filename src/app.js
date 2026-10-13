@@ -13,7 +13,7 @@ import {installChildFeedback,celebrate,stopChildFeedback} from './child-feedback
 import {openVoiceAudition} from './voice-audition.js';
 import {getTodayJourney} from './journey.js';
 import {getAdventure} from './adventure.js';
-import {rankButton,walletMarkup,questSteps,treasureMarkup,openAdventurePassport} from './adventure-ui.js';
+import {rankButton,walletMarkup,questSteps,treasureMarkup,openAdventurePassport,showWaterReward,closeWaterReward} from './adventure-ui.js';
 import {startAutomaticUpdates} from './auto-update.js';
 import {SKIN_STORAGE_KEY,getSkinProgress} from './skins.js';
 import {applySavedSkin,skinEntryMarkup,skinRewardMarkup,openSkinPicker,closeSkinPicker} from './skin-picker.js';
@@ -99,7 +99,7 @@ function bindAvatar(){document.querySelectorAll('#avatar-open,[data-edit-avatar]
 function voiceAuditionEntry(){return `<button class="voice-audition-entry" data-voice-audition><span aria-hidden="true">🎭</span><span><strong>配音对照试听</strong><small>Pip 已加入整本小书 · 保留其他伙伴的样音对照</small></span>${icon('speaker')}</button>`;}
 function bindVoiceAudition(){document.querySelectorAll('[data-voice-audition]').forEach(button=>button.onclick=()=>{stopPlayback();openVoiceAudition();});}
 function navItems(){return [['home','🧭','今日冒险'],['library','🎈','短句广场'],['garden','🌷','我的花园']].map(([id,symbol,label])=>`<button data-go="${id}" class="${view===id?'active':''}" ${view===id?'aria-current="page"':''}><span class="nav-world-icon" aria-hidden="true">${symbol}</span><span>${label}</span></button>`).join('');}
-function navigate(next){closeSkinPicker();closeSoundSettings();stopPlayback();resetRecording();session=null;view=next;if(next==='parent')parentPanel='menu';location.hash=next;render();window.scrollTo({top:0,behavior:'instant'});}
+function navigate(next){closeWaterReward();closeSkinPicker();closeSoundSettings();stopPlayback();resetRecording();session=null;view=next;if(next==='parent')parentPanel='menu';location.hash=next;render();window.scrollTo({top:0,behavior:'instant'});}
 function render(){if(view==='home')renderHome();else if(view==='library')renderLibrary();else if(view==='garden')renderGarden();else if(view==='parent')renderParent();else renderHome();}
 const journey=()=>getTodayJourney(state,curriculum.lessons,dayKey());
 function journeyCopy(j){return {
@@ -307,7 +307,11 @@ async function evaluateGardenSpeech(url){
       for(const el of document.querySelectorAll('.rating-label,.rating-buttons'))el.hidden=value.matched;
       if(active.preview&&!state.cards[active.ids[active.index]])result.querySelector('small').textContent='这句跟读匹配通过啦';
     }
-    if(value.matched)celebrate('stars',{target:result});
+    if(value.matched){
+      celebrate('stars',{target:result});
+      if(active.gardenPractice)claimGardenPractice('local-speech');
+      else if(!active.checkup&&(active.preview?Boolean(state.cards[active.ids[active.index]]):active.ids[active.index]===active.newId))finishLesson(active.revealed?'help':'good',{matched:true});
+    }
   }catch(error){if(current()){result.innerHTML='<span>🌱</span><strong>先开口练，小耳朵在准备</strong><small data-speech-preparing>正在后台准备，也可以先开口练</small>';const fallback=document.querySelector('[data-garden-effort]');if(fallback)fallback.hidden=false;}}
 }
 function claimGardenPractice(assessment){
@@ -315,16 +319,36 @@ function claimGardenPractice(assessment){
   if(assessment==='local-speech'&&!active.speechResult?.matched||assessment==='practice-effort'&&!active.effortReady)return;
   if(!storageOK){toast('记录暂时无法保存，请在家长页检查存储空间。');return;}
   if(dayKey()!==active.day){navigate('garden');toast('新的一天开始啦，重新练一句就能领水。');return;}
+  const previous=state;
   try{
-    const before=getGarden(state,active.day).inventory.seeds;
-    const previous=state;
     state=recordGardenPractice(state,{lessonId:active.ids[0],attemptId:active.attemptId,assessment},active.day);
     if(!save()){state=previous;toast('还没保存成功，请先到家长页处理存储空间。');return;}active.claimed=true;
-    const bonus=getGarden(state,active.day).inventory.seeds-before;
+  }catch(error){state=previous;toast(error.message);return;}
+  collectSavedReward(active,previous,()=>{
     gardenView='world';navigate('garden');document.querySelector('[data-world-tool="water"]')?.classList.add('garden-reward-pop');
-    toast(`得到 2 次浇水机会${bonus?'，还得到 1 颗种子':''}！把水壶拖给小花吧`);
-    celebrate('reward',{target:document.querySelector('[data-world-tool="water"]')});
-  }catch(error){toast(error.message);}
+    toast('把水壶拖给小花吧！');
+  });
+}
+
+function collectSavedReward(active,previous,continueSession){
+  const before=getGarden(previous,active.day).earned,after=getGarden(state,active.day).earned;
+  const reward={water:after.water-before.water,seeds:after.seeds-before.seeds,fertilizer:after.fertilizer-before.fertilizer};
+  if(reward.water<=0){continueSession();return;}
+  active.rewardPending=true;
+  closeSoundSettings();stopPlayback();resetRecording();
+  let continued=false;
+  const resume=()=>{
+    if(continued||session!==active)return;
+    continued=true;
+    active.rewardPending=false;continueSession();
+  };
+  try{
+    const target=showWaterReward({...reward,onCollect:resume});
+    celebrate('reward',{target});
+  }catch(error){
+    // A presentation failure must never undo the completed storage transaction.
+    closeWaterReward();resume();toast('小奖励已经放进背包啦');
+  }
 }
 function chooseAnswer(index){
   const l=sessionCurrent(),right=index===l.answerIndex;
@@ -353,7 +377,7 @@ async function toggleRecording(){
   finally{if(generation===screenGeneration&&attempt===recordAttemptGeneration){recordPending=false;b.disabled=false;if(session&&!recording&&!recordedURL)showGardenEffort();}}
 }
 function finishLesson(rating,{matched=false}={}){
-  if(!session||session.step!=='speak')return;
+  if(!session||session.rewardPending||session.step!=='speak')return;
   if(!matched&&rating==='good')rating='help';
   if(dayKey()!==session.day){session=null;stopPlayback();resetRecording();render();toast('新的一天开始啦，已为你重新安排今天的练习。');return;}
   if(session.checkup){if(session.revealed&&rating==='good')return;if(matched){session.speechRewards??=[];session.speechRewards.push({lessonId:sessionCurrent().id,attemptId:session.speechIds[sessionCurrent().id],assessment:'local-speech'});}session.spoken=rating;session.step='choose';renderSession();guideStage();return;}
@@ -361,30 +385,34 @@ function finishLesson(rating,{matched=false}={}){
   commitLessonResult(rating,{matched});
 }
 function commitLessonResult(rating,{matched=false}={}){
-  if(!session||session.checkup||recording||recordPending||!['speak','choose'].includes(session.step))return;
+  if(!session||session.rewardPending||session.checkup||recording||recordPending||!['speak','choose'].includes(session.step))return;
   if(session.step==='choose'&&(!session.meaningAfterSpeech||session.firstTryCorrect===null))return;
   if(dayKey()!==session.day){navigate('home');toast('新的一天开始啦，重新安排今天的练习');return;}
-  const l=sessionCurrent();
+  const active=session,l=sessionCurrent();
   const previous=state;
   try{
     if(!session.preview)state=recordResult(state,l.id,rating,session.day,{isNew:l.id===session.newId,meaning:session.firstTryCorrect===true});
     if(matched&&state.cards[l.id])state=recordGardenPractice(state,{lessonId:l.id,attemptId:session.speechIds[l.id],assessment:'local-speech'},session.day);
     if(state!==previous&&(!storageOK||!save())){state=previous;toast('还没保存成功，请先检查存储空间。');return;}
   }catch(e){state=previous;toast(e.message);return;}
-  if(session.preview){const next=session.returnView||'library';session=null;resetRecording();stopPlayback();view=next;location.hash=next;render();if(matched&&state.cards[l.id])toast('星星点亮啦！得到 2 次浇水机会');return;}
-  resetRecording();session.index++;
-  if(session.index>=session.ids.length){renderCompletion();return;}
-  session.step=session.ids[session.index]===session.newId?'listen':'remember';session.revealed=false;session.choice=null;session.firstTryCorrect=null;session.meaningAfterSpeech=false;session.speechMatched=false;renderSession();guideStage();
+  collectSavedReward(active,previous,()=>{
+    if(session.preview){const next=session.returnView||'library';session=null;resetRecording();stopPlayback();view=next;location.hash=next;render();return;}
+    resetRecording();session.index++;
+    if(session.index>=session.ids.length){renderCompletion();return;}
+    session.step=session.ids[session.index]===session.newId?'listen':'remember';session.revealed=false;session.choice=null;session.firstTryCorrect=null;session.meaningAfterSpeech=false;session.speechMatched=false;renderSession();guideStage();
+  });
 }
 function finishCheckupCard(){
-  if(!session?.checkup||session.firstTryCorrect===null)return;
+  if(!session?.checkup||session.rewardPending||session.firstTryCorrect===null)return;
   if(dayKey()!==session.day){session=null;stopPlayback();resetRecording();render();toast('新的一天开始啦，小游戏会重新安排。');return;}
   const results=[...session.results,{lessonId:sessionCurrent().id,meaning:session.firstTryCorrect,spoken:session.spoken}];
   if(results.length===session.ids.length){
     const previous=state;
     try{state=recordCheckup(state,curriculum.lessons,results,session.day);for(const reward of session.speechRewards||[])state=recordGardenPractice(state,reward,session.day);if(!storageOK||!save()){state=previous;toast('还没保存成功，请先检查存储空间。');return;}}catch(e){state=previous;toast(e.message);return;}
-    const rewards=rewardMarkup(session),rankStart=session.rankStart;session=null;stopPlayback();resetRecording();
-    renderFinish('记忆小游戏完成啦',results.length,rewards,`首次听懂 ${results.filter(r=>r.meaning).length} 句`,rankStart);return;
+    collectSavedReward(session,previous,()=>{
+      const rewards=rewardMarkup(session),rankStart=session.rankStart;session=null;stopPlayback();resetRecording();
+      renderFinish('记忆小游戏完成啦',results.length,rewards,`首次听懂 ${results.filter(r=>r.meaning).length} 句`,rankStart);
+    });return;
   }
   session.results=results;session.index++;session.step='speak';session.revealed=false;session.firstTryCorrect=null;session.spoken=null;renderSession();
 }
@@ -533,11 +561,11 @@ function confirmDialog(title,body,label,onConfirm){
   const d=document.createElement('dialog');d.className='confirm-dialog';d.innerHTML=`<h2>${esc(title)}</h2><p>${esc(body)}</p><div class="button-row"><button class="secondary" data-cancel>先不改</button><button class="primary" data-confirm>${esc(label)}</button></div>`;document.body.append(d);showDialog(d);d.querySelector('[data-cancel]').onclick=()=>d.close();d.querySelector('[data-confirm]').onclick=()=>{d.close();onConfirm();};d.onclose=()=>d.remove();
 }
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installEvent=event;});
-window.addEventListener('hashchange',()=>{if(!bootReady)return;const v=location.hash.slice(1);if(['home','library','garden','parent'].includes(v)&&v!==view){closeSkinPicker();closeSoundSettings();resetRecording();stopPlayback();session=null;view=v;if(v==='parent')parentPanel='menu';render();}});
+window.addEventListener('hashchange',()=>{if(!bootReady)return;const v=location.hash.slice(1);if(['home','library','garden','parent'].includes(v)&&v!==view){closeWaterReward();closeSkinPicker();closeSoundSettings();resetRecording();stopPlayback();session=null;view=v;if(v==='parent')parentPanel='menu';render();}});
 window.addEventListener('online',()=>{if(!bootReady){init();return;}if(!session)render();});window.addEventListener('offline',()=>{if(bootReady&&!session)render();});
 document.addEventListener('visibilitychange',()=>{if(!bootReady){if(!document.hidden&&bootFailure==='course'&&navigator.onLine!==false)init();return;}if(document.hidden){stopPlayback();if(recordPending)resetRecording();else if(recording)stopRecording();}else if(!session)render();});
 window.addEventListener('pagehide',()=>{stopPlayback();resetRecording();});
-window.addEventListener('storage',e=>{if(!bootReady)return;if(e.key===SKIN_STORAGE_KEY){closeSkinPicker();applySavedSkin(state,dayKey());return;}if(e.key===COURSE_RATE_KEY){applyCourseRate(readCourseRate(),false);return;}if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){closeSkinPicker();closeSoundSettings();stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
+window.addEventListener('storage',e=>{if(!bootReady)return;if(e.key===SKIN_STORAGE_KEY){closeSkinPicker();applySavedSkin(state,dayKey());return;}if(e.key===COURSE_RATE_KEY){applyCourseRate(readCourseRate(),false);return;}if(e.key===AVATAR_STORAGE_KEY){document.querySelectorAll('[data-user-avatar]').forEach(el=>el.innerHTML=avatarMarkup());return;}if(e.key===VOICE_STORAGE_KEY){stopPlayback();selectedVoice=readVoicePreference();syncVoiceSelectors();return;}if(e.key===KEY){closeWaterReward();closeSkinPicker();closeSoundSettings();stopPlayback();if(session){toast('另一个页面更新了进度，请退出本轮再继续。');session=null;resetRecording();}state=load();render();}});
 function showBootFailure(kind,error){
   bootFailure=kind;app.dataset.startup='error';console.error('English Sprout startup: '+kind,error);
   const message=kind==='course'?'连接有点慢，点一下再试。网络恢复后也会自动继续。':'页面暂时没打开完整，点一下再试。已有学习记录会保留。';

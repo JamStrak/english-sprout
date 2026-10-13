@@ -1,6 +1,38 @@
 import {showDialog} from './dialog.js';
+import {gardenToolArt} from './garden-art.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let waterRewardDialog=null;
+
+// Rewards are already saved by the caller. This is the child's collection moment,
+// not a second transaction: refresh, navigation and repeated taps cannot lose/regrant it.
+export function closeWaterReward(){
+  const dialog=waterRewardDialog;waterRewardDialog=null;
+  if(dialog){dialog.close();dialog.remove();}
+}
+
+export function showWaterReward({water,seeds=0,fertilizer=0,onCollect}){
+  closeWaterReward();
+  const dialog=document.createElement('dialog');waterRewardDialog=dialog;
+  dialog.className='reward-claim-dialog';
+  dialog.setAttribute('aria-labelledby','water-reward-title');
+  dialog.setAttribute('aria-describedby','water-reward-hint');
+  dialog.setAttribute('aria-modal','true');
+  dialog.innerHTML=`<div class="reward-claim-stars" aria-hidden="true">✦ ★ ✦</div><h2 id="water-reward-title">水壶来啦！</h2><p id="water-reward-hint">点点大水壶，带走小奖励</p><button class="reward-collect" data-reward-collect autofocus aria-label="收下水壶，可以浇水 ${water} 次"><span class="reward-can-art" aria-hidden="true">${gardenToolArt('water')}</span><span class="reward-water-count" data-material="water"><strong>+${water}</strong><small>次浇水</small></span><strong>收下水壶 <span aria-hidden="true">↓</span></strong></button>${seeds||fertilizer?`<div class="reward-extra">${seeds?`<span data-material="seeds">🌰 种子 <strong>+${seeds}</strong></span>`:''}${fertilizer?`<span data-material="fertilizer">🌿 肥料 <strong>+${fertilizer}</strong></span>`:''}</div>`:''}<small class="reward-saved">小奖励已保存在背包里</small>`;
+  let collected=false;
+  dialog.addEventListener('cancel',event=>event.preventDefault());
+  // Keep the single action focused even in browsers that tab from a native
+  // modal's last control to browser chrome. Old Safari also gets showDialog's trap.
+  dialog.addEventListener('keydown',event=>{if(event.key==='Tab'){event.preventDefault();dialog.querySelector('[data-reward-collect]').focus();}});
+  dialog.querySelector('[data-reward-collect]').onclick=()=>{
+    if(collected||waterRewardDialog!==dialog)return;
+    collected=true;dialog.querySelector('button').disabled=true;
+    closeWaterReward();onCollect();
+  };
+  document.body.append(dialog);showDialog(dialog);
+  return dialog.querySelector('[data-reward-collect]');
+}
 
 export function rankButton(adventure){
   const rank=adventure.rank;

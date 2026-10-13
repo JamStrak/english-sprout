@@ -128,6 +128,24 @@ body:not([data-screen=parent]) #app>.bottom-nav{border:0;background:transparent;
 .passport-goal>span{font-size:31px}.passport-goal strong{font-size:14px}.passport-goal p{font-size:12px;line-height:1.5;margin-top:3px}
 .passport-note{font-size:10px;line-height:1.6;color:var(--muted);margin:12px 0}
 .adventure-passport>.primary{width:100%;min-height:50px;border-radius:18px}
+.reward-claim-dialog{width:min(calc(100% - 32px),350px);max-height:calc(var(--app-viewport-height,100vh) - 32px);box-sizing:border-box;padding:20px 22px 17px;border:4px solid #f3d78f;border-radius:36px;background:#fffbed;color:#415e4e;text-align:center;overflow:auto;box-shadow:0 12px 0 #314c4229,0 22px 80px #1e433755}
+.reward-claim-dialog::backdrop{background:#193f37a6;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.reward-claim-dialog h2{font-size:27px;line-height:1.25;margin:3px 0 8px;color:#415e4e}
+.reward-claim-dialog p{font-size:13px;margin:0 0 15px;color:#687d66}
+.reward-claim-stars{color:#edb54c;font-size:30px;letter-spacing:8px;line-height:1.2;animation:reward-twinkle .5s ease-out both}
+.reward-collect{display:flex;position:relative;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;min-height:220px;padding:12px 14px;border:3px solid #9eb98c;border-radius:29px;background:radial-gradient(ellipse at 50% 35%,#fffce1 8%,#e6f2d3 75%);color:#365747;box-shadow:0 7px 0 #89a477;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.reward-collect:focus-visible{outline:4px solid #d99b2f;outline-offset:5px}
+.reward-collect:active{transform:translateY(4px);box-shadow:0 3px 0 #89a477}
+.reward-collect>.reward-can-art{display:block;width:156px;height:125px;animation:reward-can-arrive .65s cubic-bezier(.2,.9,.3,1.25) both;transform-origin:50% 85%}
+.reward-can-art svg{width:100%;height:100%;filter:drop-shadow(0 8px 0 #55734b13)}
+.reward-water-count{display:flex;align-items:center;gap:7px;line-height:1.1}
+.reward-water-count>strong{font-size:35px;font-weight:900}.reward-water-count small{font-size:14px}
+.reward-collect>strong{font-size:23px;margin-top:7px;line-height:1.3}.reward-collect>strong>span{display:inline-block;color:#719258}
+.reward-extra{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:18px 0 0;font-size:13px;color:#746b43}
+.reward-saved{display:block;font-size:10px;color:#7d886e;margin-top:17px}
+@keyframes reward-can-arrive{0%{opacity:0;transform:translateY(24px) scale(.6) rotate(-18deg)}65%{opacity:1;transform:translateY(-7px) scale(1.08) rotate(8deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@media(max-height:600px){.reward-claim-dialog{padding:13px 18px;border-radius:28px}.reward-claim-stars{font-size:24px}.reward-claim-dialog h2{font-size:24px}.reward-claim-dialog p{margin-bottom:10px}.reward-collect{min-height:184px;padding:8px 12px}.reward-collect>.reward-can-art{width:128px;height:97px}.reward-water-count>strong{font-size:28px}.reward-collect>strong{font-size:21px;margin-top:3px}.reward-extra{margin-top:14px}.reward-saved{margin-top:13px}}
+@media(prefers-reduced-motion:reduce){.reward-claim-stars,.reward-collect>.reward-can-art{animation:none}}
 @keyframes portal-arrive{from{opacity:0;transform:translate(-50%,-40%) rotate(3deg) scale(.8)}to{opacity:1;transform:translate(-50%,-50%) rotate(-3deg) scale(1)}}
 @keyframes chest-open{from{transform:translateY(15px) rotate(0)}to{transform:translateY(-9px) rotate(-7deg)}}
 @keyframes reward-twinkle{0%{transform:scale(.1);opacity:0}65%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}

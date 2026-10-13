@@ -90,7 +90,16 @@ async function record(page){
  await page.waitForTimeout(4000);await page.locator('#record').tap();
  await page.waitForFunction(()=>window.qaBlob===true);await page.locator('.speech-stars').waitFor();
 }
-async function matched(page){await record(page);assert.equal(await page.locator('.speech-stars').textContent(),'★★★');await page.locator('[data-speech-next]:visible').waitFor();}
+async function matched(page){await record(page);assert.equal(await page.locator('.speech-stars').textContent(),'★★★');await page.waitForFunction(()=>document.querySelector('.reward-claim-dialog[open]')||document.querySelector('[data-speech-next]')?.hidden===false);}
+async function collectReward(page,before){
+ const dialog=page.locator('.reward-claim-dialog[open]');await dialog.waitFor();
+ const saved=await stored(page),old=garden.getGarden(before,today).earned,earned=garden.getGarden(saved,today).earned;
+ assert.ok(earned.water>old.water,'The reward is saved before it is shown');assert.equal(parseInt(await dialog.locator('.reward-water-count').innerText(),10),earned.water-old.water);
+ assert.equal(await dialog.locator('button').count(),1,'Only the big watering can collects the reward');await geometry(page,'required reward',['.reward-claim-dialog button']);
+ await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),true,'Escape does not skip collecting');
+ await dialog.locator('[data-reward-collect]').tap();assert.deepEqual(await stored(page),saved,'Collection acknowledgement never adds another reward');
+}
+
 async function go(page,target){await page.locator(`[data-go="${target}"]:visible`).first().tap();}
 async function plantAndWater(page){
  await page.locator('[data-garden-world]').waitFor();const initial=await stored(page),before=garden.getGarden(initial,today);
@@ -124,7 +133,7 @@ async function plantAndWater(page){
     await page.locator('.scene-picture').tap();await page.waitForFunction(()=>window.qaSounds.some(src=>src.endsWith('.mp3')));
     await page.locator('[data-step="choose"]').tap();await currentStep(page,'choose');await geometry(page,'choose',['[data-choice]','#exit-session']);
     const lesson=await choose(page);await currentStep(page,'speak');await geometry(page,'speak',['#record','#replay-record','#exit-session','[data-rating]']);
-    await matched(page);await geometry(page,'matched',['#record','[data-speech-next]']);await page.locator('[data-speech-next]').tap();
+    await matched(page);await collectReward(page,empty);
     await page.locator('.game-completion').waitFor();await geometry(page,'reward',['#completion-next','.game-completion [data-go]']);
     const earned=await stored(page);assert.equal(earned.days[today].results.length,1);assert.equal(earned.cards[lesson].due,'2026-10-14');assert.equal(earned.days[today].results[0].meaning,true);
     await rewardValues(page,empty);await page.screenshot({path:path.join(out,`reward-${viewport.width}.png`)});
@@ -136,7 +145,7 @@ async function plantAndWater(page){
    assert.equal(await page.locator('.adventure-home').getAttribute('data-next-kind'),'review');await wallet(page);const before=await stored(page),played=await page.evaluate(()=>window.qaSounds.length);
    await page.locator('#hero-start').tap();assert.equal(await page.locator('.practice-english').count(),0);assert.equal(await page.evaluate(()=>window.qaSounds.length),played);await currentStep(page,'remember');
    await page.locator('[data-step="speak"]').tap();await currentStep(page,'speak');await matched(page);await page.locator('[data-speech-next]').tap();
-   assert.deepEqual(await stored(page),before,'Speech matching alone cannot complete a recall or award learning');await currentStep(page,'choose');await choose(page);await page.locator('.game-completion').waitFor();
+   assert.deepEqual(await stored(page),before,'Speech matching alone cannot complete a recall or award learning');await currentStep(page,'choose');await choose(page);await collectReward(page,before);await page.locator('.game-completion').waitFor();
    const after=await stored(page);assert.equal(after.days[today].results.length,1);assert.equal(after.days[today].results[0].meaning,true);assert.equal(after.days[today].results[0].isNew,false);assert.equal(after.days[today].results[0].rating,'good');await rewardValues(page,before);
   },learned);
   await test('Old saved lesson and garden survive passive game screens and reload',async page=>{
@@ -148,7 +157,7 @@ async function plantAndWater(page){
   let twoKnown=learning.createState(today);for(const lesson of curriculum.lessons.slice(0,2))twoKnown=learning.recordResult(twoKnown,lesson.id,'good',today,{isNew:true,meaning:true});
   await test('Third real discovery visibly unlocks rank two once and reload grants no duplicate materials',async page=>{
    assert.equal(await page.locator('.adventure-rank').getAttribute('data-level'),'1');const before=await stored(page);
-   await page.locator('#hero-start').tap();await page.locator('[data-step="choose"]').tap();const lesson=await choose(page);await matched(page);await page.locator('[data-speech-next]').tap();
+   await page.locator('#hero-start').tap();await page.locator('[data-step="choose"]').tap();const lesson=await choose(page);await matched(page);await collectReward(page,before);
    await page.locator('.game-completion [data-rank-unlocked]').waitFor();assert.match(await page.locator('[data-rank-unlocked]').innerText(),/新称号.*种子伙伴/);
    assert.equal(await page.locator('.adventure-rank').getAttribute('data-level'),'2');await rewardValues(page,before);await geometry(page,'rank unlocked at daily limit',['[data-rank-unlocked]','#completion-next','.game-completion [data-go]']);
    const after=await stored(page);assert.equal(after.days[today].results.length,3);assert.equal(after.days[today].results[2].lessonId,lesson);assert.equal(after.garden.actions.filter(a=>a.type==='practice').length,1,'Exactly one matched practice reward');
@@ -174,7 +183,7 @@ async function plantAndWater(page){
    await geometry(page,'reduced motion home',['#hero-start','#daily-picture']);
    const animations=await page.locator('.adventure-home *').evaluateAll(nodes=>nodes.map(n=>({name:n.className,animation:getComputedStyle(n).animationName,duration:getComputedStyle(n).animationDuration})));
    assert.ok(animations.every(a=>a.animation==='none'||a.duration==='0s'||a.duration==='0.001s'),'Reduced motion disables home motion');
-   await page.locator('#hero-start').tap();await page.locator('[data-step="choose"]').tap();await choose(page);await matched(page);await page.locator('[data-speech-next]').tap();await page.locator('.game-completion').waitFor();await geometry(page,'reduced motion reward',['#completion-next','.game-completion [data-go]']);
+   await page.locator('#hero-start').tap();await page.locator('[data-step="choose"]').tap();await choose(page);await matched(page);await collectReward(page,empty);await page.locator('.game-completion').waitFor();await geometry(page,'reduced motion reward',['#completion-next','.game-completion [data-go]']);
   },empty,{width:320,height:568},{reduced:true,noAudio:true});
   await test('Empty garden tools are disabled without blocking the visible practice route',async page=>{
    await go(page,'garden');assert.equal(await page.locator('[data-world-tool="plant"]').isDisabled(),true);assert.equal(await page.locator('[data-world-tool="water"]').isDisabled(),true);

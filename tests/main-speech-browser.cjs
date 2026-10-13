@@ -50,9 +50,19 @@ export async function assessRecording(url,expected){
   await p.waitForTimeout(4000);await p.locator('#record').click();await p.waitForFunction(()=>window.assessmentCalls>0);
   assert.equal(await p.evaluate(()=>window.assessmentHadBlob),true,'ASR adapter receives a recording blob');
  }
- async function match(p){await record(p);await p.locator('[data-speech-next]:visible').waitFor();assert.equal(await p.locator('.speech-stars').textContent(),'★★★');assert.equal(await p.locator('.rating-buttons').isVisible(),false);}
+ async function match(p){await record(p);await p.waitForFunction(()=>document.querySelector('.reward-claim-dialog[open]')||document.querySelector('[data-speech-next]')?.hidden===false);assert.equal(await p.locator('.speech-stars').textContent(),'★★★');assert.equal(await p.locator('.rating-buttons').isVisible(),false);}
+ async function collectReward(p,before,{double=false}={}){
+  const saved=await stored(p),start=garden.getGarden(before,today).earned,end=garden.getGarden(saved,today).earned;
+  if(end.water===start.water){assert.equal(await p.locator('.reward-claim-dialog').count(),0);return;}
+  const dialog=p.locator('.reward-claim-dialog[open]');await dialog.waitFor();assert.equal(await dialog.locator('button').count(),1);
+  assert.equal(parseInt(await dialog.locator('.reward-water-count').innerText(),10),end.water-start.water,'Collection shows the real persisted earning');
+  await p.keyboard.press('Escape');assert.equal(await dialog.isVisible(),true,'Reward stays until its single collection action');
+  if(double)await dialog.locator('[data-reward-collect]').evaluate(b=>{b.click();b.click();});else await dialog.locator('[data-reward-collect]').click();
+  assert.equal(await p.locator('.reward-claim-dialog').count(),0);assert.deepEqual(await stored(p),saved,'Collecting an already saved reward never grants it twice');
+ }
+
  async function geometry(p,name){
-  const boxes=await p.locator('[data-home-speech],#hero-start,#record,[data-speech-result],.rating-buttons:visible,[data-speech-next]:visible').evaluateAll(nodes=>nodes.filter(n=>!n.hidden).map(n=>({name:n.id||n.className,rect:n.getBoundingClientRect().toJSON()})));
+  const boxes=await p.locator('[data-home-speech],#hero-start,#record,[data-speech-result],.rating-buttons:visible,[data-speech-next]:visible,[data-reward-collect]:visible').evaluateAll(nodes=>nodes.filter(n=>!n.hidden).map(n=>({name:n.id||n.className,rect:n.getBoundingClientRect().toJSON()})));
   const {width,height}=p.viewportSize();for(const b of boxes){assert.ok(b.rect.top>=-1&&b.rect.bottom<=height+1&&b.rect.left>=-1&&b.rect.right<=width+1,`${name} ${b.name} within visible viewport: ${JSON.stringify(b.rect)}`);}
   assert.ok(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+2),`${name} no page scrolling`);
  }
@@ -61,7 +71,7 @@ export async function assessRecording(url,expected){
  async function reviewSpeak(p){await p.locator('#hero-start').click();assert.equal(await p.locator('[data-step="speak"]').count(),1);await p.locator('[data-step="speak"]').click();}
  try{
   if(process.env.QA_CASE==='review-double'){
-   const p=await setup(learned);await reviewSpeak(p);await p.locator('[data-rating="help"]').click();await chooseMeaning(p,{next:'[data-review-next]',double:true});await p.locator('.completion').waitFor();assert.equal((await stored(p)).days[today].results.length,1);assert.deepEqual(p.qaErrors,[]);pass('Double click of final review meaning continuation records once without dereferencing an ended session');fs.writeFileSync(path.join(out,'review-double-results.json'),JSON.stringify({checks},null,2));return;
+   const p=await setup(learned);await reviewSpeak(p);await p.locator('[data-rating="help"]').click();await chooseMeaning(p,{next:'[data-review-next]',double:true});await collectReward(p,learned);await p.locator('.completion').waitFor();assert.equal((await stored(p)).days[today].results.length,1);assert.deepEqual(p.qaErrors,[]);pass('Double click of final review meaning continuation records once without dereferencing an ended session');fs.writeFileSync(path.join(out,'review-double-results.json'),JSON.stringify({checks},null,2));return;
   }
   for(const introduced of [false,true]){
    const p=await setup(introduced?learned:empty);assert.equal(await p.locator('.focus-home').getAttribute('data-next-kind'),introduced?'review':'learn');
@@ -73,7 +83,7 @@ export async function assessRecording(url,expected){
    await geometry(p,`home ${viewport.width}`);const id=await newSpeak(p);
    assert.equal(await p.locator('[data-speech-result]').isVisible(),true);await geometry(p,`speak ${viewport.width}`);
    await match(p);await geometry(p,`stars ${viewport.width}`);await p.screenshot({path:path.join(out,`stars-${viewport.width}.png`)});
-   await p.locator('[data-speech-next]').evaluate(b=>{b.click();b.click();});await p.locator('.completion').waitFor();
+   await collectReward(p,empty,{double:true});await p.locator('.completion').waitFor();
    const state=await stored(p);assert.equal(state.days[today].results.length,1);assert.equal(state.days[today].results[0].rating,'good');assert.equal(state.days[today].results[0].meaning,true);
    assert.equal(rounds(state).length,1);assert.equal(rounds(state)[0].lessonId,id);assert.equal(rounds(state)[0].assessment,'local-speech');
    assert.equal(garden.getGarden(state,today).inventory.water,4);assert.doesNotMatch(JSON.stringify(state),/blob:|heard|transcript/);
@@ -82,7 +92,7 @@ export async function assessRecording(url,expected){
   for(const reveal of [false,true]){
    const p=await setup(learned);assert.equal(await p.locator('.focus-home').getAttribute('data-next-kind'),'review');await reviewSpeak(p);
    if(reveal)await p.locator('#reveal').click();else assert.doesNotMatch(await p.locator('#answer-area').innerText(),/Hello/);
-   await match(p);await p.locator('[data-speech-next]').click();assert.deepEqual(await stored(p),learned,'Speech alone cannot persist a recall result before meaning choice');await chooseMeaning(p,{next:'[data-review-next]',double:true});await p.locator('.completion').waitFor();
+   await match(p);await p.locator('[data-speech-next]').click();assert.deepEqual(await stored(p),learned,'Speech alone cannot persist a recall result before meaning choice');await chooseMeaning(p,{next:'[data-review-next]',double:true});await collectReward(p,learned);await p.locator('.completion').waitFor();
    const s=await stored(p);assert.equal(s.days[today].results[0].rating,reveal?'help':'good');assert.equal(s.days[today].results[0].meaning,true);assert.equal(rounds(s).length,1);
    if(reveal)assert.equal(s.cards['hello-01'].due,learning.addDays(today,1));
    pass(`Review automatic match uses ${reveal?'hinted recall (help), not independent recall':'independent recall (good)'} and earns water`);
@@ -94,7 +104,7 @@ export async function assessRecording(url,expected){
    else{await record(p);await p.waitForFunction(()=>{const result=document.querySelector('[data-speech-result]');return result&&result.querySelector('strong')&&!result.querySelector('.speech-listening')&&document.querySelector('[data-speech-next]').hidden;});}
    assert.equal(await p.locator('[data-speech-next]').isVisible(),false);assert.equal(await p.locator('[data-rating="help"]').isVisible(),true);
    assert.doesNotMatch(await p.locator('[data-speech-result]').innerText(),/匹配通过|★★★/);
-   await p.locator('[data-rating="good"]').click();await p.locator('.completion').waitFor();const s=await stored(p);assert.equal(rounds(s).length,0);assert.equal(s.days[today].results[0].rating,'help','Manual continue without a match cannot claim independent recall');
+   await p.locator('[data-rating="good"]').click();await collectReward(p,empty);await p.locator('.completion').waitFor();const s=await stored(p);assert.equal(rounds(s).length,0);assert.equal(s.days[today].results[0].rating,'help','Manual continue without a match cannot claim independent recall');
    pass(`${unavailable} failure keeps direct completion available without fabricated automatic pass`);
   }
   const game=await setup(checkup);await game.locator('[data-go="parent"]').click();await game.locator('[data-parent-panel="progress"]').click();await game.locator('#start-checkup').click();
@@ -105,23 +115,23 @@ export async function assessRecording(url,expected){
    const l=curriculum.lessons.find(l=>l.id===ids[i]);await game.locator(`[data-choice="${l.answerIndex}"]`).click();await game.locator('[data-checkup-next]').click();
    if(i<ids.length-1){assert.equal(await game.locator('[data-speech-next]').isVisible(),false);assert.doesNotMatch(await game.locator('[data-speech-result]').innerText(),/★★★/);}
   }
-  await game.locator('.completion').waitFor();const gs=await stored(game);assert.equal(rounds(gs).length,ids.length);assert.deepEqual(gs.cards,checkup.cards);
+  await collectReward(game,checkup);await game.locator('.completion').waitFor();const gs=await stored(game);assert.equal(rounds(gs).length,ids.length);assert.deepEqual(gs.cards,checkup.cards);
   assert.deepEqual(gs.checkups[today].map(r=>r.spoken),ids.map((_,i)=>i===0?'help':'good'));pass('Full checkup persists matched water once only at completion and retains hint-aware recall');
   const manualGame=await setup(checkup);await manualGame.locator('[data-go="parent"]').click();await manualGame.locator('[data-parent-panel="progress"]').click();await manualGame.locator('#start-checkup').click();
   for(let i=0;i<ids.length;i++){await manualGame.locator('[data-rating="good"]').click();await chooseMeaning(manualGame,{next:'[data-checkup-next]'});}
-  await manualGame.locator('.completion').waitFor();const mg=await stored(manualGame);assert.ok(mg.checkups[today].every(r=>r.spoken==='help'));assert.equal(rounds(mg).length,0);pass('Unassessed manual checkup continuation records help, never good or matching water');
-  const manualReview=await setup(learned);await reviewSpeak(manualReview);await manualReview.locator('[data-rating="good"]').click();assert.deepEqual(await stored(manualReview),learned);await chooseMeaning(manualReview,{next:'[data-review-next]'});await manualReview.locator('.completion').waitFor();const mr=await stored(manualReview);assert.equal(mr.days[today].results[0].rating,'help');assert.equal(rounds(mr).length,0);pass('Unassessed manual review requires meaning choice and cannot self-award independent recall');
+  await collectReward(manualGame,checkup);await manualGame.locator('.completion').waitFor();const mg=await stored(manualGame);assert.ok(mg.checkups[today].every(r=>r.spoken==='help'));assert.equal(rounds(mg).length,0);pass('Unassessed manual checkup continuation records help, never good or matching water');
+  const manualReview=await setup(learned);await reviewSpeak(manualReview);await manualReview.locator('[data-rating="good"]').click();assert.deepEqual(await stored(manualReview),learned);await chooseMeaning(manualReview,{next:'[data-review-next]'});await collectReward(manualReview,learned);await manualReview.locator('.completion').waitFor();const mr=await stored(manualReview);assert.equal(mr.days[today].results[0].rating,'help');assert.equal(rounds(mr).length,0);pass('Unassessed manual review requires meaning choice and cannot self-award independent recall');
   for(const kind of ['new','review']){
-   const p=await setup(kind==='new'?empty:learned);if(kind==='new')await newSpeak(p,{wrong:true});else await reviewSpeak(p);await match(p);await p.locator('[data-speech-next]').click();if(kind==='review')await chooseMeaning(p,{wrong:true,next:'[data-review-next]'});await p.locator('.completion').waitFor();
+   const p=await setup(kind==='new'?empty:learned);if(kind==='new')await newSpeak(p,{wrong:true});else await reviewSpeak(p);await match(p);if(kind==='review'){await p.locator('[data-speech-next]').click();await chooseMeaning(p,{wrong:true,next:'[data-review-next]'});}await collectReward(p,kind==='new'?empty:learned);await p.locator('.completion').waitFor();
    const s=await stored(p),r=s.days[today].results[0];assert.equal(r.meaning,false);assert.equal(r.rating,'again');assert.equal(s.cards[r.lessonId].due,learning.addDays(today,1));pass(`Wrong first meaning choice in ${kind} survives later correct tap and forces retry despite matched speech`);
   }
   const multi=await setup(empty);const learnedIds=[];
-  for(let i=0;i<3;i++){learnedIds.push(await newSpeak(multi,{started:i>0}));await match(multi);await multi.locator('[data-speech-next]').click();await multi.locator('.completion').waitFor();const s=await stored(multi);assert.equal(s.days[today].results.filter(r=>r.isNew).length,i+1);if(i<2){assert.match(await multi.locator('#completion-next').innerText(),/再学一句/);await multi.locator('#completion-next').click();}}
+  for(let i=0;i<3;i++){const before=await stored(multi);learnedIds.push(await newSpeak(multi,{started:i>0}));await match(multi);await collectReward(multi,before);await multi.locator('.completion').waitFor();const s=await stored(multi);assert.equal(s.days[today].results.filter(r=>r.isNew).length,i+1);if(i<2){assert.match(await multi.locator('#completion-next').innerText(),/再学一句/);await multi.locator('#completion-next').click();}}
   assert.equal(new Set(learnedIds).size,3);const capped=await stored(multi),plan=learning.getDailyPlan(capped,curriculum.lessons,today);assert.equal(plan.newCount,3);assert.equal(plan.newLimit,3);assert.equal(plan.canLearnMore,false);assert.deepEqual(learning.getDailyPlan(capped,curriculum.lessons,learning.addDays(today,1)).dueIds,learnedIds);
   await multi.locator('.completion [data-go="home"]').click();assert.equal(await multi.locator('.focus-home').getAttribute('data-next-kind'),'garden');await multi.locator('#hero-start').click();assert.equal(await multi.locator('[data-lesson-id]').count(),0);await multi.locator('[data-go="library"]').click();await multi.locator('[data-theme-open]').first().click();const fourth=curriculum.lessons[3];await multi.locator(`[data-preview="${fourth.id}"]`).click();await multi.locator('[data-step="choose"]').click();await chooseMeaning(multi);await match(multi);await multi.locator('[data-speech-next]').click();await multi.locator('.focus-library').waitFor();assert.deepEqual(await stored(multi),capped);assert.equal(capped.cards[fourth.id],undefined);pass('Three unique daily new sentences become tomorrow reviews; cap sends child to garden or free library without a fourth admission');
   for(const introduced of [true,false]){
    const p=await setup(introduced?learned:empty);await p.locator('[data-go="library"]').click();await p.locator('[data-theme-open]').first().click();await p.locator('[data-preview="hello-01"]').click();await p.locator('[data-step="choose"]').click();
-   const l=curriculum.lessons.find(l=>l.id==='hello-01');await p.locator(`[data-choice="${l.answerIndex}"]`).click();await p.locator('#quiz-next').click();await match(p);await p.locator('[data-speech-next]').click();await p.locator('.focus-library').waitFor();
+   const l=curriculum.lessons.find(l=>l.id==='hello-01');await p.locator(`[data-choice="${l.answerIndex}"]`).click();await p.locator('#quiz-next').click();await match(p);if(introduced)await collectReward(p,learned);else await p.locator('[data-speech-next]').click();await p.locator('.focus-library').waitFor();
    const s=await stored(p),before=introduced?learned:empty;assert.deepEqual(s.cards,before.cards);assert.deepEqual(s.days,before.days);assert.equal(rounds(s).length,introduced?1:0);
    pass(`Free practice ${introduced?'of learned sentence earns water without changing review':'of unlearned sentence offers stars without creating learning or water'}`);
   }
@@ -129,7 +139,7 @@ export async function assessRecording(url,expected){
    let initial=learned;
    if(leave==='next-card'){initial=learning.recordResult(learning.createState('2026-10-11'),first[0],'good','2026-10-11',{isNew:true});initial=learning.recordResult(initial,first[1],'good','2026-10-12',{isNew:true});}
    const p=await setup(initial);await reviewSpeak(p);await p.evaluate(()=>window.assessmentMode='pending');await record(p);await p.waitForFunction(()=>!!window.finishAssessment);
-   if(leave==='exit')await p.locator('#exit-session').click();else{await p.locator('[data-rating="help"]').click();await chooseMeaning(p,{next:'[data-review-next]'});await p.locator('[data-step="speak"]').click();}
+   if(leave==='exit')await p.locator('#exit-session').click();else{await p.locator('[data-rating="help"]').click();await chooseMeaning(p,{next:'[data-review-next]'});await collectReward(p,initial);await p.locator('[data-step="speak"]').click();}
    const before=await stored(p);await p.evaluate(()=>window.finishAssessment());await p.waitForTimeout(150);assert.deepEqual(await stored(p),before);assert.equal(await p.locator('[data-speech-next]:visible').count(),0);assert.equal(await p.locator('.speech-stars').count(),0);
    pass(`Late matched response after ${leave} neither contaminates next screen nor grants water`);
   }
