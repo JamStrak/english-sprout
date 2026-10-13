@@ -6,11 +6,11 @@
 
 ### v1.7.3 小耳朵进度与续传
 
-本地候选24326369eb91，待发布核对。用户反馈电脑浏览器10%后又到37%，不能将其真实设备认定为永久死锁；未清理用户缓存。已复现CacheStorage/open/put、缓存body/JSON及忽略abort的网络body悬挂。真实CDN模型0/4MB分段206、SHA与本地相同；脚本压缩Range存在2393051/5804485长度协商冲突。详见docs/SPEECH_DOWNLOAD.md。
+已发布：代码2196a9a1fb2a2817596ae26e7def78d07091abbf，Pages38343049992成功，正式e14f47881e97（版本接口与CI日志一致），本地24326369eb91。用户反馈电脑浏览器10%后又到37%，不能将其真实设备认定为永久死锁；未清理用户缓存。已复现CacheStorage/open/put、缓存body/JSON及忽略abort的网络body悬挂。真实CDN模型0/4MB分段206、SHA与本地相同；脚本压缩Range存在2393051/5804485长度协商冲突。详见docs/SPEECH_DOWNLOAD.md。
 
 下载改为ReadableStream实时字节进度、15秒无新字节独立截止并重试（持续慢传输不断时），缓存操作5秒后禁用本次缓存访问且继续内存/网络，不清存档。脚本完整压缩GET，拒绝短206；模型原URL、speech-v1、256KB/3并发及既有v1meta/parts保持，分段耗尽后3/6/12/24/30秒自动续传，联网可提前唤醒。显式no-store识别下载绕过SW二次存储，已缓存冷页离线继续可用。后加入观察者重播当前进度，评分等15秒结束后后台提示仍可更新；保存/打开/准备完成分阶段，不把下载100%等同识别就绪。录音、学习、评分与奖励规则、配音/audio-v5不变。
 
-已验证npm test213、构建、功能36、正式形态版本/52核心SHA/三尺寸/离线5、本机真实录音→真实Vosk正常学习与一次奖励5。新增下载恢复17单测，以及真实Edge/Vosk下载专项8：预置16块约10%缓存，缺失4MB段真实停顿15008ms+随后3次503，产品自动重试/外层3秒续传，约21.8秒准备完成；原前4MB不重取、迟到观察者立即收到10%状态、真实hello everyone匹配3星、冷页离线无额外库/模型请求，无上传/第三方请求/页面异常。此耗时是本地故障服务器测试，不冒充首次公网下载时间或儿童口音准确率。证据test-results/speech-download-browser、speech-stall-rootcause、main-real-speech、local-v173-final、release-version-v173。正式部署信息待完成后填写。
+已验证npm test213、构建、功能36、正式形态版本/52核心SHA/三尺寸/离线5、本机真实录音→真实Vosk正常学习与一次奖励5。新增下载恢复17单测，以及真实Edge/Vosk下载专项8：预置16块约10%缓存，缺失4MB段真实停顿15008ms+随后3次503，产品自动重试/外层3秒续传，约21.8秒准备完成；原前4MB不重取、迟到观察者立即收到10%状态、真实hello everyone匹配3星、冷页离线无额外库/模型请求，无上传/第三方请求/页面异常。此耗时是本地故障服务器测试，不冒充首次公网下载时间或儿童口音准确率。证据test-results/speech-download-browser、speech-stall-rootcause、main-real-speech、local-v173-final、release-version-v173。正式站版本/52核心实际SHA/三尺寸/离线重开5项通过，证据test-results/live-version-v173。真实正式Edge下载专项90秒截止未跨过10%，保留失败证据：完整脚本200/gzip/无Range，模型约0–2MB的8个响应206/41184862/无额外编码、均非SW返回，完成传输约3.7MB；不能冒称完整公网模型下载或正式跨10%/续传验收通过。公网线路慢仍是首次耗时限制，轻量专项不继续占用当前用户下载网络。证据test-results/speech-live-progress/results.json。
 
 ### v1.7.2 更新完整性与自动恢复
 
