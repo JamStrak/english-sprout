@@ -302,7 +302,7 @@ async function evaluateGardenSpeech(url){
       if(active.preview&&!state.cards[active.ids[active.index]])result.querySelector('small').textContent='这句跟读匹配通过啦';
     }
     if(value.matched)celebrate('stars',{target:result});
-  }catch(error){if(current()){result.innerHTML='<span>🌱</span><strong>先开口练，小耳朵在准备</strong><small>可以重新录音，或说过后选一选继续</small>';const fallback=document.querySelector('[data-garden-effort]');if(fallback)fallback.hidden=false;}}
+  }catch(error){if(current()){result.innerHTML='<span>🌱</span><strong>先开口练，小耳朵在准备</strong><small data-speech-preparing>正在后台准备，也可以先开口练</small>';const fallback=document.querySelector('[data-garden-effort]');if(fallback)fallback.hidden=false;}}
 }
 function claimGardenPractice(assessment){
   const active=session;if(!active?.gardenPractice||active.claimed||recording||recordPending)return;

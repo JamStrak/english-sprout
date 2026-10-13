@@ -96,7 +96,10 @@ test('cancellation does not erase verified chunks and next attempt resumes',asyn
     if(start===4){
       await new Promise((resolve,reject)=>{
         options.signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')),{once:true});
-        setTimeout(()=>controller.abort(),15);
+        // Cancel after another parallel part is actually saved, rather than
+        // assuming every machine can finish its cache write within 15 ms.
+        const poll=setInterval(()=>{if(entries.has(`${URL_ASSET}?sprout-part=8`)){clearInterval(poll);clearTimeout(deadline);controller.abort();}},1);
+        const deadline=setTimeout(()=>{clearInterval(poll);reject(new Error('Fixture part 8 was not saved'));},2000);
       });
     }
   });

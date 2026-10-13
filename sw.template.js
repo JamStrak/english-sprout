@@ -129,6 +129,9 @@ self.addEventListener('fetch',event=>{
   // JSON manifests live beside MP3s but belong to the versioned core cache.
   const isAudio=/\/audio\/.+\.mp3$/i.test(u.pathname);
   const isSpeech=/\/speech\/(?:vosk-0\.0\.8\.js|model-en-us-0\.15\.tar\.gz)$/.test(u.pathname);
+  // The resumable downloader already bounds and persists its own cache work.
+  // Do not route its explicit network reads through a second unbounded cache.
+  if(isSpeech&&event.request.cache==='no-store')return;
   let cacheWrite=Promise.resolve();
   const responsePromise=(async()=>{
     let cache,found;

@@ -8,7 +8,34 @@ const MODEL=new URL('speech/model-en-us-0.15.tar.gz',ASSET_BASE).href;
 let model=null, preparing=null, generation=0, libraryPromise=null,assetController=null;
 const pending=new Set();
 const preparingListeners=new Set();
-function preparingStatus(message){for(const listener of preparingListeners)try{listener(message);}catch{}}
+let lastPreparationStatus='';
+function preparingStatus(message){lastPreparationStatus=message;for(const listener of preparingListeners)try{listener(message);}catch{}}
+
+function recoveryPause(delay,signal){
+  return new Promise((resolve,reject)=>{
+    let timer;
+    const finish=(fn,value)=>{clearTimeout(timer);signal?.removeEventListener('abort',cancel);window.removeEventListener('online',resume);fn(value);};
+    const cancel=()=>finish(reject,abortError()),resume=()=>finish(resolve);
+    if(signal?.aborted){cancel();return;}
+    signal?.addEventListener('abort',cancel,{once:true});window.addEventListener('online',resume,{once:true});
+    timer=setTimeout(resume,delay);
+  });
+}
+async function prepareAsset(url,{signal,label,...options}){
+  let progress={loaded:0,total:0};
+  const amount=()=>progress.total?`${Math.min(99,Math.floor(progress.loaded/progress.total*100))}% · ${(progress.loaded/1048576).toFixed(1)}/${(progress.total/1048576).toFixed(1)}MB`:`${(progress.loaded/1048576).toFixed(1)}MB`;
+  for(let attempt=0;;attempt++){
+    if(signal?.aborted)throw abortError();
+    try{return await downloadSpeechAsset(url,{...options,signal,
+      onProgress:value=>{progress=value;preparingStatus(`${label}下载中 ${amount()}`);},
+      onState:value=>{if(value.phase==='retrying')preparingStatus(`连接慢，自动续传 · ${amount()}`);else if(value.phase==='saving')preparingStatus(`${label}下载好了，正在保存`);}
+    });}catch(error){
+      if(signal?.aborted||error.name==='AbortError')throw abortError();
+      preparingStatus(`连接中断，自动续传 · ${amount()}`);
+      await recoveryPause(Math.min(30000,3000*2**Math.min(attempt,4)),signal);
+    }
+  }
+}
 
 // Keep Vosk's stable model URL for its IndexedDB path, while its worker reads
 // already-downloaded bytes. This also works before a service worker takes over.
@@ -43,7 +70,7 @@ function releaseModel(value){
 }
 export function disposeSpeechAssessment(){
   generation++;
-  assetController?.abort();assetController=null;preparingListeners.clear();
+  assetController?.abort();assetController=null;preparingListeners.clear();lastPreparationStatus='';
   for(const cancel of [...pending])cancel();
   releaseModel(model);model=null;preparing=null;
 }
@@ -65,15 +92,16 @@ function bounded(work,{signal,timeout=60000,disposeOnTimeout=true}={}){
 async function loadLibrary(signal){
   if(window.Vosk)return window.Vosk;
   if(!libraryPromise)libraryPromise=(async()=>{
-    const response=await downloadSpeechAsset(LIBRARY,{signal,onProgress:({loaded,total})=>preparingStatus(`声音工具下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
+    const response=await prepareAsset(LIBRARY,{signal,label:'声音工具',useRanges:false});
+    preparingStatus('声音工具下载好了，正在打开…');
     const url=URL.createObjectURL(new Blob([await response.text()],{type:'text/javascript'}));
     try{
-      await new Promise((resolve,reject)=>{
+      await bounded(new Promise((resolve,reject)=>{
         const script=document.createElement('script');script.src=url;
         script.onload=()=>{script.remove();resolve();};
         script.onerror=()=>{script.remove();reject(new Error('这个浏览器暂时无法打开小耳朵。'));};
         document.head.append(script);
-      });
+      }),{signal,timeout:60000});
     }finally{URL.revokeObjectURL(url);}
     if(!window.Vosk)throw new Error('这个浏览器暂时无法打开小耳朵。');
     return window.Vosk;
@@ -85,22 +113,23 @@ export async function prepareSpeech({onStatus=()=>{},signal,background=false}={}
   if(signal?.aborted)throw abortError();
   if(model?.ready)return model;
   if(!window.WebAssembly||!window.Worker||!(window.AudioContext||window.webkitAudioContext))throw new Error('这个浏览器暂时不能听懂跟读，可以继续听示范或照顾花园。');
-  onStatus('准备小耳朵…首次需要下载约47MB，之后保存在这台设备。');
   preparingListeners.add(onStatus);
+  onStatus(preparing&&lastPreparationStatus?lastPreparationStatus:'准备小耳朵…首次需要下载约47MB，之后保存在这台设备。');
   const currentGeneration=generation;
   if(!preparing){
     const controller=new AbortController();assetController=controller;
     const task=(async()=>{
       const Vosk=await loadLibrary(controller.signal);
       if(currentGeneration!==generation)throw abortError();
-      const response=await downloadSpeechAsset(MODEL,{signal:controller.signal,expectedBytes:41184862,onProgress:({loaded,total})=>preparingStatus(`小耳朵下载中 ${Math.round(loaded/total*100)}% · 可以先练`) });
+      const response=await prepareAsset(MODEL,{signal:controller.signal,expectedBytes:41184862,label:'小耳朵'});
       if(currentGeneration!==generation)throw abortError();
+      preparingStatus('下载完成，正在打开小耳朵…');
       const {value,cleanup}=modelFromArchive(Vosk,await response.blob());value.sproutArchiveCleanup=cleanup;model=value;
       try{
-        await new Promise((resolve,reject)=>{
+        await bounded(new Promise((resolve,reject)=>{
           value.on('load',message=>message.result?resolve():reject(new Error('小耳朵没有准备好，请再试一次。')));
           value.on('error',()=>reject(new Error('小耳朵暂时无法准备，请检查网络或稍后再试。')));
-        });
+        }),{signal:controller.signal,timeout:120000});
         if(currentGeneration!==generation)throw abortError();
         return value;
       }catch(error){releaseModel(value);if(model===value)model=null;throw error;}

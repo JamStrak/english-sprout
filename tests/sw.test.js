@@ -21,7 +21,7 @@ function worker({cached=null,writeError=false,writeGate=null,openError=false,net
   const events={},lifetimes=[];let writes=0,storedBody;
   const context={self:{registration:{scope:'https://example.test/kids/'},addEventListener:(n,f)=>events[n]=f},location:{origin:'https://example.test'},URL,Response,caches:{open:async()=>{if(openError)throw Error('storage disabled');return {match:async()=>cached?.clone(),put:async(_request,response)=>{writes++;if(writeGate)await writeGate;if(writeError)throw Error('quota exceeded');storedBody=await response.text();}}; }},fetch:async()=>{if(networkError)throw Error('offline');return networkResponse||new Response('network data',{status:200});}};
   vm.runInNewContext(code,context);
-  return {request:async(url,headers={})=>{let promise,dispatching=true;events.fetch({request:new Request(url,{headers}),respondWith:p=>promise=p,waitUntil:p=>{assert.equal(dispatching,true,'worker lifetime must be extended during fetch dispatch');lifetimes.push(p);}});dispatching=false;return promise;},writes:()=>writes,storedBody:()=>storedBody,finished:()=>Promise.all(lifetimes)};
+  return {request:async(url,headers={},options={})=>{let promise,dispatching=true;events.fetch({request:new Request(url,{headers,...options}),respondWith:p=>promise=p,waitUntil:p=>{assert.equal(dispatching,true,'worker lifetime must be extended during fetch dispatch');lifetimes.push(p);}});dispatching=false;return promise;},writes:()=>writes,storedBody:()=>storedBody,finished:()=>Promise.all(lifetimes)};
 }
 test('cache quota error never turns a successful online response into a network error',async()=>{
   const w=worker({writeError:true});const r=await w.request('https://example.test/kids/audio/hello.mp3');assert.equal(r.status,200);assert.equal(await r.text(),'network data');assert.equal(w.writes(),1);await w.finished();
@@ -62,6 +62,12 @@ test('streaming audio reaches the player before the whole audio file has downloa
 });
 test('disabled CacheStorage still allows online content',async()=>{
   const r=await worker({openError:true}).request('https://example.test/kids/src/app.js');assert.equal(r.status,200);
+});
+
+test('explicit speech downloader network reads bypass worker cache even when storage is broken',async()=>{
+  const w=worker({openError:true});
+  assert.equal(await w.request('https://example.test/kids/speech/model-en-us-0.15.tar.gz',{Range:'bytes=0-262143'},{cache:'no-store'}),undefined);
+  assert.equal(await w.request('https://example.test/kids/speech/vosk-0.0.8.js',{}, {cache:'no-store'}),undefined);
 });
 test('offline audio supports normal, open-ended and suffix byte ranges',async()=>{
   for(const [range,body,contentRange] of [['bytes=2-5','cdef','bytes 2-5/10'],['bytes=7-','hij','bytes 7-9/10'],['bytes=-3','hij','bytes 7-9/10']]){

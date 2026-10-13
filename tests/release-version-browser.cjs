@@ -1,7 +1,7 @@
 // Inspect the actual deployed/cache-backed release, not a URL version label.
 const {chromium}=require('C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const origin=process.env.TEST_URL||'http://127.0.0.1:24736/',expected=process.env.EXPECT_VERSION||'1.7.2';
+const origin=process.env.TEST_URL||'http://127.0.0.1:24736/',expected=process.env.EXPECT_VERSION||require('../package.json').version;
 const out=path.resolve(__dirname,'../test-results',process.env.REPORT_NAME||'release-version');fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server']});
@@ -44,7 +44,7 @@ const out=path.resolve(__dirname,'../test-results',process.env.REPORT_NAME||'rel
     });
     assert.ok(cached.count>30);assert.deepEqual(cached.failures,[]);checks.push({name:'Actual cached core SHA-256 matches deployed worker',status:'PASS',count:cached.count});
     await context.setOffline(true);await page.reload();await page.locator('#hero-start').waitFor();
-    assert.match(await page.locator('[data-app-version]').innerText(),/^v1\.7\.2/);checks.push({name:'New release reopens offline with actual version',status:'PASS'});
+    assert.match(await page.locator('[data-app-version]').innerText(),new RegExp('^v'+expected.replaceAll('.','\\.')));checks.push({name:'New release reopens offline with actual version',status:'PASS'});
    }
    assert.deepEqual(errors,[]);await context.close();console.log('PASS '+width+'px release, worker and layout');
   }
