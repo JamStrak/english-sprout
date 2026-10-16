@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen",
+  "useCase": "precise-object-edit",
+  "date": "2026-10-16",
+  "input": "C:/Users/Jam/.codex/generated_images/01a14259-c5e5-7bc0-b2e6-8c2654a2d7a6/exec-11a0f54b-38a2-4ad1-9a25-3b97fd13d633.png",
+  "prompt": "Use case: precise-object-edit.\nInput image: the attached 2x2 preschool goodbye storyboard is the edit target.\nPrimary request: repair ONLY the anatomically inconsistent bear paws and waving arm articulation, especially the raised waving paw in the lower-left panel and the corresponding raised paw in lower-right. In the original, palm pads appear on the back of a hand. Make the back of each visible waving paw plainly furry, with NO palm pad spots visible on the back. Use simple rounded mitten-like bear paws, a single small correctly placed thumb bulge, a naturally joined wrist and elbow, and no splayed human fingers. The bear should be waving to the sprout, with the palm oriented toward the sprout, so the camera sees a softly furred back or side of the paw. Never add paw pads to both sides. Recheck all four panels for left/right anatomy, extra fingers/arms, dislocated wrists and broken shoulders; fix only a clearly malformed hand or joint. Keep the friendly goodbye gesture immediately readable.\nInvariants: preserve the full 2x2 grid, same generous panels and clean cream gutters, warm gouache/paper style, colors, lighting, same sprout and bear identities, yellow backpack, same setting and all four story moments, all existing camera framings and all object placements. Preserve faces, story continuity and the large difference in distance between the two goodbye panels. Do not mirror the image or any panel. Do not change the room or move the door. No text, letters, numbers, watermark or UI. Opaque background. Return the whole corrected four-panel image at high quality.",
+  "source": "goodbye-v2.png",
+  "runtime": "../../public/xiaoya/stories/goodbye-v2.webp",
+  "encoding": "FFmpeg libwebp quality 82, compression_level 6, original dimensions, no cropping or visual edits"
+}

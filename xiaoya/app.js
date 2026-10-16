@@ -11,7 +11,7 @@ const today=()=>localDay();
 const GUIDE_STEPS=['listen','wave','speak','replay','gift','place','done'];
 const readPrefs=value=>({welcome:!!value?.welcome,mic:!!value?.mic,guideStep:GUIDE_STEPS.includes(value?.guideStep)?value.guideStep:null});
 let state=createState(),prefs=readPrefs(null),storageProblem=null,rawState=null;
-let page='home',session=null,modal=null,parentUnlocked=false,selectedItem=null,drag=null,toastTimer=null;
+let page=new URLSearchParams(location.search).get('story')==='hello-goodbye'?'story-launch':'home',session=null,modal=null,parentUnlocked=false,selectedItem=null,drag=null,toastTimer=null;
 let challenge=null,restoreFocus=null,renderGeneration=0;
 try { rawState=localStorage.getItem(STORAGE_KEY); if(rawState)state=validateState(JSON.parse(rawState)); } catch(error){storageProblem=error.message;}
 try { prefs=readPrefs(JSON.parse(localStorage.getItem(PREFS)||'null')); }catch{}
@@ -28,9 +28,9 @@ function button(action,label,glyph,extra=''){return `<button type="button" class
 function voice(id){return `xiaoya/audio/v3/${id}.mp3`;}
 async function sound(file){try{return await audio.playSound(file);}catch{toast('声音暂时没有播放。联网打开过这段声音后，就能离线再听。');return false;}}
 function help(id){if(session)session.helped=true;return sound(voice(id));}
-function stopSession(){if(session)clearTimeout(session.guideTimer);audio.releaseAudioSession();session=null;challenge=null;}
+function stopSession(){if(session){clearTimeout(session.guideTimer);cancelStory(session);}audio.releaseAudioSession();session=null;challenge=null;}
 function navigate(next){stopSession();modal=null;page=next;selectedItem=null;render();window.scrollTo(0,0);}
-function openModal(value){if(session){session.guideGeneration++;session.guideBusy=false;session.teaching=false;audio.stopSound();cancelAttempt(session);}restoreFocus=document.activeElement;modal=value;renderModal();setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
+function openModal(value){if(session){cancelStory(session);session.guideGeneration++;session.guideBusy=false;session.teaching=false;audio.stopSound();cancelAttempt(session);}restoreFocus=document.activeElement;modal=value;renderModal();setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
 function closeModal(){modal=null;if(session)render();else renderModal();restoreFocus?.focus?.();}
 function requireParent(callback){if(parentUnlocked){callback();return;}openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function header(back=false){return `<header class="topbar">${back?button('home','回到首页','back'):`<span class="brand">小芽英语</span>`}<div class="topbar-actions">${button('help','语音帮助','help')}${button('parent','家长陪伴区','parent')}</div></header>`;}
@@ -48,6 +48,7 @@ function prepareFor(s){return audio.prepareRecognition(()=>{
 });}
 function cancelAttempt(s){s.speechGeneration++;audio.cancelRecording();audio.cancelRecognition();s.recording=false;s.waiting=false;s.assessment=null;s.pendingClip=null;}
 async function teach(){const s=session;if(!s||s.teaching)return;
+  if(s.event.id==='hello-goodbye'&&!s.tutorial)return playStory();
   cancelAttempt(s);audio.stopSound();s.guideGeneration++;s.helped=true;s.guideBusy=true;s.teaching=true;
   if(s.tutorial){s.guideStep='speak';s.phase='request';s.guideNeedsSample=false;savePrefs({...prefs,guideStep:'speak'});}
   else if(s.phase!=='listen')s.phase='request';
@@ -87,22 +88,101 @@ async function guideReplay(){const s=session;if(!s?.tutorial||s.guideBusy||s.gui
 async function guideSkip(){const s=session;if(!s?.tutorial||s.guideBusy||s.guideStep!=='speak')return;cancelAttempt(s);const generation=++s.guideGeneration;s.guideBusy=true;render();const ok=await sound(s.event.audio);if(session!==s||s.guideGeneration!==generation)return;s.guideBusy=false;if(ok)guideStep('gift');else{s.guideError=true;render();}}
 function guideGift(){const s=session;if(!s?.tutorial||s.guideBusy||s.guideStep!=='gift')return;if(!state.completions[s.event.id]&&!save(completeEvent(state,s.event.id,today())))return;guideStep('place');}
 function guidePlace(){const s=session;if(!s?.tutorial||s.guideBusy||s.guideStep!=='place')return;if(!state.items['sun-lamp']){guideStep('gift');return;}if(state.items['sun-lamp'].x===null&&!save(placeItem(state,'sun-lamp',{x:.5,y:.4})))return;if(!savePrefs({...prefs,welcome:true,guideStep:'done'}))return;navigate('home');sound(voice('guide-done'));}
-function startEvent(themeId,forcedEvent=null,node=null,tutorial=false){
-  audio.releaseAudioSession();
+function startEvent(themeId,forcedEvent=null,node=null,tutorial=false,assessment=null){
+  stopSession();
   const event=forcedEvent||selectEvent(state,themeId,today());
   const context=event.context||event.contexts.find(c=>c.id===node?.contextId)||event.contexts[0];
   const practiced=!!state.completions[event.id];
-  session={id:uid(),event,context,phase:practiced||node?'request':'listen',helped:!!node,choices:[...event.choices].sort(()=>Math.random()-.5),listened:false,firstChoice:true,listeningRecorded:false,recording:false,waiting:false,observed:false,attemptId:null,hasClip:false,node,discoveryReady:false,speechGeneration:0,hadItem:!!state.items[event.itemId],tutorial,guideStep:'listen',guideGeneration:0};
+  session={id:uid(),event,context,phase:assessment==='listening'?'listen':assessment==='speech'||practiced||node?'request':'listen',listenOnly:assessment==='listening',helped:!!node,choices:[...event.choices].sort(()=>Math.random()-.5),listened:false,firstChoice:true,listeningRecorded:false,recording:false,waiting:false,observed:false,attemptId:null,hasClip:false,node,discoveryReady:false,speechGeneration:0,hadItem:!!state.items[event.itemId],tutorial,guideStep:'listen',guideGeneration:0,storyGeneration:0};
   session.choices=session.choices.map(choice=>choice.correct?{...choice,scene:{...event,...context}}:choice);
   page='event';modal=null;render();window.scrollTo(0,0);
   // Keep first entry light; the local model starts preparing on the first recording.
   fetch(new URL(voice(context.id),document.baseURI)).catch(()=>{});
+  // Completion is participation only. The pilot needs target-specific reliable
+  // evidence before normal visits can omit its meaning demonstration.
+  const independent=effectiveEvidence(state).some(r=>r.eventId===event.id&&r.kind==='speech'&&r.source==='parent'&&r.result==='independent'&&!r.helped);
+  if(event.id==='hello-goodbye'&&!tutorial&&!node&&!assessment&&!independent)playStory();
 }
+
+const STORY_FRAMES=['play','leave','wave','depart'];
+const STORY_LABELS=['两个朋友一起玩','朋友背起小包，准备离开','朋友回头挥手，和伙伴告别','伙伴回应，朋友向外走远'];
+const storyImage=()=>new URL('xiaoya/stories/goodbye-v2.webp',document.baseURI).href;
+let storyImageReady=null;
+let storyImageCaching=false;
+function cacheStoryImage(){
+  const build=document.querySelector('meta[name="xiaoya-build"]')?.content;
+  if(!('caches' in window)||storyImageCaching||!/^\w{12}$/.test(build||''))return;
+  storyImageCaching=true;
+  // The first picture can load before the worker controls the page. Save only
+  // this requested story, without delaying playback or adding it to the shell.
+  (async()=>{
+    const cache=await caches.open(`xiaoya-core-${build}`),url=storyImage();
+    if(await cache.match(url))return;
+    const response=await fetch(url);
+    if(response.status===200)await cache.put(url,response);
+  })().catch(()=>{}).finally(()=>{storyImageCaching=false;});
+}
+function loadStoryImage(){
+  cacheStoryImage();
+  if(!storyImageReady)storyImageReady=new Promise((resolve,reject)=>{
+    const image=new Image();let timer;
+    const finish=ok=>{clearTimeout(timer);image.onload=image.onerror=null;ok?resolve():reject(new Error('story unavailable'));};
+    image.onload=()=>finish(true);image.onerror=()=>finish(false);timer=setTimeout(()=>finish(false),15000);image.src=storyImage();
+  }).catch(error=>{storyImageReady=null;throw error;});
+  return storyImageReady;
+}
+function cancelStory(s){
+  s.storyGeneration=(s.storyGeneration||0)+1;clearTimeout(s.storyTimer);
+  const finish=s.storyDelayFinish;s.storyDelayFinish=null;s.storyTimer=null;s.storyRunning=false;finish?.(false);
+}
+function storyCurrent(s,generation){return session===s&&s.phase==='story'&&s.storyGeneration===generation&&!modal&&!document.hidden;}
+function storyDelay(s,generation,ms){return new Promise(resolve=>{
+  if(!storyCurrent(s,generation)){resolve(false);return;}
+  s.storyDelayFinish=resolve;s.storyTimer=setTimeout(()=>{s.storyTimer=null;s.storyDelayFinish=null;resolve(storyCurrent(s,generation));},ms);
+});}
+function storyPicture(frame,extra=''){
+  const index=STORY_FRAMES.indexOf(frame);
+  return `<div class="story-picture ${extra}" data-story-frame="${frame}" role="img" aria-label="${STORY_LABELS[index]}" style="--story-image:url('${storyImage()}');--story-x:${index%2?100:0}%;--story-y:${index>1?100:0}%"></div>`;
+}
+function storyLaunchView(){return `${header(true)}<main class="story-launch"><button class="story-stage story-launch-target" data-primary data-action="start-story" aria-label="看看朋友怎样告别">${storyPicture('play')}<span class="story-launch-play" aria-hidden="true">${icon('play',45)}</span></button><span class="story-launch-cue" aria-hidden="true">${icon('tap',42)}</span></main>`;}
+function storyView(s){
+  const ready=s.storyReady&&!s.storyRunning;
+  const action=ready?'story-continue':s.storyAudioPending?'story-audio':'story-replay';
+  const label=ready?'轮到你，和朋友挥手告别':s.storyAudioPending?'点小耳朵，听朋友挥手说话':'再看一遍朋友告别的故事';
+  return `${header(true)}<main class="event-view story-view" data-phase="story" data-story-running="${!!s.storyRunning}" data-story-ready="${!!ready}"><div class="story-progress" aria-hidden="true">${STORY_FRAMES.map((frame,index)=>`<i class="${index<=STORY_FRAMES.indexOf(s.storyFrame)?'filled':''}"></i>`).join('')}</div><div class="story-stage">${storyPicture(s.storyFrame||'play',s.storyRunning?'story-moving':'')}</div><p class="sr-only" role="status">${s.storyError?'图片暂时没有准备好，可以再试一次':s.storyAudioPending?'声音没有响起来，点小耳朵再听一次':s.storyRunning?'看看朋友在做什么':ready?'轮到你和朋友告别':'点一下，再看朋友告别的故事'}</p><div class="story-controls">${button('story-replay','从头再看一遍','again')}<button class="guide-target story-primary" data-primary data-action="${action}" aria-label="${label}" ${s.storyRunning?'disabled':''}>${icon(ready?'wave':s.storyAudioPending?'ear':'play',54)}</button>${button('story-help','听中文，再看朋友告别','help')}${!s.storyRunning?`<span class="guide-cue" aria-hidden="true">${icon('tap',38)}</span>`:''}</div></main>`;
+}
+async function finishStoryWave(s,generation){
+  // This call also runs directly from a retry tap if autoplay was blocked.
+  const ok=await sound(s.event.audio);if(!storyCurrent(s,generation))return;
+  if(!ok){s.storyRunning=false;s.storyAudioPending=true;render();return;}
+  s.storyAudioPending=false;if(!await storyDelay(s,generation,850))return;
+  s.storyFrame='depart';render();if(!await storyDelay(s,generation,1900))return;
+  s.storyRunning=false;s.storyReady=true;render();
+}
+async function playStory(chinese=false){
+  const s=session;if(!s||s.event.id!=='hello-goodbye'||s.tutorial)return;
+  cancelStory(s);cancelAttempt(s);audio.stopSound();audio.clearClip();s.guideGeneration++;s.guideBusy=false;s.teaching=false;
+  // The illustrated indoor practice uses its real context, even when help was
+  // requested in a park checkup. Never label this same picture as a new setting.
+  s.context=s.event.contexts[0];s.phase='story';s.listenOnly=false;s.helped=true;s.storyUsed=true;s.hasClip=false;s.observed=false;s.attemptId=null;s.discoveryReady=false;
+  s.storyFrame='play';s.storyReady=false;s.storyAudioPending=false;s.storyError=false;s.storyRunning=true;
+  const generation=s.storyGeneration;render();
+  try{await loadStoryImage();}catch{if(storyCurrent(s,generation)){s.storyRunning=false;s.storyError=true;render();}return;}
+  if(!await storyDelay(s,generation,1700))return;
+  s.storyFrame='leave';render();
+  if(chinese){await sound(voice(s.context.id));if(!storyCurrent(s,generation))return;}
+  if(!await storyDelay(s,generation,1700))return;
+  s.storyFrame='wave';render();if(!await storyDelay(s,generation,650))return;
+  await finishStoryWave(s,generation);
+}
+function retryStoryAudio(){const s=session;if(!s||s.phase!=='story'||!s.storyAudioPending||s.storyRunning)return;cancelStory(s);audio.stopSound();s.storyRunning=true;s.storyAudioPending=false;render();finishStoryWave(s,s.storyGeneration);}
+function storyContinue(){const s=session;if(!s||s.phase!=='story'||s.storyRunning||!s.storyReady)return;cancelStory(s);s.phase='request';s.helped=true;render();sound(voice('speak'));}
 function sceneFor(s){return {...s.event,...s.context,sceneId:s.context.scene,context:s.context};}
 function choiceMarkup(choices,attr='choice'){return `<div class="choice-row">${choices.map(choice=>`<button class="choice-button" data-${attr}="${esc(choice.id)}" aria-label="${esc(choice.label)}">${sceneArt(choice.scene||choice.eventId||'food-water','before')}</button>`).join('')}</div>`;}
 function eventView(){
   const s=session;if(!s)return homeView();
   if(s.tutorial)return guideView();
+  if(s.phase==='story')return storyView(s);
   const done=s.phase==='resolved'||s.phase==='reward';
   let controls='';
   if(s.phase==='listen')controls=`${button('sample','听伙伴说话','ear','data-primary')}${s.listened?choiceMarkup(s.choices):''}`;
@@ -112,9 +192,9 @@ function eventView(){
   const cue=s.recording?'话筒亮啦，现在说，我在听':s.waiting?'等话筒亮起来再说…':s.teaching?'听小芽说，等会儿轮到你':s.phase==='listen'?(s.listened?'点一幅图，找出声音的意思':'点小耳朵，听小芽说'):s.phase==='request'?(s.hasClip?'点话筒再说一次，或点小芽听示范':'点话筒，把想说的话告诉小芽'):s.phase==='resolved'?'点小勾勾，收好这次相遇':'点小礼物，把它带回家';
   // Listening must test sound → meaning, never matching a revealed answer image.
   const listening=s.phase==='listen';
-  return `${header(true)}<main class="event-view" data-phase="${s.phase}"><div class="status-dots" aria-hidden="true"><i class="filled"></i><i class="${!listening?'filled':''}"></i><i class="${done?'filled':''}"></i></div><div class="scene-stage" ${listening?'data-listening-neutral':''}><div class="scene-art">${listening?`<div class="listening-buddy">${buddy('listening')}<span>${icon('ear',50)}</span></div>`:sceneArt(sceneFor(s),done?'resolved':'request')}</div>${s.recording?'<div class="recording-indicator" role="status" aria-label="正在录音"><i></i><i></i><i></i></div>':''}</div>${!listening&&s.phase!=='reward'?assessmentView(s):''}<p class="event-cue sr-only" role="status">${cue}</p><div class="event-controls ${listening&&s.listened?'choosing':''}">${controls}${!s.recording&&!s.waiting&&!s.teaching&&!(listening&&s.listened)?`<span class="event-tap-cue" aria-hidden="true">${icon('tap',38)}</span>`:''}</div>${s.phase==='request'?teachingButton():''}<div class="sr-only" role="status">${esc(listening?'听声音，再选择对应的图画':s.phase==='request'?s.context.request:s.event.resolution)}</div></main>`;
+  return `${header(true)}<main class="event-view" data-phase="${s.phase}"><div class="status-dots" aria-hidden="true"><i class="filled"></i><i class="${!listening?'filled':''}"></i><i class="${done?'filled':''}"></i></div><div class="scene-stage" ${listening?'data-listening-neutral':''}><div class="scene-art">${listening?`<div class="listening-buddy">${buddy('listening')}<span>${icon('ear',50)}</span></div>`:s.storyUsed?storyPicture(done?'depart':'wave'):sceneArt(sceneFor(s),done?'resolved':'request')}</div>${s.recording?'<div class="recording-indicator" role="status" aria-label="正在录音"><i></i><i></i><i></i></div>':''}</div>${!listening&&s.phase!=='reward'?assessmentView(s):''}<p class="event-cue sr-only" role="status">${cue}</p><div class="event-controls ${listening&&s.listened?'choosing':''}">${controls}${!s.recording&&!s.waiting&&!s.teaching&&!(listening&&s.listened)?`<span class="event-tap-cue" aria-hidden="true">${icon('tap',38)}</span>`:''}</div>${s.phase==='request'?teachingButton():''}<div class="sr-only" role="status">${esc(listening?'听声音，再选择对应的图画':s.phase==='request'?s.context.request:s.event.resolution)}</div></main>`;
 }
-async function sample(){const s=session;if(!s)return;if(s.recording||s.waiting){return teach();}if(s.guideBusy)return;
+async function sample(){const s=session;if(!s)return;if(s.phase==='story')return playStory();if(s.recording||s.waiting){return teach();}if(s.guideBusy)return;
   if(s.tutorial){if(s.guideStep==='speak'&&s.guideNeedsSample){guideNarration('guide-speak',true);return;}if(s.guideStep!=='listen')return;const generation=++s.guideGeneration;s.guideBusy=true;render();const ok=await sound(s.event.audio);if(session!==s||s.guideGeneration!==generation)return;s.guideBusy=false;if(ok)guideStep('wave');else{s.guideError=true;render();}return;}
   s.helped=s.phase==='request'||s.helped;const ok=await sound(s.event.audio);if(session!==s)return;if(ok&&s.phase==='listen'){s.listened=true;render();sound(voice('listen'));}}
 function choose(id){const s=session;if(!s||s.phase!=='listen'||!s.listened)return;const choice=s.choices.find(c=>c.id===id);if(!choice)return;
@@ -184,8 +264,8 @@ async function discoveryListen(){if(!challenge)return;const current=challenge;if
 function discoveryChoice(id){if(!challenge?.listened)return;const choice=challenge.choices.find(c=>c.id===id);if(!choice)return;if(choice.correct){const n=challenge.node,e=challenge.event;challenge=null;closeModal();startEvent(e.theme,{...e,context:e.contexts.find(c=>c.id===n.contextId)},n);}else{help('again');}}
 const levelNames={unseen:'还没开始',participated:'已参与，待观察',listening:'有听懂的证据',supported:'能在帮助下表达',independent:'有独立表达的证据',passed:'隔天换情境仍能表达'};
 const resultNames={independent:'独立表达',supported:'有帮助才表达',not_yet:'尚未观察到',unclear:'无法确定',device_error:'设备未完成'};
-function parentView(){const eligibility=alphabetEligibility(state),alert=speakingAlert(state);const records=effectiveEvidence(state).slice(-20).reverse();return `${header(true)}<main class="parent-view"><div class="parent-heading"><span class="eyebrow">陪伴手记</span><h1>听懂了，也愿意说。</h1><p>看实际表达的变化，不用通关次数代替学会。</p></div>${storageProblem?`<section class="parent-card"><h2>本机记录需要处理</h2><p>${esc(storageProblem)}</p><button class="secondary-button" data-action="export">导出原记录</button><p>暂未覆盖原数据。请保留导出文件后联系开发者处理。</p></section>`:''}${alert.active?`<section class="parent-card attention"><h2>换一种邀请方式</h2><p>${esc(alert.message)}</p><p>先让孩子指给你看，再由你示范一句；下次等一等，给孩子自己表达的机会。允许继续玩，但能力状态不会因此升级。</p></section>`:''}<div class="parent-grid">${GOALS.map(g=>{const st=goalStatus(state,g.id);return `<section class="parent-card"><h2>${g.name}</h2><p class="goal-level">${levelNames[st.level]}</p><div class="evidence-steps"><span class="${st.listening?'done':''}">听懂</span><span class="${st.supported?'done':''}">有帮助说</span><span class="${st.independent?'done':''}">自己说</span><span class="${st.retained?'done':''}">换情境说</span></div><p class="fine-print">家长确认独立 ${st.independentCount} 次 · 帮助下 ${st.supportedCount} 次${st.candidateCount?` · 机器候选 ${st.candidateCount} 次待确认`:''}</p></section>`;}).join('')}</div><section class="parent-card"><h2>一起做一次生活验收</h2><p>选熟悉的情境，先不播放答案。孩子可以说更短、意思合适的话。观察后如实记录；一次表现不等于稳定掌握。</p><div class="parent-actions">${EVENTS.map(e=>`<div class="checkup-option"><button class="secondary-button" data-checkup="${e.id}">${e.title} · 说</button><button class="icon-button" data-listening="${e.id}" aria-label="${e.title} · 听懂回访">${icon('ear')}</button></div>`).join('')}</div></section><section class="parent-card"><h2>语音与本机设置</h2><p>录音只供本次回听，离开互动即释放。学习记录只保存在这个浏览器，换设备不会自动同步。</p><div class="parent-actions"><button class="secondary-button" data-action="mic-settings">${prefs.mic?'录音已允许 · 查看':'允许本机录音'}</button><button class="secondary-button" data-action="recognition">${audio.speechReady()?'本地识别已就绪':'重试准备自动语音反馈'}</button><button class="secondary-button" data-action="export">导出学习记录</button></div><p class="fine-print">第一次录音会自动准备约 47 MB 的本机识别资源，下载后可离线识别。每次练习自动给出 0–3 颗词句匹配星，无需家长代判；星级不等于发音准确率。隔天换情境的稳定掌握，仍单独记录并可由家长核对。</p><p id="model-status" role="status"></p></section><section class="parent-card"><h2>慢慢打开的文字发现</h2><p>表达需要、请求帮助、邀请陪伴，分别要有跨日且换情境的家长确认。已达到 ${eligibility.passed.length} / ${eligibility.required.length} 项。</p>${!state.alphabet.enabled?`<button class="primary-button" data-action="enable-letters" ${eligibility.eligible?'':'disabled'}>开启独立文字探索区</button>`:`<p>${eligibility.eligible?'文字探索已开启':'补充核心能力观察后，继续文字探索。'} · 已收集 ${Object.keys(state.alphabet.letters).length} / 26 个符号</p>`}<p class="fine-print">集齐后，只有也取得跨日、换情境原句证据的短句才会显示拼写。这些是首版可调整的产品规则。</p></section><section class="parent-card"><h2>最近的观察</h2><p>可修正误点。原观察和修正历史都会保留。</p>${records.map(r=>`<div class="observation-row"><div><strong>${esc(EVENTS.find(e=>e.id===r.eventId).title)}</strong><p>${r.date} · ${r.kind==='listening'?'找图':resultNames[r.result]} · ${r.source==='parent'?'家长观察':'互动候选'}${r.helped?' · 有提示':''}${r.corrected?' · 已修正':''}</p></div>${r.kind==='speech'?`<button class="secondary-button" data-correct="${r.attemptId}">核对</button>`:''}</div>`).join('')||'<p>先和孩子玩一个生活事件，留下第一份观察。</p>'}</section><p class="fine-print">小芽英语 0.3 · ${esc(document.querySelector('meta[name="xiaoya-build"]')?.content||'开发中')} · 本机离线体验版</p></main>`;}
-function render(){renderGeneration++;app.innerHTML=`<div class="app-shell">${page==='event'?eventView():page==='house'?houseView():page==='parent'?parentView():page==='letters'?lettersView():page==='world'?worldView():homeView()}</div><div id="modal-root"></div>`;renderModal();}
+function parentView(){const eligibility=alphabetEligibility(state),alert=speakingAlert(state);const records=effectiveEvidence(state).slice(-20).reverse();return `${header(true)}<main class="parent-view"><div class="parent-heading"><span class="eyebrow">陪伴手记</span><h1>听懂了，也愿意说。</h1><p>看实际表达的变化，不用通关次数代替学会。</p></div>${storageProblem?`<section class="parent-card"><h2>本机记录需要处理</h2><p>${esc(storageProblem)}</p><button class="secondary-button" data-action="export">导出原记录</button><p>暂未覆盖原数据。请保留导出文件后联系开发者处理。</p></section>`:''}${alert.active?`<section class="parent-card attention"><h2>换一种邀请方式</h2><p>${esc(alert.message)}</p><p>先让孩子指给你看，再由你示范一句；下次等一等，给孩子自己表达的机会。允许继续玩，但能力状态不会因此升级。</p></section>`:''}<div class="parent-grid">${GOALS.map(g=>{const st=goalStatus(state,g.id);return `<section class="parent-card"><h2>${g.name}</h2><p class="goal-level">${levelNames[st.level]}</p><div class="evidence-steps"><span class="${st.listening?'done':''}">听懂</span><span class="${st.supported?'done':''}">有帮助说</span><span class="${st.independent?'done':''}">自己说</span><span class="${st.retained?'done':''}">换情境说</span></div><p class="fine-print">家长确认独立 ${st.independentCount} 次 · 帮助下 ${st.supportedCount} 次${st.candidateCount?` · 机器候选 ${st.candidateCount} 次待确认`:''}</p></section>`;}).join('')}</div><section class="parent-card"><h2>一起做一次生活验收</h2><p>选熟悉的情境，先不播放答案。孩子可以说更短、意思合适的话。观察后如实记录；一次表现不等于稳定掌握。</p><div class="parent-actions">${EVENTS.map(e=>`<div class="checkup-option"><button class="secondary-button" data-checkup="${e.id}">${e.title} · 说</button><button class="icon-button" data-listening="${e.id}" aria-label="${e.title} · 听懂回访">${icon('ear')}</button></div>`).join('')}</div></section><section class="parent-card"><h2>语音与本机设置</h2><p>录音只供本次回听，离开互动即释放。学习记录只保存在这个浏览器，换设备不会自动同步。</p><div class="parent-actions"><button class="secondary-button" data-action="mic-settings">${prefs.mic?'录音已允许 · 查看':'允许本机录音'}</button><button class="secondary-button" data-action="recognition">${audio.speechReady()?'本地识别已就绪':'重试准备自动语音反馈'}</button><button class="secondary-button" data-action="export">导出学习记录</button></div><p class="fine-print">第一次录音会自动准备约 47 MB 的本机识别资源，下载后可离线识别。每次练习自动给出 0–3 颗词句匹配星，无需家长代判；星级不等于发音准确率。隔天换情境的稳定掌握，仍单独记录并可由家长核对。</p><p id="model-status" role="status"></p></section><section class="parent-card"><h2>慢慢打开的文字发现</h2><p>表达需要、请求帮助、邀请陪伴，分别要有跨日且换情境的家长确认。已达到 ${eligibility.passed.length} / ${eligibility.required.length} 项。</p>${!state.alphabet.enabled?`<button class="primary-button" data-action="enable-letters" ${eligibility.eligible?'':'disabled'}>开启独立文字探索区</button>`:`<p>${eligibility.eligible?'文字探索已开启':'补充核心能力观察后，继续文字探索。'} · 已收集 ${Object.keys(state.alphabet.letters).length} / 26 个符号</p>`}<p class="fine-print">集齐后，只有也取得跨日、换情境原句证据的短句才会显示拼写。这些是首版可调整的产品规则。</p></section><section class="parent-card"><h2>最近的观察</h2><p>可修正误点。原观察和修正历史都会保留。</p>${records.map(r=>`<div class="observation-row"><div><strong>${esc(EVENTS.find(e=>e.id===r.eventId).title)}</strong><p>${r.date} · ${r.kind==='listening'?'找图':resultNames[r.result]} · ${r.source==='parent'?'家长观察':'互动候选'}${r.helped?' · 有提示':''}${r.corrected?' · 已修正':''}</p></div>${r.kind==='speech'?`<button class="secondary-button" data-correct="${r.attemptId}">核对</button>`:''}</div>`).join('')||'<p>先和孩子玩一个生活事件，留下第一份观察。</p>'}</section><p class="fine-print">小芽英语 ${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'开发中')} · ${esc(document.querySelector('meta[name="xiaoya-build"]')?.content||'开发中')} · 本机离线体验版</p></main>`;}
+function render(){renderGeneration++;app.innerHTML=`<div class="app-shell">${page==='story-launch'?storyLaunchView():page==='event'?eventView():page==='house'?houseView():page==='parent'?parentView():page==='letters'?lettersView():page==='world'?worldView():homeView()}</div><div id="modal-root"></div>`;renderModal();}
 function renderModal(){const root=document.querySelector('#modal-root');if(!root)return;if(!modal){root.innerHTML='';return;}let html='';const m=modal;
   if(m.type==='gate')html=`<h2>请交给陪伴的大人</h2><p>这里记录孩子真实的学习表现。</p><label for="parent-answer">${m.a} + ${m.b} =</label><input id="parent-answer" inputmode="numeric" autocomplete="off" aria-label="计算结果"><button class="primary-button" data-action="gate-submit">进入</button><button class="secondary-button" data-action="close">回到孩子的世界</button>`;
   if(m.type==='mic')html=`<h2>录下这一次声音</h2><p>点话筒开始，停顿后自动结束，也可再次点击结束。每次最长 12 秒。</p><p>录音只在当前页面内存临时回听，不上传。浏览器还会询问麦克风权限。</p><button class="primary-button" data-action="allow-mic">允许孩子使用本机麦克风</button><button class="secondary-button" data-action="disable-mic">暂不使用录音</button>`;
@@ -199,11 +279,13 @@ function exportState(){const blob=new Blob([storageProblem?rawState||storageProb
 async function recognition(){const el=document.querySelector('#model-status');if(el)el.textContent='准备本机识别资源，可继续浏览；请保持本页打开。';try{await audio.prepareRecognition(value=>{const target=document.querySelector('#model-status');if(target)target.textContent=typeof value==='string'?value:'正在准备本机识别…';});toast('本机识别已准备好，录音后会自动反馈词句匹配星级。');if(page==='parent')render();}catch{toast('识别资源没有准备完成，可重试。听、玩和亲子验收仍可使用。');}}
 const actions={
   home:()=>{navigate('home');sound(voice('next'));},house:()=>{navigate('house');sound(voice('house'));},world:()=>navigate('world'),letters:()=>navigate('letters'),
-  'start-guide':startGuide,'next-event':()=>{const e=nextEvent();startEvent(e.theme,e);sound(voice(session.phase==='listen'?'guide-hello':'speak'));},
+  'start-guide':startGuide,'next-event':()=>{const e=nextEvent();startEvent(e.theme,e);if(session.phase!=='story')sound(voice(session.phase==='listen'?'guide-hello':'speak'));},
   'guide-wave':guideWave,'guide-replay':guideReplay,'guide-gift':guideGift,'guide-place':guidePlace,'guide-skip':guideSkip,
   parent:()=>requireParent(()=>navigate('parent')),
-  help:()=>session&&(session.recording||session.waiting||session.phase==='request')?teach():session?.tutorial?guideNarration(guideVoice[session.guideStep]):help(session?session.context.id:page==='house'?'house':'welcome'),
-  sample,teach,'assessment-voice':assessmentVoice,'context-help':()=>session&&(session.recording||session.waiting||session.pendingClip||session.assessment)?teach():session&&help(session.context.id),record,'retry-assessment':retryAssessment,
+  help:()=>session?.event.id==='hello-goodbye'&&!session.tutorial?playStory(true):session&&(session.recording||session.waiting||session.phase==='request')?teach():session?.tutorial?guideNarration(guideVoice[session.guideStep]):help(session?session.context.id:page==='house'?'house':'welcome'),
+  'start-story':()=>{const e=EVENTS.find(e=>e.id==='hello-goodbye');startEvent(e.theme,e);if(session.phase!=='story')playStory();},
+  'story-replay':()=>playStory(),'story-help':()=>playStory(true),'story-continue':storyContinue,'story-audio':retryStoryAudio,
+  sample,teach,'assessment-voice':assessmentVoice,'context-help':()=>session?.event.id==='hello-goodbye'&&!session.tutorial?playStory(true):session&&(session.recording||session.waiting||session.pendingClip||session.assessment)?teach():session&&help(session.context.id),record,'retry-assessment':retryAssessment,
   replay:()=>audio.replayClip().catch(()=>toast('这次录音已释放，请重新录制。')),
   observe:()=>observation(),watch,finish,'take-reward':()=>{navigate('house');sound(voice('house'));},
   'place-center':()=>selectedItem&&putItem(selectedItem,.5,.65),
@@ -223,8 +305,8 @@ app.addEventListener('click',event=>{if(drag?.moved)return;const b=event.target.
   else if(b.dataset.item){selectedItem=b.dataset.item;render();}
   else if(b.dataset.observation)submitObservation(b.dataset.observation);
   else if(b.dataset.correct)observation(b.dataset.correct);
-  else if(b.dataset.checkup){const e=EVENTS.find(x=>x.id===b.dataset.checkup);const pick=selectEvent(state,e.theme,today());startEvent(e.theme,{...e,context:pick.id===e.id?pick.context:e.contexts[state.completions[e.id]?1:0]});session.phase='request';session.helped=false;render();}
-  else if(b.dataset.listening){const e=EVENTS.find(x=>x.id===b.dataset.listening);const prior=effectiveEvidence(state).filter(r=>r.eventId===e.id&&r.kind==='listening').slice(-1)[0];const context=e.contexts.find(c=>c.id!==prior?.contextId)||e.contexts[0];startEvent(e.theme,{...e,context});session.phase='listen';session.listenOnly=true;session.helped=false;render();}
+  else if(b.dataset.checkup){const e=EVENTS.find(x=>x.id===b.dataset.checkup);const pick=selectEvent(state,e.theme,today());startEvent(e.theme,{...e,context:pick.id===e.id?pick.context:e.contexts[state.completions[e.id]?1:0]},null,false,'speech');}
+  else if(b.dataset.listening){const e=EVENTS.find(x=>x.id===b.dataset.listening);const prior=effectiveEvidence(state).filter(r=>r.eventId===e.id&&r.kind==='listening').slice(-1)[0];const context=e.contexts.find(c=>c.id!==prior?.contextId)||e.contexts[0];startEvent(e.theme,{...e,context},null,false,'listening');}
   else if(b.dataset.letter)startLetter(b.dataset.letter);
   else if(b.dataset.discoveryChoice)discoveryChoice(b.dataset.discoveryChoice);
   else if(b.dataset.phrase)sound(EVENTS.find(e=>e.id===b.dataset.phrase).audio);
@@ -237,7 +319,7 @@ app.addEventListener('pointercancel',()=>{drag=null;render();});
 document.addEventListener('keydown',event=>{if(modal&&event.key==='Escape'){closeModal();return;}if(modal&&event.key==='Tab'){const list=[...document.querySelectorAll('.modal-card button,.modal-card input')].filter(e=>!e.disabled);if(!list.length)return;const first=list[0],last=list.slice(-1)[0];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}if(modal?.type==='gate'&&event.key==='Enter')actions['gate-submit']();});
 function suspend(){
   audio.releaseAudioSession();
-  if(session){const s=session;s.speechGeneration++;s.recording=false;s.waiting=false;s.hasClip=false;s.assessment=null;s.pendingClip=null;s.teaching=false;s.guideGeneration++;s.guideBusy=false;clearTimeout(s.guideTimer);
+  if(session){const s=session;cancelStory(s);s.speechGeneration++;s.recording=false;s.waiting=false;s.hasClip=false;s.assessment=null;s.pendingClip=null;s.teaching=false;s.guideGeneration++;s.guideBusy=false;clearTimeout(s.guideTimer);
     if(s.tutorial){s.allowSkip=true;
       if(s.guideStep==='replay'){s.guideStep='speak';s.phase='request';s.guideNeedsSample=true;savePrefs({...prefs,guideStep:'speak'});}
     }

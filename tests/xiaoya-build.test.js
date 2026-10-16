@@ -23,6 +23,9 @@ async function fixture(t) {
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), 'replacement voice bytes');
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
   const result = await buildXiaoya({root});
+  // The outer build copies public media; it must stay outside the eager shell.
+  await fs.mkdir(path.join(root, 'dist/xiaoya/stories'), {recursive:true});
+  await fs.writeFile(path.join(root, 'dist/xiaoya/stories/goodbye-v2.webp'), 'public story bytes');
   return {root, ...result, output:path.join(root, 'dist/xiaoya')};
 }
 
@@ -86,7 +89,7 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
   assert.match(await fs.readFile(path.join(built.output, `releases/${built.build}/audio.js`), 'utf8'), /import\('\.\/shared\/speech-local.js'\)/);
   assert.ok(built.core.includes(`./releases/${built.build}/shared/speech-download.js`));
-  assert.ok(built.core.every(file => !file.includes('model-en-us') && !file.includes('vosk-0.0.8') && !file.endsWith('.mp3')));
+  assert.ok(built.core.every(file => !file.includes('model-en-us') && !file.includes('vosk-0.0.8') && !/\.(mp3|webp)$/.test(file)));
   assert.equal(await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
   await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'private.log')), {code:'ENOENT'});
@@ -116,6 +119,17 @@ test('worker refuses activation when one core response is from another build', a
   const sw = await worker(await fixture(t), {corrupt:true});
   await assert.rejects(sw.lifecycle('install'), /版本不一致/);
   assert.equal(sw.skipped(), 0);
+});
+
+test('story image loads on demand and remains available offline under a nested host', async t => {
+  const sw = await worker(await fixture(t));
+  await sw.lifecycle('install');
+  const url = new URL('stories/goodbye-v2.webp', sw.scope);
+  assert.ok(!sw.fetched.includes(url.href), 'Installing the shell must not download story art');
+  assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'public story bytes');
+  sw.setOnline(false);
+  assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'public story bytes');
+  assert.equal(sw.fetched.filter(value => value === url.href).length, 1);
 });
 
 test('downloaded original and new help clips play offline including byte ranges', async t => {
