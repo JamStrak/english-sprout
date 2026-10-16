@@ -3,6 +3,7 @@ import {prepareSamples} from './speech-signal.js';
 let playback = null;
 let capture = null;
 let captureGeneration = 0;
+let preparedCapture = null;
 let clip = null;
 let speechModule = null;
 let preparing = null;
@@ -61,15 +62,57 @@ export function supportsRecording() {
   return Boolean(window.isSecureContext && navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
 }
 
+const microphone = () => navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+const liveStream = stream => stream?.getTracks().some(track => track.readyState === 'live');
+function stopStream(stream) { stream?.getTracks().forEach(track => { if (track.readyState !== 'ended') track.stop(); }); }
+function releasePrepared(current = preparedCapture) {
+  if (!current) return;
+  if (preparedCapture === current) preparedCapture = null;
+  current.cancelled = true; clearTimeout(current.timeout); stopStream(current.stream);
+}
+
+// Open the device only after both the parent's opt-in (caller) and an existing
+// browser grant. No recorder, audio buffer or recognition starts during warmup.
+export function prepareRecording() {
+  if (!supportsRecording() || document.hidden || !navigator.permissions?.query || capture) return Promise.resolve(false);
+  if (preparedCapture) return preparedCapture.promise.then(stream => Boolean(stream));
+  const current = {stream:null,requested:false,cancelled:false,timeout:null,promise:null};
+  preparedCapture = current;
+  current.timeout = setTimeout(() => releasePrepared(current), 20000);
+  current.promise = (async () => {
+    try {
+      const permission = await navigator.permissions.query({name:'microphone'});
+      if (current.cancelled || document.hidden || permission.state !== 'granted') return null;
+      current.requested = true;
+      const stream = await microphone();
+      if (current.cancelled || document.hidden) { stopStream(stream); return null; }
+      current.stream = stream;
+      return stream;
+    } catch { return null; }
+  })().then(stream => {
+    if (!stream) releasePrepared(current);
+    return stream;
+  });
+  return current.promise.then(stream => Boolean(stream));
+}
+
+function cancelMeterStart(current) {
+  clearTimeout(current.meterTimer);
+  if (current.meterFrame !== null) window.cancelAnimationFrame?.(current.meterFrame);
+  current.meterTimer = current.meterFrame = null;
+}
+
 function closeCapture(current, closeContext = true) {
+  cancelMeterStart(current);
   clearInterval(current.interval); clearTimeout(current.timeout); clearTimeout(current.readyTimeout);
-  current.stream?.getTracks().forEach(track => track.stop());
+  releasePrepared(current.warming); stopStream(current.stream);
   if (closeContext && current.context) {
     try { Promise.resolve(current.context.close()).catch(() => {}); } catch {}
   }
 }
 
-export function cancelRecording() {
+export function cancelRecording({keepPrepared = false} = {}) {
+  if (!keepPrepared) releasePrepared();
   captureGeneration++;
   const old = capture; capture = null;
   if (old) {
@@ -85,9 +128,10 @@ export function cancelRecording() {
 export function finishRecording() {
   if (!capture) return;
   if (!capture.started) { cancelRecording(); return; }
+  cancelMeterStart(capture);
   clearInterval(capture.interval); clearTimeout(capture.timeout);
   try { if (capture.recorder.state !== 'inactive') capture.recorder.stop(); }
-  finally { capture?.stream.getTracks().forEach(track => track.stop()); }
+  finally { stopStream(capture?.stream); }
 }
 
 async function recordedVoice(current, blob) {
@@ -135,11 +179,45 @@ function watchVoice(current, onLevel) {
   });
 }
 
+function scheduleVoiceMeter(current, onLevel) {
+  const Context = window.AudioContext || window.webkitAudioContext;
+  const active = () => capture === current && current.started && current.recorder.state === 'recording';
+  if (!Context || !active()) return;
+  const start = () => {
+    current.meterTimer = null;
+    if (!active()) return;
+    try {
+      const context = new Context();
+      if (!active()) { Promise.resolve(context.close()).catch(() => {}); return; }
+      current.context = context;
+      // A delayed resume may remain suspended without user activation. The
+      // meter is optional; recording and whole-clip decoding never await it.
+      current.contextReady = Promise.resolve(context.resume()).then(() => true, () => false);
+      watchVoice(current, onLevel);
+    } catch { /* Capture and recognition still work without a live meter. */ }
+  };
+  const afterPaint = () => {
+    current.meterFrame = null;
+    if (active()) current.meterTimer = setTimeout(start, 0);
+  };
+  // Some devices synchronously block in new AudioContext(). Give the ready
+  // cue a paint opportunity before constructing this optional analyser.
+  if (window.requestAnimationFrame) current.meterFrame = window.requestAnimationFrame(afterPaint);
+  else current.meterTimer = setTimeout(start, 0);
+}
+
 export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish = () => {}} = {}) {
   if (!supportsRecording()) return Promise.reject(new Error('当前浏览器不能录音。可继续亲子互动；手机录音需要 HTTPS 网页。'));
-  cancelRecording(); stopSound(); clearClip();
+  cancelRecording({keepPrepared:true}); stopSound(); clearClip();
+  const warming = preparedCapture;
+  preparedCapture = null;
+  if (warming) {
+    clearTimeout(warming.timeout);
+    // A slow/unsupported permission query must not delay an explicit click.
+    if (!warming.requested) releasePrepared(warming);
+  }
   const generation = captureGeneration;
-  const current = {recorder:null,stream:null,chunks:[],started:false,start:0,lastVoice:0,voiced:0,samples:0,context:null,interval:null,timeout:null,readyTimeout:null};
+  const current = {recorder:null,stream:null,warming,chunks:[],started:false,start:0,lastVoice:0,voiced:0,samples:0,context:null,meterFrame:null,meterTimer:null,interval:null,timeout:null,readyTimeout:null};
   let readySettled = false;
   const started = new Promise((resolve, reject) => {
     current.settleReady = (value, error) => {
@@ -149,15 +227,6 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
     };
   });
   capture = current;
-  // Resume from the user gesture, in parallel with the permission request.
-  // MediaRecorder does not depend on Web Audio being present or resumed.
-  const Context = window.AudioContext || window.webkitAudioContext;
-  if (Context) {
-    try {
-      current.context = new Context();
-      current.contextReady = Promise.resolve(current.context.resume()).then(() => true, () => false);
-    } catch { current.contextReady = Promise.resolve(false); }
-  }
   const failed = error => {
     if (capture !== current || generation !== captureGeneration) return;
     current.settleReady(false, error);
@@ -165,9 +234,13 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
     cancelRecording();
     if (wasStarted) onFinish({url:null,hasVoice:false,voiceActivityAvailable:false,error:'录音没有完成，可重试或请家长观察。'});
   };
+  // Cover device acquisition too: getUserMedia can remain pending forever.
+  current.readyTimeout = setTimeout(() => failed(new Error('话筒启动较慢，请再试一次。')), 10000);
   (async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation:true, noiseSuppression:true}});
-    if (generation !== captureGeneration || capture !== current) { stream.getTracks().forEach(t => t.stop()); return; }
+    let stream = warming?.requested && !warming.cancelled ? await warming.promise : null;
+    if (generation !== captureGeneration || capture !== current) { stopStream(stream); return; }
+    if (!liveStream(stream)) { stopStream(stream); stream = await microphone(); }
+    if (generation !== captureGeneration || capture !== current) { stopStream(stream); return; }
     current.stream = stream;
     const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t));
     const recorder = new MediaRecorder(stream, type ? {mimeType:type} : {});
@@ -177,8 +250,10 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
       if (capture !== current || generation !== captureGeneration || current.started) return;
       current.started = true; current.start = performance.now();
       current.timeout = setTimeout(() => { if (capture === current) finishRecording(); }, 12000);
-      watchVoice(current, onLevel);
-      try { onReady(); current.settleReady(true); } catch (error) { failed(error); }
+      try {
+        onReady(); current.settleReady(true);
+        scheduleVoiceMeter(current, onLevel);
+      } catch (error) { failed(error); }
     };
     recorder.onstop = async () => {
       if (capture !== current || generation !== captureGeneration) return;
@@ -194,7 +269,6 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
       onFinish({url:clip,...voice,duration});
     };
     recorder.onerror = () => failed(new Error('录音没有完成，可重试或请家长观察。'));
-    current.readyTimeout = setTimeout(() => failed(new Error('话筒启动较慢，请再试一次。')), 10000);
     recorder.start(200);
   })().catch(failed);
   return started;

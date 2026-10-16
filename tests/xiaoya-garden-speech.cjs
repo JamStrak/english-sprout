@@ -185,7 +185,7 @@ async function captureCandidate(expectedCount){
   await page.locator('[data-action="next-event"]').waitFor();
   report.version=await page.locator('meta[name="xiaoya-version"]').getAttribute('content');
   report.build=await page.locator('meta[name="xiaoya-build"]').getAttribute('content');
-  assert.equal(report.version,'0.6.0','Run against the built Whisper comic/garden v0.6 app');
+  assert.equal(report.version,'0.6.1','Run against the built Whisper comic/garden v0.6.1 app');
   const servedAssets=await page.evaluate(async()=>{
     const script=document.querySelector('script[type="module"][src]').src;
     const assets=await import(new URL('speech-assets.js',script));

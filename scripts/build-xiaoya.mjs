@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.6.0';
+export const XIAOYA_VERSION = '0.6.1';
 const MODULES = ['app.js', 'experience.js', 'stories.js', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');

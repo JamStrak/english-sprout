@@ -26,7 +26,7 @@ async function fixture(options={}){
       Object.defineProperty(Array.prototype,'at',{configurable:true,value:undefined});
     }
     if(denyMic){localStorage.setItem(PREFS,JSON.stringify({mic:true}));navigator.mediaDevices.getUserMedia=async()=>{qa.micCalls++;throw new DOMException('Test permission denied','NotAllowedError');};}
-    window.qa={errors:[],audios:[],plays:[],frames:[],hold:null,held:null,micCalls:0};
+    window.qa={errors:[],audios:[],plays:[],frames:[],chimes:[],hold:null,held:null,micCalls:0};
     window.addEventListener('error',event=>qa.errors.push(event.message));
     window.addEventListener('unhandledrejection',event=>qa.errors.push(String(event.reason)));
     const NativeAudio=window.Audio;
@@ -41,6 +41,15 @@ async function fixture(options={}){
       audio.addEventListener('error',()=>entry.error=true);
       return audio;
     };window.Audio.prototype=NativeAudio.prototype;
+    const contextType=window.AudioContext||window.webkitAudioContext;
+    if(contextType){
+      const createOscillator=contextType.prototype.createOscillator;
+      contextType.prototype.createOscillator=function(...args){
+        const oscillator=createOscillator.apply(this,args),start=oscillator.start;
+        oscillator.start=function(...args){qa.chimes.push({frequency:oscillator.frequency.value,time:performance.now()});return start.apply(this,args);};
+        return oscillator;
+      };
+    }
     new MutationObserver(()=>{
       const element=document.querySelector('main[data-phase="story"] [data-story-frame]');
       if(!element)return;
@@ -107,6 +116,47 @@ async function seedRounds(p,count){
   },{key:GARDEN,count});
   await p.reload();await p.locator('main.home-view').waitFor();
 }
+async function seedGrownGarden(p,{plants=3,extraRounds=1}={}){
+  await p.evaluate(async({key,plants,extraRounds})=>{
+    const m=await import(new URL('garden.js',document.querySelector('script[type="module"][src]').src));
+    let state=m.createGarden();const ids=['food-water','play-box','hello-goodbye'];
+    for(let i=0;i<plants+extraRounds;i++){
+      state=m.rewardRound(state,{roundId:`grown-fixture-${i}`,eventId:ids[i%3],date:'2026-10-16'});
+      if(i<plants){state=m.plantSeed(m.openSeedPack(state));const id=state.plants[state.plants.length-1].id;state=m.waterPlant(m.waterPlant(state,id),id);}
+    }
+    localStorage.setItem(key,JSON.stringify(state));
+  },{key:GARDEN,plants,extraRounds});
+  await p.reload();await p.locator('main.home-view').waitFor();
+}
+async function gardenPrompts(p){return p.evaluate(()=>qa.plays.filter(x=>/\/garden-(open-pack|seed|water|bloom|next)\.mp3(?:\?|$)/.test(x.url)));}
+async function noAutomaticGardenPrompt(p){
+  // Real audio is preloaded locally. Allow an accidental automatic play to surface.
+  await p.waitForTimeout(450);assert.equal((await gardenPrompts(p)).length,0,'Experienced gardeners must not hear an automatic long instruction after each action');
+}
+async function neutralPendingSeed(p,existing){
+  const seed=p.locator('.seed-reveal');assert.equal(await seed.count(),1);
+  assert.equal(await seed.getAttribute('aria-hidden'),'true');
+  assert.equal(await seed.locator('button,[data-action],.garden-plant,.plant-art').count(),0,'The revealed seed contains no interactive pot or grown-flower preview');
+  assert.equal(await seed.getAttribute('data-action'),null);assert.notEqual(await seed.evaluate(e=>e.tagName),'BUTTON');
+  assert.equal(await seed.locator('svg').count(),1,'Only the neutral seed is visible, with no second flower or pot illustration');
+  assert(await seed.evaluate(async e=>{
+    const m=await import(new URL('garden-art.js',document.querySelector('script[type="module"][src]').src));
+    const expected=document.createElement('div');expected.innerHTML=m.seedArt();
+    return e.querySelector('svg').outerHTML===expected.querySelector('svg').outerHTML;
+  }),'The pending seed keeps its neutral color instead of revealing the hidden flower variety');
+  assert.equal(await p.locator('main [data-primary][data-action="plant"]:enabled').count(),1,'The empty planting pot is the single primary planting entry');
+  assert.equal(await p.locator('main [data-action="plant"]').count(),1);
+  assert.equal(await p.locator('[data-action="seed-voice"]').count(),0,'The seed does not compete with the planting button');
+  assert.equal(await p.locator('[data-plant]').count(),existing);
+  assert.equal(await p.locator('[data-plant]:enabled').count(),0,'Existing pots cannot intercept a pending-seed planting tap');
+}
+async function setPageHidden(p,hidden){
+  await p.evaluate(hidden=>{
+    Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});
+    Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>hidden?'hidden':'visible'});
+    document.dispatchEvent(new Event('visibilitychange'));
+  },hidden);
+}
 async function assertLayout(p){
   // Measure resting touch targets after finite entrance effects, not an intermediate scale.
   await p.locator('main').evaluate(async element=>{
@@ -125,7 +175,7 @@ async function assertLayout(p){
   assert(await primary.evaluate(e=>{const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return hit===e||e.contains(hit);}), 'Main action is occluded');
   assert(!/[a-zA-Z]/.test(await p.locator('#app').innerText()),'Child flow has visible English letters');
 }
-async function diagnostic(p){return p.evaluate(({GARDEN,STATE,VOICE})=>({build:document.querySelector('meta[name="xiaoya-build"]')?.content,phase:document.querySelector('main[data-phase]')?.dataset.phase,next:document.querySelector('main[data-garden-next]')?.dataset.gardenNext,frame:document.querySelector('[data-story-frame]')?.dataset.storyFrame,frames:qa.frames,plays:qa.plays,audios:qa.audios.map(x=>({url:x.url,ended:x.ended,error:x.error,paused:x.audio.paused})),errors:qa.errors,garden:JSON.parse(localStorage.getItem(GARDEN)||'null'),learning:localStorage.getItem(STATE),voice:localStorage.getItem(VOICE)}),{GARDEN,STATE,VOICE}).catch(error=>({error:error.message}));}
+async function diagnostic(p){return p.evaluate(({GARDEN,STATE,VOICE})=>({build:document.querySelector('meta[name="xiaoya-build"]')?.content,phase:document.querySelector('main[data-phase]')?.dataset.phase,next:document.querySelector('main[data-garden-next]')?.dataset.gardenNext,guidance:document.querySelector('main[data-guidance]')?.dataset.guidance,frame:document.querySelector('[data-story-frame]')?.dataset.storyFrame,frames:qa.frames,plays:qa.plays,chimes:qa.chimes,audios:qa.audios.map(x=>({url:x.url,ended:x.ended,error:x.error,paused:x.audio.paused})),errors:qa.errors,garden:JSON.parse(localStorage.getItem(GARDEN)||'null'),learning:localStorage.getItem(STATE),voice:localStorage.getItem(VOICE)}),{GARDEN,STATE,VOICE}).catch(error=>({error:error.message}));}
 async function test(name,fn,options){
   if(filter&&!filter.test(name))return;let f;
   try{
@@ -227,6 +277,7 @@ async function test(name,fn,options){
     await click(p,'home');assert.equal(await p.locator('.is-guided').count(),0,'Leaving the prompt clears its highlight');
     await seedRounds(p,1);
     await p.evaluate(()=>{qa.hold='garden-open-pack.mp3';qa.held=null;});await openGarden(p,'pack');
+    assert.equal(await p.locator('main.garden-view').getAttribute('data-guidance'),'new','New gardeners still receive immediate spoken guidance');
     await heldGuide(p,'garden-open-pack.mp3',['pack']);
     assert.equal(await p.locator('button [data-icon="ear"]').count(),0,'Garden guidance has no English example ear');
     assert.equal(await p.locator('[data-action="help"]').count(),1,'Garden has one general help entry');
@@ -235,6 +286,73 @@ async function test(name,fn,options){
     await p.evaluate(()=>{qa.hold='garden-water.mp3';qa.held=null;});await click(p,'plant');await heldGuide(p,'garden-water.mp3',['water']);
     await p.screenshot({animations:'disabled',path:path.join(out,'garden-one-help-guidance.png'),fullPage:true});
     await untouchedLearning(p);
+  });
+  await test('Three planted flowers make garden actions quiet while rewards, neutral seeds and explicit help still work',async({p})=>{
+    await seedGrownGarden(p);await openGarden(p,'pack');
+    assert.equal(await p.locator('main.garden-view').getAttribute('data-guidance'),'quiet');
+    assert.equal(await p.locator('main .tap-cue:visible').count(),0,'Experienced gardeners do not receive a persistent pointing hand');
+    await noAutomaticGardenPrompt(p);
+    const before=await garden(p),chimes=await p.evaluate(()=>qa.chimes.length);
+    await click(p,'pack');await p.locator('main[data-garden-next="plant"]').waitFor();await neutralPendingSeed(p,3);await noAutomaticGardenPrompt(p);
+    const pending=await garden(p);assert.deepEqual([pending.shells,pending.water,pending.seedPacksOpened],[0,2,4]);
+    assert.equal(pending.pendingSeed.id,'seed-4');assert.equal(pending.plants.length,3);
+    await click(p,'plant');await p.locator('main[data-garden-next="water"]').waitFor();await noAutomaticGardenPrompt(p);
+    await click(p,'water');await noAutomaticGardenPrompt(p);await click(p,'water');await p.locator('main[data-garden-next="learn"]').waitFor();await noAutomaticGardenPrompt(p);
+    const after=await garden(p);assert.deepEqual([after.shells,after.water,after.plants.length,after.plants[3].waterings],[0,0,4,2]);
+    assert.deepEqual(after.rounds,before.rounds,'Garden care never creates an extra participation reward');
+    assert.equal(after.pendingSeed,null);assert(await p.evaluate(n=>qa.chimes.length>n,chimes),'Quiet gardening retains real short oscillator feedback');
+    const beforeBloom=await p.evaluate(()=>qa.chimes.length);
+    await p.locator('[data-plant="plant-1"]').click();
+    await p.locator('[data-plant="plant-1"].just-watered').waitFor();await p.locator('.bloom-sparkles').waitFor();
+    assert(await p.evaluate(n=>qa.chimes.length>=n+4,beforeBloom),'A mature flower responds with the complete short bloom chime');
+    assert.deepEqual(await garden(p),after,'Touching a mature flower cannot charge water or create another reward');await noAutomaticGardenPrompt(p);
+    await p.evaluate(()=>{qa.hold='garden-next.mp3';qa.held=null;});await click(p,'help');
+    await heldGuide(p,'garden-next.mp3',['next-event']);
+    assert.equal(await p.locator('main .tap-cue:visible').count(),1,'Explicit help restores the pointing cue for its spoken action');
+    await p.screenshot({animations:'disabled',path:path.join(out,'quiet-garden-explicit-help-390.png'),fullPage:true});await untouchedLearning(p);
+  });
+  await test('Quiet garden waits a real 15 seconds after activity, reminds once, and rearms only after new activity',async({p})=>{
+    await seedGrownGarden(p);await openGarden(p,'pack');
+    const entered=await p.evaluate(()=>performance.now());
+    await p.waitForTimeout(8000);await p.locator('[data-plant="plant-1"]').click();const activity=await p.evaluate(()=>performance.now());
+    await p.waitForTimeout(8000);assert.equal((await gardenPrompts(p)).length,0,'Activity postpones the original entry deadline instead of leaving two timers');
+    await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/garden-open-pack.mp3')),null,{timeout:12000});
+    let prompts=await gardenPrompts(p);assert.equal(prompts.length,1);
+    assert(prompts[0].time-entered>=22500,'The original 15-second timer did not fire after activity');
+    assert(prompts[0].time-activity>=14700,`Reminder fired before 15 seconds of actual inactivity: ${prompts[0].time-activity} ms`);
+    await p.waitForTimeout(16500);assert.equal((await gardenPrompts(p)).length,1,'One uninterrupted idle period produces only one reminder');
+    await p.locator('main [data-primary]').focus();await p.keyboard.press('Shift');const nextActivity=await p.evaluate(()=>performance.now());
+    await p.waitForFunction(()=>qa.plays.filter(x=>x.url.endsWith('/garden-open-pack.mp3')).length===2,null,{timeout:20000});
+    prompts=await gardenPrompts(p);assert(prompts[1].time-nextActivity>=14700,'The next idle reminder waits another complete inactivity period');
+    assert.equal(prompts.length,2);assert.deepEqual([(await garden(p)).shells,(await garden(p)).plants.length],[3,3]);await untouchedLearning(p);
+  });
+  await test('Leaving a quiet garden cancels its pending idle reminder',async({p})=>{
+    await seedGrownGarden(p);await openGarden(p,'pack');await p.waitForTimeout(1000);
+    await click(p,'home');await p.locator('main.home-view').waitFor();await p.waitForTimeout(16000);
+    assert.equal((await gardenPrompts(p)).length,0,'A garden reminder must not play over the home screen');
+    assert.equal(await p.locator('.is-guided').count(),0);await untouchedLearning(p);
+  });
+  await test('A parent modal cancels quiet garden idle guidance and closing it starts a fresh idle period',async({p})=>{
+    await seedGrownGarden(p);await openGarden(p,'pack');await p.waitForTimeout(1000);
+    await click(p,'parent');await p.locator('[role="dialog"]').waitFor();await p.waitForTimeout(16000);
+    assert.equal((await gardenPrompts(p)).length,0,'The pending child reminder cannot talk across the parent gate');
+    await click(p,'close');await p.locator('[role="dialog"]').waitFor({state:'detached'});const closed=await p.evaluate(()=>performance.now());
+    await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/garden-open-pack.mp3')),null,{timeout:20000});
+    const prompts=await gardenPrompts(p);assert.equal(prompts.length,1);assert(prompts[0].time-closed>=14700,'Closing a modal does not deliver an already-expired reminder');
+    await p.evaluate(()=>{qa.hold='garden-open-pack.mp3';qa.held=null;});await click(p,'help');await heldGuide(p,'garden-open-pack.mp3',['pack']);
+    await click(p,'parent');await p.locator('[role="dialog"]').waitFor();
+    assert(await p.evaluate(()=>qa.held.audio.paused&&qa.held.audio.getAttribute('src')===null),'Opening the parent gate also stops an already-started child reminder');
+    await untouchedLearning(p);
+  });
+  await test('Hidden and pagehide lifecycle signals cancel garden reminders; returning visible starts a fresh idle period',async({p})=>{
+    await seedGrownGarden(p);await openGarden(p,'pack');await p.waitForTimeout(1000);
+    await setPageHidden(p,true);await p.waitForTimeout(16000);
+    assert.equal((await gardenPrompts(p)).length,0,'A hidden page cannot start a new garden voice');
+    await setPageHidden(p,false);const shown=await p.evaluate(()=>performance.now());
+    await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/garden-open-pack.mp3')),null,{timeout:20000});
+    const prompts=await gardenPrompts(p);assert.equal(prompts.length,1);assert(prompts[0].time-shown>=14700);
+    await p.locator('main [data-primary]').focus();await p.keyboard.press('Shift');await p.evaluate(()=>window.dispatchEvent(new Event('pagehide')));await p.waitForTimeout(16000);
+    assert.equal((await gardenPrompts(p)).length,1,'Pagehide cancels a rearmed idle reminder');await untouchedLearning(p);
   });
   await test('Missing story artwork cannot advance or reward; replay recovers after the asset returns',async({c,p})=>{
     const target=/\/xiaoya\/stories\/water-v1\.webp(?:\?.*)?$/;await c.route(target,r=>r.abort('failed'));
@@ -302,6 +420,44 @@ async function test(name,fn,options){
     await click(p,'finish');await p.locator('.parent-view').waitFor();
     await openNeutralCheckup('food-water');assert.equal(await garden(p),null,'Assisted checkups do not award participation currency');
   });
+  await test('Fourth mature flower can be reached by touch scrolling and tapped at 320 pixels without changing rewards',async({c,p})=>{
+    await seedGrownGarden(p,{plants:4,extraRounds:0});await openGarden(p,'learn');
+    const before=await garden(p),grid=p.locator('.garden-plants');
+    const metrics=await grid.evaluate(e=>({overflow:getComputedStyle(e).overflowY,scrollHeight:e.scrollHeight,clientHeight:e.clientHeight,scrollTop:e.scrollTop}));
+    assert.equal(metrics.overflow,'auto');assert(metrics.scrollHeight>metrics.clientHeight,'Four flowers overflow only the internal garden grid');
+    assert.equal(metrics.scrollTop,0);
+    const box=await grid.boundingBox(),x=box.x+box.width/2,start=box.y+box.height-16,end=box.y+16;
+    const input=await c.newCDPSession(p);
+    try{
+      await input.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y:start}]});
+      for(let step=1;step<=8;step++){
+        await input.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:start+(end-start)*step/8}]});
+        await p.waitForTimeout(35);
+      }
+      await input.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }finally{await input.detach();}
+    await p.waitForFunction(()=>document.querySelector('.garden-plants').scrollTop>0);
+    // Allow native touch inertia to settle before selecting the visible fourth pot.
+    await p.waitForTimeout(600);
+    const last=p.locator('[data-plant="plant-4"]');
+    const fourthVisible=()=>last.evaluate(e=>{const r=e.getBoundingClientRect(),g=e.closest('.garden-plants').getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.top>=g.top&&r.bottom<=g.bottom&&(hit===e||e.contains(hit));});
+    assert(await fourthVisible(),'The fourth flower is fully visible and its center is genuinely tappable after a swipe');
+    const position=await grid.evaluate(e=>e.scrollTop);
+    await p.screenshot({animations:'disabled',path:path.join(out,'quiet-fourth-flower-scrolled-320.png'),fullPage:true});
+    const target=await last.boundingBox(),chimes=await p.evaluate(()=>qa.chimes.length);
+    await p.touchscreen.tap(target.x+target.width/2,target.y+target.height/2);
+    await p.locator('[data-plant="plant-4"].just-watered').waitFor();await p.locator('.bloom-sparkles').waitFor();
+    assert(await p.evaluate(n=>qa.chimes.length>=n+4,chimes),'Touching the fourth flower triggers the bloom chime');
+    assert.deepEqual(await garden(p),before,'A mature flower tap changes no saved garden state or rewards');
+    assert(Math.abs(await grid.evaluate(e=>e.scrollTop)-position)<=2,'The bloom render preserves the internal garden scroll position');
+    assert(await fourthVisible(),'The flower that was just tapped remains visible during its feedback');
+    await noAutomaticGardenPrompt(p);await untouchedLearning(p);
+    await p.screenshot({animations:'disabled',path:path.join(out,'quiet-fourth-flower-after-tap-320.png'),fullPage:true});
+    await p.locator('[data-plant="plant-4"].just-watered').waitFor({state:'detached'});
+    assert(Math.abs(await grid.evaluate(e=>e.scrollTop)-position)<=2,'Ending bloom feedback also preserves the scroll position');
+    assert(await fourthVisible(),'The fourth flower stays visible when its temporary feedback ends');
+    assert.deepEqual(await garden(p),before);await untouchedLearning(p);
+  },{viewport:{width:320,height:568},isMobile:true,hasTouch:true});
   for(const [width,height,reducedMotion] of [[320,568,'no-preference'],[390,844,'no-preference'],[320,568,'reduce']])await test(`Story and growing garden fit ${width}x${height}, motion ${reducedMotion}`,async({p})=>{
     await assertLayout(p);await start(p);await assertLayout(p);await throughStory(p);await assertLayout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`story-${width}-${reducedMotion}.png`),fullPage:true});
@@ -316,6 +472,14 @@ async function test(name,fn,options){
       assert.equal(moving,0,'Reduced motion disables continuing decorative animation');
     }
     await untouchedLearning(p);await p.screenshot({animations:'disabled',path:path.join(out,`garden-${width}-${reducedMotion}.png`),fullPage:true});
+    await seedGrownGarden(p);await openGarden(p,'pack');await assertLayout(p);
+    assert.equal(await p.locator('main.garden-view').getAttribute('data-guidance'),'quiet');
+    await click(p,'pack');await neutralPendingSeed(p,3);await assertLayout(p);
+    await p.screenshot({animations:'disabled',path:path.join(out,`quiet-pending-seed-${width}-${reducedMotion}.png`),fullPage:true});
+    await click(p,'plant');await click(p,'water');await click(p,'water');await assertLayout(p);
+    await p.locator('[data-plant="plant-1"]').click();await p.locator('.bloom-sparkles').waitFor();await assertLayout(p);
+    if(reducedMotion==='reduce')assert.equal(await p.locator('main').evaluate(e=>e.getAnimations({subtree:true}).filter(a=>a.playState==='running'&&Number(a.effect?.getTiming().duration)>20).length),0,'Mature-flower feedback also respects reduced motion');
+    await untouchedLearning(p);await p.screenshot({animations:'disabled',path:path.join(out,`quiet-four-flowers-${width}-${reducedMotion}.png`),fullPage:true});
   },{viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion});
   await browser.close();browser=null;
   fs.writeFileSync(path.join(out,filter?'results-filtered.json':'results.json'),JSON.stringify(checks,null,2));

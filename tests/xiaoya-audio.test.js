@@ -17,9 +17,9 @@ const deferred = () => {
 };
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
-function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128, speech={}}={}) {
-  const permission=deferred(), timers=new Map(), intervals=new Map();
-  const streams=[], recorders=[], contexts=[], urls=[], revoked=[];
+function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128, speech={}, permissionState='granted', permissionQuery, queryError, visible=true, recordingSupported=true, animationFrame=true, onConstruct=()=>{}}={}) {
+  const permission=deferred(), timers=new Map(), intervals=new Map(), frames=new Map();
+  const streams=[], recorders=[], contexts=[], urls=[], revoked=[], microphoneRequests=[], permissionQueries=[];
   let sequence=0, now=100;
   class Recorder {
     static isTypeSupported() { return true; }
@@ -36,7 +36,7 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
   }
   const silent = {sampleRate:1000,length:400,numberOfChannels:1,getChannelData:()=>new Float32Array(400)};
   class Context {
-    constructor() { this.closed=0; this.sources=0; contexts.push(this); }
+    constructor() { this.closed=0; this.sources=0; contexts.push(this); onConstruct(); }
     resume() { return resume; }
     close() { this.closed++; return Promise.resolve(); }
     createMediaStreamSource() { this.sources++; return {connect(){}}; }
@@ -50,27 +50,211 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
     static createObjectURL(blob) { const url=`blob:test-${urls.length}`; urls.push({url,blob}); return url; }
     static revokeObjectURL(url) { revoked.push(url); }
   }
-  const window={isSecureContext:true,MediaRecorder:Recorder};
+  const window={isSecureContext:recordingSupported,MediaRecorder:Recorder};
   if (webAudio) window.AudioContext=Context;
+  if (animationFrame) {
+    window.requestAnimationFrame=fn=>{const id=++sequence;frames.set(id,fn);return id;};
+    window.cancelAnimationFrame=id=>frames.delete(id);
+  }
+  const navigator={mediaDevices:{getUserMedia:options=>{
+    const request=microphoneRequests.length ? deferred() : permission;
+    microphoneRequests.push({options,...request}); return request.promise;
+  }}};
+  if (permissionState !== 'unsupported') navigator.permissions={query:options=>{
+    permissionQueries.push(options);
+    return queryError ? Promise.reject(queryError) : permissionQuery?.promise || Promise.resolve({state:permissionState});
+  }};
   const sandbox={
-    window, navigator:{mediaDevices:{getUserMedia:()=>permission.promise}},
-    document:{baseURI:'http://127.0.0.1/app/'}, location:{origin:'http://127.0.0.1'},
+    window,navigator,
+    document:{baseURI:'http://127.0.0.1/app/',visibilityState:visible?'visible':'hidden',hidden:!visible}, location:{origin:'http://127.0.0.1'},
     MediaRecorder:Recorder,Blob,URL:ClipURL,DOMException,AbortController,prepareSamples,
     performance:{now:()=>now},
-    setTimeout(fn,delay){const id=++sequence;timers.set(id,{fn,delay});return id;},
+    setTimeout(fn,delay){const id=++sequence;timers.set(id,{fn,delay,due:now+delay});return id;},
     clearTimeout(id){timers.delete(id);},
     setInterval(fn,delay){const id=++sequence;intervals.set(id,{fn,delay});return id;},
     clearInterval(id){intervals.delete(id);},
     loadSpeech:()=>Promise.resolve(speech),loadMatcher:()=>Promise.resolve({scoreSpeech,speechWords})
   };
-  vm.runInNewContext(source+`;globalThis.api={beginRecording,finishRecording,cancelRecording,releaseAudioSession,hasClip,prepareRecognition,speechReady,recognize,cancelRecognition};`,sandbox);
+  vm.runInNewContext(source+`;globalThis.api={prepareRecording:typeof prepareRecording==='function'?prepareRecording:undefined,beginRecording,finishRecording,cancelRecording,releaseAudioSession,hasClip,prepareRecognition,speechReady,recognize,cancelRecognition};`,sandbox);
   return {
-    ...sandbox.api, permission,recorders,contexts,streams,timers,intervals,urls,revoked,
-    grant() { const track={stopped:0,stop(){this.stopped++;}}; const stream={track,getTracks:()=>[track]}; streams.push(stream); permission.resolve(stream); return stream; },
+    ...sandbox.api, permission,recorders,contexts,streams,timers,intervals,frames,urls,revoked,microphoneRequests,permissionQueries,
+    grant(index=Math.max(0,microphoneRequests.length-1)) {
+      const track={stopped:0,readyState:'live',stop(){this.stopped++;this.readyState='ended';}};
+      const stream={track,get active(){return track.readyState==='live';},getTracks:()=>[track],getAudioTracks:()=>[track]};
+      streams.push(stream); (microphoneRequests[index] || permission).resolve(stream); return stream;
+    },
+    setVisible(value) { sandbox.document.visibilityState=value?'visible':'hidden'; sandbox.document.hidden=!value; },
+    paintFrame() { const pending=[...frames.values()]; frames.clear(); for(const fn of pending)fn(now); },
     advance(ms) { now+=ms; },
-    async start(options) { const pending=sandbox.api.beginRecording(options); this.grant(); await flush(); recorders.at(-1).emitStart(); assert.equal(await pending,true); return recorders.at(-1); }
+    async advanceTimers(ms) {
+      const target=now+ms;
+      while(true) {
+        const next=[...timers].filter(([,timer])=>timer.due<=target).sort((a,b)=>a[1].due-b[1].due)[0];
+        if(!next)break;
+        now=next[1].due; timers.delete(next[0]); next[1].fn(); await flush();
+      }
+      now=target; await flush();
+    },
+    async start(options) { const pending=sandbox.api.beginRecording(options); this.grant(); await flush(); recorders.at(-1).emitStart(); assert.equal(await pending,true); this.paintFrame(); await this.advanceTimers(0); return recorders.at(-1); }
   };
 }
+
+test('granted microphone preparation is shared, creates no recorder or clip, and is claimed without a second request', async () => {
+  const f=fixture();
+  const first=f.prepareRecording(), second=f.prepareRecording(); await flush();
+  assert.equal(f.permissionQueries.length,1); assert.equal(f.permissionQueries[0].name,'microphone');
+  assert.equal(f.microphoneRequests.length,1);
+  const stream=f.grant(); assert.equal(await first,true); assert.equal(await second,true);
+  assert.equal(f.recorders.length,0); assert.equal(f.contexts.length,0); assert.equal(f.urls.length,0); assert.equal(f.hasClip(),false);
+  assert.equal(stream.track.readyState,'live');
+  assert.equal(await f.prepareRecording(),true); assert.equal(f.microphoneRequests.length,1);
+  let ready=0, settled=false;
+  const started=f.beginRecording({onReady(){ready++;}}).then(value=>{settled=true;return value;}); await flush();
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders[0].stream,stream);
+  assert.equal(ready,0); assert.equal(settled,false,'A warm stream is not the recorder start event');
+  assert.equal([...f.timers.values()].some(timer=>timer.delay===20000),false,'Claiming removes the idle microphone deadline');
+  f.recorders[0].emitStart(); assert.equal(await started,true); assert.equal(ready,1);
+  f.releaseAudioSession(); assert.equal(stream.track.readyState,'ended'); assert.equal(f.urls.length,0);
+});
+
+test('recording claims an in-flight warm microphone request and still waits for the native start event', async () => {
+  const f=fixture(); const prepared=f.prepareRecording(); await flush();
+  assert.equal(f.microphoneRequests.length,1);
+  let ready=0; const started=f.beginRecording({onReady(){ready++;}}); await flush();
+  assert.equal(f.microphoneRequests.length,1,'A tap while getUserMedia is pending must share its request');
+  const stream=f.grant(); await prepared; await flush();
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders.length,1);
+  assert.equal(f.recorders[0].stream,stream); assert.equal(stream.track.readyState,'live'); assert.equal(ready,0);
+  f.recorders[0].emitStart(); assert.equal(await started,true); assert.equal(ready,1);
+  f.releaseAudioSession(); assert.equal(stream.track.readyState,'ended');
+});
+
+test('microphone warmup skips prompt, denied, unsupported and failed permission queries without requesting access', async () => {
+  for (const options of [
+    {permissionState:'prompt'}, {permissionState:'denied'}, {permissionState:'unsupported'},
+    {queryError:new Error('microphone permission queries are unsupported')}, {recordingSupported:false}, {visible:false}
+  ]) {
+    const f=fixture(options);
+    assert.equal(await f.prepareRecording(),false,JSON.stringify(options));
+    assert.equal(f.microphoneRequests.length,0); assert.equal(f.recorders.length,0); assert.equal(f.contexts.length,0);
+    assert.equal(f.urls.length,0); assert.equal(f.timers.size,0);
+    f.releaseAudioSession();
+  }
+});
+
+test('a prepared microphone expires after 20 seconds and later recording requests a new live stream', async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush();
+  const warm=f.grant(); assert.equal(await prepared,true);
+  await f.advanceTimers(19999); assert.equal(warm.track.readyState,'live');
+  await f.advanceTimers(1); assert.equal(warm.track.readyState,'ended'); assert.equal(warm.track.stopped,1);
+  assert.equal(f.recorders.length,0); assert.equal(f.urls.length,0);
+  const started=f.beginRecording(); await flush(); assert.equal(f.microphoneRequests.length,2);
+  const fresh=f.grant(); await flush(); assert.equal(f.recorders[0].stream,fresh);
+  f.recorders[0].emitStart(); assert.equal(await started,true); f.releaseAudioSession();
+});
+
+test('cancelling preparation while permission query is unresolved prevents a late microphone request', async () => {
+  const query=deferred(), f=fixture({permissionQuery:query});
+  const prepared=f.prepareRecording(); await flush(); assert.equal(f.permissionQueries.length,1);
+  f.cancelRecording(); query.resolve({state:'granted'});
+  assert.equal(await prepared,false); await flush();
+  assert.equal(f.microphoneRequests.length,0); assert.equal(f.recorders.length,0); assert.equal(f.timers.size,0);
+});
+
+test('release stops a late warm stream and cannot create a recorder, clip or retained deadline', async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush();
+  assert.equal(f.microphoneRequests.length,1); f.releaseAudioSession();
+  const late=f.grant(); assert.equal(await prepared,false); await flush();
+  assert.equal(late.track.readyState,'ended'); assert.equal(late.track.stopped,1);
+  assert.equal(f.recorders.length,0); assert.equal(f.urls.length,0); assert.equal(f.timers.size,0);
+});
+
+test('hidden pages cannot finish an unresolved warm permission query by requesting microphone access', async () => {
+  const query=deferred(), f=fixture({permissionQuery:query});
+  const prepared=f.prepareRecording(); await flush(); f.setVisible(false); query.resolve({state:'granted'});
+  assert.equal(await prepared,false); assert.equal(f.microphoneRequests.length,0); assert.equal(f.timers.size,0);
+});
+
+test('keepPrepared preserves a live warm stream but default cancellation releases it', async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush(); const warm=f.grant(); await prepared;
+  f.cancelRecording({keepPrepared:true}); assert.equal(warm.track.readyState,'live');
+  assert.equal(await f.prepareRecording(),true); assert.equal(f.microphoneRequests.length,1);
+  f.cancelRecording(); assert.equal(warm.track.readyState,'ended'); assert.equal(warm.track.stopped,1);
+  assert.equal(f.timers.size,0);
+});
+
+test('an externally ended warm track is never given to MediaRecorder and falls back to a fresh request', async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush(); const warm=f.grant(); await prepared;
+  warm.track.stop(); const started=f.beginRecording(); await flush();
+  assert.equal(f.microphoneRequests.length,2); assert.equal(f.recorders.length,0);
+  const fresh=f.grant(); await flush(); assert.equal(f.recorders[0].stream,fresh); assert.equal(fresh.track.readyState,'live');
+  f.recorders[0].emitStart(); assert.equal(await started,true); f.releaseAudioSession();
+});
+
+test('failed warm acquisition returns false and a later preparation can retry', async () => {
+  const f=fixture(), first=f.prepareRecording(); await flush();
+  f.microphoneRequests[0].reject(new Error('microphone device busy'));
+  assert.equal(await first,false); assert.equal(f.timers.size,0); assert.equal(f.recorders.length,0);
+  const retry=f.prepareRecording(); await flush(); assert.equal(f.microphoneRequests.length,2);
+  const stream=f.grant(); assert.equal(await retry,true); assert.equal(stream.track.readyState,'live');
+  f.releaseAudioSession(); assert.equal(stream.track.readyState,'ended');
+});
+
+test('finishing a recording claimed from warmup releases its track and does not reuse it for the next recording', async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush(); const warm=f.grant(); await prepared;
+  const finished=deferred(), started=f.beginRecording({onFinish:finished.resolve}); await flush();
+  f.recorders[0].emitStart(); assert.equal(await started,true);
+  f.finishRecording(); const result=await finished.promise;
+  assert.ok(result.url); assert.equal(warm.track.readyState,'ended'); assert.equal(f.microphoneRequests.length,1);
+  const next=f.beginRecording(); await flush(); assert.equal(f.microphoneRequests.length,2);
+  const fresh=f.grant(); await flush(); assert.equal(f.recorders[1].stream,fresh);
+  assert.notEqual(fresh,warm); assert.deepEqual(f.revoked,[result.url]);
+  f.recorders[1].emitStart(); assert.equal(await next,true); f.releaseAudioSession();
+});
+
+test('device acquisition times out after 10 seconds and a late stream is stopped without announcing readiness', async () => {
+  const f=fixture(); let ready=0, finished=0;
+  const started=f.beginRecording({onReady(){ready++;},onFinish(){finished++;}});
+  const rejected=assert.rejects(started,/话筒启动较慢/);
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders.length,0);
+  await f.advanceTimers(9999); assert.equal(f.contexts.length,0);
+  await f.advanceTimers(1); await rejected; assert.equal(f.contexts.length,0);
+  const late=f.grant(); await flush();
+  assert.equal(late.track.readyState,'ended'); assert.equal(late.track.stopped,1);
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders.length,0);
+  assert.equal(ready,0); assert.equal(finished,0); assert.equal(f.urls.length,0); assert.equal(f.timers.size,0);
+});
+
+for (const exit of ['cancel','timeout']) test(`a claimed pending warm request survives no extra request after ${exit} and closes its late stream`, async () => {
+  const f=fixture(), prepared=f.prepareRecording(); await flush();
+  assert.equal(f.microphoneRequests.length,1);
+  let ready=0, finished=0;
+  const started=f.beginRecording({onReady(){ready++;},onFinish(){finished++;}}); await flush();
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders.length,0);
+  if (exit==='cancel') { f.cancelRecording(); assert.equal(await started,false); }
+  else {
+    const rejected=assert.rejects(started,/话筒启动较慢/);
+    await f.advanceTimers(10000); await rejected;
+  }
+  const late=f.grant(); assert.equal(await prepared,false); await flush();
+  assert.equal(late.track.readyState,'ended'); assert.equal(late.track.stopped,1);
+  assert.equal(f.microphoneRequests.length,1,'A stale warm completion must not trigger the fallback request');
+  assert.equal(f.recorders.length,0); assert.equal(ready,0); assert.equal(finished,0);
+  assert.equal(f.urls.length,0); assert.equal(f.timers.size,0); assert.equal(f.contexts.length,0);
+});
+
+test('an explicit recording tap bypasses a pending permission query and ignores its later granted result', async () => {
+  const query=deferred(), f=fixture({permissionQuery:query}), prepared=f.prepareRecording(); await flush();
+  assert.equal(f.permissionQueries.length,1); assert.equal(f.microphoneRequests.length,0);
+  let ready=0; const started=f.beginRecording({onReady(){ready++;}}); await flush();
+  assert.equal(f.microphoneRequests.length,1,'Explicit capture must not wait for the uncompleted permissions query');
+  const stream=f.grant(); await flush(); assert.equal(f.recorders.length,1); assert.equal(ready,0);
+  f.recorders[0].emitStart(); assert.equal(await started,true); assert.equal(ready,1);
+  query.resolve({state:'granted'}); assert.equal(await prepared,false); await flush();
+  assert.equal(f.microphoneRequests.length,1); assert.equal(f.recorders.length,1);
+  assert.equal(f.recorders[0].stream,stream); assert.equal(stream.track.readyState,'live');
+  f.releaseAudioSession(); assert.equal(stream.track.readyState,'ended'); assert.equal(f.timers.size,0);
+});
 
 test('capture starts and announces readiness without waiting for Web Audio resume', async () => {
   const resume=deferred(), f=fixture({resume:resume.promise});
@@ -81,9 +265,58 @@ test('capture starts and announces readiness without waiting for Web Audio resum
   assert.equal(ready,0); assert.equal(settled,false);
   f.recorders[0].emitStart(); assert.equal(await pending,true);
   f.recorders[0].emitStart();
-  assert.equal(ready,1); assert.equal(f.contexts[0].sources,0);
+  assert.equal(ready,1); assert.equal(f.contexts.length,0);
+  f.paintFrame(); await f.advanceTimers(0); assert.equal(f.contexts[0].sources,0);
   f.releaseAudioSession(); resume.resolve(); await flush();
   assert.equal(f.contexts[0].sources,0); assert.equal(f.intervals.size,0);
+});
+
+test('optional context construction happens only after native start, ready settlement and a paint opportunity', async () => {
+  let ready=false, settled=false, constructed=false;
+  const f=fixture({onConstruct(){
+    assert.equal(ready,true); assert.equal(settled,true);
+    assert.equal(f.recorders[0].state,'recording'); constructed=true;
+  }});
+  const pending=f.beginRecording({onReady(){ready=true;}}).then(value=>{settled=true;return value;});
+  assert.equal(f.contexts.length,0,'Device permission cannot construct a context');
+  f.grant(); await flush(); assert.equal(f.contexts.length,0,'recorder.start() alone is not readiness');
+  f.recorders[0].emitStart(); assert.equal(await pending,true);
+  assert.equal(constructed,false,'The synchronous ready callback must not construct a context');
+  f.paintFrame(); assert.equal(constructed,false,'The paint callback only schedules a later task');
+  await f.advanceTimers(0); assert.equal(constructed,true);
+  f.releaseAudioSession(); assert.equal(f.contexts[0].closed,1);
+});
+
+for (const stage of ['frame','task']) for (const action of ['cancel','finish']) test(`${action} before the deferred meter ${stage} releases capture without constructing a late context`, async () => {
+  const f=fixture(), finished=deferred(), pending=f.beginRecording({onFinish:finished.resolve});
+  f.grant(); await flush(); f.recorders[0].emitStart(); assert.equal(await pending,true);
+  if(stage==='task')f.paintFrame();
+  const stale=stage==='frame'?[...f.frames.values()][0]:[...f.timers.values()].find(timer=>timer.delay===0)?.fn;
+  assert.equal(typeof stale,'function');
+  action==='cancel'?f.cancelRecording():f.finishRecording();
+  if(action==='finish'){
+    const result=await finished.promise;
+    assert.ok(result.url); assert.equal(result.voiceActivityAvailable,false,'Unmeasured audio must remain available for recognition');
+  }
+  stale(); f.paintFrame(); await f.advanceTimers(0);
+  assert.equal(f.contexts.length,0); assert.equal(f.frames.size,0); assert.equal(f.timers.size,0);
+  assert.equal(f.streams[0].track.readyState,'ended'); f.releaseAudioSession();
+});
+
+test('a context constructed after reentrant cancellation is closed without attaching a meter', async () => {
+  const f=fixture({onConstruct(){f.cancelRecording();}}), pending=f.beginRecording();
+  f.grant(); await flush(); f.recorders[0].emitStart(); assert.equal(await pending,true);
+  f.paintFrame(); await f.advanceTimers(0);
+  assert.equal(f.contexts.length,1); assert.equal(f.contexts[0].closed,1);
+  assert.equal(f.contexts[0].sources,0); assert.equal(f.intervals.size,0);
+  assert.equal(f.streams[0].track.readyState,'ended'); assert.equal(f.frames.size,0); assert.equal(f.timers.size,0);
+});
+
+test('without requestAnimationFrame the optional meter is still deferred beyond readiness', async () => {
+  const f=fixture({animationFrame:false}), pending=f.beginRecording();
+  f.grant(); await flush(); f.recorders[0].emitStart(); assert.equal(await pending,true);
+  assert.equal(f.contexts.length,0); await f.advanceTimers(0); assert.equal(f.contexts.length,1);
+  f.releaseAudioSession();
 });
 
 test('cancelling pending permission settles immediately and stops a late granted stream', async () => {
@@ -92,7 +325,7 @@ test('cancelling pending permission settles immediately and stops a late granted
   f.cancelRecording(); assert.equal(await pending,false);
   const stream=f.grant(); await flush();
   assert.equal(stream.track.stopped,1); assert.equal(f.recorders.length,0);
-  assert.equal(ready,0); assert.equal(finished,0); assert.ok(f.contexts[0].closed);
+  assert.equal(ready,0); assert.equal(finished,0); assert.equal(f.contexts.length,0);
 });
 
 test('cancelling after recorder.start but before its start event suppresses a late ready cue', async () => {
@@ -177,7 +410,7 @@ test('release during delayed final decoding cannot create a clip or deliver a st
 test('permission denial and native startup failure reject readiness and clean up', async () => {
   const f=fixture(), denied=new Error('denied');
   const pending=f.beginRecording(); f.permission.reject(denied);
-  await assert.rejects(pending,/denied/); assert.ok(f.contexts[0].closed);
+  await assert.rejects(pending,/denied/); assert.equal(f.contexts.length,0);
   const g=fixture(); const second=g.beginRecording(); g.grant(); await flush();
   g.recorders[0].onerror();
   await assert.rejects(second,/录音没有完成/);

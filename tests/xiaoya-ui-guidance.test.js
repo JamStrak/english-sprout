@@ -17,7 +17,7 @@ const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});r
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function fixture(){
   let nodes=[],html='',timerId=0;
-  const timers=new Map(),sounds=[],captures=[],writes=[],calls={cancelRecording:0,cancelRecognition:0,release:0,replay:0};
+  const timers=new Map(),sounds=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
   function parse(markup){return [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map(([,attributes,body])=>{
     const attrs=Object.fromEntries([...attributes.matchAll(/([\w-]+)(?:="([^"]*)")?/g)].map(([,name,value])=>[name,value??'']));
     const classes=new Set((attrs.class||'').split(/\s+/));
@@ -34,18 +34,20 @@ function fixture(){
     addEventListener(){},body:{append(){}},createElement(){return {remove(){}};}};
   const localStorage={getItem(){return null;},setItem(key,value){writes.push({key,value});}};
   const audio={playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
-    cancelRecording(){calls.cancelRecording++;for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
+    cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
+    prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
   const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,audio,document,localStorage,
     location:{search:''},URL,URLSearchParams,navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
-  vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,
+  vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,
     getSession:()=>session,getState:()=>state,
+    setMic(value){prefs.mic=value;},
     setPage(value){page=value;session=null;modal=null;render();},
     setGarden(value){garden=value;page='garden';session=null;modal=null;render();},
     setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};loadedPictures.set(imageUrl(story),Promise.resolve());render();return session;}};`,sandbox);
-  return {...sandbox.ui,document,sounds,captures,calls,writes,timers,
+  return {...sandbox.ui,document,sounds,captures,calls,writes,timers,html:()=>html,
     buttons:()=>nodes,button:action=>nodes.find(node=>node.dataset.action===action),
     ears:()=>nodes.filter(node=>node.body.includes('data-icon="ear"')),
     guided:()=>nodes.filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action).sort(),
@@ -160,4 +162,40 @@ test('replay, prompt and help glyphs are genuinely different from the English ea
   assert.match(css,/\.topbar \.icon-button\{[^}]*min-width:48px;min-height:48px/);
   assert.match(css,/\.icon-button\.is-guided[^}]*outline:3px solid/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)[\s\S]*animation:none!important/);
+});
+
+test('entering speaking warms an opted-in microphone once, never just from rendering',()=>{
+  const f=fixture();f.setSession({phase:'story',storyReady:true});
+  assert.equal(f.calls.prepareRecording,0);f.storyContinue();assert.equal(f.calls.prepareRecording,1);
+  f.render();f.render();assert.equal(f.calls.prepareRecording,1,'Rendering cannot renew the idle microphone deadline');
+  const g=fixture();g.setSession({phase:'story',storyReady:true});g.setMic(false);g.storyContinue();
+  assert.equal(g.calls.prepareRecording,0,'Parent opt-in is still required');
+  for(const state of [{phase:'story'},{phase:'resolved'},{waiting:true},{recording:true},{teaching:true}]){
+    const h=fixture();h.setSession(state);h.prepareMicrophone();assert.equal(h.calls.prepareRecording,0,JSON.stringify(state));
+  }
+  f.document.hidden=true;f.prepareMicrophone();assert.equal(f.calls.prepareRecording,1);
+  f.document.hidden=false;f.openModal({type:'mic'});f.prepareMicrophone();assert.equal(f.calls.prepareRecording,1);
+});
+
+test('click immediately shows preparation and preserves warmth; only native readiness lights the recording state',async()=>{
+  const f=fixture(),s=f.setSession();const pending=f.record();
+  assert.equal(f.calls.cancelOptions.at(-1).keepPrepared,true);
+  assert.equal(s.waiting,true);assert.equal(s.recording,false);
+  assert.equal(f.button('record').disabled,true);assert.equal(f.button('record').attrs['aria-busy'],'true');
+  assert.match(f.html(),/is-mic-starting/);assert.match(f.button('record').body,/mic-start-ring/);
+  assert.doesNotMatch(f.html(),/class="recording-indicator"/);
+  f.captures[0].options.onReady();f.captures[0].resolve(true);await pending;
+  assert.equal(s.recording,true);assert.equal(s.waiting,false);assert.equal(f.button('record').disabled,false);
+  assert.equal(f.button('record').attrs['aria-busy'],'false');assert.doesNotMatch(f.html(),/mic-start-ring/);
+  assert.match(f.html(),/class="recording-indicator"/);
+});
+
+test('leaving, hiding and opening a parent modal release preparation without rendering it open again',()=>{
+  for(const exit of [f=>f.navigate('home'),f=>f.suspend(),f=>f.openModal({type:'mic'})]){
+    const f=fixture();f.setSession({phase:'story',storyReady:true});f.storyContinue();
+    const cancellations=f.calls.cancelRecording;exit(f);
+    assert(f.calls.cancelRecording>cancellations);
+    assert.notEqual(f.calls.cancelOptions.at(-1)?.keepPrepared,true);
+    assert.equal(f.calls.prepareRecording,1);
+  }
 });
