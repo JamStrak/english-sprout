@@ -63,6 +63,13 @@ self.addEventListener('fetch', event => {
     let cache, found;
     try {
       cache = await caches.open(isAudio ? AUDIO : isSpeech ? SPEECH : CACHE);
+      // Story/deep-link query strings choose app state, not a different shell.
+      // Never revive HTML from an older release's cached query URL.
+      const entry = new URL(SCOPE);
+      if (request.mode === 'navigate' && [entry.pathname, `${entry.pathname}index.html`].includes(url.pathname)) {
+        const shell = await cache.match(absolute('./index.html'));
+        if (shell) return shell;
+      }
       found = isAudio ? await cachedAudio(request) : await cache.match(request);
       if (!found && !isAudio && !isSpeech) {
         for (const name of await caches.keys()) {

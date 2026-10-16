@@ -121,6 +121,35 @@ test('worker refuses activation when one core response is from another build', a
   assert.equal(sw.skipped(), 0);
 });
 
+test('query navigations use the current shell instead of an older cached query page, online and offline', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  const currentHtml = await fs.readFile(path.join(built.output, 'index.html'), 'utf8');
+  const oldCache = await sw.caches.open('xiaoya-core-old-query-release');
+  const urls = ['./?story=hello-goodbye', './index.html?story=hello-goodbye'].map(file => new URL(file, sw.scope).href);
+  for (const url of urls) await oldCache.put(url, new Response('<html>old query shell</html>'));
+  await sw.lifecycle('install');
+  await sw.lifecycle('activate');
+  const installedRequests = sw.fetched.length;
+  for (const online of [true, false]) {
+    sw.setOnline(online);
+    for (const url of urls) {
+      // Node disallows constructing mode:navigate; keep its real Request URL
+      // and headers while exposing the mode supplied by a browser navigation.
+      const request = new Request(url);
+      Object.defineProperty(request, 'mode', {value:'navigate'});
+      const response = await sw.fetchRequest(request);
+      assert.equal(response.status, 200, `Navigation must return a shell (${online ? 'online' : 'offline'})`);
+      assert.equal(await response.text(), currentHtml, 'An older release must never serve query navigation HTML');
+      assert.equal(response.headers.get('Location'), null, 'Serving the shell must not redirect away from the story query');
+      assert.equal(response.redirected, false);
+      assert.equal(request.url, url);
+      assert.equal(new URL(request.url).searchParams.get('story'), 'hello-goodbye');
+    }
+  }
+  assert.equal(sw.fetched.length, installedRequests, 'Installed current HTML must work without a navigation network request');
+  assert.equal(await (await oldCache.match(urls[0])).text(), '<html>old query shell</html>', 'Old release assets stay intact for existing tabs');
+});
+
 test('story image loads on demand and remains available offline under a nested host', async t => {
   const sw = await worker(await fixture(t));
   await sw.lifecycle('install');
