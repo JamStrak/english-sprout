@@ -1,3 +1,4 @@
+import {prepareSamples} from './speech-signal.js';
 // Audio is local to this session. Recordings never enter storage or a request.
 let playback = null;
 let capture = null;
@@ -100,21 +101,8 @@ async function recordedVoice(current, blob) {
       blob.arrayBuffer().then(bytes => new Promise((resolve, reject) => current.context.decodeAudioData(bytes, resolve, reject))),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Voice check timed out')), 1800); })
     ]);
-    let voiced = 0;
-    const step = Math.max(1, Math.round(decoded.sampleRate * .04));
-    const channels = Array.from({length:decoded.numberOfChannels}, (_, i) => decoded.getChannelData(i));
-    for (let offset = 0; offset < decoded.length; offset += step) {
-      const end = Math.min(decoded.length, offset + step);
-      let sum = 0;
-      for (let i = offset; i < end; i++) {
-        let sample = 0;
-        for (const channel of channels) sample += channel[i] / channels.length;
-        sum += sample * sample;
-      }
-      if (Math.sqrt(sum / (end - offset)) > .022) voiced += (end - offset) / decoded.sampleRate * 1000;
-      if (voiced >= 200) return {hasVoice:true, voiceActivityAvailable:true};
-    }
-    return {hasVoice:false, voiceActivityAvailable:true};
+    const {quality} = prepareSamples(decoded);
+    return {hasVoice:quality.hasVoice, voiceActivityAvailable:true,quality};
   // Quiet meter samples can miss the first words while AudioContext resumes.
   // Without a complete decode, silence is unknown even if the meter did run.
   } catch { return {hasVoice:false, voiceActivityAvailable:false}; }
@@ -129,13 +117,17 @@ function watchVoice(current, onLevel) {
     try {
       const source = current.context.createMediaStreamSource(current.stream), analyser = current.context.createAnalyser();
       analyser.fftSize = 512; source.connect(analyser);
-      const values = new Uint8Array(analyser.fftSize);
+      const floating = typeof analyser.getFloatTimeDomainData === 'function';
+      const values = floating ? new Float32Array(analyser.fftSize) : new Uint8Array(analyser.fftSize);
+      let floor = Infinity;
       current.interval = setInterval(() => {
         if (capture !== current || current.recorder.state !== 'recording') return;
-        analyser.getByteTimeDomainData(values); current.samples++;
-        const rms = Math.sqrt(values.reduce((n,x)=>n+((x-128)/128)**2,0)/values.length);
+        if (floating) analyser.getFloatTimeDomainData(values); else analyser.getByteTimeDomainData(values);
+        current.samples++;
+        const rms = Math.sqrt(values.reduce((n,x)=>n+(floating ? x : (x-128)/128)**2,0)/values.length);
+        floor = Math.min(floor,rms);
         const now = performance.now(); onLevel(Math.min(1, rms*8));
-        if (rms > .022) { current.lastVoice=now; current.voiced+=80; }
+        if (rms > Math.max(.0015,Math.min(.022,floor*2.2))) { current.lastVoice=now; current.voiced+=80; }
         const elapsed = now-current.start;
         if ((current.voiced>=200 && elapsed>2800 && now-current.lastVoice>2000) || (!current.lastVoice && elapsed>8000)) finishRecording();
       }, 80);
@@ -209,7 +201,7 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
 }
 
 async function localSpeech() {
-  if (!speechModule) speechModule = await import('../src/speech-local.js');
+  if (!speechModule) speechModule = await import('./speech-local.js');
   return speechModule;
 }
 export function speechReady() { return ready; }
@@ -281,7 +273,7 @@ export async function recognize(url, accepted) {
     scores.sort((a,b)=>Number(b.matched)-Number(a.matched)||b.stars-a.stars||b.coverage-a.coverage||b.precision-a.precision||b.matchedWords-a.matchedWords);
     const best = scores[0] || {...matcher.scoreSpeech('',result.heard),variant:null};
     // Ordered word matching only: these are not phoneme/pronunciation grades.
-    return {...best,variant:best.matched ? best.variant : null};
+    return {...best,variant:best.matched ? best.variant : null,engine:result.engine,quality:result.quality};
   } finally { if (recognition===controller) recognition=null; }
 }
 export function releaseAudioSession() {

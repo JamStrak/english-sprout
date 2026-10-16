@@ -37,6 +37,7 @@ export function icon(name,size=32) {
     play:'<path d="M11 6L27 16L11 26Z" fill="currentColor"/>', pause:`${rect(8,5,6,22,2,'currentColor')}${rect(20,5,6,22,2,'currentColor')}`,
     sound: `<path d="M5 12H10L17 6V26L10 20H5Z" fill="currentColor"/>${line('M22 11q6 5 0 10M26 7q10 9 0 18','currentColor',2.7)}`,
     mic:`${rect(11,3,10,17,5,'currentColor')}${line('M6 15v2a10 10 0 0020 0v-2M16 27v4M11 31h10','currentColor',3)}`,
+    'voice-replay':`${rect(8,3,8,13,4,'currentColor')}${line('M4 12v2a8 8 0 0016 0v-2M12 22v6M8 28h8M24 18a7 7 0 11-4 11M24 13v6h-6','currentColor',2.5)}`,
     stop:rect(7,7,18,18,4,'currentColor'), again: `${line('M26 14a11 11 0 10-2 10','currentColor',3)}${line('M26 5v9h-9','currentColor',3)}`,
     help:`${dot(16,16,13,'currentColor')}<path d="M11 11a5 5 0 019 2c0 3-4 3-4 6" stroke="#fff8e7" stroke-width="2.6" stroke-linecap="round"/>${dot(16,24,1.5,'#fff8e7')}`,
     home:`<path d="M3 15L16 4l13 11" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${rect(7,14,18,16,3,'currentColor')}${rect(13,21,6,9,2,'#fff8e7')}`,
@@ -62,7 +63,8 @@ export function icon(name,size=32) {
     plus:line('M16 5v22M5 16h22','currentColor',4),
     world:`${line('M5 29h25M9 28V15M23 27V10','currentColor',3)}${dot(10,11,7,'currentColor')}${dot(23,7,6,'currentColor')}${dot(28,14,5,'currentColor')}${line('M14 28q4-12 8 0','currentColor',3)}`,
   };
-  return tag(paths[name] || paths.star,'0 0 34 34',`width="${Number(size)||32}" height="${Number(size)||32}" class="ui-icon"`);
+  const key=Object.prototype.hasOwnProperty.call(paths,name)?name:'star';
+  return tag(paths[key],'0 0 34 34',`width="${Number(size)||32}" height="${Number(size)||32}" class="ui-icon" data-icon="${key}"`);
 }
 
 function toy(name, resolved=true) {

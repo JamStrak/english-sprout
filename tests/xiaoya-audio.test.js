@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {scoreSpeech,speechWords} from '../src/speech-match.js';
+import {prepareSamples} from '../xiaoya/speech-signal.js';
 
 const source = fs.readFileSync(new URL('../xiaoya/audio.js', import.meta.url), 'utf8')
+  .replace("import {prepareSamples} from './speech-signal.js';", '')
   .replace(/export (async )?function /g, '$1function ')
-  .replace("import('../src/speech-local.js')", 'loadSpeech()')
+  .replace("import('./speech-local.js')", 'loadSpeech()')
   .replace("import('../src/speech-match.js')", 'loadMatcher()');
 const deferred = () => {
   let resolve, reject;
@@ -53,7 +55,7 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
   const sandbox={
     window, navigator:{mediaDevices:{getUserMedia:()=>permission.promise}},
     document:{baseURI:'http://127.0.0.1/app/'}, location:{origin:'http://127.0.0.1'},
-    MediaRecorder:Recorder,Blob,URL:ClipURL,DOMException,AbortController,
+    MediaRecorder:Recorder,Blob,URL:ClipURL,DOMException,AbortController,prepareSamples,
     performance:{now:()=>now},
     setTimeout(fn,delay){const id=++sequence;timers.set(id,{fn,delay});return id;},
     clearTimeout(id){timers.delete(id);},
@@ -103,7 +105,7 @@ test('cancelling after recorder.start but before its start event suppresses a la
 });
 
 test('words captured before the meter resumes are checked from the entire local recording', async () => {
-  const pcm=new Float32Array(400); pcm.fill(.1,0,280);
+  const pcm=Float32Array.from({length:400},(_,i)=>i<280 ? Math.sin(i*.9)*.1 : 0);
   const f=fixture({resume:new Promise(()=>{}),decode:()=>({sampleRate:1000,length:400,numberOfChannels:1,getChannelData:()=>pcm})});
   const finished=deferred();
   await f.start({onFinish:finished.resolve}); f.advance(400); f.finishRecording();

@@ -16,8 +16,14 @@ async function fixture(t) {
   await fs.mkdir(path.join(root, 'dist'));
   await fs.writeFile(path.join(root, 'dist/index.html'), 'original-product');
   for (const name of ['index.html', 'manifest.webmanifest', 'sw.template.js']) await fs.copyFile(path.join(project, 'xiaoya', name), path.join(root, 'xiaoya', name));
-  for (const name of ['app.js', 'experience.js', 'stories.js', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), name === 'app.js' ? "import './audio.js';" : name === 'audio.js' ? "export const ready=()=>import('../src/speech-local.js');" : '/* public module */');
-  for (const name of ['speech-local.js', 'speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
+  const modules = {
+    'app.js':"import './audio.js';",
+    'audio.js':"export const ready=()=>import('./speech-local.js'); export const match=()=>import('../src/speech-match.js');",
+    'speech-local.js':"import './speech-assets.js'; import './speech-signal.js'; import '../src/speech-download.js'; export const worker=new URL('./speech-worker.js',import.meta.url);"
+  };
+  for (const name of ['app.js', 'experience.js', 'stories.js', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
+  for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
+  await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), 'replacement voice bytes');
@@ -87,9 +93,16 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
-  assert.match(await fs.readFile(path.join(built.output, `releases/${built.build}/audio.js`), 'utf8'), /import\('\.\/shared\/speech-local.js'\)/);
+  const audio = await fs.readFile(path.join(built.output, `releases/${built.build}/audio.js`), 'utf8');
+  assert.match(audio, /import\('\.\/speech-local.js'\)/);
+  assert.match(audio, /import\('\.\/shared\/speech-match.js'\)/);
+  const speech = await fs.readFile(path.join(built.output, `releases/${built.build}/speech-local.js`), 'utf8');
+  assert.match(speech, /import '\.\/shared\/speech-download.js'/);
+  assert.match(speech, /new URL\('\.\/speech-worker.js',import.meta.url\)/);
+  for (const name of ['speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js']) assert.ok(built.core.includes(`./releases/${built.build}/${name}`), `The small ${name} module must be available offline`);
   assert.ok(built.core.includes(`./releases/${built.build}/shared/speech-download.js`));
-  assert.ok(built.core.every(file => !file.includes('model-en-us') && !file.includes('vosk-0.0.8') && !/\.(mp3|webp)$/.test(file)));
+  await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/shared/speech-local.js`)), {code:'ENOENT'});
+  assert.ok(built.core.every(file => !/model-en-us|vosk-0\.0\.8|whisper-tiny-en-v1|\.(mp3|webp|onnx|wasm)$/.test(file)));
   assert.equal(await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
   await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'private.log')), {code:'ENOENT'});
@@ -108,11 +121,13 @@ test('worker verifies lightweight core and leaves existing product caches intact
   assert.equal(sw.claimed(), 1);
   assert.ok(sw.stores.has('english-sprout-core-old'));
   assert.ok(sw.fetched.every(url => url.startsWith(sw.scope)));
-  assert.ok(!sw.fetched.some(url => /\.mp3$|model-en-us|vosk-0/.test(url)));
+  assert.ok(!sw.fetched.some(url => /\.mp3$|model-en-us|vosk-0|whisper-tiny-en-v1/.test(url)));
   sw.setOnline(false);
-  const response = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/shared/speech-local.js`, sw.scope)));
-  assert.equal(response.status, 200);
-  assert.equal(await response.text(), '/* shared module */');
+  for (const file of ['speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'shared/speech-match.js', 'shared/speech-download.js']) {
+    const response = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/${file}`, sw.scope)));
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), await fs.readFile(path.join(built.output, `releases/${built.build}/${file}`), 'utf8'));
+  }
 });
 
 test('worker refuses activation when one core response is from another build', async t => {
@@ -184,6 +199,10 @@ test('worker reuses old audio and bypasses resumable speech downloads and outsid
   sw.setOnline(false);
   assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'original clip');
   assert.equal(await sw.fetchRequest(new Request(new URL('../speech/model-en-us-0.15.tar.gz', sw.scope), {cache:'no-store'})), undefined);
+  for (const file of ['model/onnx/encoder_model.onnx', 'model/config.json', 'runtime/ort-wasm-simd-threaded.wasm', 'runtime/transformers-4.3.1.min.js']) {
+    const request = new Request(new URL(`speech/whisper-tiny-en-v1/${file}`, sw.scope), {cache:'no-store', headers:{Range:'bytes=0-1023'}});
+    assert.equal(await sw.fetchRequest(request), undefined, 'Verified resumable Whisper downloads must bypass the shell worker');
+  }
   assert.equal(await sw.fetchRequest(new Request('https://example.test/unrelated/file.js')), undefined);
   assert.equal(await sw.fetchRequest(new Request('https://other.test/hosted/course/audio/a.mp3')), undefined);
 });

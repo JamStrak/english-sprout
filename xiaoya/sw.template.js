@@ -56,7 +56,7 @@ self.addEventListener('fetch', event => {
   const relative = url.pathname.slice(BASE.pathname.length);
   if (relative.endsWith('/sw.js') || relative.endsWith('/version.json') || relative.startsWith('__')) return;
   const isAudio = /^(?:xiaoya\/)?audio\/.+\.mp3$/i.test(relative);
-  const isSpeech = /^speech\/(?:vosk-0\.0\.8\.js|model-en-us-0\.15\.tar\.gz)$/.test(relative);
+  const isSpeech = /^speech\/(?:vosk-0\.0\.8\.js|model-en-us-0\.15\.tar\.gz)$/.test(relative) || relative.startsWith('xiaoya/speech/');
   if (isSpeech && request.cache === 'no-store') return;
   let write = Promise.resolve();
   const work = (async () => {

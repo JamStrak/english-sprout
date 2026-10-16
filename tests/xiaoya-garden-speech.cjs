@@ -1,4 +1,4 @@
-/* Comic/garden v0.5 integration: real story -> MediaRecorder -> real local Vosk.
+/* Comic/garden integration: real story -> MediaRecorder -> real local Whisper.
    A known course MP3 supplies a synthetic stream once native recording starts.
    This verifies the software
    path, not children's pronunciation accuracy or real-device microphone quality.
@@ -7,6 +7,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/cod
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const {pathToFileURL}=require('node:url');
 const root=path.resolve(__dirname,'..');
 const target=new URL(process.env.TEST_URL||'http://127.0.0.1:24756');
 if(!['127.0.0.1','localhost','[::1]'].includes(target.hostname))throw new Error('This recording integration test requires a loopback server.');
@@ -19,7 +20,8 @@ const output=path.join(root,'test-results/xiaoya-garden-speech'+(fixtureVoice===
 const key='xiaoya-english:state:v1';
 fs.mkdirSync(output,{recursive:true});
 const knownAudio=Array.from(fs.readFileSync(path.join(root,fixturePath)));
-const report={entry,fixture:fixturePath,checks:[],syntheticMicrophone:true,actualMediaRecorder:true,actualLocalVosk:true,childSpeechValidated:false,realDeviceMicrophoneValidated:false,requests:[],errors:[]};
+const isSpeechAsset=url=>new URL(url).pathname.includes('/xiaoya/speech/whisper-tiny-en-v1/');
+const report={entry,fixture:fixturePath,checks:[],syntheticMicrophone:true,actualMediaRecorder:true,actualLocalWhisper:true,childSpeechValidated:false,realDeviceMicrophoneValidated:false,requests:[],errors:[]};
 let browser,context,page;
 function pass(name,evidence){report.checks.push({name,status:'PASS',evidence});console.log('PASS '+name);}
 async function parent(){
@@ -49,7 +51,7 @@ async function captureCandidate(expectedCount){
   assert.equal(await page.locator('[data-choice]').count(),0,'The comic flow does not ask an untaught picture question');
   await page.screenshot({path:path.join(output,expectedCount===1?'online-story-complete.png':'offline-story-complete.png'),fullPage:true});
   if(expectedCount===1){
-    assert(!report.requests.some(r=>/\/speech\/(vosk-|model-)/.test(r.url)));
+    assert(!report.requests.some(r=>isSpeechAsset(r.url)));
     pass('The default water story completes before recording, writes no evidence and downloads no speech model');
   }
   await page.locator('[data-action="story-continue"]').click();
@@ -75,21 +77,37 @@ async function captureCandidate(expectedCount){
   assert(latest.injectedAt>=latest.startedAt,'Synthetic speech starts only after the actual recorder is ready');
   assert.equal(await page.locator('.event-view').getAttribute('data-phase'),'resolved');
   await page.locator('[data-assessment][data-status="matched"][data-stars="3"]').waitFor();
-  const capture=await page.evaluate(()=>({records:qaCapture.records,tracks:qaCapture.streams.flatMap(s=>s.getTracks().map(t=>t.readyState)),vosk:typeof window.Vosk?.Model==='function'}));
+  const capture=await page.evaluate(async()=>{
+    const script=document.querySelector('script[type="module"][src]').src;
+    const audio=await import(new URL('audio.js',script));
+    return {records:qaCapture.records,tracks:qaCapture.streams.flatMap(s=>s.getTracks().map(t=>t.readyState)),workers:qaCapture.workers,messages:qaCapture.workerMessages,speechReady:audio.speechReady(),workerURL:new URL('speech-worker.js',script).href};
+  });
   assert(capture.records.some(r=>r.bytes>0&&r.stopped&&r.mimeType.startsWith('audio/')),'A real MediaRecorder produced non-empty audio');
   assert(capture.tracks.every(s=>s==='ended'),'Capture releases microphone tracks');
-  assert(capture.vosk,'Actual downloaded Vosk library is present');
+  assert(capture.speechReady,'The real local Whisper engine is ready');
+  assert(capture.workers.some(worker=>worker.url===capture.workerURL&&worker.type==='module'),'The actual versioned Whisper module worker was started');
+  const transcribes=capture.messages.filter(m=>m.direction==='sent'&&m.type==='transcribe');
+  assert.equal(transcribes.length,1,'This fresh page sends one genuine captured sample buffer to its worker');
+  const transcribe=transcribes[0],result=capture.messages.find(m=>m.direction==='received'&&m.type==='result'&&m.id===transcribe.id&&m.worker===transcribe.worker);
+  assert.deepEqual(transcribe.keys,['id','samples','type'],'No expected phrase, answer prompt or candidate list enters the decoder');
+  assert(transcribe.samples>16000&&transcribe.activeVoiceSeconds>0,'Actual captured PCM reaches Whisper');
+  assert(result?.heard?.trim(),'Actual Whisper produces a nonempty transcript for the known course audio');
+  const initialization=capture.messages.find(m=>m.direction==='sent'&&m.type==='init'&&m.worker===transcribe.worker);
+  assert(capture.messages.some(m=>m.direction==='received'&&m.type==='ready'&&m.id===initialization?.id&&m.at<=transcribe.at),'Recognition waits for real model readiness');
+  capture.timings={modelInitializationMs:capture.messages.find(m=>m.direction==='received'&&m.type==='ready'&&m.id===initialization.id).at-initialization.at,inferenceMs:result.at-transcribe.at};
   await page.screenshot({path:path.join(output,expectedCount===1?'online-matched.png':'offline-matched.png'),fullPage:true});
   return {saved,capture};
 }
 (async()=>{
+  const {SPEECH_ASSETS,SPEECH_ENGINE,SPEECH_BYTES}=await import(pathToFileURL(path.join(root,'xiaoya/speech-assets.js')).href);
+  report.engine=SPEECH_ENGINE;report.expectedModelBytes=SPEECH_BYTES;
   browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream','--autoplay-policy=no-user-gesture-required']});
   context=await browser.newContext({permissions:['microphone'],viewport:{width:390,height:844},timezoneId:'Asia/Shanghai'});
   context.on('request',request=>report.requests.push({url:request.url(),method:request.method(),hasBody:request.postDataBuffer()!==null}));
   context.on('page',p=>p.on('pageerror',error=>report.errors.push(error.message)));
   await context.addInitScript(({knownAudio,origin})=>{
     if(location.origin===origin&&!localStorage.getItem('xiaoya-english:preferences:v1'))localStorage.setItem('xiaoya-english:preferences:v1',JSON.stringify({mic:true}));
-    window.qaCapture={records:[],streams:[],streamEvidence:[],chunks:[],voskMessages:[]};
+    window.qaCapture={records:[],streams:[],streamEvidence:[],chunks:[],workers:[],workerMessages:[]};
     const NativeRecorder=window.MediaRecorder;
     // Initial about:blank is not a secure media surface. Instrument only the
     // actual loopback document; unavailable APIs remain unavailable there.
@@ -142,11 +160,24 @@ async function captureCandidate(expectedCount){
           decoded.push({durationSeconds:buffer.duration,firstVoiceSeconds:first,lastVoiceSeconds:last,activeVoiceSeconds:activeFrames*.02});
         }finally{await context.close();}
       }
-      return {records:qaCapture.records,streams:qaCapture.streamEvidence,decoded,voskMessages:qaCapture.voskMessages};
+      return {records:qaCapture.records,streams:qaCapture.streamEvidence,decoded,workers:qaCapture.workers,workerMessages:qaCapture.workerMessages};
     };
     const NativeWorker=window.Worker;
     window.Worker=class extends NativeWorker{
-      constructor(...args){super(...args);this.addEventListener('message',event=>{const d=event.data;if(d?.event==='result'||d?.event==='partialresult')qaCapture.voskMessages.push({at:performance.now(),data:d});});}
+      constructor(...args){
+        super(...args);this.qaWorker=qaCapture.workers.length;
+        qaCapture.workers.push({url:new URL(String(args[0]),document.baseURI).href,type:args[1]?.type,createdAt:performance.now()});
+        this.addEventListener('message',event=>{const d=event.data;if(['ready','result','error'].includes(d?.type))qaCapture.workerMessages.push({at:performance.now(),direction:'received',worker:this.qaWorker,...d});});
+      }
+      postMessage(data,...args){
+        if(['init','transcribe'].includes(data?.type)){
+          const item={at:performance.now(),direction:'sent',worker:this.qaWorker,type:data.type,id:data.id,keys:Object.keys(data).sort()};
+          if(data.type==='init'){item.assetCount=data.assets?.length;item.assetBytes=data.assets?.reduce((total,a)=>total+a.blob.size,0);}
+          if(data.samples){item.samples=data.samples.length;let active=0;for(let i=0;i<data.samples.length;i+=320){let power=0;const end=Math.min(i+320,data.samples.length);for(let j=i;j<end;j++)power+=data.samples[j]**2;if(Math.sqrt(power/(end-i))>.022)active++;}item.activeVoiceSeconds=active*.02;}
+          qaCapture.workerMessages.push(item);
+        }
+        return super.postMessage(data,...args);
+      }
     };
   },{knownAudio,origin});
   page=await context.newPage();page.setDefaultTimeout(15000);
@@ -154,34 +185,44 @@ async function captureCandidate(expectedCount){
   await page.locator('[data-action="next-event"]').waitFor();
   report.version=await page.locator('meta[name="xiaoya-version"]').getAttribute('content');
   report.build=await page.locator('meta[name="xiaoya-build"]').getAttribute('content');
-  assert.equal(report.version,'0.5.0','Run against the built comic/garden v0.5 app');
+  assert.equal(report.version,'0.6.0','Run against the built Whisper comic/garden v0.6 app');
+  const servedAssets=await page.evaluate(async()=>{
+    const script=document.querySelector('script[type="module"][src]').src;
+    const assets=await import(new URL('speech-assets.js',script));
+    return {engine:assets.SPEECH_ENGINE,assets:assets.SPEECH_ASSETS};
+  });
+  assert.equal(servedAssets.engine,SPEECH_ENGINE);assert.deepEqual(servedAssets.assets,SPEECH_ASSETS,'The test and served build must use the same immutable speech assets');
   const worker=await page.evaluate(async()=>{
     const ready=await Promise.race([navigator.serviceWorker.ready.then(()=>true),new Promise(resolve=>setTimeout(()=>resolve(false),30000))]);
     return {ready,registrations:(await navigator.serviceWorker.getRegistrations()).map(r=>({scope:r.scope,active:r.active?.state,installing:r.installing?.state,waiting:r.waiting?.state}))};
   });
   assert(worker.ready,'Service worker failed to become ready within 30 seconds: '+JSON.stringify(worker));
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller,null,{timeout:15000});
-  assert(!report.requests.some(r=>/\/speech\/(vosk-|model-)/.test(r.url)));
+  assert(!report.requests.some(r=>isSpeechAsset(r.url)));
   const prepareStarted=Date.now();
   // The child recording action must prepare the real model automatically.
   // No parent recognition/preparation button is used anywhere in this run.
   const first=await captureCandidate(1);
-  const downloads=report.requests.filter(r=>/\/speech\/(vosk-|model-)/.test(r.url));
-  assert(downloads.some(r=>r.url.includes('/speech/model-en-us-0.15.tar.gz')));
-  assert(downloads.some(r=>r.url.includes('/speech/vosk-0.0.8.js')));
-  const cached=await page.evaluate(async()=>{
+  const downloads=report.requests.filter(r=>isSpeechAsset(r.url));
+  for(const asset of SPEECH_ASSETS)assert(downloads.some(r=>new URL(r.url).pathname.endsWith('/'+asset.path)),`First recording must fetch ${asset.path}`);
+  assert(!report.requests.some(r=>/\/speech\/(vosk-|model-en-us)/.test(r.url)),'Xiaoya must not load the previous Vosk engine');
+  const cached=await page.evaluate(async assets=>{
     const cache=await caches.open('english-sprout-speech-v1');
     const result={};
-    for(const file of ['speech/vosk-0.0.8.js','speech/model-en-us-0.15.tar.gz']){
-      const response=await cache.match(new URL(file,document.baseURI));
-      result[file]=response?(await response.arrayBuffer()).byteLength:0;
+    for(const asset of assets){
+      const response=await cache.match(new URL(asset.path,document.baseURI));
+      if(!response){result[asset.path]=null;continue;}
+      const bytes=await response.arrayBuffer();
+      const digest=await crypto.subtle.digest('SHA-256',bytes);
+      result[asset.path]={bytes:bytes.byteLength,sha256:[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('')};
     }
     return result;
-  });
-  assert.equal(cached['speech/model-en-us-0.15.tar.gz'],41184862);
-  assert(cached['speech/vosk-0.0.8.js']>0);
-  pass('First recording automatically prepares the actual local Vosk library and complete model',{milliseconds:Date.now()-prepareStarted,cached});
-  pass('Real MediaRecorder audio reaches actual Vosk and produces a matching machine candidate',{recorders:first.capture.records});
+  },SPEECH_ASSETS);
+  for(const asset of SPEECH_ASSETS)assert.deepEqual(cached[asset.path],{bytes:asset.bytes,sha256:asset.sha256},`Complete verified bytes must be cached: ${asset.path}`);
+  const initialization=first.capture.messages.find(m=>m.direction==='sent'&&m.type==='init');
+  assert.equal(initialization.assetCount,SPEECH_ASSETS.length);assert.equal(initialization.assetBytes,SPEECH_BYTES);
+  pass('First recording automatically prepares actual local Whisper with complete verified model and runtime bytes',{milliseconds:Date.now()-prepareStarted,cached});
+  pass('Real MediaRecorder audio reaches actual Whisper without the expected phrase and produces a matching machine candidate',{recorders:first.capture.records,timings:first.capture.timings});
   const firstStatus=await statuses();
   assert.equal(firstStatus.goal.candidateCount,1);
   for(const field of ['independent','retained','passed'])assert.equal(firstStatus.goal[field],false);
@@ -210,16 +251,16 @@ async function captureCandidate(expectedCount){
   await context.setOffline(true);
   const requestBoundary=report.requests.length;
   await page.reload();await page.locator('[data-action="next-event"]').waitFor();
-  assert.equal(await page.evaluate(()=>typeof window.Vosk),'undefined');
+  assert.equal(await page.evaluate(()=>qaCapture.workers.length),0,'Reload starts with no model worker, not an already warm in-memory engine');
   const second=await captureCandidate(2);
-  const offlineRequests=report.requests.slice(requestBoundary).filter(r=>/\/speech\/(vosk-|model-)/.test(r.url));
+  const offlineRequests=report.requests.slice(requestBoundary).filter(r=>isSpeechAsset(r.url));
   assert.deepEqual(offlineRequests,[],'Cold offline preparation reuses existing speech bytes without another asset fetch');
   const secondStatus=await statuses();
   assert.equal(secondStatus.goal.candidateCount,2);
   assert.equal(secondStatus.goal.independentCount,0);
   assert.equal(secondStatus.goal.passed,false);
   assert.equal(secondStatus.alphabet.eligible,false);
-  pass('Cold offline reload, complete water comic/audio, model preparation and another actual recording/recognition succeed',{recorders:second.capture.records,candidateCount:secondStatus.goal.candidateCount});
+  pass('Cold offline reload, complete water comic/audio, model preparation and another actual recording/recognition succeed',{recorders:second.capture.records,timings:second.capture.timings,candidateCount:secondStatus.goal.candidateCount});
   await page.locator('[data-action="home"]').click();
   const serialized=await page.evaluate(()=>JSON.stringify(Object.fromEntries(Object.entries(localStorage))));
   assert.doesNotMatch(serialized,/blob:|base64|transcript|"heard"|audio\/webm/);
@@ -231,7 +272,7 @@ async function captureCandidate(expectedCount){
   report.checks.push({name:'Integration run',status:'FAIL',error:error.stack});
   console.error(error);
   if(page){
-    const diagnostics=await page.evaluate(async()=>({records:qaCapture?.records,streams:qaCapture?.streamEvidence,voskMessages:qaCapture?.voskMessages,recordings:await Promise.all((qaCapture?.chunks||[]).map(async chunks=>Array.from(new Uint8Array(await new Blob(chunks).arrayBuffer()))))})).catch(()=>null);
+    const diagnostics=await page.evaluate(async()=>({records:qaCapture?.records,streams:qaCapture?.streamEvidence,workers:qaCapture?.workers,workerMessages:qaCapture?.workerMessages,recordings:await Promise.all((qaCapture?.chunks||[]).map(async chunks=>Array.from(new Uint8Array(await new Blob(chunks).arrayBuffer()))))})).catch(()=>null);
     if(diagnostics){
       for(const [index,bytes]of diagnostics.recordings.entries())fs.writeFileSync(path.join(output,`synthetic-capture-${index+1}.webm`),Buffer.from(bytes));
       delete diagnostics.recordings;report.failureDiagnostics=diagnostics;
