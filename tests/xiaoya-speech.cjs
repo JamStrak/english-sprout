@@ -44,7 +44,7 @@ async function captureCandidate(expectedCount){
   await page.waitForFunction(({key,count})=>{
     const state=JSON.parse(localStorage.getItem(key)||'null');
     return state?.evidence.filter(e=>e.kind==='speech'&&e.source==='machine').length===count;
-  },{key,count:expectedCount},{timeout:75000});
+  },{key,count:expectedCount},{timeout:180000});
   const saved=await state(),candidate=saved.evidence.at(-1);
   const diagnostic=await page.evaluate(()=>qaCapture.describe());
   report.captures??=[];report.captures.push({candidate,diagnostic});
@@ -56,6 +56,7 @@ async function captureCandidate(expectedCount){
   assert(latest.sourceEndedAt<latest.stoppedAt,'The complete known phrase is supplied before capture stops');
   assert(latest.injectedAt>=latest.startedAt,'Synthetic speech starts only after the actual recorder is ready');
   assert.equal(await page.locator('.event-view').getAttribute('data-phase'),'resolved');
+  await page.locator('[data-assessment][data-status="matched"][data-stars="3"]').waitFor();
   const capture=await page.evaluate(()=>({records:qaCapture.records,tracks:qaCapture.streams.flatMap(s=>s.getTracks().map(t=>t.readyState)),vosk:typeof window.Vosk?.Model==='function'}));
   assert(capture.records.some(r=>r.bytes>0&&r.stopped&&r.mimeType.startsWith('audio/')),'A real MediaRecorder produced non-empty audio');
   assert(capture.tracks.every(s=>s==='ended'),'Capture releases microphone tracks');
@@ -136,10 +137,11 @@ async function captureCandidate(expectedCount){
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
   await parent();
   assert(!report.requests.some(r=>/\/speech\/(vosk-|model-)/.test(r.url)));
-  pass('Fresh new-product entry and parent area do not download the optional recognition assets');
+  pass('Fresh entry and parent area do not download recognition assets before a recording');
   const prepareStarted=Date.now();
-  await page.locator('[data-action="recognition"]').click();
-  await page.getByRole('button',{name:'本地识别已就绪',exact:true}).waitFor({timeout:180000});
+  // The child recording action must prepare the real model automatically.
+  // No parent recognition/preparation button is used anywhere in this run.
+  const first=await captureCandidate(1);
   const downloads=report.requests.filter(r=>/\/speech\/(vosk-|model-)/.test(r.url));
   assert(downloads.some(r=>r.url.includes('/speech/model-en-us-0.15.tar.gz')));
   assert(downloads.some(r=>r.url.includes('/speech/vosk-0.0.8.js')));
@@ -154,8 +156,7 @@ async function captureCandidate(expectedCount){
   });
   assert.equal(cached['speech/model-en-us-0.15.tar.gz'],41184862);
   assert(cached['speech/vosk-0.0.8.js']>0);
-  pass('Parent explicitly prepares the actual local Vosk library and complete model',{milliseconds:Date.now()-prepareStarted,cached});
-  const first=await captureCandidate(1);
+  pass('First recording automatically prepares the actual local Vosk library and complete model',{milliseconds:Date.now()-prepareStarted,cached});
   pass('Real MediaRecorder audio reaches actual Vosk and produces a matching machine candidate',{recorders:first.capture.records});
   const firstStatus=await statuses();
   assert.equal(firstStatus.goal.candidateCount,1);
@@ -172,8 +173,7 @@ async function captureCandidate(expectedCount){
   const requestBoundary=report.requests.length;
   await page.reload();await page.locator('[data-action="next-event"]').waitFor();
   assert.equal(await page.evaluate(()=>typeof window.Vosk),'undefined');
-  await parent();await page.locator('[data-action="recognition"]').click();
-  await page.getByRole('button',{name:'本地识别已就绪',exact:true}).waitFor({timeout:180000});
+  await parent();
   const second=await captureCandidate(2);
   const offlineRequests=report.requests.slice(requestBoundary).filter(r=>/\/speech\/(vosk-|model-)/.test(r.url));
   assert.deepEqual(offlineRequests,[],'Cold offline preparation reuses existing speech bytes without another asset fetch');

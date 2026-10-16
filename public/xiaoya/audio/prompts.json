@@ -144,6 +144,55 @@
       "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
+      "id": "assist-model",
+      "text": "不会说也没关系。先听我说，听完点话筒。话筒亮了，再跟我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "speech-pass",
+      "text": "我听懂啦！点小勾勾，收好这次相遇吧。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "speech-partial",
+      "text": "我听到了你说的一部分。点小芽，让我再教你一遍。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "speech-retry",
+      "text": "这次我还没听清。点小芽，听我说，再试一次吧。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "speech-silent",
+      "text": "还没听到你的声音。点小芽听我说，或者点话筒再试一次。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "speech-wait",
+      "text": "小耳朵还在准备。你可以先听我说，准备好会帮你听一听。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
+      "id": "house-placed",
+      "text": "放好啦。点下面的小房子，和我接着玩吧。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
+    },
+    {
       "id": "hello-morning",
       "text": "早上见面，可以挥挥手，跟伙伴说早上好。点一下小耳朵，听我说。",
       "engine": "edge-neural",

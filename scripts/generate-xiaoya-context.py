@@ -1,8 +1,8 @@
-"""Make the 36 public Chinese context prompts with installed free Edge neural TTS.
+"""Make selected public Chinese prompts with installed free Edge neural TTS.
 
 Only the generic prompt text is sent during production. The app receives static
 MP3 files and never connects to TTS. Does not send recordings or learning data.
-Run --ids hello-morning for one probe; run without IDs for the context batch.
+Run --ids hello-morning for one probe; run without IDs for the Edge prompt batch.
 Use --export after checking staged audio/word coverage. No automatic retries.
 Use the isolated interpreter at test-results/xiaoya-neural-help-20261016/edge-venv/
 Scripts/python.exe, with edge-tts==7.3.1 installed there (not globally).

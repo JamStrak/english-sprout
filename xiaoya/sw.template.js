@@ -1,6 +1,6 @@
 const PREFIX = 'xiaoya-core-';
 const CACHE = PREFIX + '__XIAOYA_BUILD__';
-const AUDIO = 'xiaoya-audio-v2';
+const AUDIO = 'xiaoya-audio-v3';
 const SPEECH = 'english-sprout-speech-v1';
 const CORE = __XIAOYA_CORE__;
 const INTEGRITY = /*__XIAOYA_INTEGRITY__*/{};

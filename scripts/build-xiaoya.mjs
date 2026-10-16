@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.2.0';
+export const XIAOYA_VERSION = '0.3.0';
 const MODULES = ['app.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css'];
 const SHARED = ['speech-local.js', 'speech-match.js', 'speech-download.js'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -33,7 +33,7 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
     if (error.code === 'ENOENT') return []; throw error;
   });
   if (voiceFiles.length) {
-    const voiceOutput = path.join(output, 'audio/v2');
+    const voiceOutput = path.join(output, 'audio/v3');
     await fs.mkdir(voiceOutput, {recursive:true});
     for (const name of voiceFiles.filter(name => name.endsWith('.mp3'))) {
       await fs.copyFile(path.join(publicAudio, name), path.join(voiceOutput, name));

@@ -113,7 +113,7 @@ async function pendingRecording(p){
 }
 async function settleMatched(p){
   await p.evaluate(()=>race.calls[0].resolve());
-  await p.waitForFunction(()=>race.calls[0].consumed);
+  await p.waitForFunction(()=>race.calls[0].aborted?race.calls[0].settled:race.calls[0].consumed);
   // Real scoreSpeech has consumed the transcript; allow its awaiting app callback
   // to finish before asserting that no DOM or saved state has changed.
   await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

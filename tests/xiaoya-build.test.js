@@ -87,8 +87,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.match(await fs.readFile(path.join(built.output, `releases/${built.build}/audio.js`), 'utf8'), /import\('\.\/shared\/speech-local.js'\)/);
   assert.ok(built.core.includes(`./releases/${built.build}/shared/speech-download.js`));
   assert.ok(built.core.every(file => !file.includes('model-en-us') && !file.includes('vosk-0.0.8') && !file.endsWith('.mp3')));
-  assert.equal(await fs.readFile(path.join(built.output, 'audio/v2/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
-  await assert.rejects(fs.stat(path.join(built.output, 'audio/v2/private.log')), {code:'ENOENT'});
+  assert.equal(await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
+  await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'private.log')), {code:'ENOENT'});
   const again = await buildXiaoya({root:built.root});
   assert.equal(again.build, built.build);
@@ -148,7 +148,7 @@ test('worker reuses old audio and bypasses resumable speech downloads and outsid
 test('replaced Chinese voices bypass the previous voice cache and remain available offline', async t => {
   const sw = await worker(await fixture(t));
   const oldUrl = new URL('./audio/speak.mp3', sw.scope).href;
-  const url = new URL('./audio/v2/speak.mp3', sw.scope).href;
+  const url = new URL('./audio/v3/speak.mp3', sw.scope).href;
   await (await sw.caches.open('xiaoya-audio-v1')).put(oldUrl, new Response('old system voice'));
   await (await sw.caches.open('english-sprout-audio-v5')).put(oldUrl, new Response('old parent-worker voice'));
   await (await sw.caches.open('english-sprout-audio-v5')).put(url, new Response('unexpected parent-worker voice'));

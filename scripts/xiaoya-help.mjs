@@ -21,9 +21,17 @@ const prompts = [
   {id:'reward',text:'谢谢你陪我一起玩。点一下小礼物，把它带回家吧。'},
   {id:'house',text:'先点一件小家具，再点小屋里想放的地方。'},
   {id:'silent',text:'现在不想说，也没关系。先听我说一遍吧。'},
+  {id:'assist-model',text:'不会说也没关系。先听我说，听完点话筒。话筒亮了，再跟我说。'},
+  {id:'speech-pass',text:'我听懂啦！点小勾勾，收好这次相遇吧。'},
+  {id:'speech-partial',text:'我听到了你说的一部分。点小芽，让我再教你一遍。'},
+  {id:'speech-retry',text:'这次我还没听清。点小芽，听我说，再试一次吧。'},
+  {id:'speech-silent',text:'还没听到你的声音。点小芽听我说，或者点话筒再试一次。'},
+  {id:'speech-wait',text:'小耳朵还在准备。你可以先听我说，准备好会帮你听一听。'},
+  {id:'house-placed',text:'放好啦。点下面的小房子，和我接着玩吧。'},
   ...EVENTS.flatMap(event=>event.contexts.map(context=>({id:context.id,text:context.help+'点一下小耳朵，听我说。'}))),
 ];
-const contextIds = new Set(EVENTS.flatMap(event => event.contexts.map(context => context.id)));
+const contextIds = new Set([...EVENTS.flatMap(event => event.contexts.map(context => context.id)),
+  'assist-model','speech-pass','speech-partial','speech-retry','speech-silent','speech-wait','house-placed']);
 for (const prompt of prompts) Object.assign(prompt, contextIds.has(prompt.id)
   ? {engine:'edge-neural',voice:'zh-CN-XiaoxiaoNeural',model:'Microsoft Edge Neural TTS'}
   : {engine:'qwen-custom-voice',voice:'Serena',model:'Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice'});

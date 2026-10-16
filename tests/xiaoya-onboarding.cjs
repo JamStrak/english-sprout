@@ -1,5 +1,7 @@
 // Guided entry regression: real HTML audio and MediaRecorder; no recognition or
-// learning-result stub. Browser fake microphone verifies mechanics, not speech.
+// learning-result stub. Model asset requests are unavailable in this suite so
+// model loading cannot monopolize CPU across guide fixtures. Actual recognition
+// is covered separately. Browser fake microphone verifies mechanics, not speech.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -8,9 +10,11 @@ const origin=process.env.TEST_URL||'http://127.0.0.1:24756';
 const out=path.resolve(__dirname,'../test-results/xiaoya-onboarding');
 const STATE='xiaoya-english:state:v1',PREFS='xiaoya-english:preferences:v1';
 const checks=[];let browser;
+const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 
 async function fixture(options={}){
   const c=await browser.newContext({viewport:{width:390,height:844},permissions:['microphone'],timezoneId:'Asia/Shanghai',serviceWorkers:'block',...options});
+  await c.route(/\/speech\/(?:vosk-.*\.js|model-.*\.tar\.gz)(?:\?.*)?$/,route=>route.abort('failed'));
   await c.addInitScript(()=>{
     window.qa={errors:[],audios:[],streams:[],requests:[],hold:null,held:-1,voiced:0,stops:0,deny:false,failKey:null};
     window.addEventListener('error',e=>qa.errors.push(e.message));
@@ -47,7 +51,7 @@ async function releaseHeld(p){await p.evaluate(async()=>{const a=qa.audios[qa.he
 async function seedStage(p,step,mic=true){await p.evaluate(({key,step,mic})=>localStorage.setItem(key,JSON.stringify({welcome:true,mic,guideStep:step})),{key:PREFS,step,mic});await p.reload();await click(p,'start-guide');await stage(p,step==='replay'?'speak':step);}
 async function noEvidence(p){assert.equal((await state(p))?.evidence.length||0,0);}
 async function diagnostic(p){return p.evaluate(()=>({step:document.querySelector('.guide-view')?.dataset.step,prefs:localStorage.getItem('xiaoya-english:preferences:v1'),state:localStorage.getItem('xiaoya-english:state:v1'),message:document.querySelector('.guide-message')?.textContent,toast:document.querySelector('.toast')?.textContent,errors:qa.errors,voiceSamples:qa.voiced,stops:qa.stops,audios:qa.audios.map(x=>({url:x.url,ended:x.ended,plays:x.plays,paused:x.audio.paused})),tracks:qa.streams.flatMap(s=>s.getTracks().map(t=>t.readyState))})).catch(e=>({error:e.message}));}
-async function test(name,fn,options){let f,build;try{f=await fixture(options);build=await f.p.locator('meta[name="xiaoya-build"]').getAttribute('content');await fn(f);assert.deepEqual(await f.p.evaluate(()=>qa.errors),[]);checks.push({name,status:'PASS',build,diagnostic:await diagnostic(f.p)});console.log('PASS',name);}catch(error){checks.push({name,status:'FAIL',build,error:error.stack,diagnostic:f?await diagnostic(f.p):null});console.error('FAIL',name,error.message);if(f)await f.p.screenshot({path:path.join(out,`failed-${checks.length}.png`),fullPage:true}).catch(()=>{});}finally{await f?.c.close();}}
+async function test(name,fn,options){if(filter&&!filter.test(name))return;let f,build;try{f=await fixture(options);build=await f.p.locator('meta[name="xiaoya-build"]').getAttribute('content');await fn(f);assert.deepEqual(await f.p.evaluate(()=>qa.errors),[]);checks.push({name,status:'PASS',build,diagnostic:await diagnostic(f.p)});console.log('PASS',name);}catch(error){checks.push({name,status:'FAIL',build,error:error.stack,diagnostic:f?await diagnostic(f.p):null});console.error('FAIL',name,error.message);if(f)await f.p.screenshot({path:path.join(out,`failed-${checks.length}.png`),fullPage:true}).catch(()=>{});}finally{await f?.c.close();}}
 
 (async()=>{
   fs.mkdirSync(out,{recursive:true});
@@ -68,7 +72,7 @@ async function test(name,fn,options){let f,build;try{f=await fixture(options);bu
     await click(p,'guide-wave');await stage(p,'speak');await noEvidence(p);assert.equal(await p.evaluate(()=>qa.streams.length),0);
   });
   await test('Guided capture, replay, reload recovery and placing one gift create participation only',async({p,requests})=>{
-    await toSpeak(p);await authorize(p);await capture(p);await noEvidence(p);
+    await toSpeak(p);assert(!requests.some(r=>/model-en-us|vosk-0/.test(r.url)),'Listening and waving alone do not prepare recognition');await authorize(p);await capture(p);await noEvidence(p);
     await p.reload();await click(p,'start-guide');await stage(p,'speak');assert.equal((await prefs(p)).guideStep,'speak','A lost in-memory clip must lead to a fresh recording');
     await capture(p);await p.evaluate(()=>qa.hold='blob:');await click(p,'guide-replay');await p.waitForFunction(()=>qa.held>=0);
     await stage(p,'replay');assert.equal(await p.locator('[data-action="guide-gift"]').count(),0);await releaseHeld(p);await stage(p,'gift');
@@ -78,7 +82,7 @@ async function test(name,fn,options){let f,build;try{f=await fixture(options);bu
     await click(p,'guide-place');await p.locator('[data-action="next-event"]').waitFor();const done=await state(p);
     assert.equal(done.items['sun-lamp'].x,.5);assert.equal(done.items['sun-lamp'].y,.4);assert.equal(done.completions['hello-morning'].count,1);assert.equal((await prefs(p)).guideStep,'done');
     await p.reload();await p.locator('[data-action="next-event"]').waitFor();assert.deepEqual(await state(p),done);assert.equal(await p.locator('[data-action="world"]').count(),0);
-    const saved=await p.evaluate(()=>JSON.stringify(Object.fromEntries(Object.entries(localStorage))));assert.doesNotMatch(saved,/blob:|base64|audio\/webm/);assert(!requests.some(r=>!['GET','HEAD'].includes(r.method)));assert(!requests.some(r=>/model-en-us|vosk-0/.test(r.url)));
+    const saved=await p.evaluate(()=>JSON.stringify(Object.fromEntries(Object.entries(localStorage))));assert.doesNotMatch(saved,/blob:|base64|audio\/webm/);assert(!requests.some(r=>!['GET','HEAD'].includes(r.method)));
     await p.screenshot({path:path.join(out,'guide-complete.png'),fullPage:true});
   });
   await test('Denied microphone offers a silent completion route without inventing speech evidence',async({p})=>{
@@ -95,8 +99,10 @@ async function test(name,fn,options){let f,build;try{f=await fixture(options);bu
     await c.unroute(pattern);await click(p,'sample');await stage(p,'wave');await noEvidence(p);
   });
   await test('Leaving during a held sound cancels it; reopening resumes the unfinished step',async({p})=>{
-    await start(p);await p.locator('[data-action="sample"]:not([disabled])').waitFor();await p.evaluate(()=>qa.hold='hello-02.mp3');await click(p,'sample');await p.waitForFunction(()=>qa.held>=0);await click(p,'home');await p.locator('[data-action="start-guide"]').waitFor();
-    assert(await p.evaluate(()=>qa.audios.every(x=>x.audio.paused)));assert.equal((await prefs(p)).guideStep,'listen');await noEvidence(p);
+    await start(p);await p.locator('[data-action="sample"]:not([disabled])').waitFor();await p.evaluate(()=>qa.hold='hello-02.mp3');await click(p,'sample');await p.waitForFunction(()=>qa.held>=0);const oldCount=await p.evaluate(()=>qa.audios.length);await click(p,'home');await p.locator('[data-action="start-guide"]').waitFor();
+    // Returning home now speaks the next-action cue; only the abandoned guide
+    // audio must be stopped and released, not that new navigation narration.
+    assert(await p.evaluate(n=>qa.audios.slice(0,n).every(x=>x.audio.paused),oldCount));assert.equal(await p.evaluate(()=>qa.audios[qa.held].audio.getAttribute('src')),null);assert.equal((await prefs(p)).guideStep,'listen');await noEvidence(p);
     await p.reload();await start(p);await click(p,'sample');await stage(p,'wave');await noEvidence(p);
   });
   await test('Existing learning, fixed furniture and old-product storage survive the first new guide',async({p})=>{
@@ -115,5 +121,5 @@ async function test(name,fn,options){let f,build;try{f=await fixture(options);bu
   for(const [width,height]of [[320,568],[390,844],[768,1024]])await test(`First entry and guide stay usable at ${width}x${height}`,async({p})=>{
     assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));let box=await p.locator('[data-primary]').boundingBox();assert(box.width>=48&&box.height>=48&&box.y>=0&&box.y+box.height<=height);await start(p);await p.locator('[data-action="sample"]:not([disabled])').waitFor();box=await p.locator('main [data-primary]').boundingBox();assert(box.width>=48&&box.height>=48&&box.y>=0&&box.y+box.height<=height);assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await p.screenshot({path:path.join(out,`guide-${width}.png`),fullPage:true});
   },{viewport:{width,height},isMobile:true,hasTouch:true});
-  await browser.close();fs.writeFileSync(path.join(out,'results.json'),JSON.stringify(checks,null,2));console.log(`${checks.filter(x=>x.status==='PASS').length}/${checks.length} passed`);if(checks.some(x=>x.status==='FAIL'))process.exitCode=1;
+  await browser.close();fs.writeFileSync(path.join(out,filter?'results-filtered.json':'results.json'),JSON.stringify(checks,null,2));console.log(`${checks.filter(x=>x.status==='PASS').length}/${checks.length} passed`);if(checks.some(x=>x.status==='FAIL'))process.exitCode=1;
 })().catch(async error=>{console.error(error);await browser?.close();process.exitCode=1;});

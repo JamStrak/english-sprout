@@ -13,16 +13,19 @@ const leaf = (x,y,s=1,rotate=0) => at(x,y,s,`<path d="M0 0C-26-1-27-23-26-27C-5-
 
 function sprout(mood='happy') {
   const sleepy = /sleep|bed|calm/.test(mood), asking = /ask|request|thinking|listen/.test(mood), wave = /wave|happy|resolved|celebrate/.test(mood);
+  const pointing = /point/.test(mood), listening = /listening/.test(mood), helping = /helping|inviting|story/.test(mood), reading = /reading/.test(mood);
+  const leftArm = pointing?'M-36 32Q-57 17-77 2':helping?'M-36 34Q-58 43-77 31':wave?'M-36 32Q-63 18-61-6':'M-36 35Q-53 48-49 57';
+  const rightArm = listening?'M37 34Q61 20 42 0':helping?'M37 34Q58 43 69 27':asking?'M37 34Q56 32 59 15':'M37 34Q58 51 50 60';
   return `${ell(0,93,48,8,'#6b7643','opacity=".13"')}${line('M-29 66l-9 19M27 67l9 19',C.leaf,13)}
-    <g class="buddy-arm${wave?' buddy-wave':''}">${line(wave?'M-36 32Q-63 18-61-6':'M-36 35Q-53 48-49 57',C.green,15)}${wave?`${line('M-62-5l-5-9M-59-5l2-11',C.green,6)}`:''}</g>${line(asking?'M37 34Q56 32 59 15':'M37 34Q58 51 50 60',C.green,15)}
+    <g class="buddy-arm${wave?' buddy-wave':''}">${line(leftArm,C.green,15)}${pointing?line('M-77 2l-12-8',C.green,6):wave?line('M-62-5l-5-9M-59-5l2-11',C.green,6):''}</g>${line(rightArm,C.green,15)}
     <path d="M-41 16C-47-18-26-48 0-48S48-22 43 15L39 61C34 83-29 87-38 63Z" fill="${C.mint}" stroke="#6f9360" stroke-width="3"/>
     <path d="M-31 17C-36-11-22-34-2-37" stroke="#f7f9e8" stroke-width="7" stroke-linecap="round"/>
     ${line('M1-48Q-2-63 5-74',C.leaf,5)}${leaf(3,-60,.66,45)}${leaf(7,-66,.57,135)}
-    ${sleepy?line('M-23 6q7 8 14 0M12 6q7 8 14 0',C.ink,3.5):`${ell(-16,5,3.8,5,C.ink)}${ell(17,5,3.8,5,C.ink)}`}
+    ${sleepy?line('M-23 6q7 8 14 0M12 6q7 8 14 0',C.ink,3.5):`${ell(pointing?-21:-16,reading?12:5,3.8,5,C.ink)}${ell(pointing?12:17,reading?12:5,3.8,5,C.ink)}`}
     ${ell(-27,18,8,5,C.pink)}${ell(28,18,8,5,C.pink)}
     <g class="buddy-mouth">${asking?ell(1,23,4,5,C.ink):sleepy?line('M-3 24q5 3 9 0',C.ink,2.5):`<path d="M-9 20Q1 25 11 20Q4 38-4 30Z" fill="${C.ink}"/>`}</g>
     <path d="M-18 49Q0 39 19 49L17 68Q0 75-16 68Z" fill="#a5be8b"/>
-    ${leaf(3,62,.28,35)}`;
+    ${leaf(3,62,.28,35)}${listening?`${ell(45,4,8,11,C.green)}${line('M50-4q9 8 0 16',C.leaf,2.4)}`:''}`;
 }
 
 export function buddy(mood='happy') { return tag(at(90,91,.92,sprout(mood)),'0 0 180 190','class="buddy-svg"'); }
@@ -140,128 +143,220 @@ function backdrop(theme) {
   return `${rect(0,0,400,300,0,bed?'#e3e5db':'#f4ebd7')}${windowArt(bed)}<path d="M0 207H400V300H0Z" fill="${bed?'#c2b298':'#ddc4a2'}"/>${line('M0 208h400','#c7ad8c',5)}${line('M0 263h400M88 209L69 300M285 210l29 90','#cfb592',2)}${bed?`${spark(302,39,.55,'#d2b872')}${spark(329,73,.35,'#d2b872')}`:`${rect(273,51,69,65,5,'#c6a77d')}${rect(281,59,53,49,2,'#faf4e1')}${at(309,91,.49,toy('plant'))}`}`;
 }
 
+// A setting is an actual picture, not a keyword to be guessed from its title.
+// The coat scene is deliberately shared by two help events.
+const sceneDefinitions = {
+  'hello-morning': ['hello','morning'], 'garden-morning': ['outside','morning'],
+  'hello-welcome': ['hello','meeting'], 'park-new-friend': ['outside','meeting'],
+  'hello-goodbye': ['hello','leaving'], 'park-goodbye': ['outside','leaving'],
+  'food-water': ['food','water'], 'bed-water': ['bed','water'],
+  'food-more': ['outside','more'], 'drawing-more': ['play','more'],
+  'food-no-thanks': ['food','decline'], 'park-decline': ['outside','decline'],
+  'play-box': ['play','open-box'], 'coat-zip': ['care','zip-coat'],
+  'play-ball': ['outside','invite'], 'blocks-invite': ['play','invite'],
+  'play-bridge': ['outside','bridge'], 'basket-lift': ['play','lift'],
+  'care-hands': ['care','wash'], 'picnic-wash': ['outside','wash'],
+  'backpack-buckle': ['care','open-buckle'],
+  'care-socks': ['outside','wet-socks'], 'spilled-water-socks': ['food','wet-socks'],
+  'outside-cat': ['outside','discover'], 'window-snail': ['hello','discover'],
+  'outside-bird': ['outside','look'], 'window-bird': ['hello','look'],
+  'outside-dog': ['outside','hear'], 'window-dog': ['hello','hear'],
+  'bed-book': ['bed','read-together'], 'garden-book': ['outside','read-together'],
+  'bed-story': ['bed','tell-story'], 'rain-story': ['hello','tell-story'],
+  'bed-night': ['bed','sleep'], 'camp-night': ['outside','sleep'],
+};
+const sceneAliases = { 'care-zip':'coat-zip', hello:'hello-welcome', food:'food-water', play:'play-box', care:'care-hands', outside:'outside-cat', bed:'bed-night' };
 function eventInfo(value) {
-  if(typeof value==='string') {
-    const prefix=value.split('-')[0];
-    return {theme:themeNames.includes(value)?value:themeNames.includes(prefix)?prefix:'play',id:value};
+  const raw=typeof value==='string'?{scene:value}:value||{};
+  const candidates=[raw.settingId,raw.context?.settingId,raw.sceneId,raw.scene,raw.id];
+  for(const candidate of candidates) {
+    const id=sceneAliases[candidate]||candidate;
+    if(sceneDefinitions[id]) return {id,theme:sceneDefinitions[id][0],action:sceneDefinitions[id][1]};
   }
-  const raw = value||{};
-  const scene=String(raw.sceneId||raw.scene||raw.id||'');
-  const id=String(raw.settingId||raw.context?.settingId||scene);
-  const prefix=scene.split('-')[0];
-  let theme=(themeNames.includes(prefix)?prefix:null)||raw.themeId||raw.theme||'play';
-  if(typeof theme==='object') theme=theme.id;
-  return {theme:themeNames.includes(theme)?theme:'play',id};
+  return {id:'unknown',theme:'play',action:'neutral'};
 }
 
-function hands(clean=false) {
-  const hand=`<path d="M-20 21V-3Q-27-14-18-17L-8-8V-27Q-8-36-1-33L2-14V-35Q6-43 11-34L13-14V-30Q17-37 22-28L22-9V-20Q28-27 31-18V9Q30 30 10 33Z" fill="#efcbaa" stroke="#d6af90" stroke-width="2"/>`;
-  return `${at(-25,0,.66,hand,-30)}${at(27,0,.66,hand,18)}${clean?`${spark(-21,-18,.4,'#fffdf1')}${spark(29,8,.35,'#fffdf1')}`:`${ell(-25,6,6,4,'#9d805b')}${ell(-13,-1,5,4,'#9d805b')}${ell(36,10,6,4,'#9d805b')}`}`;
+// These cue groups name the actual painted objects for the scene contract tests.
+const part = (cue,body) => `<g data-cue="${cue}">${body}</g>`;
+const object = (name,x,y,scale=1,resolved=true,rotate=0) => at(x,y,scale,toy(name,resolved),rotate);
+const friend = (x,y,scale=1,pose='quiet') => at(x,y,scale,sprout(pose));
+const shadow = (x,y,rx=38) => ell(x,y,rx,7,'#6b6349','opacity=".14"');
+function bear(pose='quiet') {
+  const leaving=pose==='leaving', waving=pose==='wave';
+  return `${shadow(0,92,39)}${line(leaving?'M-16 60l-13 23M15 60l22 13':'M-17 61v23M17 61v23',C.dark,17)}${ell(0,40,32,37,C.wood)}${ell(0,41,20,25,'#ead2a7')}${line(waving?'M-24 29Q-49 10-45-11':'M-25 30l-17 24',C.wood,14)}${line('M25 30l17 22',C.wood,14)}${leaving?`${rect(-30,7,29,48,11,C.orange)}${line('M-15 8v32',C.cream,3)}${ell(10,-13,29,32,C.wood)}${dot(-7,-39,11,C.wood)}${dot(29,-15,3,C.ink)}${ell(32,-2,13,10,'#ead2a7')}${dot(41,-5,4,C.dark)}`:at(0,-15,.89,toy('bear'))}`;
 }
-
-function picnicMat() {return `<path d="M64 198L251 187 290 271 34 275Z" fill="#edc8a2"/>${line('M81 197L65 274M130 194l-2 80M184 193l14 79M237 188l26 84M50 230l221-4', '#fff0d4',9)}`;}
+function animal(name) {
+  const cat=name==='cat',color=cat?C.pink:C.wood;
+  return `${shadow(0,66,36)}${line(cat?'M25 37Q64 53 58 18':'M-24 32Q-53 23-48 7',color,10)}${ell(0,34,29,31,color)}${ell(-18,62,13,7,color)}${ell(18,62,13,7,color)}${ell(0,35,17,23,cat?'#f1d3c0':'#e8d4b0')}${at(0,-7,.9,toy(name))}`;
+}
+function palm(kind='open',color='#efcbaa') {
+  if(kind==='point') return `<path d="M-15 39L-10 10-31-3Q-38-11-30-13L-7-3-10-38Q-10-46-3-45L3-7 11-11 29-3 25 27 17 43Z" fill="${color}" stroke="#d6af90" stroke-width="2"/>`;
+  return `<path d="M-22 36L-30 11Q-34 1-27-2L-14 11-17-22Q-18-31-11-32L-5-7-5-35Q-4-43 3-39L7-9 11-31Q15-39 20-31L18-5 25-20Q31-27 35-18L29 13Q27 35 15 41Z" fill="${color}" stroke="#d6af90" stroke-width="2"/>`;
+}
+function hands(clean=false,paint=false) {
+  return `${at(-28,0,.67,palm(),-30)}${at(27,0,.67,palm(),18)}${clean?`${spark(-21,-18,.4,'#fffdf1')}${spark(29,8,.35,'#fffdf1')}`:`${ell(-25,6,6,4,paint?C.orange:'#9d805b')}${ell(-13,-1,5,4,paint?C.blue:'#9d805b')}${ell(36,10,6,4,paint?C.green:'#9d805b')}`}`;
+}
+function picnicMat() {return `<path d="M64 198L251 187 290 271 34 275Z" fill="#edc8a2"/>${line('M81 197L65 274M130 194l-2 80M184 193l14 79M237 188l26 84M50 230l221-4','#fff0d4',9)}`;}
+function door(open=true) {
+  return `${rect(15,34,132,227,58,C.wood)}${rect(26,45,110,213,49,open?'#9fba97':'#f3d5a1')}${open?`<path d="M27 49L92 75V256H27Z" fill="#efd4a2"/>${dot(77,165,5,C.dark)}`:dot(119,168,5,C.dark)}${rect(12,253,141,11,5,C.dark)}`;
+}
+function dawnWindow() {
+  return `${rect(23,20,154,132,55,C.wood)}${rect(31,28,138,116,47,'#f1d8b2')}${dot(101,111,29,C.yellow)}<path d="M32 117Q67 95 100 116Q130 96 169 117V144H32Z" fill="#afc199"/>${line('M100 29v114M32 97h137','#fff4db',6)}${line('M62 74l-9-10M100 66V54M135 74l10-11',C.yellow,4)}`;
+}
+function bigWindow(night=false,rain=false) {
+  return `${rect(24,23,200,146,55,C.wood)}${rect(33,32,182,128,48,night?'#687e86':'#cadfd6')}${night?object('moon',165,68,.39):rain?`${ell(91,63,37,17,'#aebfc0')}${ell(128,62,32,16,'#aebfc0')}${line('M65 88l-7 13M100 89l-7 13M137 89l-7 13M168 95l-7 13M91 121l-7 13M141 126l-7 13','#86aab1',4)}`:`${dot(169,64,17,C.yellow)}<path d="M34 140Q81 93 118 136Q170 108 214 143V160H34Z" fill="#aac197"/>`}${line('M124 33v127M35 112h179','#f9ecd3',6)}${rect(17,159,215,13,5,C.wood)}`;
+}
+function plainRoom(night=false) {
+  return `${rect(0,0,400,300,0,night?'#dce1d9':'#f4ebd7')}${rect(0,211,400,89,0,night?'#bbad95':'#ddc4a2')}${line('M0 212h400M0 269h400','#c4aa87',3)}`;
+}
+function table() {return `${rect(44,203,294,18,9,C.wood)}${line('M70 222l-7 69M307 222l8 69',C.dark,10)}`;}
+function biscuit(x,y,s=.6) {return at(x,y,s,`${dot(0,0,29,'#dba86d')}${dot(-10,-10,3,C.dark)}${dot(10,-5,3,C.dark)}${dot(-5,12,3,C.dark)}${dot(13,14,3,C.dark)}`);}
+function drops(x,y,s=1) {return at(x,y,s,`<path d="M0-15Q-16 5 0 8Q16 5 0-15M24 4Q13 20 24 21Q35 20 24 4" fill="#78afb9"/>`);}
+function soundWaves(x,y,s=1) {return at(x,y,s,line('M0-14q17 14 0 28M13-23q28 23 0 46','#bc914c',4));}
+function wornSocks(dry=false) {
+  return `${line('M-25-62v31M24-62v31','#efcbaa',23)}${at(-27,-5,.84,toy('sock'),8)}${at(25,-5,.84,toy('sock'),-14)}${dry?'':`${ell(-20,10,14,7,'#79b3bf','opacity=".78"')}${ell(29,9,15,9,'#79b3bf','opacity=".78"')}${drops(42,26,.7)}`}`;
+}
+function buckleBag(open=false) {
+  return `${line('M-14-41q0-22 28 0',C.dark,6)}${rect(-42,-37,84,88,15,C.orange)}${rect(-35,15,70,29,7,'#e9b68a')}${open?`<path d="M-41-35Q0-82 41-35L32-22Q0-48-32-22Z" fill="#edbb90"/>${ell(0,-29,34,10,'#8e674b')}${line('M0-56v21M0-5v22',C.cream,7)}${rect(-9,-40,18,12,3,C.wood)}${rect(-9,0,18,13,3,C.wood)}`:`${rect(-42,-38,84,44,14,'#e9b68a')}${line('M0-25v45',C.cream,7)}${rect(-10,-6,20,19,4,C.wood)}${rect(-5,-2,10,11,2,C.dark)}`}`;
+}
+function storyBubble(active=false) {
+  return `${ell(174,77,67,49,'#fffaf0')}${dot(234,121,7,'#fffaf0')}${dot(248,136,4,'#fffaf0')}${active?`${at(149,90,.53,toy('plant'))}${at(194,68,.5,toy('bird'))}${spark(155,48,.5)}${line('M183 88q12 7 23 0',C.orange,2)}`:`${at(174,78,.65,toy('moon'))}`}`;
+}
 
 export function sceneArt(eventOrScene,phase='before') {
-  const {theme,id}=eventInfo(eventOrScene), done=/resolved|complete|success|reward|end/.test(phase), request=/request|speak|listen|observe|challenge/.test(phase);
-  const uid=`xygrain${++serial}`;
-  let scene=backdrop(theme), objects='', person=at(294,168,.7,sprout(done?'celebrate':request?'asking':'happy'));
-  if(theme==='hello') {
-    scene = `${rect(0,0,400,300,0,'#e9eedb')}<path d="M0 224Q100 196 207 225Q300 202 400 224V300H0Z" fill="#c2cfa7"/>${rect(27,40,177,219,68,'#d1ad80')}${rect(40,53,150,206,59,'#f5d8a3')}${done?`<path d="M47 63L151 89V255H47Z" fill="#b6c7aa"/>${line('M147 91v160','#8fa587',3)}`:`${line('M116 61v188','#e2be89',2)}${dot(166,170,7,C.dark)}`}${rect(25,251,187,12,6,C.wood)}${at(215,239,.58,toy('plant'))}${at(73,264,.68,toy('rug'))}`;
-    const goodbye=/bye|later|goodbye|farewell|03/.test(id);
-    person=at(goodbye&&done?350:282,175,goodbye&&done?.43:.72,sprout('wave'));
-    if(/morning|01/.test(id)) objects+=`${dot(333,56,27,C.yellow)}${spark(373,88,.45)}`;
-    if(/friend|welcome|new|02/.test(id)) objects+=at(188,222,.48,toy('basket'));
+  const {theme,id,action}=eventInfo(eventOrScene);
+  const done=/resolved|complete|success|reward|end/.test(phase), request=/request|speak|listen|observe|challenge/.test(phase);
+  let scene='',objects='',people='';
+  // Morning is waking up or a low sunrise; meeting always has a new person;
+  // goodbye always has a departing person and a travel path.
+  if(action==='morning') {
+    const garden=id==='garden-morning';
+    scene=garden?`${rect(0,0,400,300,0,'#f3dfbc')}${dot(199,136,38,C.yellow)}${line('M199 84V68M151 100l-12-12M245 100l12-12',C.yellow,5)}<path d="M0 163Q87 123 183 162Q302 126 400 161V300H0Z" fill="#bdcca2"/>`:plainRoom()+part('dawn-window',dawnWindow());
+    if(garden) {
+      objects=part('morning-garden',object('plant',89,233,1.04)+object('plant',173,251,.7)+object('jug',done?238:292,211,.6,true,done?-40:0)+(done?line('M220 203q-27 0-36 25','#86b8bb',4):''));
+      people=part('morning-greeting',friend(286,145,.81,done?'wave':request?'asking':'quiet'));
+    } else {
+      objects=part('waking-bed',object('bed',132,248,1.66)+object('pillow',85,211,.68)+(done?'':object('blanket',148,220,.96)));
+      people=part('morning-greeting',friend(done?275:137,done?158:168,.76,done?'wave':request?'asking':'sleep'));
+      objects+=part('morning-slippers',object('shoe',254,264,.49)+object('shoe',299,264,.49));
+    }
+  } else if(action==='meeting') {
+    const park=id==='park-new-friend';scene=park?backdrop('outside'):plainRoom()+door(true);
+    objects=park?part('park-bench',object('bench',111,239,.84)):part('welcome-doormat',object('welcome-mat',100,270,.95));
+    const distance=done?31:0;
+    people=part('new-friend',at(park?124+distance:174+distance,162,.8,bear(done?'wave':'quiet')))+part('meeting-greeting',friend(315-distance,155,.78,done||request?'wave':'quiet'));
+    if(done) objects+=part('friendly-handshake',line('M235 181q16 11 32 0',C.green,11)+ell(245,184,12,8,C.wood));
+  } else if(action==='leaving') {
+    const park=id==='park-goodbye';scene=park?backdrop('outside'):plainRoom()+door(true);
+    objects=part('leaving-path',`<path d="M138 294Q258 249 375 175L400 213Q301 284 239 300Z" fill="#f0ddb8"/>${ell(251,264,10,4,C.dark,'transform="rotate(-28 251 264)" opacity=".4"')}${ell(279,246,10,4,C.dark,'transform="rotate(-28 279 246)" opacity=".4"')}`);
+    people=part('farewell-wave',friend(park?104:151,164,.75,'wave'))+part('departing-backpack-friend',at(done?351:285,done?145:180,done?.52:.75,bear('leaving')));
+  } else if(action==='water') {
+    const bedtime=id==='bed-water';scene=bedtime?plainRoom(true)+windowArt(true):backdrop('food');
+    objects=bedtime?part('bedside-table',object('bed',92,247,1.31)+object('table',233,240,1.02)):table()+part('just-played-ball',object('ball',64,267,.55));
+    const cupX=bedtime?220:133,cupY=bedtime?204:174,jugX=done?cupX+65:bedtime?310:255;
+    objects+=part(done?'filled-water-cup':'empty-water-cup',object('blue-cup',cupX,cupY,.93,done));
+    objects+=part('water-jug',object('jug',jugX,done?cupY-34:cupY-1,.8,true,done?-40:0));
+    if(done)objects+=part('pouring-water',line(`M${cupX+36} ${cupY-47}Q${cupX+11} ${cupY-40} ${cupX+2} ${cupY-21}`,'#83b7c0',5));
+    people=part('water-request',friend(332,bedtime?131:126,.61,done?'happy':request?'asking':'quiet'))+part('reaching-for-water',at(bedtime?182:101,285,.72,palm('open'),-20));
+  } else if(action==='more') {
+    const drawing=id==='drawing-more';scene=drawing?backdrop('play'):backdrop('outside');objects=drawing?table():picnicMat();
+    objects+=part(done?'refilled-bowl':'empty-bowl',object('bowl',126,drawing?179:230,.96,false)+(done?(drawing?object('paper',124,166,.48):object('apple',124,209,.47)):''));
+    objects+=part(drawing?'spare-drawing-paper':'spare-fruit',drawing?object('paper',253,177,.77):object('basket',241,218,.85)+object('apple',240,195,.5));
+    if(drawing)objects+=part('drawing-tools',line('M174 190l30-32',C.orange,8)+line('M192 197l34-20',C.green,8)+rect(151,134,40,35,3,'#fff8e7')+leaf(169,159,.35));
+    people=part('asking-for-more',friend(325,137,.68,done?'helping':request?'asking':'quiet'))+part('upturned-request-hand',at(150,done?270:263,.76,palm('open'),-68));
+  } else if(action==='decline') {
+    const park=id==='park-decline';scene=park?backdrop('outside'):backdrop('food');objects=park?picnicMat():table();
+    objects+=park?part('picnic-basket',object('basket',84,235,.75)):part('finished-meal',ell(103,185,46,13,'#fff5dc')+biscuit(90,184,.15)+biscuit(113,184,.12)+object('spoon',53,180,.55,false,-38));
+    objects+=part(park?'offered-juice':'offered-biscuit',park?object('cup',done?282:211,205,.75,true):biscuit(done?278:210,171,.7));
+    people=part('offering-friend',friend(329,139,.67,done?'quiet':'helping'))+part('polite-stop-palm',at(park?145:145,park?189:169,1.03,palm(),-10));
+    // The offered object withdraws; no cross, punishment, or consumption reward.
+    if(done)objects+=part('offer-withdrawn',line(park?'M236 199q12-10 27-8':'M235 164q14-10 29-5',C.orange,3));
+  } else if(action==='open-box') {
+    scene=backdrop('play');objects=object('rug',181,263,2);
+    objects+=part(done?'opened-toy-box':'stuck-toy-box',object('box',163,220,1.35,done));
+    people=part('box-helper',friend(done?275:309,153,.78,done?'helping':request?'asking':'quiet'))+part('pulling-box-lid',at(113,done?195:215,.61,palm('open'),-94));
+    if(!done)objects+=part('stuck-latch',line('M149 182l-7-10M170 179l2-11M186 187l9-7',C.orange,3));
+  } else if(action==='zip-coat') {
+    scene=plainRoom()+windowArt();
+    objects=part('wearing-coat',ell(150,116,28,31,'#efcbaa')+`<path d="M123 111Q121 82 148 83Q179 83 178 112Q163 100 151 105Q135 93 123 111Z" fill="${C.dark}"/>`+dot(140,117,2.5,C.ink)+dot(160,117,2.5,C.ink)+line(done?'M142 130q8 8 16 0':'M144 133q6-3 12 0',C.ink,2)+line('M132 235v37M171 235v37',C.dark,15)+object('coat',150,190,1.44,done));
+    objects+=part(done?'closed-zipper':'stuck-zipper',at(150,done?175:202,.55,palm('point'),done?165:24));
+    people=part('zipper-helper',friend(done?268:307,160,.76,done?'helping':request?'asking':'quiet'));
+    if(!done)objects+=line('M162 189l10-8M162 204h13',C.orange,3);
+  } else if(action==='invite') {
+    const blocks=id==='blocks-invite';scene=blocks?backdrop('play'):backdrop('outside');
+    objects=blocks?object('rug',196,264,1.84):'';
+    objects+=part(blocks?'shared-building-blocks':'shared-ball',blocks?object(done?'bridge':'block',188,236,1.05)+rect(done?233:244,done?227:250,23,23,3,C.blue):object('ball',done?229:146,247,.97));
+    people=part('inviting-friend',friend(done?274:323,156,.78,done?'helping':request?'inviting':'quiet'))+part('playmate',at(done?112:70,done?173:174,.66,bear(done?'wave':'quiet')));
+    if(done&&!blocks)objects+=part('rolling-ball',line('M164 254q14-15 28-9M179 266h18',C.orange,3));
+  } else if(action==='bridge') {
+    scene=backdrop('outside');objects=part('river-gap',`<path d="M148 163Q118 199 151 236Q178 268 145 300H235Q261 262 222 233Q195 200 220 163Z" fill="#91bfbe"/>${line('M160 190h17M194 281h20','#d7e9dc',4)}`);
+    objects+=part(done?'placed-bridge-plank':'unplaced-bridge-plank',rect(86,235,39,30,4,C.orange)+rect(244,235,38,30,4,C.blue)+at(185,done?229:218,1,rect(-85,-9,170,18,4,C.wood),done?0:-21));
+    people=part('bridge-helper',friend(321,151,.72,done?'helping':request?'asking':'quiet'))+part('lifting-plank-together',at(99,done?232:249,.65,palm(),-75)+line(done?'M275 178Q258 193 261 229':'M275 178q-10 15-2 29',C.green,10));
+  } else if(action==='lift') {
+    scene=backdrop('play');objects=object('rug',188,274,1.75);
+    objects+=part(done?'lifted-heavy-basket':'heavy-basket-on-floor',object('basket',175,done?191:246,1.5)+object('ball',158,done?155:210,.61)+object('block',196,done?169:224,.5));
+    people=part('basket-helper',friend(done?285:321,155,.74,done?'helping':request?'asking':'quiet'))+part('basket-handles',at(108,done?171:230,.75,palm(),-85)+line(done?'M261 183L220 171':'M265 188l-13 29',C.green,12));
+    if(done)objects+=part('basket-clear-of-ground',shadow(175,278,65));
+  } else if(action==='wash') {
+    const picnic=id==='picnic-wash';scene=picnic?backdrop('outside'):plainRoom()+windowArt();
+    objects=picnic?picnicMat()+part('outdoor-water-bowl',object('bowl',157,239,1.45,false)+ell(157,232,45,9,'#94c5cc')+object('leaf-soap',80,220,.61)+object('paper',85,267,.42)):
+      part('washbasin',rect(53,201,194,91,9,C.wood)+rect(43,184,215,20,10,'#f8f5e6')+ell(151,192,65,14,'#a8c9c6')+line('M154 157v-31q0-21 28-21',C.dark,10)+object('soap',76,173,.55)+object('towel',235,114,.62));
+    objects+=part(done?'clean-hands':picnic?'painty-hands':'muddy-hands',at(156,picnic?204:169,1.12,hands(done,picnic)));
+    if(done)objects+=part('washing-water',picnic?drops(169,218,.6):line('M154 151v35','#86bac2',6));
+    people=part('washing-helper',friend(328,157,.72,done?'happy':request?'pointing':'quiet'));
+  } else if(action==='open-buckle') {
+    scene=plainRoom()+door(false);objects=part(done?'opened-backpack-buckle':'closed-backpack-buckle',at(167,197,1.23,buckleBag(done)))+object('shoe',232,273,.58);
+    people=part('buckle-helper',friend(done?275:323,153,.73,done?'helping':request?'asking':'quiet'))+part('pulling-buckle',at(138,done?193:220,.64,palm('point'),-35));
+  } else if(action==='wet-socks') {
+    const spill=id==='spilled-water-socks';scene=spill?plainRoom()+windowArt():backdrop('outside');
+    objects=part(spill?'spilled-cup':'rain-puddle',ell(149,265,83,15,'#9bc3c7')+(spill?object('blue-cup',74,229,.79,false,-78):drops(78,224,.7)));
+    // The shins enter from the bottom edge: these are the child's own feet,
+    // seen looking down, rather than detached socks floating in the scene.
+    objects+=part(done?'dry-socks-on-feet':'wet-socks-on-feet',at(165,242,1.07,wornSocks(done),180))+part('dry-replacement-socks',object('basket',303,255,.87)+object('sock',done?304:288,done?251:221,.53,true,-16)+(done?'':object('sock',320,224,.48,true,20)));
+    people=part('noticing-wet-feet',friend(317,121,.6,done?'happy':request?'pointing':'quiet'));
+  } else if(action==='discover') {
+    const snail=id==='window-snail';scene=snail?plainRoom()+bigWindow():backdrop('outside');
+    objects=part(snail?'snail-on-sill':'cat-in-bush',snail?object('snail',111,139,1.02):at(130,206,1.06,animal('cat'))+(done?'':ell(83,243,54,25,'#8eaa75')+ell(161,252,59,22,'#a1b985')));
+    people=part('curious-pointing-hand',at(snail?191:201,snail?228:278,.8,palm('point'),snail?-36:-24))+part('curious-friend',friend(done?277:318,165,.77,done?'pointing':request?'asking':'quiet'));
+  } else if(action==='look') {
+    const window=id==='window-bird';scene=window?plainRoom()+bigWindow():backdrop('outside');
+    objects=part(window?'bird-on-windowsill':'bird-on-branch',window?object('bird',111,141,.9):line('M43 117Q129 139 217 105',C.dark,11)+object('bird',155,102,.95)+leaf(72,123,.7,-30));
+    people=part(done?'looking-at-bird':'friend-looking-down',friend(299,174,.86,done?'pointing':'reading'));
+    // The large pointing arm connects the speaker with the bird, unlike discovery.
+    people+=part('pointing-out-the-bird',at(window?220:244,258,.91,palm('point'),window?-34:-26));
+    if(!done)objects+=part('distracting-ground-toy',object('ball',318,266,.46));
+  } else if(action==='hear') {
+    const window=id==='window-dog';scene=window?plainRoom()+bigWindow():backdrop('outside');
+    objects=part(window?'dog-outside-window':'dog-behind-bush',window?object('dog',109,137,.91):at(115,207,1.04,animal('dog')));
+    if(!done)objects+=part('partly-hidden-dog',window?rect(42,154,167,14,4,C.wood):ell(83,237,58,31,'#8ba676')+ell(139,248,57,27,'#a2b984'));
+    objects+=part('barking-sound',soundWaves(window?160:169,window?120:173,.85));
+    if(window)objects+=part('paused-reading',object('book',276,254,.72));
+    people=part('cupped-ear-listener',friend(done?279:310,167,.82,'listening'));
+    if(done)objects+=part('sound-located',line(window?'M230 125q-20-7-35 1':'M233 169q-15-6-25 3',C.yellow,3));
+  } else if(action==='read-together') {
+    const garden=id==='garden-book';scene=garden?backdrop('outside'):plainRoom(true)+windowArt(true);
+    objects=part(garden?'reading-bench':'reading-cushions',garden?object('bench',194,241,1.61):object('cloud-cushion',118,247,1.02)+object('cloud-cushion',285,247,1.02));
+    people=part('two-readers',at(done?135:101,168,.68,bear('quiet'))+friend(done?247:301,158,.7,done?'reading':request?'inviting':'quiet'));
+    objects+=part(done?'shared-open-picture-book':'waiting-picture-book',object('book',done?192:181,done?203:244,done?1.22:1.08));
+  } else if(action==='tell-story') {
+    const rain=id==='rain-story';scene=plainRoom(!rain)+(rain?bigWindow(false,true):windowArt(true));
+    objects=part(rain?'rainy-day-chairs':'storytime-bed',rain?object('chair',116,244,1.18)+object('chair',300,243,1.12):object('bed',122,248,1.6)+object('lamp',355,231,.62));
+    people=part('story-listener',at(118,rain?175:180,.68,bear('quiet')))+part('storyteller',friend(299,169,.72,done?'story':request?'asking':'quiet'));
+    if(!rain)objects+=part('listener-blanket',rect(78,216,94,39,8,C.blue)+spark(124,234,.75,'#e9e8c6'));
+    objects+=part(done?'imagined-bird-story':'story-request-bubble',storyBubble(done));
+  } else if(action==='sleep') {
+    const camp=id==='camp-night';scene=camp?`${rect(0,0,400,300,0,'#657b80')}${object('moon',326,62,.68)}${spark(71,41,.45)}${spark(202,65,.5)}<path d="M0 221Q98 180 187 221Q302 181 400 218V300H0Z" fill="#90a082"/>`:plainRoom(true)+part('night-window',bigWindow(true));
+    objects=part(camp?'night-tent':'night-bed',camp?object('tent',122,204,1.8):object('bed',172,248,1.74));
+    people=part(done?'sleeping-buddy':'sleepy-buddy',friend(camp?272:171,camp?done?191:166:done?184:163,.68,done?'sleep':'calm'));
+    objects+=part(camp?'sleeping-bag':'tucked-in-blanket',camp?rect(235,done?218:248,79,done?65:33,28,C.blue)+spark(275,done?251:264,.9,'#eef0cd'):rect(108,done?214:247,132,done?46:17,9,'#a0b98f')+line(done?'M119 229h108':'M119 255h108','#cbd8ae',4));
+    if(!camp)objects+=part(done?'dimmed-bedside-lamp':'lit-bedside-lamp',object('lamp',327,218,.82)+(done?'':ell(327,187,43,33,C.yellow,'opacity=".16"')));
+  } else {
+    scene=plainRoom();people=friend(200,159,.93,'quiet');
   }
-  if(theme==='food') {
-    objects=`${ell(199,254,131,21,'#b7956a','opacity=".2"')}${rect(58,201,250,17,8,C.wood)}${line('M83 216l-9 76M281 217l10 75',C.dark,10)}`;
-    if(/water|drink|01/.test(id)) objects+=`${at(129,172,.9,toy('blue-cup',done))}${at(done?212:232,163,.85,toy('jug'),done?-18:0)}${done?`${spark(119,113,.7)}${spark(160,128,.45)}`:''}`;
-    else if(/more|picnic|02/.test(id)) objects+=`${at(135,174,.95,toy('bowl',done))}${at(216,170,.7,toy('basket'))}${done?at(137,154,.45,toy('apple')):at(214,155,.45,toy('apple'))}`;
-    else objects+=`${at(124,176,.82,toy('bowl',false))}${at(done?242:171,169,.58,toy('apple'))}${at(222,195,.5,toy('spoon'),-55)}`;
-    person=at(325,152,.7,sprout(done?'happy':request?'asking':'happy'));
-  }
-  if(theme==='play') {
-    objects=`${at(194,257,1.8,toy('rug'))}`;
-    if(/ball|invite|02/.test(id)) objects+=at(done?240:128,239,.9,toy('ball'));
-    else if(/bridge|build|tower|03/.test(id)) objects+=done?at(163,226,1.24,toy('bridge')):`${at(125,254,.76,toy('block'))}${rect(169,254,65,17,4,C.wood)}${rect(208,221,24,31,4,C.blue)}`;
-    else objects+=at(155,231,1.18,toy('box',done));
-  }
-  if(theme==='care') {
-    if(/wash|hand|01/.test(id)) {
-      objects=`${rect(48,182,174,98,9,C.wood)}${rect(35,174,198,17,8,'#f6f6e7')}${ell(133,181,64,15,'#a8c9c6')}${line('M140 153v-24q0-21 24-21h9',C.dark,10)}${at(65,165,.55,toy('soap'))}${at(213,119,.7,toy('towel'))}${done?`${line('M141 155v24','#9fc8c6',5)}${spark(80,122,.8)}`:''}${at(134,165,.8,hands(done))}`;
-    } else if(/sock|wet|03/.test(id)) objects=`${at(125,229,.9,toy('sock'),-18)}${at(done?201:124,done?222:258,.72,toy(done?'sock':'basket'))}${done?`${spark(158,170,.7)}${at(195,263,.5,toy('shoe'))}`:`${ell(145,268,50,8,'#9fc8c6')}${dot(169,233,5,C.blue)}`}`;
-    else objects=`${line('M115 102v150M75 251h80M88 111h55',C.wood,9)}${at(115,164,1.25,toy('coat',done))}${done?spark(150,112,.7):''}`;
-  }
-  if(theme==='outside') {
-    if(/bird|look|02/.test(id)) objects=`${line('M190 119h112',C.dark,9)}${at(done?246:258,99,.75,toy('bird'))}${done?`${spark(285,58,.6)}${spark(220,66,.4)}`:''}`;
-    else if(/dog|sound|03/.test(id)) objects=`${at(115,204,.93,toy('dog'))}${done?'':`${ell(90,231,48,29,'#8da879')}${ell(128,240,52,28,'#a1b985')}`}${line('M154 166q15 12 0 24M166 158q22 20 0 40','#d4aa61',3)}`;
-    else objects=`${at(118,207,.94,toy('cat'))}${done?'':`${ell(88,230,43,31,'#8eab7a')}${ell(140,239,45,27,'#a5bc89')}`}`;
-    person=at(294,177,.73,sprout(done?'happy':request?'asking':'happy'));
-  }
-  if(theme==='bed') {
-    const night=/night|blanket|03/.test(id);
-    objects=`${at(162,243,1.55,toy('bed'))}${at(341,208,.78,toy('lamp'))}`;
-    if(night) {person=at(154,185,.58,sprout(done?'sleep':'calm'));objects+=done?`${rect(91,213,146,44,9,'#9ab58f')}${line('M105 228h115','#b8cba5',3)}`:at(95,260,.6,toy('blanket'));}
-    else {objects+=at(done?207:109,done?191:169,.83,toy('book'));person=at(done?246:283,178,.67,sprout(done?'happy':request?'asking':'happy'));}
-  }
-  // A transfer event must change its actual setting or object, not just its title.
-  if(id==='food-more') {
-    scene=backdrop('outside');objects=picnicMat()+at(129,231,.82,toy('bowl',done))+at(220,216,.8,toy('basket'))+at(done?129:220,done?213:194,.4,toy('apple'));person=at(305,163,.69,sprout(done?'happy':'asking'));
-  }
-  if(id==='play-ball') {
-    scene=backdrop('outside');objects=at(done?233:125,247,1,toy('ball'));person=at(297,165,.73,sprout(done?'celebrate':'happy'));
-  }
-  if(id==='play-bridge') {
-    scene=backdrop('outside');objects=`<path d="M139 178Q112 205 141 233Q164 264 132 300H221Q251 263 209 235Q185 206 210 178Z" fill="#a4c9c5"/>${line('M161 197h15M177 277h20','#dbece0',3)}`+(done?at(177,233,1.24,toy('bridge')):`${rect(91,220,27,37,4,C.orange)}${rect(238,218,27,38,4,C.blue)}${at(190,228,1,rect(-43,-9,86,18,4,C.wood),-21)}`);
-  }
-  if(id==='garden-morning') {
-    scene=backdrop('outside');objects=`${at(130,228,.85,toy('plant'))}${at(done?205:253,199,.61,toy('jug'),done?-35:0)}${done?line('M197 189q-18 0-28 23','#87b6b3',3):''}`;person=at(289,157,.72,sprout(done?'wave':'happy'));
-  }
-  if(id==='park-new-friend'||id==='park-goodbye') {
-    scene=backdrop('outside');objects=`${at(id==='park-goodbye'&&done?135:127,id==='park-goodbye'&&done?175:204,id==='park-goodbye'&&done?.56:.88,toy('bear'))}${id==='park-goodbye'?at(done?145:148,done?188:229,.42,toy('backpack')):''}`;person=at(297,176,.73,sprout(done?'wave':'happy'));
-  }
-  if(id==='bed-water') {
-    scene=backdrop('bed');objects=`${at(119,241,1.35,toy('bed'))}${at(241,236,.73,toy('table'))}${at(224,210,.66,toy('blue-cup',done))}${at(done?274:317,done?185:194,.58,toy('jug'),done?-24:0)}`;person=at(328,161,.67,sprout(done?'happy':'asking'));
-  }
-  if(id==='drawing-more') {
-    scene=backdrop('play');objects=`${at(173,242,2.1,toy('table'))}${at(105,207,.7,toy('bowl',false))}${at(242,189,.76,toy('paper'))}${done?at(111,192,.48,toy('paper')):''}${line('M168 214l30-22',C.green,8)}${line('M185 217l33-12',C.orange,8)}`;person=at(318,154,.67,sprout(done?'happy':'asking'));
-  }
-  if(id==='park-decline') {
-    scene=backdrop('outside');objects=picnicMat()+at(104,220,.7,toy('basket'))+at(done?274:192,211,.78,toy('cup'));person=at(306,166,.73,sprout(done?'happy':'asking'));
-  }
-  if(id==='coat-zip') {
-    scene=backdrop('care');objects=`${line('M115 102v150M75 251h80M88 111h55',C.wood,9)}${at(115,164,1.25,toy('coat',done))}${done?spark(150,112,.7):''}`;person=at(294,168,.7,sprout(done?'celebrate':'asking'));
-  }
-  if(id==='blocks-invite') {
-    scene=backdrop('play');objects=at(184,260,1.8,toy('rug'))+at(133,238,.8,toy(done?'bridge':'block'))+rect(202,246,24,24,3,C.blue);person=at(done?254:320,done?187:166,.72,sprout(done?'celebrate':'happy'));
-  }
-  if(id==='basket-lift') {
-    scene=backdrop('play');objects=`${at(166,done?201:246,1.5,toy('basket'))}${at(152,done?168:214,.65,toy('ball'))}${at(185,done?182:228,.48,toy('block'))}${done?`${line('M104 216l-15 20M225 210l18 20',C.green,12)}${ell(170,275,64,9,'#7a684a','opacity=".15"')}`:''}`;person=at(done?271:308,168,.72,sprout(done?'celebrate':'asking'));
-  }
-  if(id==='picnic-wash') {
-    scene=backdrop('outside');objects=picnicMat()+at(87,245,.65,toy('basket'))+at(184,236,1.15,toy('bowl',false))+at(191,203,.89,hands(done))+at(129,211,.55,toy('leaf-soap'))+(done?spark(178,173,.6):'');person=at(311,168,.73,sprout(done?'happy':'asking'));
-  }
-  if(id==='backpack-buckle') {
-    scene=backdrop('hello');objects=at(141,208,1.2,toy('backpack',done))+at(213,253,.6,toy('shoe'))+(done?spark(157,139,.65):'');person=at(303,171,.75,sprout(done?'happy':'asking'));
-  }
-  if(id==='spilled-water-socks') {
-    scene=backdrop('food');objects=`${at(109,207,.7,toy('blue-cup',false),-83)}${ell(139,252,65,12,'#a4c9c5')}${at(169,228,.77,toy('sock'),-21)}${at(228,243,.75,toy('basket'))}${done?at(197,191,.65,toy('sock'),16):`${dot(166,198,5,C.blue)}${dot(182,211,4,C.blue)}`}`;person=at(314,171,.72,sprout(done?'happy':'asking'));
-  }
-  if(id==='window-snail'||id==='window-bird'||id==='window-dog') {
-    scene=backdrop(id==='window-dog'?'bed':'hello');objects=`${at(102,110,id==='window-snail'?.48:.59,toy(id==='window-snail'?'snail':id==='window-bird'?'bird':'dog'))}${id==='window-dog'?`${line('M137 86q14 12 0 24M147 79q22 20 0 40','#c5a664',3)}${at(250,243,.6,toy('book'))}`:''}${done?spark(134,68,.48):''}`;person=at(done?225:305,174,.73,sprout(done?'happy':'asking'));
-  }
-  if(id==='garden-book') {
-    scene=backdrop('outside');objects=`${at(165,243,1.42,toy('bench'))}${at(done?180:121,208,.72,toy('book'))}`;person=at(done?245:316,done?167:174,.69,sprout(done?'happy':'asking'));
-  }
-  if(id==='rain-story') {
-    scene=backdrop('hello')+line('M46 56l-4 9M68 47l-4 9M97 55l-4 9M58 94l-4 9M104 92l-4 9','#88b3b6',3);objects=at(145,232,1.27,toy('chair'))+at(274,233,1.13,toy('chair'))+at(done?231:125,done?196:202,.67,toy('book'));person=at(280,168,.68,sprout(done?'happy':'asking'));
-  }
-  if(id==='camp-night') {
-    scene=`${rect(0,0,400,300,0,'#667e80')}${dot(333,47,20,'#e7d294')}${spark(73,45,.4,'#f4e3b1')}${spark(213,61,.5,'#f4e3b1')}<path d="M0 210Q80 177 172 210Q290 181 400 215V300H0Z" fill="#8b9c7d"/>`;objects=at(153,192,1.65,toy('tent'))+at(done?264:318,260,.91,toy('star-blanket'));person=at(done?166:293,done?192:177,.57,sprout(done?'sleep':'happy'));
-  }
-  scene += objects+person;
-  if(done) scene+=`${spark(230,52,.7)}${spark(263,88,.45)}`;
-  if(request) scene+=`<g class="scene-invitation">${ell(327,87,27,21,'#fffcf0')}${dot(319,87,3,C.green)}${dot(328,87,3,C.green)}${dot(337,87,3,C.green)}<path d="M316 103l-5 13 17-10" fill="#fffcf0"/></g>`;
-  return tag(scene+grain(uid),'0 0 400 300',`class="scene-svg scene-${theme} phase-${done?'resolved':request?'request':'before'}"`);
+  // Draw people before the foreground objects so hands, books and blankets sit
+  // where they are used, rather than floating next to a generic mascot.
+  const invitation=request?`<g class="scene-invitation">${soundWaves(361,76,.32)}</g>`:'';
+  return tag(scene+people+objects+invitation+grain(`xygrain${++serial}`),'0 0 400 300',`class="scene-svg scene-${theme} phase-${done?'resolved':request?'request':'before'}" data-scene="${id}" data-action="${action}"`);
 }
 
 export function roomArt() {
