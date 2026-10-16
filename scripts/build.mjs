@@ -3,6 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {ANIMALS} from '../src/avatars.js';
 import {serializeCurriculum} from '../src/startup.js';
+import {buildXiaoya} from './build-xiaoya.mjs';
 const appVersion=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root,'dist');
@@ -52,3 +53,4 @@ sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(re
 await fs.writeFile(path.join(dist,'sw.js'),sw);
 await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:appVersion,build:version}));
 console.log('Built English Sprout '+appVersion+' · '+version);
+await buildXiaoya({root,dist});
