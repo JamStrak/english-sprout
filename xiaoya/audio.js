@@ -9,7 +9,7 @@ let ready = false;
 let recognition = null;
 const absolute = file => new URL(file, document.baseURI).href;
 // Keep in step with sw.template.js when replacing bytes at existing audio URLs.
-const AUDIO_CACHE = 'xiaoya-audio-v1';
+const AUDIO_CACHE = 'xiaoya-audio-v2';
 const caching = new Set();
 function cachePublicSound(file) {
   const url = new URL(file, document.baseURI);

@@ -1,24 +1,34 @@
 #requires -Version 5.1
-param([string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot))
+param(
+  [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
+  [switch]$InstallEdgeTts
+)
 $ErrorActionPreference = 'Stop'
-Add-Type -AssemblyName System.Speech
-$audioDir = Join-Path $ProjectRoot 'public\xiaoya\audio'
-$spec = Get-Content -LiteralPath (Join-Path $audioDir 'prompts.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-$synth.SelectVoice($spec.voice)
-$synth.Rate = 0
-$synth.Volume = 100
+# Compatibility entry. Never falls back to the rejected Windows voice.
+Push-Location -LiteralPath $ProjectRoot
 try {
-  foreach ($prompt in $spec.prompts) {
-    $wavPath = Join-Path ([IO.Path]::GetTempPath()) ('xiaoya-' + [guid]::NewGuid().ToString('N') + '.wav')
-    $outPath = Join-Path $audioDir ($prompt.id + '.mp3')
-    try {
-      $synth.SetOutputToWaveFile($wavPath)
-      $synth.Speak($prompt.text)
-      $synth.SetOutputToNull()
-      & ffmpeg -hide_banner -loglevel error -y -i $wavPath -map_metadata -1 -af loudnorm=I=-20:TP=-1.5:LRA=7 -ac 1 -ar 24000 -c:a libmp3lame -b:a 48k $outPath
-      if ($LASTEXITCODE -ne 0) { throw "Audio conversion failed: $($prompt.id)" }
-    } finally { $synth.SetOutputToNull(); if (Test-Path -LiteralPath $wavPath) { Remove-Item -LiteralPath $wavPath } }
+  $EdgeEnvironment = Join-Path $ProjectRoot 'test-results/xiaoya-neural-help-20261016/edge-venv'
+  $EdgePython = Join-Path $EdgeEnvironment 'Scripts/python.exe'
+  if ($InstallEdgeTts) {
+    if (-not (Test-Path -LiteralPath $EdgePython)) {
+      & python -m venv $EdgeEnvironment
+      if ($LASTEXITCODE -ne 0) { throw 'Could not create the isolated production environment.' }
+    }
+    & $EdgePython -m pip install --disable-pip-version-check 'edge-tts==7.3.1'
+    if ($LASTEXITCODE -ne 0) { throw 'Could not install the pinned production dependency.' }
   }
-  Write-Output "Created $($spec.prompts.Count) Chinese voice prompts."
-} finally { $synth.Dispose() }
+  if (-not (Test-Path -LiteralPath $EdgePython)) {
+    throw 'Run this script with -InstallEdgeTts once to install edge-tts 7.3.1 in test-results; user-wide Python is not changed.'
+  }
+  & node (Join-Path $PSScriptRoot 'xiaoya-help.mjs')
+  if ($LASTEXITCODE -ne 0) { throw 'Chinese audio prompt preparation failed.' }
+  & python (Join-Path $PSScriptRoot 'generate-xiaoya-help.py')
+  if ($LASTEXITCODE -ne 0) { throw 'Local neural audio failed; inspect test-results/xiaoya-neural-help-20261016/generation.log.' }
+  & $EdgePython (Join-Path $PSScriptRoot 'generate-xiaoya-context.py')
+  if ($LASTEXITCODE -ne 0) { throw 'Neural context audio failed; inspect test-results/xiaoya-neural-help-20261016/edge-contexts/error.log.' }
+  # Both source batches must finish before any new public clips are copied.
+  & python (Join-Path $PSScriptRoot 'generate-xiaoya-help.py') --export
+  if ($LASTEXITCODE -ne 0) { throw 'Audio publication failed; generated evidence is retained under test-results.' }
+  & $EdgePython (Join-Path $PSScriptRoot 'generate-xiaoya-context.py') --export
+  if ($LASTEXITCODE -ne 0) { throw 'Context publication failed; generated evidence is retained under test-results.' }
+} finally { Pop-Location }

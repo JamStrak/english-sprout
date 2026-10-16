@@ -67,7 +67,8 @@ async function captureCandidate(expectedCount){
   context=await browser.newContext({permissions:['microphone'],viewport:{width:390,height:844},timezoneId:'Asia/Shanghai'});
   context.on('request',request=>report.requests.push({url:request.url(),method:request.method(),hasBody:request.postDataBuffer()!==null}));
   context.on('page',p=>p.on('pageerror',error=>report.errors.push(error.message)));
-  await context.addInitScript(({knownAudio})=>{
+  await context.addInitScript(({knownAudio,origin})=>{
+    if(location.origin===origin&&!localStorage.getItem('xiaoya-english:preferences:v1'))localStorage.setItem('xiaoya-english:preferences:v1',JSON.stringify({welcome:true,mic:true,guideStep:'done'}));
     window.qaCapture={records:[],streams:[],streamEvidence:[],chunks:[],voskMessages:[]};
     const NativeRecorder=window.MediaRecorder;
     // Initial about:blank is not a secure media surface. Instrument only the
@@ -127,10 +128,10 @@ async function captureCandidate(expectedCount){
     window.Worker=class extends NativeWorker{
       constructor(...args){super(...args);this.addEventListener('message',event=>{const d=event.data;if(d?.event==='result'||d?.event==='partialresult')qaCapture.voskMessages.push({at:performance.now(),data:d});});}
     };
-  },{knownAudio});
+  },{knownAudio,origin});
   page=await context.newPage();page.setDefaultTimeout(15000);
   await page.goto(entry);
-  await page.locator('[data-action="welcome-mic"]').click();
+  await page.locator('[data-action="next-event"]').waitFor();
   await page.evaluate(()=>navigator.serviceWorker.ready);
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
   await parent();
@@ -169,7 +170,7 @@ async function captureCandidate(expectedCount){
   // subsequent download/recognition operation now runs with the context offline.
   await context.setOffline(true);
   const requestBoundary=report.requests.length;
-  await page.reload();await page.locator('[data-theme]').first().waitFor();
+  await page.reload();await page.locator('[data-action="next-event"]').waitFor();
   assert.equal(await page.evaluate(()=>typeof window.Vosk),'undefined');
   await parent();await page.locator('[data-action="recognition"]').click();
   await page.getByRole('button',{name:'本地识别已就绪',exact:true}).waitFor({timeout:180000});

@@ -1,178 +1,399 @@
 {
-  "voice": "Microsoft Huihui Desktop",
-  "kind": "offline synthesized Chinese help",
+  "version": 2,
+  "kind": "prerecorded neural Chinese guidance",
+  "language": "Chinese",
   "prompts": [
     {
+      "id": "guide-hello",
+      "text": "你好呀，我是小芽。点一下小耳朵，听我说。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-wave",
+      "text": "早上见面，我们挥挥手。点一下小手，跟我打个招呼吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-speak",
+      "text": "轮到你啦。点一下话筒，试着跟我说一句。说完，停一停就好。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-replay",
+      "text": "点一下小耳朵，听听你刚才的声音。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-gift",
+      "text": "谢谢你陪我一起玩。点一下小太阳，把它带回家吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-place",
+      "text": "点一下发光的地方，把小太阳放好吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-done",
+      "text": "小太阳住进来啦。下次还和我一起玩哦。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-skip",
+      "text": "现在不想说，也没关系。先听我说一遍吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-mic",
+      "text": "请身边的大人帮忙，打开话筒吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "guide-retry",
+      "text": "刚才没有听到声音。点一下话筒，再试一试吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "next",
+      "text": "我们继续玩吧。点一下中间的图画。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "finish",
+      "text": "我们玩好啦。点一下小勾勾，收好这次的小礼物吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
+      "id": "recorded",
+      "text": "你的声音留下来啦。可以点小耳朵听一听，再请身边的大人看一看。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    },
+    {
       "id": "welcome",
-      "text": "欢迎来到小芽的小屋！点一幅图，和小芽一起玩吧。"
+      "text": "欢迎来到小芽的小屋。点一幅图，和我一起玩吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "listen",
-      "text": "听一听，哪幅图和听到的话是一回事？"
+      "text": "听一听，再点一幅图。哪一幅，说的是刚才那句话呢？",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "speak",
-      "text": "现在轮到你啦！点一下话筒，把想说的话告诉小芽。"
+      "text": "轮到你啦。点一下话筒，把想说的话告诉我吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "again",
-      "text": "没关系。可以再听一遍，也可以请身边的大人陪你一起。"
+      "text": "没关系。点小耳朵，再听一遍吧。也可以请大人帮忙。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "reward",
-      "text": "谢谢你和小芽一起玩！把这件小礼物放进小屋吧。"
+      "text": "谢谢你陪我一起玩。点一下小礼物，把它带回家吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "house",
-      "text": "先点一件小家具，再点小屋里想放的位置。也可以拖动它。"
+      "text": "先点一件小家具，再点小屋里想放的地方。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "silent",
-      "text": "这次先看小芽做也可以。等你准备好了，再告诉小芽。"
+      "text": "现在不想说，也没关系。先听我说一遍吧。",
+      "engine": "qwen-custom-voice",
+      "voice": "Serena",
+      "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
     },
     {
       "id": "hello-morning",
-      "text": "早上见面，可以挥挥手，跟伙伴说早上好。点小耳朵，听听可以怎么说。"
+      "text": "早上见面，可以挥挥手，跟伙伴说早上好。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "hello-morning-elsewhere",
-      "text": "花园里的伙伴也在等你打招呼。点小耳朵，听听可以怎么说。"
+      "text": "花园里的伙伴也在等你打招呼。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "hello-welcome",
-      "text": "这是刚认识的朋友，可以告诉它很高兴认识它。点小耳朵，听听可以怎么说。"
+      "text": "这是刚认识的朋友，可以告诉它很高兴认识它。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "hello-welcome-elsewhere",
-      "text": "这是新认识的朋友，试着欢迎它。点小耳朵，听听可以怎么说。"
+      "text": "这是新认识的朋友，试着欢迎它。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "hello-goodbye",
-      "text": "朋友要暂时离开了，可以说一会儿见。点小耳朵，听听可以怎么说。"
+      "text": "朋友要暂时离开了，可以说一会儿见。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "hello-goodbye-elsewhere",
-      "text": "朋友要回家了，可以挥手告别。点小耳朵，听听可以怎么说。"
+      "text": "朋友要回家了，可以挥手告别。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-water",
-      "text": "玩累了想喝水，可以告诉伙伴你需要水。点小耳朵，听听可以怎么说。"
+      "text": "玩累了想喝水，可以告诉伙伴你需要水。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-water-elsewhere",
-      "text": "睡前口渴了，也可以说自己需要水。点小耳朵，听听可以怎么说。"
+      "text": "睡前口渴了，也可以说自己需要水。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-more",
-      "text": "还想吃一点，可以有礼貌地再要一点。点小耳朵，听听可以怎么说。"
+      "text": "还想吃一点，可以有礼貌地再要一点。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-more-elsewhere",
-      "text": "材料不够了，也可以有礼貌地再要一点。点小耳朵，听听可以怎么说。"
+      "text": "材料不够了，也可以有礼貌地再要一点。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-no-thanks",
-      "text": "不想再吃，可以说不用了，并谢谢伙伴。点小耳朵，听听可以怎么说。"
+      "text": "不想再吃，可以说不用了，并谢谢伙伴。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "food-no-thanks-elsewhere",
-      "text": "不需要的时候可以拒绝，不用勉强接受。点小耳朵，听听可以怎么说。"
+      "text": "不需要的时候可以拒绝，不用勉强接受。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-box",
-      "text": "盒子打不开，可以向伙伴求助。点小耳朵，听听可以怎么说。"
+      "text": "盒子打不开，可以向伙伴求助。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-box-elsewhere",
-      "text": "拉链卡住也可以请求帮助。点小耳朵，听听可以怎么说。"
+      "text": "拉链卡住也可以请求帮助。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-ball",
-      "text": "想和伙伴一起玩，可以主动邀请它。点小耳朵，听听可以怎么说。"
+      "text": "想和伙伴一起玩，可以主动邀请它。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-ball-elsewhere",
-      "text": "换成积木，也可以邀请伙伴一起玩。点小耳朵，听听可以怎么说。"
+      "text": "换成积木，也可以邀请伙伴一起玩。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-bridge",
-      "text": "桥板拿不稳，可以请伙伴帮忙。点小耳朵，听听可以怎么说。"
+      "text": "桥板拿不稳，可以请伙伴帮忙。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "play-bridge-elsewhere",
-      "text": "一个人抬不动的时候可以请求帮助。点小耳朵，听听可以怎么说。"
+      "text": "一个人抬不动的时候可以请求帮助。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-hands",
-      "text": "小手脏了，伙伴在提醒你洗手。点小耳朵，听听可以怎么说。"
+      "text": "小手脏了，伙伴在提醒你洗手。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-hands-elsewhere",
-      "text": "吃东西之前，要先洗掉手上的颜料。点小耳朵，听听可以怎么说。"
+      "text": "吃东西之前，要先洗掉手上的颜料。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-zip",
-      "text": "拉链卡住了，可以请伙伴帮忙。点小耳朵，听听可以怎么说。"
+      "text": "拉链卡住了，可以请伙伴帮忙。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-zip-elsewhere",
-      "text": "扣子打不开，也可以向伙伴求助。点小耳朵，听听可以怎么说。"
+      "text": "扣子打不开，也可以向伙伴求助。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-socks",
-      "text": "脚不舒服，因为袜子湿了，可以告诉伙伴。点小耳朵，听听可以怎么说。"
+      "text": "脚不舒服，因为袜子湿了，可以告诉伙伴。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "care-socks-elsewhere",
-      "text": "屋里的水也会打湿袜子，可以说明发生了什么。点小耳朵，听听可以怎么说。"
+      "text": "屋里的水也会打湿袜子，可以说明发生了什么。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-cat",
-      "text": "看到想认识的东西，可以问这是什么。点小耳朵，听听可以怎么说。"
+      "text": "看到想认识的东西，可以问这是什么。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-cat-elsewhere",
-      "text": "遇到不同的新东西，也可以问这是什么。点小耳朵，听听可以怎么说。"
+      "text": "遇到不同的新东西，也可以问这是什么。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-bird",
-      "text": "伙伴还没看到小鸟，你可以提醒它看。点小耳朵，听听可以怎么说。"
+      "text": "伙伴还没看到小鸟，你可以提醒它看。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-bird-elsewhere",
-      "text": "窗边也有小鸟，提醒伙伴一起看。点小耳朵，听听可以怎么说。"
+      "text": "窗边也有小鸟，提醒伙伴一起看。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-dog",
-      "text": "听到狗叫，可以把听见的声音告诉伙伴。点小耳朵，听听可以怎么说。"
+      "text": "听到狗叫，可以把听见的声音告诉伙伴。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "outside-dog-elsewhere",
-      "text": "没有看到小狗时，也能告诉伙伴自己听到了它。点小耳朵，听听可以怎么说。"
+      "text": "没有看到小狗时，也能告诉伙伴自己听到了它。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-book",
-      "text": "想一起看绘本，可以邀请伙伴读一本书。点小耳朵，听听可以怎么说。"
+      "text": "想一起看绘本，可以邀请伙伴读一本书。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-book-elsewhere",
-      "text": "在花园里也可以邀请伙伴一起看书。点小耳朵，听听可以怎么说。"
+      "text": "在花园里也可以邀请伙伴一起看书。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-story",
-      "text": "想听故事，可以把这个愿望告诉伙伴。点小耳朵，听听可以怎么说。"
+      "text": "想听故事，可以把这个愿望告诉伙伴。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-story-elsewhere",
-      "text": "雨天休息时，也可以请求伙伴讲故事。点小耳朵，听听可以怎么说。"
+      "text": "雨天休息时，也可以请求伙伴讲故事。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-night",
-      "text": "睡前可以向伙伴道晚安。点小耳朵，听听可以怎么说。"
+      "text": "睡前可以向伙伴道晚安。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     },
     {
       "id": "bed-night-elsewhere",
-      "text": "睡在帐篷里，也可以在休息前说晚安。点小耳朵，听听可以怎么说。"
+      "text": "睡在帐篷里，也可以在休息前说晚安。点一下小耳朵，听我说。",
+      "engine": "edge-neural",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS"
     }
   ]
 }

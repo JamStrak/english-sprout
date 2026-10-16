@@ -1,6 +1,6 @@
 const PREFIX = 'xiaoya-core-';
 const CACHE = PREFIX + '__XIAOYA_BUILD__';
-const AUDIO = 'xiaoya-audio-v1';
+const AUDIO = 'xiaoya-audio-v2';
 const SPEECH = 'english-sprout-speech-v1';
 const CORE = __XIAOYA_CORE__;
 const INTEGRITY = /*__XIAOYA_INTEGRITY__*/{};
@@ -26,10 +26,12 @@ self.addEventListener('activate', event => event.waitUntil(self.clients.claim())
 // product's caches, downloaded speech assets, recordings, or learning records.
 
 async function cachedAudio(request) {
-  // The original public clips are unchanged, so existing downloads can be reused.
-  for (const name of [AUDIO, 'english-sprout-audio-v5']) {
+  // Only original English clips can reuse the older product's downloads.
+  // Versioned Chinese paths also bypass an older worker's ignoreSearch lookup.
+  const original = new URL(request.url).pathname.slice(BASE.pathname.length).startsWith('audio/');
+  for (const name of original ? [AUDIO, 'english-sprout-audio-v5'] : [AUDIO]) {
     try {
-      const found = await (await caches.open(name)).match(request, {ignoreSearch:true, ignoreVary:true});
+      const found = await (await caches.open(name)).match(request, {ignoreSearch:original, ignoreVary:true});
       if (found?.status === 200) return found;
     } catch {}
   }

@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.1.0';
+export const XIAOYA_VERSION = '0.2.0';
 const MODULES = ['app.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css'];
 const SHARED = ['speech-local.js', 'speech-match.js', 'speech-download.js'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -25,6 +25,20 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
   const build = hash.digest('hex').slice(0, 12);
   const release = `releases/${build}`;
   const output = path.join(dist, 'xiaoya');
+  // A new pathname avoids stale Chinese bytes even while the parent product's
+  // previous service worker still controls this tab. Keep legacy URLs for tabs
+  // that have not reloaded; audio is fetched on demand, never in the core shell.
+  const publicAudio = path.join(root, 'public/xiaoya/audio');
+  const voiceFiles = await fs.readdir(publicAudio).catch(error => {
+    if (error.code === 'ENOENT') return []; throw error;
+  });
+  if (voiceFiles.length) {
+    const voiceOutput = path.join(output, 'audio/v2');
+    await fs.mkdir(voiceOutput, {recursive:true});
+    for (const name of voiceFiles.filter(name => name.endsWith('.mp3'))) {
+      await fs.copyFile(path.join(publicAudio, name), path.join(voiceOutput, name));
+    }
+  }
   await fs.mkdir(path.join(output, release, 'shared'), {recursive:true});
   for (const [name, bytes] of files) await fs.writeFile(path.join(output, release, name), bytes);
   const html = template.replaceAll('__XIAOYA_BUILD__', build).replaceAll('__XIAOYA_VERSION__', XIAOYA_VERSION)

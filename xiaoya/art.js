@@ -14,13 +14,13 @@ const leaf = (x,y,s=1,rotate=0) => at(x,y,s,`<path d="M0 0C-26-1-27-23-26-27C-5-
 function sprout(mood='happy') {
   const sleepy = /sleep|bed|calm/.test(mood), asking = /ask|request|thinking|listen/.test(mood), wave = /wave|happy|resolved|celebrate/.test(mood);
   return `${ell(0,93,48,8,'#6b7643','opacity=".13"')}${line('M-29 66l-9 19M27 67l9 19',C.leaf,13)}
-    ${line(wave?'M-36 32Q-63 18-61-6':'M-36 35Q-53 48-49 57',C.green,15)}${line(asking?'M37 34Q56 32 59 15':'M37 34Q58 51 50 60',C.green,15)}
+    <g class="buddy-arm${wave?' buddy-wave':''}">${line(wave?'M-36 32Q-63 18-61-6':'M-36 35Q-53 48-49 57',C.green,15)}${wave?`${line('M-62-5l-5-9M-59-5l2-11',C.green,6)}`:''}</g>${line(asking?'M37 34Q56 32 59 15':'M37 34Q58 51 50 60',C.green,15)}
     <path d="M-41 16C-47-18-26-48 0-48S48-22 43 15L39 61C34 83-29 87-38 63Z" fill="${C.mint}" stroke="#6f9360" stroke-width="3"/>
     <path d="M-31 17C-36-11-22-34-2-37" stroke="#f7f9e8" stroke-width="7" stroke-linecap="round"/>
     ${line('M1-48Q-2-63 5-74',C.leaf,5)}${leaf(3,-60,.66,45)}${leaf(7,-66,.57,135)}
     ${sleepy?line('M-23 6q7 8 14 0M12 6q7 8 14 0',C.ink,3.5):`${ell(-16,5,3.8,5,C.ink)}${ell(17,5,3.8,5,C.ink)}`}
     ${ell(-27,18,8,5,C.pink)}${ell(28,18,8,5,C.pink)}
-    ${asking?ell(1,23,4,5,C.ink):sleepy?line('M-3 24q5 3 9 0',C.ink,2.5):`<path d="M-9 20Q1 25 11 20Q4 38-4 30Z" fill="${C.ink}"/>`}
+    <g class="buddy-mouth">${asking?ell(1,23,4,5,C.ink):sleepy?line('M-3 24q5 3 9 0',C.ink,2.5):`<path d="M-9 20Q1 25 11 20Q4 38-4 30Z" fill="${C.ink}"/>`}</g>
     <path d="M-18 49Q0 39 19 49L17 68Q0 75-16 68Z" fill="#a5be8b"/>
     ${leaf(3,62,.28,35)}`;
 }
@@ -42,6 +42,9 @@ export function icon(name,size=32) {
     lock:`${line('M9 13V9a7 7 0 0114 0v4','currentColor',3)}${rect(5,12,22,18,4,'currentColor')}${dot(16,20,2.5,'#fff8e7')}${rect(15,20,2,5,1,'#fff8e7')}`,
     gift:`${rect(5,14,22,16,3,'currentColor')}${rect(3,10,26,6,2,'currentColor')}${line('M16 12v17','#fff8e7',3)}${line('M16 10C3 11 6-4 13 3L16 10C29 11 26-4 19 3Z','currentColor',2.5)}`,
     hand:`<path d="M10 17V7a2 2 0 014 0v9V4a2 2 0 014 0v12V7a2 2 0 014 0v11-6a2 2 0 014 0v10q0 9-10 9c-4 0-6-3-9-6l-4-5q-2-4 2-3l5 4" fill="currentColor"/>`,
+    wave:`<path d="M11 18V8a2 2 0 014 0v8V5a2 2 0 014 0v12V8a2 2 0 014 0v11-6a2 2 0 014 0v9q0 9-9 9c-4 0-6-3-9-6l-4-5q-2-4 2-3l4 3" fill="currentColor"/>${line('M3 8l2 2M6 3l2 2M29 4l1-2','currentColor',2)}`,
+    tap:`<path d="M13 18V6a3 3 0 016 0v10l7 1q5 1 4 6l-2 8H16l-8-9q-3-5 1-5l4 3Z" fill="#fff8e7" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/>${line('M7 7H4M10 2L8 0M25 5l3-2','currentColor',2)}`,
+    place:`${line('M5 24v6h24v-6M17 4v16M10 14l7 7 7-7','currentColor',3)}${line('M4 24h4M26 24h4','currentColor',3)}`,
     ear:`${line('M10 21c-9-11 5-24 15-13 6 8-3 12-6 15-2 2 0 7-5 7-3 0-5-2-5-4M14 17c-6-8 8-12 7-3 0 3-4 3-5 6','currentColor',3)}`,
     book:`<path d="M3 5q8-3 13 2 5-5 13-2v23q-8-3-13 1-5-4-13-1Z" fill="currentColor"/>${line('M16 8v18','#fff8e7',2)}`,
     settings:`${dot(16,16,10,'currentColor')}${dot(16,16,4,'#fff8e7')}${[0,45,90,135].map(a=>`<path d="M16 1v6M16 25v6" stroke="currentColor" stroke-width="5" transform="rotate(${a} 16 16)"/>`).join('')}`,

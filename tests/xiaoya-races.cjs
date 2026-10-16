@@ -38,6 +38,7 @@ async function state(p){return p.evaluate(()=>JSON.parse(localStorage.getItem('x
 async function setup(){
   const c=await browser.newContext({viewport:{width:390,height:844},permissions:['microphone'],timezoneId:'Asia/Shanghai',serviceWorkers:'block'});
   await c.addInitScript(()=>{
+    if(!localStorage.getItem('xiaoya-english:preferences:v1'))localStorage.setItem('xiaoya-english:preferences:v1',JSON.stringify({welcome:true,mic:true,guideStep:'done'}));
     window.race={prepareCalls:0,calls:[],errors:[],streams:[],capture:{samples:0,voicedSamples:0,maxRms:0,starts:0,stops:0}};
     window.addEventListener('error',e=>race.errors.push(e.message));
     window.addEventListener('unhandledrejection',e=>race.errors.push(String(e.reason)));
@@ -66,7 +67,7 @@ async function setup(){
   p.setDefaultTimeout(10000);
   try{
     await p.goto(origin+'/xiaoya/');
-    await p.locator('[data-action="welcome-mic"]').click();
+    await p.locator('[data-action="next-event"]').waitFor();
     await p.evaluate(async()=>{
       const src=document.querySelector('script[type="module"][src]').src;
       const m=await import(new URL('learning.js',src));

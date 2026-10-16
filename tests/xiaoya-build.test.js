@@ -19,6 +19,9 @@ async function fixture(t) {
   for (const name of ['app.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), name === 'app.js' ? "import './audio.js';" : name === 'audio.js' ? "export const ready=()=>import('../src/speech-local.js');" : '/* public module */');
   for (const name of ['speech-local.js', 'speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
+  await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
+  await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), 'replacement voice bytes');
+  await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
   const result = await buildXiaoya({root});
   return {root, ...result, output:path.join(root, 'dist/xiaoya')};
 }
@@ -84,6 +87,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.match(await fs.readFile(path.join(built.output, `releases/${built.build}/audio.js`), 'utf8'), /import\('\.\/shared\/speech-local.js'\)/);
   assert.ok(built.core.includes(`./releases/${built.build}/shared/speech-download.js`));
   assert.ok(built.core.every(file => !file.includes('model-en-us') && !file.includes('vosk-0.0.8') && !file.endsWith('.mp3')));
+  assert.equal(await fs.readFile(path.join(built.output, 'audio/v2/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
+  await assert.rejects(fs.stat(path.join(built.output, 'audio/v2/private.log')), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'private.log')), {code:'ENOENT'});
   const again = await buildXiaoya({root:built.root});
   assert.equal(again.build, built.build);
@@ -138,4 +143,22 @@ test('worker reuses old audio and bypasses resumable speech downloads and outsid
   assert.equal(await sw.fetchRequest(new Request(new URL('../speech/model-en-us-0.15.tar.gz', sw.scope), {cache:'no-store'})), undefined);
   assert.equal(await sw.fetchRequest(new Request('https://example.test/unrelated/file.js')), undefined);
   assert.equal(await sw.fetchRequest(new Request('https://other.test/hosted/course/audio/a.mp3')), undefined);
+});
+
+test('replaced Chinese voices bypass the previous voice cache and remain available offline', async t => {
+  const sw = await worker(await fixture(t));
+  const oldUrl = new URL('./audio/speak.mp3', sw.scope).href;
+  const url = new URL('./audio/v2/speak.mp3', sw.scope).href;
+  await (await sw.caches.open('xiaoya-audio-v1')).put(oldUrl, new Response('old system voice'));
+  await (await sw.caches.open('english-sprout-audio-v5')).put(oldUrl, new Response('old parent-worker voice'));
+  await (await sw.caches.open('english-sprout-audio-v5')).put(url, new Response('unexpected parent-worker voice'));
+  const response = await sw.fetchRequest(new Request(url));
+  assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [1,2,3,4,5,6]);
+  assert.ok(sw.fetched.includes(url), 'Replacement bytes must be downloaded instead of replaying v1');
+  sw.setOnline(false);
+  assert.deepEqual([...new Uint8Array(await (await sw.fetchRequest(new Request(url))).arrayBuffer())], [1,2,3,4,5,6]);
+  assert.equal(await (await (await sw.caches.open('xiaoya-audio-v1')).match(oldUrl)).text(), 'old system voice');
+  const player = await fs.readFile(path.join(project, 'xiaoya/audio.js'), 'utf8');
+  const template = await fs.readFile(path.join(project, 'xiaoya/sw.template.js'), 'utf8');
+  assert.equal(player.match(/const AUDIO_CACHE = '([^']+)'/)[1], template.match(/const AUDIO = '([^']+)'/)[1]);
 });
