@@ -16,7 +16,7 @@ async function fixture(t) {
   await fs.mkdir(path.join(root, 'dist'));
   await fs.writeFile(path.join(root, 'dist/index.html'), 'original-product');
   for (const name of ['index.html', 'manifest.webmanifest', 'sw.template.js']) await fs.copyFile(path.join(project, 'xiaoya', name), path.join(root, 'xiaoya', name));
-  for (const name of ['app.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), name === 'app.js' ? "import './audio.js';" : name === 'audio.js' ? "export const ready=()=>import('../src/speech-local.js');" : '/* public module */');
+  for (const name of ['app.js', 'experience.js', 'stories.js', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), name === 'app.js' ? "import './audio.js';" : name === 'audio.js' ? "export const ready=()=>import('../src/speech-local.js');" : '/* public module */');
   for (const name of ['speech-local.js', 'speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});

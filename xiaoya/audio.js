@@ -243,6 +243,27 @@ export function cancelRecognition() {
   }
   recognition=null;
 }
+// Xiaoya's practice candidate policy is local to this app; the older product's
+// matcher and its lexical metrics are unchanged. ASR may insert one article in
+// an otherwise complete phrase (Pip's "I need water" can become "I need a water").
+// Do not put that transcript in the catalogue as a phrase taught to children.
+function scoreCandidate(expected, heard, matcher) {
+  const score = matcher.scoreSpeech(expected, heard);
+  const target = matcher.speechWords(expected), actual = matcher.speechWords(heard);
+  const articles = new Set(['a','an','the']);
+  const optional = new Set(['a','an','the','some','please']);
+  const same = (left,right) => left.length===right.length && left.every((word,index)=>word===right[index]);
+  const articleInsertion = target.length>=2 && actual.length===target.length+1 && actual.some((word,index)=>
+    index>0 && index<actual.length-1 && articles.has(word) && same(target,actual.filter((_,position)=>position!==index))
+  );
+  // Keep content words, pronouns, word order and negation intact. In particular,
+  // an 80% lexical match must not accept open/close, wet/dry or a dropped "not".
+  // The existing longer-phrase allowance can still omit "some" or "please".
+  const semanticMatch = same(target.filter(word=>!optional.has(word)),actual.filter(word=>!optional.has(word)));
+  const matched = articleInsertion || (score.matched && actual.length<=target.length && semanticMatch);
+  const stars = matched ? 3 : score.coverage>=.5 && score.precision>=.5 ? 2 : actual.length ? 1 : 0;
+  return {...score,matched,stars};
+}
 export async function recognize(url, accepted) {
   if (!ready || !url) return null;
   cancelRecognition(); const controller = new AbortController(); recognition=controller;
@@ -254,11 +275,11 @@ export async function recognize(url, accepted) {
     checkCurrent();
     const result = await module.assessRecording(url, accepted[0], {signal:controller.signal});
     checkCurrent();
-    const {scoreSpeech} = await import('../src/speech-match.js');
+    const matcher = await import('../src/speech-match.js');
     checkCurrent();
-    const scores = accepted.map(variant => ({...scoreSpeech(variant,result.heard),variant}));
+    const scores = accepted.map(variant => ({...scoreCandidate(variant,result.heard,matcher),variant}));
     scores.sort((a,b)=>Number(b.matched)-Number(a.matched)||b.stars-a.stars||b.coverage-a.coverage||b.precision-a.precision||b.matchedWords-a.matchedWords);
-    const best = scores[0] || {...scoreSpeech('',result.heard),variant:null};
+    const best = scores[0] || {...matcher.scoreSpeech('',result.heard),variant:null};
     // Ordered word matching only: these are not phoneme/pronunciation grades.
     return {...best,variant:best.matched ? best.variant : null};
   } finally { if (recognition===controller) recognition=null; }

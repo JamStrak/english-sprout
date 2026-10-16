@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {THEMES,EVENTS,ITEMS,GOALS,ALPHABET_NODES,ALPHABET_CORE_GOALS} from '../xiaoya/content.js';
-import {STORAGE_KEY,createState,validateState,localDay,recordEvidence,correctEvidence,effectiveEvidence,completeEvent,placeItem,goalStatus,selectEvent,speakingAlert,alphabetEligibility,enableAlphabet,collectLetter,canRevealPhrase} from '../xiaoya/learning.js';
+import {STORAGE_KEY,createState,validateState,localDay,recordEvidence,correctEvidence,effectiveEvidence,completeEvent,placeItem,goalStatus,checkupContext,selectEvent,speakingAlert,alphabetEligibility,enableAlphabet,collectLetter,canRevealPhrase} from '../xiaoya/learning.js';
 
 const find=(id)=>EVENTS.find((event)=>event.id===id);
 function entry(id,eventId='play-box',date='2026-10-16',overrides={}) {
@@ -324,4 +324,24 @@ test('state validation rejects corrupted rewards, dates, foreign products and fa
   s=clone(collectedState());s.alphabet.letters['letter-a'].letter='Z';bad.push(s);
   s=clone(recordEvidence(createState(),entry('one')));s.evidence.push({...s.evidence[0]});bad.push(s);
   for(const state of bad) assert.throws(()=>validateState(state));
+});
+
+
+test('garden checkups alternate reliable settings without counting demonstrations or machine candidates',()=>{
+  for(const id of ['food-water','play-box','hello-goodbye']) {
+    const event=find(id);let state=createState();
+    assert.equal(checkupContext(state,id).id,event.contexts[1].id);
+    state=recordEvidence(state,entry(`${id}-assisted`,id,'2026-10-16',{contextId:event.contexts[1].id,helped:true}));
+    state=recordEvidence(state,entry(`${id}-machine`,id,'2026-10-16',{contextId:event.contexts[1].id,source:'machine'}));
+    assert.equal(checkupContext(state,id).id,event.contexts[1].id);
+    state=recordEvidence(state,entry(`${id}-first`,id,'2026-10-16',{contextId:event.contexts[1].id}));
+    assert.equal(checkupContext(state,id).id,event.contexts[0].id);
+    assert.equal(goalStatus(state,event.goalId).retained,false);
+    state=recordEvidence(state,entry(`${id}-second`,id,'2026-10-17',{contextId:checkupContext(state,id).id}));
+    assert.equal(goalStatus(state,event.goalId).retained,true);
+    assert.equal(checkupContext(state,id).id,event.contexts[1].id);
+    state=correctEvidence(state,`${id}-second`,{correctionId:`${id}-correction`,result:'supported',helped:true,date:'2026-10-17'});
+    assert.equal(goalStatus(state,event.goalId).retained,false);
+    assert.equal(checkupContext(state,id).id,event.contexts[0].id);
+  }
 });

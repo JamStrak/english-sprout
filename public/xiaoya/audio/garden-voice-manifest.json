@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clips": [
+    {
+      "id": "garden-welcome",
+      "text": "和小芽玩一个故事，贝壳和小水滴在等你。点亮亮的按钮，出发吧！",
+      "file": "garden-welcome.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 40988,
+      "seconds": 6.744,
+      "sha256": "511a0da6135b8a59c71172816656a4c5384a72a890f1428f29bde3b915a73311",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "和小芽玩一个故事贝壳和小水滴在等你点亮亮的按钮出发吧",
+        "final_end_seconds": 6.1625
+      }
+    },
+    {
+      "id": "garden-reward",
+      "text": "你陪小芽玩完啦！三枚小贝壳，两滴水，送给你。",
+      "file": "garden-reward.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 33644,
+      "seconds": 5.52,
+      "sha256": "fcc815e47b078f2dcdb89e17a04a71503810b0b323792ffe00d92eee0c7e7fb9",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你陪小芽玩完啦三枚小贝壳两滴水送给你",
+        "final_end_seconds": 4.95
+      }
+    },
+    {
+      "id": "garden-pack",
+      "text": "点一下小贝壳，打开种子惊喜包。",
+      "file": "garden-pack.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 20252,
+      "seconds": 3.288,
+      "sha256": "66b80f92cd6c27dc141638a3de493507b5ee0f48fe03c39c1a32872121313339",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "点一下小贝壳打开种子惊喜包",
+        "final_end_seconds": 2.7
+      }
+    },
+    {
+      "id": "garden-seed",
+      "text": "哇，一颗小种子！点花盆，把它种下去。",
+      "file": "garden-seed.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28892,
+      "seconds": 4.728,
+      "sha256": "4f53c92d27e98bababc3336e6e8cb5502ffc5b30a3f6a1bde00fd1ab1fb29362",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "哇一颗小种子点花盆把它种下去",
+        "final_end_seconds": 4.15
+      }
+    },
+    {
+      "id": "garden-water",
+      "text": "小种子渴啦。点小水壶，给它喝点水。",
+      "file": "garden-water.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 27884,
+      "seconds": 4.56,
+      "sha256": "e5d7d17ae921e98728399f9639ef651782af37fcdae525d39f7ae7bfe067d399",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小种子渴啦点小水壶给它喝点水",
+        "final_end_seconds": 4.0
+      }
+    },
+    {
+      "id": "garden-bloom",
+      "text": "开花啦！这是你种出来的小花！",
+      "file": "garden-bloom.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 22412,
+      "seconds": 3.648,
+      "sha256": "dab4b16d1f49bfbc19ef3f522aaaa63f771682454ecbc5c637c31e4db8080a67",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "开花啦这是你种出来的小花",
+        "final_end_seconds": 3.075
+      }
+    },
+    {
+      "id": "garden-next",
+      "text": "再和小芽玩一个故事，把花园变得更漂亮吧。",
+      "file": "garden-next.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 26444,
+      "seconds": 4.32,
+      "sha256": "269fb8653932acbca0c16afd646beca1effa37441114acdb2ef4f552d5c3cb38",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "再和小芽玩一个故事把花园变得更漂亮吧",
+        "final_end_seconds": 3.7375
+      }
+    },
+    {
+      "id": "garden-speak",
+      "text": "轮到你啦。点亮话筒，跟小芽说一句。想再听一遍，就点小耳朵。",
+      "file": "garden-speak.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 42716,
+      "seconds": 7.032,
+      "sha256": "6237e26dff8709ccbf36097d2479147bbb3b1beddd44eb0e263c65355f4cb7e7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "轮到你啦点亮话筒跟小芽说一句想再听一遍就点小耳朵",
+        "final_end_seconds": 6.4625
+      }
+    },
+    {
+      "id": "garden-watch",
+      "text": "没关系，先听小芽说，下次我们再试试。",
+      "file": "garden-watch.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 25436,
+      "seconds": 4.152,
+      "sha256": "18716e32c0db7c9ea80ac15b3f2f1dd4e8d3c436032f9bd8b6e5f17d4676461a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "没关系先听小芽说下次我们再试试",
+        "final_end_seconds": 3.575
+      }
+    }
+  ]
+}

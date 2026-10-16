@@ -192,6 +192,15 @@ export function placeItem(state,itemId,position) {
   return {...state,items:{...state.items,[itemId]:{...state.items[itemId],x,y}}};
 }
 
+/** A checkup changes setting after reliable parent-confirmed speech, never after assisted play. */
+export function checkupContext(state,eventId) {
+  validateState(state);
+  const event=findEvent(eventId);
+  const records=effective(state).filter(x=>x.goalId===event.goalId && reliableSpeech(x));
+  const recent=records.reverse().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  return recent ? event.contexts.find(x=>x.settingId!==setting(recent))??event.contexts[0] : event.contexts[1]??event.contexts[0];
+}
+
 /** Pick inside the requested theme only. A review may change setting, never fabricate transfer evidence. */
 export function selectEvent(state,themeId,date=localDay()) {
   validateState(state); date=localDay(date);

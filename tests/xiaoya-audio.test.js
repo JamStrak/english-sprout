@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import {scoreSpeech} from '../src/speech-match.js';
+import {scoreSpeech,speechWords} from '../src/speech-match.js';
 
 const source = fs.readFileSync(new URL('../xiaoya/audio.js', import.meta.url), 'utf8')
   .replace(/export (async )?function /g, '$1function ')
@@ -59,7 +59,7 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
     clearTimeout(id){timers.delete(id);},
     setInterval(fn,delay){const id=++sequence;intervals.set(id,{fn,delay});return id;},
     clearInterval(id){intervals.delete(id);},
-    loadSpeech:()=>Promise.resolve(speech),loadMatcher:()=>Promise.resolve({scoreSpeech})
+    loadSpeech:()=>Promise.resolve(speech),loadMatcher:()=>Promise.resolve({scoreSpeech,speechWords})
   };
   vm.runInNewContext(source+`;globalThis.api={beginRecording,finishRecording,cancelRecording,releaseAudioSession,hasClip,prepareRecognition,speechReady,recognize,cancelRecognition};`,sandbox);
   return {
@@ -213,6 +213,60 @@ test('recognition exposes the actual best accepted word match, partial coverage 
   assert.equal(result.matched,false); assert.equal(result.stars,2); assert.equal(result.coverage,.5); assert.equal(result.precision,1);
   heard=''; result=await f.recognize('blob:test',['Good morning']);
   assert.equal(result.matched,false); assert.equal(result.stars,0); assert.equal(result.coverage,0); assert.equal(result.precision,0);
+});
+
+test('Xiaoya accepts one ASR article insertion only with the complete ordered phrase and keeps raw lexical metrics', async () => {
+  let heard='i need a water';
+  const f=fixture({speech:{prepareSpeech:async()=>{},assessRecording:async()=>({heard})}});
+  await f.prepareRecognition();
+  for(const article of ['a','an','the']){
+    heard=`i need ${article} water`;
+    const result=await f.recognize('blob:test',['I need water','Water please','Water']);
+    assert.equal(result.matched,true,heard); assert.equal(result.stars,3);
+    assert.equal(result.variant,'I need water'); assert.equal(result.coverage,1);
+    assert.equal(result.precision,.75); assert.equal(result.matchedWords,3);
+    assert.equal(result.expectedWords,3); assert.equal(result.heard,heard);
+    assert.equal('pronunciation' in result,false);
+    assert.equal(scoreSpeech('I need water',heard).matched,false,'Shared old-product matching remains unchanged');
+  }
+});
+
+test('Xiaoya article tolerance does not accept missing content, other inserts or a long unrelated utterance', async () => {
+  let heard='';
+  const f=fixture({speech:{prepareSpeech:async()=>{},assessRecording:async()=>({heard})}});
+  await f.prepareRecognition();
+  for(const words of ['i need a the water','i a water','i need a juice','i need cold water','a i need water','i need water a','water i need','i need a water and a banana']){
+    heard=words; const result=await f.recognize('blob:test',['I need water','Water please','Water']);
+    assert.equal(result.matched,false,words); assert.equal(result.variant,null,words);
+    assert(result.stars<3,words);
+  }
+});
+
+test('Xiaoya rejects changed negation, antonyms and missing semantic words even at the shared 80 percent threshold', async () => {
+  let heard='';
+  const f=fixture({speech:{prepareSpeech:async()=>{},assessRecording:async()=>({heard})}});
+  await f.prepareRecognition();
+  const cases=[
+    ['I hear a dog','I hear no a dog'],
+    ["Let's read a book",'let us not read a book'],
+    ["Let's read a book",'let us never read a book'],
+    ["Let's read a book",'let us close a book'],
+    ["Let's read a book",'let us a book'],
+    ['Please do not open the box','please do open the box'],
+    ['Please open the big box','please close the big box'],
+    ['My little socks are wet','my little socks are dry'],
+    ['Can I have some water please','can you have some water please'],
+    ['I need water','I do not need a water'],
+    ['No thank you','thank you']
+  ];
+  for(const [expected,words] of cases){
+    heard=words; const result=await f.recognize('blob:test',[expected]);
+    assert.equal(result.matched,false,`${expected} / ${words}`); assert(result.stars<3);
+  }
+  heard='can i have water please';
+  assert.equal((await f.recognize('blob:test',['Can I have some water please'])).matched,true,'Existing long-phrase omission of some remains supported');
+  heard='i want water';
+  assert.equal((await f.recognize('blob:test',['I want some water'])).matched,false,'Short phrases still require every target word');
 });
 
 test('a cancelled recognizer cannot consume or return a late transcript even if its backend ignores abort', async () => {
