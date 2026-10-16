@@ -1,0 +1,2 @@
+# Speech assets are SHA-256 pinned; preserve original bytes on every platform.
+public/xiaoya/speech/** -text
