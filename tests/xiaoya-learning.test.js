@@ -28,11 +28,11 @@ function deepFreeze(value) {
   return value;
 }
 
-test('content contains six themes, 18 unique events/items and 26 reachable discovery nodes',()=>{
-  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,18); assert.equal(ITEMS.length,18); assert.equal(ALPHABET_NODES.length,26);
-  for(const theme of THEMES) assert.equal(EVENTS.filter((event)=>event.theme===theme.id).length,3);
-  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,18);
-  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,18);
+test('content contains six themes, 42 unique events/items and 26 reachable discovery nodes',()=>{
+  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,42); assert.equal(ITEMS.length,42); assert.equal(ALPHABET_NODES.length,26);
+  for(const theme of THEMES) assert.ok(EVENTS.filter((event)=>event.theme===theme.id).length>=3);
+  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,42);
+  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,42);
   assert.deepEqual(ALPHABET_NODES.map((node)=>node.letter).join(''),'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
   assert.equal(new Set(ALPHABET_NODES.map((node)=>node.id)).size,26);
   for(const node of ALPHABET_NODES) {
@@ -226,10 +226,10 @@ test('participation without speech earns the fixed item exactly once and never r
   assert.equal(Object.keys(original.items).length,0);
 });
 
-test('all 18 rewards may be earned without unlocking alphabet or losing access to any theme',()=>{
+test('all catalogue rewards may be earned without unlocking alphabet or losing access to any theme',()=>{
   let state=createState();
   for(const event of EVENTS) state=completeEvent(state,event.id,'2026-10-16');
-  assert.equal(Object.keys(state.items).length,18); assert.equal(alphabetEligibility(state).eligible,false);
+  assert.equal(Object.keys(state.items).length,EVENTS.length); assert.equal(alphabetEligibility(state).eligible,false);
   for(const theme of THEMES) assert.equal(selectEvent(state,theme.id,'2026-10-17').theme,theme.id);
 });
 
@@ -265,7 +265,7 @@ test('core goal evidence opens the parent-enabled alphabet without requiring all
   assert.throws(()=>enableAlphabet(before,'2026-10-16'));
 });
 
-test('all 26 letters are reachable with 18-event content and repeat claims cannot duplicate a letter',()=>{
+test('all 26 letters are reachable with expanded content and repeat claims cannot duplicate a letter',()=>{
   const state=collectedState();
   assert.equal(Object.keys(state.alphabet.letters).length,26);
   assert.equal(collectLetter(state,'letter-a','2026-10-19'),state);

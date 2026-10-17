@@ -145,7 +145,7 @@ test('rejects corrupted, mismatched and legacy state without changing it',()=>{
     (s)=>{s.bag.reverse();},
     (s)=>{s.bag[0]=s.bag[1];},
     (s)=>{s.rounds.push({...s.rounds[0]});s.shells+=3;s.water+=2;},
-    (s)=>{s.rounds[0].eventId='bed-night';},
+    (s)=>{s.rounds[0].eventId='not-a-story';},
     (s)=>{s.rounds[0].date='2026-02-30';},
     (s)=>{s.rounds[0].mastered=true;},
     (s)=>{s.plants[0].flowerId='tulip';},

@@ -5,6 +5,10 @@ import vm from 'node:vm';
 import * as content from '../xiaoya/content.js';
 import * as learning from '../xiaoya/learning.js';
 import * as stories from '../xiaoya/stories.js';
+import * as storyArt from '../xiaoya/story-art.js';
+import * as meadow from '../xiaoya/garden-meadow.js';
+import * as meadowArt from '../xiaoya/meadow-art.js';
+import * as meadowUI from '../xiaoya/meadow-ui.js';
 import * as gardening from '../xiaoya/garden.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
@@ -38,7 +42,7 @@ function fixture(){
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,audio,document,localStorage,
+  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
     location:{search:''},URL,URLSearchParams,navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
   vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,

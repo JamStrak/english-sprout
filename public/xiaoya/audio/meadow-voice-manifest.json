@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clips": [
+    {
+      "id": "meadow-reward",
+      "text": "三枚贝壳，五滴水，送给你！去小花园玩吧。",
+      "file": "meadow-reward.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31340,
+      "seconds": 5.136,
+      "sha256": "5773870ccc92acb02ac8613b568af309b245011649e893bbb8856ad7e201fcfd",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "三枚贝壳五滴水送给你去小花园玩吧",
+        "final_end_seconds": 4.575
+      }
+    },
+    {
+      "id": "meadow-seed",
+      "text": "拿起小种子，再点草地。想种在哪里，就种在哪里。",
+      "file": "meadow-seed.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 34364,
+      "seconds": 5.64,
+      "sha256": "2ef6327168bdffa10f08ecb1154d679e0fa0ebc2e67088d781a1ddb374194725",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "拿起小种子再点草地想种在哪里就种在哪里",
+        "final_end_seconds": 5.0625
+      }
+    },
+    {
+      "id": "meadow-water",
+      "text": "拿起小水壶，再点小苗。浇一次水，它就长大一点。",
+      "file": "meadow-water.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 33932,
+      "seconds": 5.568,
+      "sha256": "845721a09e9a26c5dc985b97bc6ad4589f001c8ea5f9c494ca9df47e16ac4f91",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "拿起小水壶再点小苗浇一次水它就长大一点",
+        "final_end_seconds": 4.975
+      }
+    },
+    {
+      "id": "meadow-growing",
+      "text": "又长大一点啦！再用小水壶，给它浇水吧。",
+      "file": "meadow-growing.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28460,
+      "seconds": 4.656,
+      "sha256": "d2263ee40989f361ed10865dfdcacb1e47b9f6f4484c0343cf9c117e938a0ef2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "又长大一点啦再用小水壶给它浇水吧",
+        "final_end_seconds": 4.075
+      }
+    },
+    {
+      "id": "meadow-bloom",
+      "text": "哇，花开啦！这是你亲手照顾的小花。",
+      "file": "meadow-bloom.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 27164,
+      "seconds": 4.44,
+      "sha256": "fcdc9c07ed296e12f02035981b494fd8c3faca62c70454d5c9a1432c5aed0376",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "哇花开啦这是你亲手照顾的小花",
+        "final_end_seconds": 3.875
+      }
+    },
+    {
+      "id": "meadow-giant",
+      "text": "哇，是巨型花种子！它要喝十次水，才能开出大大的花。",
+      "file": "meadow-giant.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 36380,
+      "seconds": 5.976,
+      "sha256": "ab217fd393b48b6bbb3a3662f70e72d11df1746d01c502aa79fd83e37fce2cd3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "哇是巨型花种子它要喝十次水才能开出大大的花",
+        "final_end_seconds": 5.4
+      }
+    },
+    {
+      "id": "meadow-empty",
+      "text": "小水壶空啦。再玩一个故事，就能带水回来。",
+      "file": "meadow-empty.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 29900,
+      "seconds": 4.896,
+      "sha256": "b4c49424d9585508fb96cb2cc982487813ba1fbe30106092e543c473d920a694",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小水壶空啦再玩一个故事就能带水回来",
+        "final_end_seconds": 4.3
+      }
+    },
+    {
+      "id": "meadow-collection",
+      "text": "看，这是你已经种出来的小花。蝴蝶结花，还有不同的颜色呢。",
+      "file": "meadow-collection.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 38396,
+      "seconds": 6.312,
+      "sha256": "9dc4601e7a8be2ffbf573b4f77323a0d2f79e3ad645d725814f43168b72c8ccb",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "看这是你已经种出来的小花蝴蝶结花还有不同的颜色呢",
+        "final_end_seconds": 5.75
+      }
+    }
+  ]
+}

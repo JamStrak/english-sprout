@@ -2,8 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.6.1';
-const MODULES = ['app.js', 'experience.js', 'stories.js', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
+export const XIAOYA_VERSION = '0.7.0';
+const MODULES = ['app.js', 'experience.js', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -42,7 +42,7 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
   await fs.mkdir(path.join(output, release, 'shared'), {recursive:true});
   for (const [name, bytes] of files) await fs.writeFile(path.join(output, release, name), bytes);
   const html = template.replaceAll('__XIAOYA_BUILD__', build).replaceAll('__XIAOYA_VERSION__', XIAOYA_VERSION)
-    .replaceAll('xiaoya/app.js', `xiaoya/${release}/app.js`).replaceAll('xiaoya/style.css', `xiaoya/${release}/style.css`);
+    .replaceAll('xiaoya/app.js', `xiaoya/${release}/app.js`).replaceAll('xiaoya/style.css', `xiaoya/${release}/style.css`).replaceAll('xiaoya/meadow.css', `xiaoya/${release}/meadow.css`);
   await fs.writeFile(path.join(output, 'index.html'), html);
   await fs.writeFile(path.join(output, 'manifest.webmanifest'), manifest);
   const core = ['./', './index.html', './manifest.webmanifest', ...Array.from(files.keys(), name => `./${release}/${name}`)];

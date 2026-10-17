@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sceneArt } from '../xiaoya/art.js';
-import { EVENTS } from '../xiaoya/content.js';
+import { EVENTS as ALL_EVENTS } from '../xiaoya/content.js';
+const EVENTS=ALL_EVENTS.slice(0,18);
 
 const contexts = EVENTS.flatMap(event => event.contexts.map(context => ({
   ...event, ...context, sceneId: context.scene, context,

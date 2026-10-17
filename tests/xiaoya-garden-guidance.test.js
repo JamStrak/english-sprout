@@ -5,6 +5,10 @@ import vm from 'node:vm';
 import * as content from '../xiaoya/content.js';
 import * as learning from '../xiaoya/learning.js';
 import * as stories from '../xiaoya/stories.js';
+import * as storyArt from '../xiaoya/story-art.js';
+import * as meadow from '../xiaoya/garden-meadow.js';
+import * as meadowArt from '../xiaoya/meadow-art.js';
+import * as meadowUI from '../xiaoya/meadow-ui.js';
 import * as gardening from '../xiaoya/garden.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
@@ -52,7 +56,7 @@ function fixture(initial=gardening.createGarden()){
   const audio={playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
     stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){},
     releaseAudioSession(){audio.stopSound();},speechReady(){return false;}};
-  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,audio,document,JSON,
+  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,JSON,
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search:''},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};

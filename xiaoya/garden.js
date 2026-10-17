@@ -1,4 +1,5 @@
 /** Local participation rewards only: flowers and balances are never learning evidence. */
+import {EVENTS as CONTENT_EVENTS} from './content.js';
 export const GARDEN_KEY = 'xiaoya-english:garden:v1';
 export const FLOWERS = Object.freeze([
   {id:'daisy',name:'雏菊',color:'#fff8e7'},
@@ -10,7 +11,7 @@ export const FLOWERS = Object.freeze([
 ].map(Object.freeze));
 
 const PRODUCT = 'xiaoya-english-garden';
-const EVENTS = new Set(['food-water','play-box','hello-goodbye']);
+const EVENTS = new Set(CONTENT_EVENTS.map(event=>event.id));
 const SHELL_REWARD = 3;
 const WATER_REWARD = 2;
 const PACK_PRICE = 3;
