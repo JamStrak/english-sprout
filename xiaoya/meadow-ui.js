@@ -18,7 +18,7 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
     </div>
     <div class="meadow-tools">
       ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.giant?'巨型花':''}种子，放到草地上">${seedArt()}${flower.giant?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}2+</span></button>`}
-      <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="点水壶，让小苗头上出现水滴，再点水滴浇水">${canArt()}<span class="meadow-cost">${dropArt()}${state.water}</span></button>
+      <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="点水壶，再点小苗进度条旁边的水滴浇水">${canArt()}<span class="meadow-cost">${dropArt()}${state.water}</span></button>
       <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，选择贝壳或水">${icon('play',40)}</button>
     </div>
   </main>`;
@@ -33,17 +33,40 @@ const WATER_SIZE=48,WATER_PITCH=56,WATER_EDGE=8;
 const waterColumns=width=>Math.max(1,Math.floor((width-2*WATER_EDGE+WATER_PITCH-WATER_SIZE)/WATER_PITCH));
 export function waterTargetHeight(count,width){return count?Math.ceil(count/waterColumns(width))*WATER_PITCH+2*WATER_EDGE-(WATER_PITCH-WATER_SIZE):0;}
 
-// Targets get their own non-overlapping spaces, independent of flower paint order.
-// Keep existing assignments during watering so a second tap still means the same plant.
+// Prefer an exact position beside the actual progress bar, not the transparent
+// plant canvas. Reserve enough grid space for a crowded garden's remaining drops.
+// Keep assignments during watering so a second tap still means the same plant.
 export function waterTargetLayout(anchors,width,height,previous=[]){
   const cols=waterColumns(width),rows=Math.max(1,Math.floor((height-2*WATER_EDGE+WATER_PITCH-WATER_SIZE)/WATER_PITCH));
   if(cols*rows<anchors.length)throw new RangeError('Expand the meadow before placing water targets');
   const x0=(width-(cols-1)*WATER_PITCH)/2,y0=WATER_EDGE+WATER_SIZE/2;
   const slots=Array.from({length:cols*rows},(_,i)=>({x:x0+(i%cols)*WATER_PITCH,y:y0+Math.floor(i/cols)*WATER_PITCH}));
-  const assigned=new Map(),occupied=new Set();
-  for(const anchor of anchors){const old=previous.find(p=>p.id===anchor.id);if(!old)continue;const index=slots.findIndex(p=>p.x===old.x&&p.y===old.y);if(index>=0&&!occupied.has(index)){assigned.set(anchor.id,slots[index]);occupied.add(index);}}
-  for(const anchor of anchors){if(assigned.has(anchor.id))continue;let nearest=-1,distance=Infinity;slots.forEach((slot,index)=>{if(occupied.has(index))return;const d=Math.hypot(slot.x-anchor.x,slot.y-anchor.y);if(d<distance){nearest=index;distance=d;}});assigned.set(anchor.id,slots[nearest]);occupied.add(nearest);}
-  return anchors.map(anchor=>({id:anchor.id,...assigned.get(anchor.id),anchorX:anchor.x,anchorY:anchor.y}));
+  const assigned=new Map(),occupied=new Set(),radius=WATER_SIZE/2;
+  const overlaps=(a,b)=>Math.abs(a.x-b.x)<WATER_SIZE&&Math.abs(a.y-b.y)<WATER_SIZE;
+  const inBounds=p=>p.x>=WATER_EDGE+radius&&p.x<=width-WATER_EDGE-radius&&p.y>=WATER_EDGE+radius&&p.y<=height-WATER_EDGE-radius;
+  function accept(id,p){
+    if(!inBounds(p)||[...assigned.values()].some(other=>overlaps(p,other)))return false;
+    const blocked=slots.flatMap((slot,i)=>!occupied.has(i)&&overlaps(p,slot)?[i]:[]);
+    if(slots.length-occupied.size-blocked.length<anchors.length-assigned.size-1)return false;
+    assigned.set(id,{x:p.x,y:p.y});blocked.forEach(i=>occupied.add(i));return true;
+  }
+  const existing=anchors.map(a=>({id:a.id,p:previous.find(p=>p.id===a.id)})).filter(a=>a.p);
+  // Old placements already form a feasible arrangement after removals. Preserve
+  // the whole arrangement, including capacity, rather than greedily shifting it.
+  if(existing.length===anchors.length&&existing.every(a=>inBounds(a.p))&&existing.every((a,i)=>existing.slice(i+1).every(b=>!overlaps(a.p,b.p)))){
+    for(const a of existing)assigned.set(a.id,{x:a.p.x,y:a.p.y});
+  }else{
+    for(const a of existing)accept(a.id,a.p);
+    for(const anchor of anchors){
+      if(assigned.has(anchor.id))continue;
+      const side=(anchor.halfWidth??22)+radius+8,y=Math.max(WATER_EDGE+radius,Math.min(height-WATER_EDGE-radius,anchor.y));
+      const candidates=[{x:anchor.x+side,y},{x:anchor.x-side,y}];
+      if(candidates.some(p=>accept(anchor.id,p)))continue;
+      const nearest=slots.filter((_,i)=>!occupied.has(i)).sort((a,b)=>Math.hypot(a.x-anchor.x,a.y-anchor.y)-Math.hypot(b.x-anchor.x,b.y-anchor.y))[0];
+      if(!accept(anchor.id,nearest))throw new RangeError('No reachable watering position');
+    }
+  }
+  return anchors.map(anchor=>({id:anchor.id,...assigned.get(anchor.id),anchorX:anchor.x,anchorY:anchor.y,halfWidth:anchor.halfWidth??22,halfHeight:anchor.halfHeight??8}));
 }
 
 let waterObserver=null,waterLayoutFrame=null,waterPositions=[],waterDimensions='',waterLayoutWidth=0,waterMinimum=0;
@@ -64,10 +87,10 @@ export function layoutMeadowWatering(root){
     // of hiding targets or silently capping the number of waterable seedlings.
     const wanted=`${minHeight}px`;if(field.style.minHeight!==wanted)field.style.minHeight=wanted;
     const height=field.clientHeight,rect=field.getBoundingClientRect(),dimensions=`${width}:${height}`;
-    const anchors=targets.map(button=>{const plant=field.querySelector(`[data-meadow-plant="${button.dataset.waterPlant}"]`),box=plant.getBoundingClientRect();return {id:button.dataset.waterPlant,x:box.left-rect.left-field.clientLeft+box.width/2,y:box.top-rect.top-field.clientTop-10};});
+    const anchors=targets.map(button=>{const bar=field.querySelector(`[data-meadow-plant="${button.dataset.waterPlant}"] .meadow-drops`),box=bar.getBoundingClientRect();return {id:button.dataset.waterPlant,x:box.left-rect.left-field.clientLeft+box.width/2,y:box.top-rect.top-field.clientTop+box.height/2,halfWidth:box.width/2,halfHeight:box.height/2};});
     waterPositions=waterTargetLayout(anchors,width,height,dimensions===waterDimensions?waterPositions:[]);waterDimensions=dimensions;
     targets.forEach((button,i)=>{button.style.left=`${waterPositions[i].x}px`;button.style.top=`${waterPositions[i].y}px`;});
-    layer.querySelector('svg').innerHTML=waterPositions.map(p=>`<path d="M ${p.x} ${p.y+18} L ${p.anchorX} ${Math.max(8,p.anchorY+30)}"/>`).join('');
+    layer.querySelector('svg').innerHTML=waterPositions.map(p=>{const dx=p.anchorX-p.x,dy=p.anchorY-p.y,d=Math.hypot(dx,dy)||1;return `<path d="M ${p.x+dx/d*24} ${p.y+dy/d*24} L ${Math.max(p.anchorX-p.halfWidth,Math.min(p.anchorX+p.halfWidth,p.x))} ${Math.max(p.anchorY-p.halfHeight,Math.min(p.anchorY+p.halfHeight,p.y))}"/>`;}).join('');
     field.classList.toggle('has-water-overflow',minHeight>Math.min(530,window.innerHeight*.52));
     layer.classList.add('is-ready');
   }

@@ -29,6 +29,7 @@ ROWS = [
     {'id':'meadow-empty','text':'小水壶空啦。再玩一个故事，就能带水回来。'},
     {'id':'meadow-collection','text':'看，这是你已经种出来的小花。蝴蝶结花，还有不同的颜色呢。'},
     {'id':'meadow-water-drops','text':'点一下小水壶，再点小苗头上的水滴。点一次，浇一滴水。'},
+    {'id':'meadow-water-beside','text':'点一下小水壶，再点小苗旁边的水滴。点一次，浇一滴水。'},
 ]
 
 

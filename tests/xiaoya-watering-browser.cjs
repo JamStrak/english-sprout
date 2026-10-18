@@ -25,6 +25,9 @@ const save=()=>fs.writeFileSync(path.join(out,filter?'results-filtered.json':'re
 const state=p=>p.evaluate(key=>JSON.parse(localStorage.getItem(key)||'null'),B);
 const click=async(p,action)=>{const loc=p.locator(`[data-action="${action}"]`).first();if(process.env.XIAOYA_TOUCH_BACKEND==='cdp')await nativeTap(p,await center(loc));else await loc.tap();};
 const drop=(p,id)=>p.locator(`[data-water-plant="${id}"]`);
+// Overflow gardens have a sticky tool tray. Being inside the viewport does not
+// mean a drop clears that tray; scroll it to the centre before testing touch.
+const revealDrop=(p,id)=>drop(p,id).evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));
 const plant=(flowerId='daisy',waterings=0,x=.5,y=.7)=>({flowerId,waterings,x,y});
 
 async function fixture({width=390,height=844,motion='reduce',serviceWorkers='block',desktop=false}={}){
@@ -116,6 +119,22 @@ async function layout(p){
   for(const b of await p.locator('.meadow-tools button:visible,.topbar button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};}))){assert(b.w>=47&&b.h>=47);assert(b.x>=-1&&b.y>=-1&&b.x+b.w<=size.w+1&&b.y+b.h<=size.h+1);}
 }
 async function shot(p,name){await p.screenshot({path:path.join(out,name+'.png'),animations:'disabled',fullPage:true});}
+async function paintedPlant(p,id){
+  await p.waitForFunction(id=>document.querySelector(`[data-meadow-plant="${id}"] [data-paper-state="ready"]`),id);
+  return p.locator(`[data-meadow-plant="${id}"]`).evaluate(async el=>{
+    const layer=el.querySelector('[data-paper-art]'),image=layer.querySelector('image'),bitmap=new Image();
+    bitmap.src=image.href.baseVal;await bitmap.decode();
+    const canvas=document.createElement('canvas');canvas.width=bitmap.naturalWidth;canvas.height=bitmap.naturalHeight;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);
+    const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let top=canvas.height;
+    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)if(pixels[(y*canvas.width+x)*4+3]>=24){top=Math.min(top,y);break;}
+    const w=image.width.baseVal.value,h=image.height.baseVal.value,scale=Math.min(w/canvas.width,h/canvas.height);
+    const y=image.y.baseVal.value+h-canvas.height*scale,matrix=image.getScreenCTM();
+    const root=new DOMPoint(80,164).matrixTransform(matrix),tip=new DOMPoint(80,y+top*scale).matrixTransform(matrix);
+    return {key:layer.dataset.paperArt,root:{x:root.x,y:root.y},height:root.y-tip.y,sourceTop:top,stage:Number(el.querySelector('svg').dataset.growth)};
+  });
+}
 async function hold(p){await p.evaluate(key=>{navigator.locks.request(key,()=>new Promise(resolve=>qaWatering.release=resolve));},B);await p.waitForFunction(()=>typeof qaWatering.release==='function');}
 async function queued(p,count=1){await p.waitForFunction(async({key,count})=>(await navigator.locks.query()).pending.filter(x=>x.name===key).length===count,{key:B,count});}
 async function release(p){await p.evaluate(()=>qaWatering.release());await p.waitForFunction(async key=>!(await navigator.locks.query()).pending.some(x=>x.name===key),B);await p.waitForTimeout(160);}
@@ -141,6 +160,33 @@ async function test(name,fn,options){
 }
 
 async function run(){
+  for(const [width,height]of[[320,568],[390,844],[1100,950]])await test(`Sparse seed drops stay beside their own progress bars ${width}`,async({p})=>{
+    await seed(p,{plants:[plant('daisy',0,.25,.5),plant('giant-daisy',0,.75,.8)]});await garden(p);await chooseCan(p);
+    await layout(p);
+    const positions=await p.locator('[data-water-plant]').evaluateAll(es=>es.map(e=>{
+      const bar=document.querySelector(`[data-meadow-plant="${e.dataset.waterPlant}"] .meadow-drops`).getBoundingClientRect(),r=e.getBoundingClientRect();
+      return{id:e.dataset.waterPlant,deltaY:r.y+r.height/2-bar.y-bar.height/2,gap:Math.min(Math.abs(r.x-bar.right),Math.abs(bar.x-r.right))};
+    }));
+    for(const row of positions){assert(Math.abs(row.deltaY)<1,JSON.stringify(row));assert(Math.abs(row.gap-8)<1,JSON.stringify(row));}
+    await shot(p,`beside-bars-${width}`);
+  },{width,height});
+  for(const [flowerId,needed,width,height]of[['daisy',5,320,568],['bow-yellow',5,390,844],['giant-daisy',10,320,568],['giant-sunflower',10,390,844]])await test(`Every real pour visibly grows ${flowerId} while keeping its root and drop fixed`,async({p})=>{
+    const plants=flowerId==='daisy'?[plant()]:[plant('daisy',5,.2,.45),plant(flowerId,0,.65,.78)],id=flowerId==='daisy'?'plant-1':'plant-2';
+    await seed(p,{plants});await garden(p);await chooseCan(p);
+    const initialDrop=await hit(p,id),stages=[await paintedPlant(p,id)];
+    await shot(p,`growth-${flowerId}-0`);
+    for(let n=1;n<=needed;n++){
+      await tapDrop(p,id);const current=await paintedPlant(p,id),previous=stages.at(-1);
+      assert(current.height-previous.height>=3,`${flowerId} pour ${n} must visibly grow: ${JSON.stringify({previous,current})}`);
+      assert(Math.hypot(current.root.x-stages[0].root.x,current.root.y-stages[0].root.y)<1,'Growth never lifts or slides the planted root');
+      assert.equal(current.stage,n);stages.push(current);
+      if(n<needed)assert.deepEqual(await hit(p,id),initialDrop,'Every pour leaves the next touch in the same place');
+      else assert.equal(await drop(p,id).count(),0);
+      await shot(p,`growth-${flowerId}-${n}`);
+    }
+    assert.deepEqual([...new Set(stages.map(s=>s.key))],['seed-in-soil','sprout','bud',`flower-${flowerId}`]);
+    await p.evaluate(stages=>qaWatering.growth=stages,stages);
+  },{width,height});
   await test('Selecting the can reveals one drop per unfinished plant; each real touch waters only its owner',async({p})=>{
     const before=await seed(p,{plants:[plant('daisy',0,.25,.65),plant('tulip',2,.72,.72),plant('giant-daisy',10,.5,.8)]});await garden(p);
     assert.equal(await p.locator('[data-water-plant]').count(),0);await chooseCan(p);
@@ -154,6 +200,8 @@ async function run(){
     if(motion==='no-preference')assert(animations.some(a=>a.playState==='running'&&a.iterations==='infinite'),'The visible water drop has an ongoing invitation animation');
     else assert(!animations.some(a=>a.playState==='running'&&(a.iterations==='infinite'||Number(a.duration)>100)),'Reduced motion removes repeated flashing or travel');
     await tapDrop(p,'plant-1');
+    await p.waitForTimeout(1000);
+    assert.equal(await p.locator('.meadow-splash').evaluate(e=>getComputedStyle(e).opacity),'0','The splash clears so it cannot hide the new growth, also with reduced motion');
   },{motion});
   for(const [width,height,motion]of[[320,568,'no-preference'],[320,568,'reduce'],[390,844,'reduce'],[768,1024,'no-preference']])await test(`Dense overlapping flowers keep all water drops reachable ${width}x${height} ${motion}`,async({p})=>{
     await seed(p,{plants:[plant('daisy',0,.5,.72),plant('giant-daisy',10,.5,.75),plant('bow-pink',1,.51,.72),plant('tulip',2,.49,.71),plant('bow-blue',3,.5,.73),plant('giant-sunflower',4,.51,.74)]});
@@ -171,17 +219,18 @@ async function run(){
     assert(layers.some(x=>x.visible),'At least one sticky garden tool is under the visible modal');
     for(const item of layers.filter(x=>x.visible))assert(item.modal,`Garden tools cannot receive touches through the modal: ${JSON.stringify(item)}`);
     await shot(p,'overflow-collection-320');await click(p,'close');await p.locator('.modal-backdrop').waitFor({state:'hidden'});
-    await drop(p,'plant-1').scrollIntoViewIfNeeded();await tapDrop(p,'plant-1');
+    for(let i=1;i<=33;i++){await revealDrop(p,`plant-${i}`);await hit(p,`plant-${i}`);}
+    await revealDrop(p,'plant-1');await tapDrop(p,'plant-1');
   },{width:320,height:568});
   await test('A bloom crossing a dense grid row leaves every other drop in its original slot',async({p})=>{
     await seed(p);await garden(p);const width=await p.locator('[data-meadow-field]').evaluate(e=>e.clientWidth),columns=Math.max(1,Math.floor((width-8)/56)),count=columns*8+1;
     await seed(p,{plants:Array.from({length:count},(_,i)=>plant(i?'tulip':'daisy',i?0:4,.5,.72))});await garden(p);await chooseCan(p);await p.locator('.has-water-overflow').waitFor();
     const positions=()=>p.locator('[data-water-plant]').evaluateAll(es=>Object.fromEntries(es.map(e=>[e.dataset.waterPlant,{left:e.style.left,top:e.style.top}])));
     const before=await positions(),height=await p.locator('[data-meadow-field]').evaluate(e=>e.clientHeight);await shot(p,'overflow-before-bloom-320');
-    await drop(p,'plant-1').scrollIntoViewIfNeeded();await tapDrop(p,'plant-1');assert.equal(await drop(p,'plant-1').count(),0);
+    await revealDrop(p,'plant-1');await tapDrop(p,'plant-1');assert.equal(await drop(p,'plant-1').count(),0);
     const after=await positions();delete before['plant-1'];assert.deepEqual(after,before,'Maturing one flower must leave the vacated slot empty until tool switch or resize');
     assert.equal(await p.locator('[data-meadow-field]').evaluate(e=>e.clientHeight),height,'The current watering grid keeps its height when the count crosses a row boundary');
-    await drop(p,'plant-2').scrollIntoViewIfNeeded();await tapDrop(p,'plant-2');await shot(p,'overflow-after-bloom-320');
+    await revealDrop(p,'plant-2');await tapDrop(p,'plant-2');await shot(p,'overflow-after-bloom-320');
   },{width:320,height:568});
   await test('The fifth ordinary and tenth giant pour remove only the mature plant drop',async({p})=>{
     await seed(p,{plants:[plant('daisy',4,.25,.65),plant('giant-daisy',9,.75,.8)],waterRounds:2});await garden(p);await chooseCan(p);
@@ -239,16 +288,16 @@ async function run(){
   });
   await test('Drop cancellation, finger movement, outside release and vertical scrolling never spend water',async f=>{
     const {p}=f,before=await seed(p,{plants:Array.from({length:33},(_,i)=>plant(i?'tulip':'daisy',0,.5,.72))});await garden(p);await chooseCan(p);
-    await drop(p,'plant-1').scrollIntoViewIfNeeded();let point=await hit(p,'plant-1');
+    await revealDrop(p,'plant-1');let point=await hit(p,'plant-1');
     await touchDrag(f,point,point,{cancel:true});assert.deepEqual(await state(p),before,'Cancelled contact is not a pour');
     await touchDrag(f,point,{x:point.x+20,y:point.y});assert.deepEqual(await state(p),before,'A moved finger is not a short tap');
     const b=await bounds(drop(p,'plant-1'));await touchDrag(f,{x:b.x+2,y:b.y+b.height/2},{x:b.x-3,y:b.y+b.height/2});
     assert.deepEqual(await state(p),before,'Even less than 8px movement cannot water after lifting outside the drop');
-    await drop(p,'plant-1').scrollIntoViewIfNeeded();point=await hit(p,'plant-1');const y=await p.evaluate(()=>scrollY),n=await p.evaluate(()=>qaWatering.gestures.length);
+    await revealDrop(p,'plant-1');point=await hit(p,'plant-1');const y=await p.evaluate(()=>scrollY),n=await p.evaluate(()=>qaWatering.gestures.length);
     await touchDrag(f,point,{x:point.x,y:Math.max(10,point.y-150)});await p.waitForTimeout(150);
     assert(await p.evaluate(({y,n})=>scrollY!==y||qaWatering.gestures.slice(n).some(x=>x.type==='pointercancel'),{y,n}),'The browser processes this contact as scroll/cancel');
     assert.deepEqual(await state(p),before,'Scrolling the large garden cannot spend water');
-    await drop(p,'plant-1').scrollIntoViewIfNeeded();await tapDrop(p,'plant-1');
+    await revealDrop(p,'plant-1');await tapDrop(p,'plant-1');
   },{width:320,height:568});
   await test('A held drop cancelled by page lifecycle never pours on the later release',async f=>{
     const {p}=f;await seed(p);await garden(p);await chooseCan(p);const session=await touchSession(p);

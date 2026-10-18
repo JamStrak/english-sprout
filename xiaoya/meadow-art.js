@@ -45,9 +45,13 @@ export function meadowPlantArt(input,waterings=0) {
   }
   const vector=`<path data-part="stem" d="M80 162Q${n(76-progress*3)} ${n(162-stemHeight/2)} 80 ${top}" stroke="#608b55" stroke-width="${n(3+progress*3)}" stroke-linecap="round"/>${leaves}${head}<path d="M67 165l-3-7m31 7 3-9" stroke="#88aa6d" stroke-width="3" stroke-linecap="round"/>`;
   const key=bloom?`flower-${flower.id}`:growth===0?'seed-in-soil':progress<.5?'sprout':'bud';
-  // Shared canvases include substantial transparent space above early growth.
-  // Keep the planted seed legible, and grow every pour around the actual root.
-  const height=n(120+progress*46),width=n(height*384/512);
+  // Measure the painted plant, not its transparent 384×512 canvas. Each giant
+  // pour adds 8 visible SVG units; ordinary pours add 16, including form changes.
+  // These source-art tops are guarded against the shipped alpha silhouettes.
+  // Keep the seed legible and the approved full-bloom size unchanged.
+  const paintedTop=key==='sprout'?296:131;
+  const height=n(growth===0?120:bloom?166:(18.5+progress*80)*512/(512*.88-paintedTop));
+  const width=n(height*384/512);
   const paper=paperPlantLayer(key,vector,{rootY:164,width,height});
   // Hit the painted silhouette, not the full canvas's transparent rectangle.
   // Keep targets outside the animated body so a tap never moves its next target.

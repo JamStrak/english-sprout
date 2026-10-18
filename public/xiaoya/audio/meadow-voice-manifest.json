@@ -167,6 +167,24 @@
         "text": "点一下小水壶再点小苗头上的水滴点一次浇一滴水",
         "final_end_seconds": 5.5625
       }
+    },
+    {
+      "id": "meadow-water-beside",
+      "text": "点一下小水壶，再点小苗旁边的水滴。点一次，浇一滴水。",
+      "file": "meadow-water-beside.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 37388,
+      "seconds": 6.144,
+      "sha256": "acab45b4d4c0df9fba32e28b5c75f3f0e9afa65dafb371495f053a3d4bdfda19",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "点一下小水壶再点小苗旁边的水滴点一次浇一滴水",
+        "final_end_seconds": 5.5625
+      }
     }
   ]
 }

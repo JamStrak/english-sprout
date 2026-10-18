@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 test('B garden ships intact static Chinese cues matching the five and ten watering rules', () => {
   const base = new URL('../public/xiaoya/audio/', import.meta.url);
   const manifest = JSON.parse(fs.readFileSync(new URL('meadow-voice-manifest.json', base), 'utf8'));
-  assert.deepEqual(manifest.clips.map(c => c.id).sort(), ['reward','seed','water','growing','bloom','giant','empty','collection','water-drops'].map(id => 'meadow-' + id).sort());
+  assert.deepEqual(manifest.clips.map(c => c.id).sort(), ['reward','seed','water','growing','bloom','giant','empty','collection','water-drops','water-beside'].map(id => 'meadow-' + id).sort());
   for (const clip of manifest.clips) {
     assert.equal(clip.file, clip.id + '.mp3');
     const bytes = fs.readFileSync(new URL(clip.file, base));
@@ -18,7 +18,21 @@ test('B garden ships intact static Chinese cues matching the five and ten wateri
   }
   assert.match(manifest.clips.find(c => c.id === 'meadow-reward').text, /三枚贝壳，五滴水/);
   assert.match(manifest.clips.find(c => c.id === 'meadow-giant').text, /浇|喝十次水/);
-  assert.ok(manifest.clips.reduce((size, clip) => size + clip.bytes, 0) < 300000);
+  assert.ok(manifest.clips.reduce((size, clip) => size + clip.bytes, 0) < 350000);
+});
+
+test('active watering guide names the drop beside its seedling and preserves the previous guide',()=>{
+  const base=new URL('../public/xiaoya/audio/',import.meta.url);
+  const manifest=JSON.parse(fs.readFileSync(new URL('meadow-voice-manifest.json',base),'utf8'));
+  const clip=manifest.clips.find(c=>c.id==='meadow-water-beside');
+  assert.equal(clip.text,'点一下小水壶，再点小苗旁边的水滴。点一次，浇一滴水。');
+  assert.equal(clip.voice,'zh-CN-XiaoxiaoNeural');
+  const words=value=>value.replace(/[^\p{L}\p{N}]/gu,'');
+  assert.equal(words(clip.word_coverage.text),words(clip.text));
+  assert.ok(clip.word_coverage.final_end_seconds<=clip.seconds);
+  const active=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8');
+  assert.ok(active.includes("'meadow-water-beside'"));
+  assert.ok(!active.includes("'meadow-water-drops'"));
 });
 
 test('drop-target guide has exact spoken instructions and keeps the old water URL immutable', () => {

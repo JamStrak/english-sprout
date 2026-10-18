@@ -10,6 +10,27 @@ function checkTargets(positions,width,height){
   }
 }
 
+test('sparse ordinary and giant drops sit eight pixels beside their progress bars',()=>{
+  for(const width of [270,370,748,920]){
+    for(const halfWidth of [19,42]){
+      const anchors=[{id:'one',x:width/2,y:180,halfWidth,halfHeight:8}];
+      const [p]=waterTargetLayout(anchors,width,360);
+      assert.equal(p.y,180);assert.equal(p.x-24-(width/2+halfWidth),8);
+      assert.equal(p.anchorY,180);assert.equal(p.halfWidth,halfWidth);
+      checkTargets([p],width,360);
+    }
+  }
+});
+
+test('edge seedlings use the left side or clamp vertically while staying beside the bar',()=>{
+  const [right]=waterTargetLayout([{id:'right',x:260,y:130,halfWidth:20,halfHeight:8}],300,360);
+  assert.equal(right.x+24,260-20-8);assert.equal(right.y,130);
+  for(const y of [5,355]){
+    const [p]=waterTargetLayout([{id:'edge',x:100,y,halfWidth:20}],300,360);
+    assert.equal(p.x,152);assert.equal(p.y,y<32?32:328);checkTargets([p],300,360);
+  }
+});
+
 test('overlapping seedlings each retain a distinct 48px touch target on narrow and wide meadows',()=>{
   for(const width of [270,300,370,748,920]){
     const anchors=Array.from({length:12},(_,i)=>({id:`plant-${i}`,x:width/2,y:180}));

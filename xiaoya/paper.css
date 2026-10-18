@@ -74,7 +74,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .meadow-drops{background:#F5F1E8D9;border-color:#C3CDB9}
 .meadow-drops i{background:#E5E9DA;border-color:#99B09C}.meadow-drops i.filled{background:#749D9B}
 .meadow-plant.can-water{filter:drop-shadow(0 0 5px #F8F3D9)}
-.meadow-splash>svg{width:45px;height:54px}
+.meadow-splash>svg{width:36px;height:36px}
 .flower-stamp{background:#E5E6D8;border:1px dashed #B9C7AC;border-radius:22px;color:#9BA88F}
 .flower-stamp.collected{background:var(--sheet);border:1px solid #C9CEBC;box-shadow:0 3px 0 #C0CAB333}
 .parent-view{margin:18px auto 55px;max-width:800px}

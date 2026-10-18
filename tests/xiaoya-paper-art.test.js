@@ -114,7 +114,7 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
 
 test('successful meadow bitmaps also grow on every pour while staying anchored at soil',()=>{
   for(const flower of FLOWERS) {
-    let previousWidth=0,previousHeight=0;
+    let previousVisibleHeight=0;
     const stages=new Set();
     for(let count=0;count<=flower.waterNeeded;count++) {
       const art=meadowPlantArt(flower,count);
@@ -122,10 +122,14 @@ test('successful meadow bitmaps also grow on every pour while staying anchored a
       const paintedHeight=Math.min(Number(height),Number(width)/(384/512));
       assert.ok(Math.abs(Number(y)+Number(height)-paintedHeight+paintedHeight*.88-164)<1e-8);
       assert.equal(Math.round((Number(x)+Number(width)/2)*100),8000);
-      assert.ok(Number(width)>previousWidth,`${flower.id} width grows at ${count}`);
-      assert.ok(Number(height)>previousHeight,`${flower.id} height grows at ${count}`);
-      previousWidth=Number(width);previousHeight=Number(height);
-      stages.add(art.match(/data-paper-art="([^"]+)"/)[1]);
+      const key=art.match(/data-paper-art="([^"]+)"/)[1];
+      // The source alpha outline is independently tied to the asset hash above.
+      // Transparent canvas growth must not pass as actual plant growth.
+      const top=Math.min(...[...MEADOW_HIT_SHAPES[key].path.matchAll(/[ML]([\d.]+),([\d.]+)/g)].map(m=>Number(m[2])));
+      const visibleHeight=paintedHeight*(512*.88-top)/512;
+      assert.ok(visibleHeight-previousVisibleHeight>=7.9,`${flower.id} pour ${count}: visible height ${previousVisibleHeight} -> ${visibleHeight}`);
+      previousVisibleHeight=visibleHeight;
+      stages.add(key);
       if(count===0)assert.ok(paintedHeight*(451-372)/512>=18,'real seed/soil pixels remain legible');
     }
     assert.deepEqual([...stages],['seed-in-soil','sprout','bud',`flower-${flower.id}`]);
