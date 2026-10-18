@@ -14,14 +14,16 @@ import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
+import * as curriculum from '../xiaoya/curriculum.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. This fixture models button attributes, not browser layout.
 const source=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
 const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});return {promise,resolve};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function fixture(){
-  let nodes=[],html='',timerId=0;
+function fixture({storyId=''}={}){
+  let nodes=[],html='',timerId=0,renders=0;
+  const images=[];
   const timers=new Map(),sounds=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
   function parse(markup){return [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map(([,attributes,body])=>{
     const attrs=Object.fromEntries([...attributes.matchAll(/([\w-]+)(?:="([^"]*)")?/g)].map(([,name,value])=>[name,value??'']));
@@ -30,10 +32,11 @@ function fixture(){
       classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)},
       hasAttribute:name=>name in attrs,style:{setProperty(){}},focus(){}};
   });}
-  const root={addEventListener(){},set innerHTML(value){html=value;nodes=parse(value);},get innerHTML(){return html;}};
+  const root={addEventListener(){},set innerHTML(value){html=value;nodes=parse(value);renders++;},get innerHTML(){return html;}};
   const modalRoot={innerHTML:''};
   const document={baseURI:'http://127.0.0.1/xiaoya-test/',hidden:false,activeElement:null,
     querySelector(selector){if(selector==='#app')return root;if(selector==='#modal-root')return modalRoot;
+      const pictureId=selector.match(/^\[data-picture-id="([^"]+)"\]$/)?.[1];if(pictureId)return html.includes(`data-picture-id="${pictureId}"`)?{}:null;
       const action=selector.match(/^\[data-action="([^"]+)"\]$/)?.[1];return action?nodes.find(node=>node.dataset.action===action):null;},
     querySelectorAll(selector){return selector==='[data-action]'?nodes.filter(node=>node.dataset.action):[];},
     addEventListener(){},body:{append(){}},createElement(){return {remove(){}};}};
@@ -43,8 +46,8 @@ function fixture(){
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={...practicePlan,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
-    location:{search:''},URL,URLSearchParams,navigator:{},window:{addEventListener(){},scrollTo(){}},
+  const sandbox={...practicePlan,...curriculum,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
+    location:{search:storyId?`?story=${storyId}`:''},URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
   vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,
     getSession:()=>session,getState:()=>state,
@@ -52,7 +55,7 @@ function fixture(){
     setPage(value){page=value;session=null;modal=null;render();},
     setGarden(value){garden=value;page='garden';session=null;modal=null;render();},
     setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};loadedPictures.set(imageUrl(story),Promise.resolve());render();return session;}};`,sandbox);
-  return {...sandbox.ui,document,sounds,captures,calls,writes,timers,html:()=>html,
+  return {...sandbox.ui,document,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,
     buttons:()=>nodes,button:action=>nodes.find(node=>node.dataset.action===action),
     ears:()=>nodes.filter(node=>node.body.includes('data-icon="ear"')),
     guided:()=>nodes.filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action).sort(),
@@ -143,19 +146,29 @@ test('replaying feedback points to the ear without writing another learning obse
   await f.actions.replay();assert.equal(f.calls.replay,1);assert.equal(f.writes.length,0);
 });
 
-test('story Chinese help has a visible ear; its microphone starts recording on the first tap',async()=>{
-  const f=fixture(),s=f.setSession({phase:'story'}),playing=f.playStory(true);
-  for(let frame=0;frame<4;frame++){
-    await f.nextDelay();
-    if(frame===s.story.cueFrame){
-      assert.deepEqual(f.guided(),['story-replay']);assert.deepEqual(f.ears().map(node=>node.dataset.action),['story-replay']);
-      f.sounds.at(-1).resolve(true);await flush();f.sounds.at(-1).resolve(true);await flush();
-    }
-    await f.nextDelay();
-  }
-  await playing;assert.equal(s.storyReady,true);assert.equal(s.phase,'story');assert.equal(f.sounds.length,2);
+test('new learning uses one key picture and one phrase, then the first microphone tap records',async()=>{
+  const f=fixture(),s=f.setSession({phase:'story'}),playing=f.playStory();
+  await f.nextDelay();
+  assert.equal(s.frame,s.story.cueFrame);
+  assert.deepEqual(f.guided(),['story-replay']);assert.deepEqual(f.ears().map(node=>node.dataset.action),['story-replay']);
+  assert.equal(f.sounds[0].file,voices.lessonAudio(s.event,'pip'));
+  f.sounds[0].resolve(true);await playing;
+  assert.equal(s.storyReady,true);assert.equal(s.phase,'story');assert.equal(f.sounds.length,1);
   assert.equal(f.sounds.some(sound=>sound.file.endsWith('garden-speak.mp3')),false);
-  f.storyContinue();assert.equal(s.phase,'request');assert.equal(s.waiting,true);assert.equal(f.captures.length,1);assert.equal(f.sounds.length,2);assert.deepEqual(f.guided(),[]);
+  f.storyContinue();assert.equal(s.phase,'request');assert.equal(s.waiting,true);assert.equal(f.captures.length,1);assert.equal(f.sounds.length,1);assert.deepEqual(f.guided(),[]);
+});
+
+test('story replay repeats only the phrase and Chinese help is interruptible by the microphone',async()=>{
+  const f=fixture(),s=f.setSession({phase:'story',storyReady:true});
+  const replay=f.actions['story-replay']();
+  assert.equal(s.phase,'request');assert.equal(s.frame,s.story.cueFrame);assert.equal(s.helped,true);
+  assert.equal(f.sounds.length,1);assert.equal(f.sounds[0].file,voices.lessonAudio(s.event,'pip'));
+  f.sounds[0].resolve(true);await replay;
+  const teaching=f.actions['context-help']();assert.equal(s.teaching,true);assert.equal(f.button('record').disabled,false);
+  assert.match(f.sounds[1].file,new RegExp(`${s.context.id}\\.mp3$`));
+  const recording=f.record();assert.equal(f.captures.length,1);assert.equal(s.waiting,true);assert.equal(s.teaching,false);
+  f.sounds[1].resolve(true);await teaching;assert.equal(f.sounds.length,2,'Cancelled help cannot restart an English example over the child');
+  f.captures[0].resolve(true);await recording;
 });
 
 test('replay, prompt and help glyphs are genuinely different from the English ear',()=>{
@@ -202,4 +215,30 @@ test('leaving, hiding and opening a parent modal release preparation without ren
     assert.notEqual(f.calls.cancelOptions.at(-1)?.keepPrepared,true);
     assert.equal(f.calls.prepareRecording,1);
   }
+});
+
+test('home and direct review recover failed pictures without a render or request loop',async()=>{
+  for(const mode of ['home','review']){
+    const f=fixture(mode==='home'?{storyId:'food-water'}:{});
+    if(mode==='review'){const story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});}
+    assert.match(f.html(),/data-picture-id="food-water"/);
+    f.render();f.render();assert.equal(f.images.length,1);
+    f.images[0].onerror();await flush();
+    assert.match(f.html(),/vector-picture/);assert.doesNotMatch(f.html(),/data-picture-id="food-water"/);
+    f.render();assert.equal(f.images.length,1);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
+  }
+});
+
+test('late picture failures cannot redraw a different page or interrupt its activity',async()=>{
+  const f=fixture({storyId:'food-water'});f.navigate('parent');const before=f.renders();
+  f.images[0].onerror();await flush();assert.equal(f.renders(),before);assert.equal(f.sounds.length,0);
+  f.setPage('home');assert.match(f.html(),/vector-picture/);assert.equal(f.images.length,1);
+});
+
+test('failed story art falls back and advances the short teaching sequence only once',async()=>{
+  const f=fixture(),story=stories.storyFor('food-water');
+  const s=f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'}),playing=f.playStory();
+  assert.equal(f.images.length,1);f.images[0].onerror();await f.nextDelay();
+  assert.match(f.html(),/vector-picture/);assert.equal(f.sounds.length,1);
+  f.sounds[0].resolve(true);await playing;assert.equal(s.storyReady,true);assert.equal(f.images.length,1);
 });

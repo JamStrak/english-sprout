@@ -18,12 +18,12 @@ const motion=(d)=>path(d,C.wood,2.5,'stroke-dasharray="4 7"');
 
 function person(kind,x,y,pose='rest',mood='happy',scale=1){
   const bear=kind==='bear',skin=bear?C.bear:C.mint,arm=bear?C.bear:C.green;
-  const poses={rest:[[-40,29],[40,29]],ask:[[-38,23],[53,-8]],offer:[[-43,22],[62,2]],receive:[[-61,0],[43,20]],open:[[-55,0],[55,0]],belly:[[-12,23],[13,23]],up:[[-47,-40],[47,-40]],point:[[-40,25],[63,-37]],brush:[[-40,25],[17,-35]],wipe:[[-43,24],[3,-33]],hold:[[-27,3],[27,3]],walk:[[-47,12],[45,22]],sit:[[-40,23],[41,23]],wave:[[-42,28],[48,-54]]};
+  const poses={rest:[[-40,29],[40,29]],ask:[[-38,23],[53,-8]],offer:[[-43,22],[62,2]],receive:[[-61,0],[43,20]],open:[[-55,0],[55,0]],belly:[[-12,23],[13,23]],up:[[-47,-40],[47,-40]],point:[[-40,25],[63,-37]],brush:[[-40,25],[17,-35]],wipe:[[-43,24],[3,-33]],hold:[[-27,3],[27,3]],walk:[[-47,12],[45,22]],sit:[[-40,23],[41,23]],wave:[[-42,28],[48,-54]],notice:[[-40,25],[45,-42]],clap:[[-5,-4],[9,-4]],chest:[[-4,4],[48,7]],yawn:[[-40,25],[9,-27]],beckon:[[-40,25],[52,-24]],eat:[[-40,25],[42,-13]],'eat-left':[[-42,-13],[40,25]]};
   const arms=poses[pose]||poses.rest;
   const limb=(side,end)=>pose==='embrace'?'':path(`M${side*27} 0Q${side*43} 13 ${end[0]} ${end[1]}`,arm,12)+circle(end[0],end[1],6,arm);
-  const sad=/sad|sorry|worried/.test(mood),eyes=mood==='closed'?path('M-16-44q5 5 10 0M7-44q5 5 10 0',C.ink,2.5):circle(-12,-45,2.5,C.ink)+circle(12,-45,2.5,C.ink);
-  const mouth=sad?path('M-7-29q7-6 14 0',C.ink,2.3):mood==='ask'?oval(0,-30,3,4,C.ink):path('M-7-32q7 7 14 0',C.ink,2.3);
-  return at(x,y,scale,`<g data-character="${kind}" data-pose="${pose}" data-mood="${mood}">${oval(0,60,38,6,'#80765c','opacity=".12"')}${path(pose==='sit'?'M-16 38l-23 14M16 38l23 14':'M-15 36l-3 19M15 36l3 19',arm,12)}${limb(-1,arms[0])}${limb(1,arms[1])}${oval(0,13,30,36,skin)}${oval(0,21,17,20,bear?'#e7c6a4':'#abc58c')}${['belly','hold'].includes(pose)?limb(-1,arms[0])+limb(1,arms[1]):''}${bear?circle(-24,-70,12,skin)+circle(24,-70,12,skin)+circle(-24,-70,6,'#ddbaa0')+circle(24,-70,6,'#ddbaa0'):path('M0-70q-3-15 7-28',C.leaf,4)+shape('M1-83C-23-80-31-101-24-105C-6-106 5-94 1-83',C.green)+shape('M4-89C5-110 28-113 31-106C32-91 18-85 4-89',C.leaf)}${oval(0,-44,34,34,skin)}${bear?oval(0,-31,17,12,'#eed3b4')+oval(0,-36,5,3.5,C.ink):''}${eyes}${oval(-22,-32,6,3,C.pink)}${oval(22,-32,6,3,C.pink)}${mouth}${sad?path('M-18-55l9 3M9-52l9-3',C.ink,2):''}</g>`);
+  const sad=/sad|sorry|worried/.test(mood),eyes=['closed','yawn','delighted'].includes(mood)?path('M-16-44q5 5 10 0M7-44q5 5 10 0',C.ink,2.5):mood==='reading'?path('M-17-45h10M7-45h10',C.ink,2)+circle(-12,-42,2,C.ink)+circle(12,-42,2,C.ink):circle(-12,-45,2.5,C.ink)+circle(12,-45,2.5,C.ink);
+  const mouth=sad?path('M-7-29q7-6 14 0',C.ink,2.3):mood==='yawn'?oval(0,-29,5,8,C.ink):mood==='delighted'?shape('M-10-32Q0-28 10-32Q7-18 0-20Q-7-18-10-32',C.ink):mood==='ask'?oval(0,-30,3,4,C.ink):path('M-7-32q7 7 14 0',C.ink,2.3);
+  return at(x,y,scale,`<g data-character="${kind}" data-pose="${pose}" data-mood="${mood}">${oval(0,60,38,6,'#80765c','opacity=".12"')}${path(pose==='sit'?'M-16 38l-23 14M16 38l23 14':'M-15 36l-3 19M15 36l3 19',arm,12)}${limb(-1,arms[0])}${limb(1,arms[1])}${oval(0,13,30,36,skin)}${oval(0,21,17,20,bear?'#e7c6a4':'#abc58c')}${['belly','hold','clap','chest'].includes(pose)?limb(-1,arms[0])+limb(1,arms[1]):''}${bear?circle(-24,-70,12,skin)+circle(24,-70,12,skin)+circle(-24,-70,6,'#ddbaa0')+circle(24,-70,6,'#ddbaa0'):path('M0-70q-3-15 7-28',C.leaf,4)+shape('M1-83C-23-80-31-101-24-105C-6-106 5-94 1-83',C.green)+shape('M4-89C5-110 28-113 31-106C32-91 18-85 4-89',C.leaf)}${oval(0,-44,34,34,skin)}${bear?oval(0,-31,17,12,'#eed3b4')+oval(0,-36,5,3.5,C.ink):''}${eyes}${oval(-22,-32,6,3,C.pink)}${oval(22,-32,6,3,C.pink)}${mouth}${pose==='yawn'?limb(1,arms[1]):''}${sad?path('M-18-55l9 3M9-52l9-3',C.ink,2):''}</g>`);
 }
 
 function prop(name,x,y,s=1,opts={}){
@@ -202,8 +202,128 @@ function comic(id,f,alt=false,theme='play'){
   return backdrop(theme,alt,id)+rear+person('sprout',sprout.x,sprout.y,sprout.pose,sprout.mood,sprout.scale)+person('bear',bear.x,bear.y,bear.pose,bear.mood,bear.scale)+front;
 }
 
+const cottage=(x,y,s=1)=>at(x,y,s,rect(-48,-8,96,94,5,'#f3ddad')+shape('M-62-6L0-57L62-6Z',C.red)+rect(-12,30,29,56,6,C.wood)+circle(10,58,2.5,C.cream)+rect(-34,13,22,24,3,C.blue)+path('M-23 14v22M-33 25h20',C.cream,2.5)+path('M-54 86H53',C.green,5));
+const doorway=()=>rect(247,27,109,204,7,C.wood)+rect(255,35,93,194,3,'#c7d8b1')+shape('M257 229L322 163H348V229Z','#e7d5ae')+shape('M255 36L302 49V214L255 229Z','#e6bc88')+circle(290,133,4,C.cream);
+const book=(x,y,s=1)=>at(x,y,s,shape('M0-15Q-15-26-35-18V23Q-16 15 0 25Q17 15 35 23V-18Q16-26 0-15',C.cream,'stroke="#c9a47b" stroke-width="2.5"')+path('M0-14v37',C.wood,2)+circle(-18,-5,7,C.yellow)+shape('M-28 13l9-10 10 10',C.green)+prop('apple',18,2,.38));
+const cushion=(x=120,y=248)=>rect(x-58,y-17,116,31,15,C.blue)+path(`M${x-44} ${y+5}q44 11 88 0`,'#cde4dc',2.5);
+const lowBed=()=>rect(27,218,193,47,12,C.wood)+rect(31,205,185,36,12,'#b4cbd2')+rect(37,198,54,27,11,C.cream)+path('M38 263v13M206 263v13',C.wood,8);
+const puzzle=(complete=false)=>rect(163,214,90,53,8,C.wood)+rect(169,220,78,41,4,C.blue)+shape('M172 255l19-22 17 15 14-19 21 26',C.green)+cue(complete?'puzzle-complete':'puzzle-gap',rect(204,225,25,25,3,complete?C.yellow:'#fff3dc'));
+const speechCue=(x,y)=>cue('spoken-invitation',path(`M${x} ${y}q7 7 0 14`,C.green,2.3)+path(`M${x+7} ${y-5}q12 12 0 24`,C.green,1.8));
+
+// Each phrase's invitation (frame 1) includes its own visible referent. The
+// optional neighbouring stills add motion, never supply missing meaning.
+// Transfer contexts change the task/prop as well as the background.
+function phraseScene(id,f,alt){
+  const done=f===3,act=f===2;
+  let background=backdrop('play',alt),rear='',front='',extra='',s={x:108,y:198,pose:'rest',mood:'happy',scale:1},b={x:295,y:198,pose:'rest',mood:'happy',scale:1},sCue='',bCue='';
+  switch(id){
+    case 'hello-everyone':{
+      background=backdrop(alt?'play':'outside',alt);rear=alt?mat():'';
+      s={x:88+(done?16:0),y:201,pose:f===0?'walk':'wave',mood:'happy',scale:.93};
+      b={x:235,y:191,pose:f<2?'rest':'wave',mood:'happy',scale:.83};
+      extra=person('bear',326,220,done?'open':act?'wave':alt?'sit':'rest','happy',.68)+path('M313 213q13 8 26 0',C.blue,7);
+      bCue='greeting-group';break;
+    }
+    case 'family-love':{
+      background=backdrop(alt?'bed':'play',alt);rear=alt?lowBed():mat();
+      s={x:[105,130,158,179][f],y:alt?199:201,pose:done?'embrace':f===0?'rest':'open',mood:done?'closed':'happy',scale:1};
+      b={x:[284,274,249,226][f],y:alt?190:197,pose:done?'embrace':f===0?'rest':'open',mood:done?'closed':'happy',scale:1.08};
+      sCue='affection-toward-family';
+      if(f>0)front=cue('love-heart',heart(done?205:196,done?103:127,f===2?.9:.78));
+      if(done)front+=cue('mutual-hug',path('M196 190Q167 214 157 191',C.bear,12)+path('M168 195Q206 220 250 192',C.green,11));break;
+    }
+    case 'hello-youre-welcome':{
+      rear=alt?table():mat();s.pose=f===0?'offer':done?'wave':'ask';b.pose=f===0?'receive':'hold';
+      sCue='giver-open-palm';
+      front=cue(f===0?'gift-offered':'gift-already-received',prop(alt?'crayon':'apple',f===0?205:295,f===0?199:f===2?185:197,alt?1.15:.8));
+      if(alt)front+=prop('picture',226,228,.65);if(f>0)front+=heart(242,125,f===3?.68:.45);break;
+    }
+    case 'hello-excuse':{
+      background=backdrop(alt?'outside':'play',alt);s.x=95;s.pose=f===0?'rest':done?'ask':'notice';sCue='gentle-attention-hand';
+      b.x=290;b.pose=f<2?'hold':done?'ask':'rest';b.mood=f<2?'reading':'happy';bCue='friend-busy';
+      if(alt){rear=cue('drawing-easel',path('M278 122l-36 145M306 122l39 145M250 238h87',C.wood,7));front=prop('picture',288,197,1.25)+prop('crayon',done?251:act?261:272,done?208:act?198:193,.65,{rotate:-30});}
+      else front=book(290,f<2?201:216,.9);
+      // There is a visible gap: the raised hand never pokes the busy friend.
+      if(f===1)front+=cue('gentle-wave',motion('M148 143q8 8 2 17'));break;
+    }
+    case 'outside-go-home':{
+      background=backdrop('outside',alt);rear=cue('destination-home',cottage(322,63,.8))+shape('M340 132Q302 208 183 285H237Q324 219 346 132Z','#ead6ae');
+      rear+=cue('activity-packed-away',alt?prop('basket',55,253,.76):prop('box',45,249,.65)+prop('ball',45,240,.4));
+      s={x:[105,112,180,261][f],y:[208,208,205,170][f],pose:f<2?'point':'walk',mood:'happy',scale:done?.72:.95};
+      b={x:[226,226,265,313][f],y:[221,221,212,172][f],pose:f<2?'rest':'walk',mood:'happy',scale:done?.63:.82};sCue='invite-homeward';
+      if(act||done)front=motion(done?'M231 224l-10 10':'M135 263l-18 2');break;
+    }
+    case 'outside-ready':{
+      background=backdrop(alt?'outside':'play',alt);rear=alt?prop('basket',42,250,.8)+cue('rolled-picnic-mat',rect(48,221,63,22,10,C.blue)+oval(51,232,8,11,'#d5e5d9')):doorway();
+      s={x:[122,128,184,248][f],y:201,pose:f===0?'rest':f===1?'chest':'walk',mood:'happy',scale:1};
+      b={x:316,y:196,pose:done?'walk':act?'wave':'rest',mood:'happy',scale:.9};sCue='ready-at-exit';
+      rear+=cue('backpack-worn',rect(s.x-43,s.y-1,32,46,9,C.blue)+path(`M${s.x-30} ${s.y+3}q-19-19-8-26`,C.blue,5));
+      front=cue('backpack-straps',path(`M${s.x-20} ${s.y-3}q8 16 5 35M${s.x+21} ${s.y-3}q-6 14-3 32`,'#89aeb6',5))+cue('shoes-on-feet',prop('shoe',s.x-20,s.y+53,.55)+prop('shoe',s.x+17,s.y+53,.55));break;
+    }
+    case 'family-come':{
+      background=backdrop(alt?'play':'outside',alt);rear=alt?doorway()+cushion(101,253):at(-62,10,.8,mat())+prop('basket',55,251,.65);
+      s={x:106,y:alt?207:197,pose:done?'sit':f===0?'rest':'beckon',mood:'happy',scale:.95};
+      b={x:[320,320,249,184][f],y:[195,195,205,208][f],pose:done?'sit':act?'walk':'rest',mood:'happy',scale:.85};sCue='inviting-here';bCue='waiting-friend';
+      if(f===1)front=cue('beckoning-motion',motion('M170 160q-3 14-16 15'));if(act)front=motion('M276 260h17');break;
+    }
+    case 'food-eat':{
+      background=backdrop(alt?'outside':'food',alt);rear=alt?mat()+prop('basket',346,249,.65):'';
+      s={x:102,y:alt?194:172,pose:f===0?'rest':f>1?'eat':'offer',mood:'happy',scale:1};
+      b={x:296,y:alt?194:172,pose:f<2?'rest':'eat-left',mood:'happy',scale:1};sCue='meal-invitation';
+      const y=alt?237:207;
+      front=cue('meal-for-two',(alt?'':table())+prop('bowl',115,y,.83)+prop('bowl',288,y,.83)+prop('plate',202,y+13,.7)+prop('bread',201,y+4,.65));
+      if(f>1)front+=prop('spoon',s.x+32,s.y-23,.65,{rotate:done?-45:-35})+prop('spoon',b.x-32,b.y-23,.65,{rotate:done?45:35});break;
+    }
+    case 'feelings-happy':{
+      background=backdrop(alt?'bed':'outside',alt);rear=alt?lowBed():mat();
+      s={x:137,y:done?193:act?181:201,pose:f===0?'rest':done?'wave':'open',mood:'delighted',scale:1.18};sCue='happy-open-arms';
+      b={x:302,y:205,pose:done?'open':'rest',mood:done?'delighted':'happy',scale:.83};
+      // The face is the primary meaning cue, not an abstract reward star.
+      front=cue('happy-face',path(`M${s.x-13} ${s.y-65}q5-4 10 0M${s.x+7} ${s.y-65}q5-4 10 0`,C.ink,2));
+      if(act)front+=motion('M91 264h-12M180 264h12');break;
+    }
+    case 'feelings-tired':{
+      background=backdrop('play',alt);rear=cue('resting-place',alt?doorway()+rect(53,225,119,15,6,C.wood)+path('M63 239v35M161 239v35',C.wood,8):cushion(115,257));
+      s={x:113,y:done?201:act?193:190,pose:done?'sit':'yawn',mood:done?'closed':'yawn',scale:1.08};sCue='yawning-face';
+      b={x:291,y:198,pose:f>1?'ask':'rest',mood:'happy',scale:.95};
+      front=alt?cue('walk-finished',prop('shoe',205,259,.65)+prop('shoe',248,259,.65)):cue('play-finished',prop('ball',219,261,.7)+block(265,265,C.blue,-10));
+      if(f===0)front+=motion('M162 158q6 9 0 17');break;
+    }
+    case 'play-your-turn':{
+      background=backdrop(alt?'outside':'play',alt);rear=alt?'':mat()+stack(2,215,241);
+      s={x:101,y:alt?202:191,pose:done?'rest':f===0?'hold':'offer',mood:'happy',scale:.95};
+      b={x:298,y:alt?202:191,pose:f<2?'receive':done?'offer':'hold',mood:'happy',scale:.95};bCue='friend-next-turn';
+      front=cue('next-piece-offered',alt?prop('ball',[131,205,287,250][f],246,.9):block([137,176,277,215][f],[192,193,188,181][f],C.yellow));
+      if(alt&&f>0)front+=motion(done?'M274 246h20':'M145 246h30');break;
+    }
+    case 'play-can-do':{
+      rear=alt?doorway()+cushion(106,258):mat();s={x:108,y:alt?196:193,pose:done?'up':f===0?'rest':act?'offer':'chest',mood:'happy',scale:1};
+      b={x:302,y:196,pose:done?'clap':'rest',mood:'happy',scale:.94};
+      if(alt){
+        front=cue(done?'own-task-complete':'unfinished-task',prop('shoe',done?90:174,done?251:259,.65)+(done?prop('shoe',127,251,.65):oval(90,250,11,6,C.cream)+oval(127,250,11,6,C.cream)));
+        if(!done)front+=cue('own-piece-ready',prop('shoe',f===0?130:act?133:158,act?228:200,.65));
+      }else{
+        front=cue(done?'own-task-complete':'unfinished-task',puzzle(done));
+        if(!done)front+=cue('own-piece-ready',rect(f===0?145:act?190:145,act?203:187,25,25,3,C.yellow));
+      }
+      if(done)front+=gleam(160,126,.65);break;
+    }
+    case 'play-good-job':{
+      rear=alt?'':mat();s={x:105,y:198,pose:f===0?'rest':done?'open':'clap',mood:'delighted',scale:1};sCue='praise-clapping';
+      b={x:295,y:198,pose:alt?'hold':done?'up':'rest',mood:done?'delighted':'happy',scale:1};
+      front=cue('friends-finished-work',alt?prop('picture',293,f===2?184:200,1.25):stack(3,219,238));
+      if(f===1||act)front+=cue('clapping-motion',path(act?'M88 178l-7-6M123 178l7-6':'M87 186l-8-1M124 186l8-1',C.yellow,3));
+      if(done)front+=gleam(250,116,.6);break;
+    }
+    default:throw new Error(`Missing phrase action: ${id}`);
+  }
+  const sprout=person('sprout',s.x,s.y,s.pose,s.mood,s.scale),bear=person('bear',b.x,b.y,b.pose,b.mood,b.scale);
+  return background+rear+(sCue?cue(sCue,sprout):sprout)+(bCue?cue(bCue,bear+extra):bear+extra)+front+(f===1?speechCue(s.x+43*s.scale,s.y-49*s.scale):'');
+}
+
 function render(event,frame,context){
   const f=Math.max(0,Math.min(3,Number(frame)||0)),alt=!!context&&context.id!==event.contexts[0].id;
+  if(event.illustration==='phrase')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-story="${event.id}" data-phrase="${event.id}" data-frame="${f}" data-alternate="${alt}">${phraseScene(event.id,f,alt)}</svg>`;
   if(event.illustration!=='comic'){
     const scene=sceneArt({...event,...context},['before','request','resolved','resolved'][f]);
     // Keep existing individually authored scene art. Frame 2 focuses the action;

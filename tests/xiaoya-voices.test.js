@@ -9,15 +9,18 @@ test('every Chinese guide and context ships the matching checked neural clip', (
   const prompts = JSON.parse(fs.readFileSync(new URL('prompts.json', base), 'utf8')).prompts;
   const manifest = JSON.parse(fs.readFileSync(new URL('voice-manifest.json', base), 'utf8'));
   const expansion = JSON.parse(fs.readFileSync(new URL('expansion-voice-manifest.json', base), 'utf8'));
+  const phrases = JSON.parse(fs.readFileSync(new URL('phrase-voice-manifest.json', base), 'utf8'));
   const addedPrompts = EVENTS.filter(event => event.illustration === 'comic').flatMap(event => event.contexts.map(context => ({id: context.id, text: context.help + '听我说。'})));
+  const phrasePrompts = EVENTS.filter(event => event.illustration === 'phrase').flatMap(event => event.contexts.map(context => ({id: context.id, text: context.help + '听我说。'})));
   const ids = prompts.map(row => row.id);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(manifest.clips.length, ids.length, 'Do not silently leave old system voices in the release');
   assert.deepEqual(manifest.clips.map(clip => clip.id).sort(), [...ids].sort());
-  const allPrompts = [...prompts, ...addedPrompts];
-  const allClips = [...manifest.clips, ...expansion.clips];
+  const allPrompts = [...prompts, ...addedPrompts, ...phrasePrompts];
+  const allClips = [...manifest.clips, ...expansion.clips, ...phrases.clips];
   assert.equal(new Set(allPrompts.map(row => row.id)).size, allPrompts.length, 'Expanded audio never shadows an old prompt');
   assert.deepEqual(expansion.clips.map(clip => clip.id).sort(), addedPrompts.map(row => row.id).sort());
+  assert.deepEqual(phrases.clips.map(clip => clip.id).sort(), phrasePrompts.map(row => row.id).sort());
   for (const context of EVENTS.flatMap(event => event.contexts)) assert.ok(allPrompts.some(row => row.id === context.id));
   for (const clip of allClips) {
     assert.equal(clip.file, `${clip.id}.mp3`);

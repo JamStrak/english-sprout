@@ -159,12 +159,59 @@ rows.push(
     '睡前你有一点想念家人，伙伴坐在旁边。','告诉伙伴你想要抱抱。','想要安慰时，可以说我想要一个拥抱。','bed','bedtime-hug',['I need a hug','A hug please','Hug please']],
 );
 
+// The first release is selected by phrase in curriculum.js. These familiar
+// expressions reuse the existing recordings without renaming any older event.
+// Their lightweight scene art and optional Chinese help are independent of the
+// earlier comic expansion and its pre-recorded Chinese help manifest.
+const phraseRows = [
+  ['hello-everyone','hello','大家好','👋','greet','hello-01','Hello, everyone.','大家好。','hello-waves','招手小旗','👋',
+    '小芽来到花园，两位朋友抬起头看着它。','向大家挥手打招呼。','见到几个朋友，可以挥挥手说大家好。','朋友们一起挥手，欢迎小芽加入。',
+    '小芽走进小屋，两个朋友正坐在地毯上。','和屋里的朋友们打招呼。','走进屋里见到大家，也可以说大家好。','hello-everyone','room-everyone',['Hello everyone','Hello']],
+  ['family-love','hello','我爱你','💗','together','family-04','I love you.','我爱你。','love-heart','爱心小花','💗',
+    '小芽开心地看着亲近的朋友，两个人面对面站着。','把你的爱告诉对方。','看着你爱的人，可以告诉它我爱你。','朋友微笑着张开双臂，小芽愿意地靠近。',
+    '睡前家人坐在小芽的床边，两个人温柔地望着对方。','睡前告诉家人你爱它。','睡前也可以对家人说我爱你。','family-love','bedtime-love',['I love you','Love you']],
+  ['hello-youre-welcome','hello','不客气','💛','greet','hello-06',"You're welcome.",'不客气。','welcome-heart','友好小心心','💛',
+    '小芽把苹果递给朋友，朋友微笑着向小芽道谢。','回应朋友的谢谢。','别人对你说谢谢，可以回应不客气。','小芽笑着回应，朋友开心地拿起苹果。',
+    '小芽把蜡笔借给朋友，朋友向小芽说谢谢。','回应借蜡笔的朋友。','朋友感谢你借给它蜡笔，可以说不客气。','hello-youre-welcome','crayon-welcome',["You're welcome",'You are welcome']],
+  ['hello-excuse','hello','打扰一下','🙋','greet','hello-09','Excuse me.','打扰一下。','excuse-hand','招呼小手','🙋',
+    '朋友正在看书，小芽站在旁边，想请朋友听自己说话。','有礼貌地请朋友注意你。','别人正在忙，想请它听你说，可以先说打扰一下。','朋友抬起头，愿意听小芽说话。',
+    '朋友正在花园里画画，你站在旁边想问一个问题。','问问题前先打个招呼。','想问正在画画的朋友一个问题，可以先说打扰一下。','hello-excuse','garden-excuse',['Excuse me']],
+  ['outside-go-home','outside','我们回家吧','🏡','together','outside-09',"Let's go home.",'我们回家吧。','home-path','回家小路','🏡',
+    '花园里的游戏收好了，小芽和朋友站在通向小屋的小路旁。','邀请朋友一起回家。','准备离开外面回到家里，可以说我们回家吧。','小芽和朋友沿着小路，走向温暖的小屋。',
+    '野餐结束，你们收好篮子，家就在小路的另一头。','邀请伙伴结束野餐一起回家。','野餐后要回家，也可以说我们回家吧。','outside-go-home','picnic-go-home',["Let's go home",'Go home']],
+  ['outside-ready','outside','我准备好出发了','🎒','discover','dress-10',"I'm ready to go.",'我准备好出发了。','ready-bag','出发小包','🎒',
+    '小芽穿好鞋，背好小包，朋友在敞开的门边等着。','告诉朋友你已经准备好出发。','鞋子穿好，东西拿好，可以说我准备好出发了。','朋友点点头，和小芽一起走出门。',
+    '野餐垫收好了，你背起自己的小包，伙伴正在等你。','告诉伙伴你准备好走了。','收好东西准备离开时，可以说我准备好出发了。','outside-ready','picnic-ready',["I'm ready to go",'Ready to go']],
+  ['family-come','hello','请过来','🤲','together','family-01','Come here, please.','请过来。','come-cushion','一起坐小垫','🤲',
+    '小芽站在野餐垫旁边，朋友在几步远的小路上。','招招手，请朋友来到你身边。','想请朋友走到你这里，可以招手说请过来。','朋友走过来，和小芽坐到野餐垫上。',
+    '你坐在铺好软垫的小屋里，朋友正在门边。','请朋友走过来一起坐。','朋友在门边，可以招招手说请过来。','family-come','room-come',['Come here please','Come here']],
+  ['food-eat','food','我们吃饭吧','🍽️','together','meals-01',"Let's eat.",'我们吃饭吧。','eat-table','开饭小桌','🍽️',
+    '饭菜已经摆上桌，小芽和朋友洗好手，准备坐下。','邀请朋友一起开始吃饭。','饭菜准备好了，可以邀请大家说我们吃饭吧。','小芽和朋友坐好，一起吃起饭来。',
+    '野餐垫上摆好了食物，你和朋友都洗好了手。','邀请朋友开始吃野餐。','野餐准备好了，也可以说我们吃饭吧。','food-eat','picnic-eat',["Let's eat",'Let us eat']],
+  ['feelings-happy','hello','我很开心','😊','discover','feelings-01',"I'm happy.",'我很开心。','happy-sun','开心小太阳','😊',
+    '小芽眉眼弯弯，开心地笑着，朋友站在身边。','把开心的心情告诉朋友。','心里高兴、想笑的时候，可以说我很开心。','朋友也笑起来，和小芽分享这份开心。',
+    '睡前你想到今天和家人一起玩的时光，露出了笑容。','告诉家人你很开心。','想起开心的事情，也可以告诉家人我很开心。','feelings-happy','bedtime-happy',["I'm happy",'I am happy','Happy']],
+  ['feelings-tired','bed','我累了','😴','request','feelings-03',"I'm tired.",'我累了。','tired-cushion','休息软垫','😴',
+    '玩了一会儿，小芽打了个哈欠，身边有一块软垫。','告诉朋友你想休息了。','玩过后身体累了，想休息，可以说我累了。','朋友陪小芽坐到软垫上，安静地休息。',
+    '散步回来，你坐到门边的小椅子上，腿想歇一歇。','告诉伙伴你有些累了。','走路以后想坐下歇一歇，可以说我累了。','feelings-tired','walk-tired',["I'm tired",'I am tired','Tired']],
+  ['play-your-turn','play','轮到你了','🧱','together','play-03',"It's your turn.",'轮到你了。','your-turn-block','轮流小积木','🧱',
+    '小芽刚给积木塔放好一块，手里还有一块，朋友在旁边等。','把下一次机会交给朋友。','你玩过一次，接下来请朋友玩，可以说轮到你了。','朋友接过积木，给塔放上下一块。',
+    '你刚沿草地滚过一次球，把球推到朋友面前。','告诉朋友接下来该它玩。','轮流玩球时，把下一次机会给朋友，可以说轮到你了。','play-your-turn','ball-your-turn',["It's your turn",'Your turn']],
+  ['play-can-do','play','我可以自己做','💪','discover','dress-07','I can do it.','我可以自己做。','can-do-puzzle','自己来拼图','💪',
+    '拼图还差一块，小芽拿着合适的拼图块，朋友在旁边等。','告诉朋友你想自己来。','想试着自己完成时，可以说我可以自己做。','小芽自己把拼图块放好，露出开心的笑容。',
+    '你坐在门边，手里拿着已经解开鞋带的小鞋子。','告诉伙伴你可以自己穿鞋。','准备自己穿好鞋子时，可以说我可以自己做。','play-can-do','shoes-can-do',['I can do it','Can do it']],
+  ['play-good-job','play','做得好','👏','together','kindness-08','Good job!','做得好！','good-job-star','鼓励小星星','👏',
+    '朋友刚搭好一座稳稳的积木塔，小芽开心地看着。','夸一夸朋友完成的事情。','朋友认真做成了一件事，可以拍拍手说做得好。','朋友收到鼓励，开心地笑了起来。',
+    '朋友把画好的彩色图画举给你看。','夸一夸朋友画得用心。','朋友认真完成了画，也可以告诉它做得好。','play-good-job','drawing-good-job',['Good job','Well done']],
+];
+rows.push(...phraseRows);
+
 export const EVENTS = freeze(rows.map((r) => {
   const [id,theme,title,icon,goalId,lessonId,english,chinese,itemId,itemName,itemIcon,setup,request,help,resolution,otherSetup,otherRequest,otherHelp,otherScene,otherSetting,accepted] = r;
   const settingId = id === 'care-zip' ? 'coat-zip' : id;
   return {id,theme,scene:id,title,name:title,icon,goalId,lessonId,phraseId:lessonId,english,chinese,audio:`./audio/characters/pip/${lessonId}.mp3`,itemId,
     setup,request,help,resolution,accepted,
-    illustration: rows.indexOf(r) < 18 ? 'legacy' : 'comic',
+    illustration: phraseRows.includes(r) ? 'phrase' : rows.indexOf(r) < 18 ? 'legacy' : 'comic',
     contexts:[
       {id,settingId,scene:id,label:title,setup,request,help},
       {id:`${id}-elsewhere`,settingId:otherSetting,scene:otherScene,label:`换个地方：${otherRequest}`,setup:otherSetup,request:otherRequest,help:otherHelp},

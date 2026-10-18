@@ -1,0 +1,13 @@
+{
+  "study_id": "610f2d54d7e6",
+  "plan_id": "7f0d0e3461e043c8",
+  "study_name": "小芽英语-手撕纸花园-r001",
+  "file": "04-garden-background.png",
+  "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-d2a0dddb-0fd6-4407-ac89-0ecd93e28dc8.png",
+  "meaning": "花园环境底图：中央大面积低细节可种植区域，由程序叠加花苗与交互，不内嵌按钮。",
+  "prompt": "为幼儿英语 APP「小芽英语」制作一张真正可用于界面底层的花园环境插画，横向16:9，单幅完整画面。参照所附图片的哑光手撕纸拼贴媒介与克制温润的纸层，但不要画参考中的角色，不要照搬拥抱构图。画风273手撕纸拼贴，配色09雾林茶奶：奶纸天空#EFEADF，浅鼠尾草草地#CCD4BD，远处少量灰绿植被#749986，深茶#344B45只用于极少量枝叶轮廓，陶色#D08D6C只点缀两侧极边缘的一只小花盆，不增加其他强色。低饱和、柔和、雅致且对儿童友善，不灰脏不冷暗。\n具体构图：上方约30%是宁静奶纸天空，地平线约在画面高度35%，后方只有两层极低起伏的灰绿剪纸小丘。下方约60%是连续完整的浅鼠尾草纸片草坪；整个中央约70%宽度必须保持开阔、平整、低细节，给程序自由种花和摆放交互对象。可种区域不画任何花、苗、插槽、栅格或路径。左右极边缘放少量大轮廓剪纸叶片，仅占画面边缘10%，底部中央亦保持空白，不要植物装饰框侵入中央。无房子，无人物，无动物，无按钮，无对话气泡，无任何文字字母数字符号，无水印。\n纸艺精致但非常克制，2至3薄层，少许柔软撕纸毛边，细纸纤维只在近看时可见，几乎没有投影，不要粗麻纹、满屏颗粒、斑驳噪点，不要微缩模型或3D塑料，不要摄影景深。大形、大片干净色块与充足空间最重要。归约细节，灭高频冗余。",
+  "prompt_en": "Landscape 16:9 app garden background in style 273 hand-torn paper collage, using palette 09 tea-milk: cream sky #EFEADF, sage lawn #CCD4BD, muted green #749986, tiny deep-tea #344B45 foliage, terracotta #D08D6C only at the extreme edges. Two low distant paper hills. Keep the central 70% wide open and low-detail for programmatic planting. Sparse large leaves only at the outer edges. No characters, buildings, flowers, seedlings, slots, grids, paths, buttons, text, letters, numbers, symbols, or watermark. 2–3 thin matte paper layers, restrained fibers, minimal shadow, no plastic 3D or depth of field. Reduce detail and eliminate redundant high-frequency marks.",
+  "generator": "Codex 内置 imagegen；底层模型版本未暴露。",
+  "rights": "本轮AI生成，参考本项目小芽拥抱插画的媒介；AI生成不等于版权独占，未进行法律清权。",
+  "observation": "中央可种区域完整；实际山丘地平线约42%而非提示词35%，纸纹较可见。作为r001候选背景由APP适配裁切，不宣称逐项精确符合提示词。"
+}

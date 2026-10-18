@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {THEMES,EVENTS,ITEMS,GOALS,ALPHABET_NODES,ALPHABET_CORE_GOALS} from '../xiaoya/content.js';
-import {STORAGE_KEY,createState,validateState,localDay,recordEvidence,correctEvidence,effectiveEvidence,completeEvent,placeItem,goalStatus,checkupContext,selectEvent,speakingAlert,alphabetEligibility,enableAlphabet,collectLetter,canRevealPhrase} from '../xiaoya/learning.js';
+import {STORAGE_KEY,createState,validateState,localDay,recordEvidence,correctEvidence,effectiveEvidence,completeEvent,placeItem,goalStatus,phraseStatus,checkupContext,phraseCheckupContext,selectEvent,speakingAlert,alphabetEligibility,enableAlphabet,collectLetter,canRevealPhrase} from '../xiaoya/learning.js';
 
 const find=(id)=>EVENTS.find((event)=>event.id===id);
 function entry(id,eventId='play-box',date='2026-10-16',overrides={}) {
@@ -28,11 +28,11 @@ function deepFreeze(value) {
   return value;
 }
 
-test('content contains six themes, 42 unique events/items and 26 reachable discovery nodes',()=>{
-  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,42); assert.equal(ITEMS.length,42); assert.equal(ALPHABET_NODES.length,26);
+test('content contains six themes, 55 unique events/items and 26 reachable discovery nodes',()=>{
+  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,55); assert.equal(ITEMS.length,55); assert.equal(ALPHABET_NODES.length,26);
   for(const theme of THEMES) assert.ok(EVENTS.filter((event)=>event.theme===theme.id).length>=3);
-  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,42);
-  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,42);
+  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,55);
+  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,55);
   assert.deepEqual(ALPHABET_NODES.map((node)=>node.letter).join(''),'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
   assert.equal(new Set(ALPHABET_NODES.map((node)=>node.id)).size,26);
   for(const node of ALPHABET_NODES) {
@@ -344,4 +344,132 @@ test('garden checkups alternate reliable settings without counting demonstration
     assert.equal(goalStatus(state,event.goalId).retained,false);
     assert.equal(checkupContext(state,id).id,event.contexts[0].id);
   }
+});
+
+test('phrase status separates different sentences under the same communication goal',()=>{
+  let state=addPair(createState(),'food-water','water',false);
+  state=recordEvidence(state,entry('water-candidate','food-water','2026-10-18',{source:'machine'}));
+  state=recordEvidence(state,entry('water-listening','food-water','2026-10-18',{kind:'listening'}));
+  state=completeEvent(state,'food-water','2026-10-18');
+  assert.equal(find('food-water').goalId,find('food-hungry').goalId);
+  assert.equal(goalStatus(state,'request').passed,true,'legacy goal summary is still available');
+  const water=phraseStatus(state,'food-water');
+  assert.equal(water.phraseId,'needs-01');
+  assert.equal(water.eventId,'food-water');
+  assert.equal(water.passed,true);
+  assert.equal(water.candidateCount,1);
+  const hungry=phraseStatus(state,'food-hungry');
+  assert.equal(hungry.level,'unseen');
+  assert.equal(hungry.passed,false);
+  assert.equal(hungry.independent,false);
+  assert.equal(hungry.candidateCount,0);
+  assert.equal(hungry.listeningCount,0);
+  assert.equal(hungry.evidenceCount,0);
+  assert.equal(hungry.lastDate,'');
+});
+
+test('alternate scenes share phrase evidence but event names never stand in for different settings or days',()=>{
+  let sameSetting=recordEvidence(createState(),entry('coat-a','play-box','2026-10-16',{contextId:'play-box-elsewhere'}));
+  sameSetting=recordEvidence(sameSetting,entry('coat-b','care-zip','2026-10-17'));
+  for(const id of ['play-box','play-bridge','care-zip']) {
+    const status=phraseStatus(sameSetting,id);
+    assert.equal(status.phraseId,'needs-08');
+    assert.equal(status.independentCount,2);
+    assert.equal(status.independent,true);
+    assert.equal(status.passed,false);
+  }
+  let sameDay=recordEvidence(createState(),entry('box','play-box'));
+  sameDay=recordEvidence(sameDay,entry('zip','care-zip'));
+  assert.equal(phraseStatus(sameDay,'play-bridge').retained,false);
+  const transferred=recordEvidence(sameSetting,entry('bridge','play-bridge','2026-10-18'));
+  assert.equal(phraseStatus(transferred,'care-zip').retained,true);
+  assert.equal(phraseStatus(transferred,'care-zip').level,'passed');
+});
+
+test('phrase status keeps listening, assisted speech and machine candidates separate from parent-confirmed speech',()=>{
+  let state=createState();
+  state=recordEvidence(state,entry('listen-a','play-box','2026-10-16',{kind:'listening',source:'machine'}));
+  state=recordEvidence(state,entry('listen-b','care-zip','2026-10-17',{kind:'listening',source:'machine'}));
+  let status=phraseStatus(state,'play-bridge');
+  assert.equal(status.listening,true);
+  assert.equal(status.independent,false);
+  assert.equal(status.level,'listening');
+  state=recordEvidence(state,entry('supported','care-zip','2026-10-17',{helped:true}));
+  state=recordEvidence(state,entry('candidate','play-box','2026-10-18',{source:'machine'}));
+  state=recordEvidence(state,entry('unclear','play-bridge','2026-10-18',{result:'unclear'}));
+  status=phraseStatus(state,'care-zip');
+  assert.equal(status.supported,true);
+  assert.equal(status.supportedCount,1);
+  assert.equal(status.candidateCount,1);
+  assert.equal(status.independent,false);
+  assert.equal(status.retained,false);
+  assert.equal(status.level,'supported');
+});
+
+test('phrase status derives old participation and corrections without changing saves or asserting exact spoken text',()=>{
+  let state=completeEvent(createState(),'care-zip','2026-10-16');
+  assert.equal(phraseStatus(state,'play-box').level,'participated');
+  assert.equal(phraseStatus(state,'play-box').evidenceCount,0);
+  state=recordEvidence(state,entry('one','care-zip','2026-10-16',{source:'machine'}));
+  state=recordEvidence(state,entry('two','play-box','2026-10-17'));
+  state=correctEvidence(state,'one',{correctionId:'parent-confirms',result:'independent',helped:false,date:'2026-10-17'});
+  const before=JSON.stringify(state);
+  deepFreeze(state);
+  assert.equal(phraseStatus(state,'play-bridge').passed,true);
+  assert.equal(JSON.stringify(state),before);
+  assert.equal(state.evidence[0].source,'machine');
+  assert.equal(state.evidence[0].phraseId,null);
+  const corrected=correctEvidence(state,'one',{correctionId:'parent-revokes',result:'supported',helped:true,date:'2026-10-18'});
+  assert.equal(phraseStatus(corrected,'play-box').passed,false);
+  assert.equal(corrected.evidence[0],state.evidence[0]);
+  assert.equal(validateState(corrected),corrected);
+  assert.throws(()=>phraseStatus(state,'missing'));
+});
+
+test('explicit phrase checkups ignore another phrase under the same goal',()=>{
+  const event=find('food-hungry');
+  const state=deepFreeze(addPair(createState(),'food-water','water-only',false));
+  assert.equal(goalStatus(state,event.goalId).passed,true);
+  assert.equal(phraseCheckupContext(state,event.id),event.contexts[0]);
+  assert.equal(phraseStatus(state,event.id).level,'unseen');
+  assert.throws(()=>phraseCheckupContext(state,'missing'));
+});
+
+test('phrase checkups stay familiar until a parent confirms independent speech and return after revocation',()=>{
+  for(const id of ['food-hungry','care-zip','hello-everyone']) {
+    const event=find(id);
+    let state=createState();
+    assert.equal(phraseCheckupContext(state,id),event.contexts[0]);
+    state=completeEvent(state,id,'2026-10-16');
+    assert.equal(phraseCheckupContext(state,id),event.contexts[0],'completion alone is not independent speech');
+    for(const [index,overrides] of [
+      {source:'machine'}, {helped:true}, {result:'supported',helped:true},
+      {kind:'listening'}, {result:'not_yet'}, {result:'unclear'}, {result:'device_error'},
+    ].entries()) {
+      state=recordEvidence(state,entry(`${id}-${index}`,id,'2026-10-16',overrides));
+      assert.equal(phraseCheckupContext(state,id),event.contexts[0]);
+    }
+    state=correctEvidence(state,`${id}-0`,{correctionId:`${id}-confirm`,result:'independent',helped:false,date:'2026-10-17'});
+    assert.equal(phraseCheckupContext(state,id),event.contexts[1]);
+    state=correctEvidence(state,`${id}-0`,{correctionId:`${id}-revoke`,result:'supported',helped:true,date:'2026-10-18'});
+    assert.equal(phraseCheckupContext(state,id),event.contexts[0]);
+  }
+});
+
+test('explicit phrase checkups use reliable same-phrase settings and respect later parent corrections',()=>{
+  let state=recordEvidence(createState(),entry('first-coat','play-box','2026-10-16',{contextId:'play-box-elsewhere'}));
+  const zip=find('care-zip');
+  assert.equal(phraseCheckupContext(state,'care-zip'),zip.contexts[1],'same real coat setting must change even when its event ID differs');
+  state=recordEvidence(state,entry('assisted','care-zip','2026-10-17',{contextId:zip.contexts[1].id,helped:true}));
+  state=recordEvidence(state,entry('machine','care-zip','2026-10-17',{contextId:zip.contexts[1].id,source:'machine'}));
+  assert.equal(phraseCheckupContext(state,'care-zip'),zip.contexts[1]);
+  state=correctEvidence(state,'machine',{correctionId:'confirmed',result:'independent',helped:false,date:'2026-10-17'});
+  assert.equal(phraseCheckupContext(state,'care-zip'),zip.contexts[0]);
+  assert.equal(phraseStatus(state,'play-box').passed,true);
+  state=correctEvidence(state,'machine',{correctionId:'revoked',result:'not_yet',helped:false,date:'2026-10-18'});
+  assert.equal(phraseCheckupContext(state,'care-zip'),zip.contexts[1]);
+  assert.equal(phraseStatus(state,'play-box').passed,false);
+  const before=JSON.stringify(state);
+  phraseCheckupContext(deepFreeze(state),'play-bridge');
+  assert.equal(JSON.stringify(state),before);
 });

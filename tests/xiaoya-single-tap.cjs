@@ -110,7 +110,7 @@ async function test(name,fn,options){
    const d=await diagnostic(p);assert.equal(d.records.length,0);assert.equal(d.acquisitions.length,0);return{settingsDoNotRecord:true};
  },{mic:false});
  await test('Direct assessment microphone is also one touch; sample and help never start recording',async({p})=>{
-   await p.locator('[data-action="parent"]').tap();await gate(p);await p.locator('.story-library>details>summary').tap();await p.locator('[data-checkup="food-water"]').tap();await p.locator('[data-action="record"]:enabled').waitFor();
+   await p.locator('[data-action="parent"]').tap();await gate(p);await p.locator('.story-library>details>summary').tap();await p.locator('[data-checkup="hello-everyone"]').tap();await p.locator('[data-action="record"]:enabled').waitFor();
    assert.equal((await diagnostic(p)).records.length,0);await p.locator('[data-action="sample"]').tap();await p.locator('[data-action="record"]:enabled').waitFor();assert.equal((await diagnostic(p)).records.length,0);
    await p.locator('[data-action="context-help"]').tap();await p.locator('[data-action="record"]:enabled').waitFor();assert.equal((await diagnostic(p)).records.length,0);
    await p.locator('[data-action="record"]').tap();const d=await ready(p);assert.equal(d.records.length,1);const timing=immediate(d);await stop(p);return timing;

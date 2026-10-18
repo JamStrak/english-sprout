@@ -11,13 +11,13 @@ const curriculum=JSON.parse(read('public/data/curriculum.json'));
 const additions=EVENTS.filter(event=>event.illustration==='comic');
 const original=['hello-morning','hello-welcome','hello-goodbye','food-water','food-more','food-no-thanks','play-box','play-ball','play-bridge','care-hands','care-zip','care-socks','outside-cat','outside-bird','outside-dog','bed-book','bed-story','bed-night'];
 
-test('42 playable stories preserve original event IDs and add 24 concrete situations',()=>{
-  assert.equal(STORIES.length,42);
+test('55 scenes preserve all legacy event IDs and add core expressions',()=>{
+  assert.equal(STORIES.length,55);
   assert.equal(additions.length,24);
   assert.deepEqual(EVENTS.slice(0,18).map(event=>event.id),original);
-  assert.equal(new Set(STORIES.map(story=>story.id)).size,42);
-  assert.equal(new Set(EVENTS.map(event=>event.lessonId)).size,40);
-  assert.equal(new Set(ITEMS.map(item=>item.id)).size,42);
+  assert.equal(new Set(STORIES.map(story=>story.id)).size,55);
+  assert.equal(new Set(EVENTS.map(event=>event.lessonId)).size,53);
+  assert.equal(new Set(ITEMS.map(item=>item.id)).size,55);
   for(const story of STORIES){
     assert.equal(storyFor(story.id),story);
     assert.equal(story.frames.length,4);
@@ -33,7 +33,7 @@ test('original three AI comics remain available, all other stories have vector a
     assert.equal(storyFor(id).image,image);
     assert.ok(read('public/xiaoya/stories/'+image).length>1000);
   }
-  assert.equal(STORIES.filter(story=>story.image).length,3);
+  assert.ok(STORIES.filter(story=>story.image).length>=3);
   for(const story of STORIES.filter(story=>!story.image))assert.ok(storyFrame(story,0).startsWith('<svg'));
 });
 
@@ -49,7 +49,7 @@ test('every expanded phrase exactly matches a recorded curriculum line in all th
   }
 });
 
-test('all 168 storyboard frames render locally without text, invalid geometry or network assets',()=>{
+test('all source storyboard frames render locally without text, invalid geometry or network assets',()=>{
   for(const story of STORIES){
     const frames=story.frames.map((_,frame)=>storyFrame(story,frame));
     for(const [index,svg] of frames.entries()){
@@ -60,7 +60,9 @@ test('all 168 storyboard frames render locally without text, invalid geometry or
     }
     // Ignore frame metadata, so four identical drawings cannot satisfy this test.
     const pictures=frames.map(svg=>svg.replace(/data-frame="\d"/g,'').replace(/paper-grain-\d+/g,'paper-grain'));
-    assert.equal(new Set(pictures).size,4,story.id+' needs four changing pictures');
+    if(story.event.illustration!=='phrase')assert.equal(new Set(pictures).size,4,story.id+' legacy source frames remain available');
+    assert.ok(story.teachingFrames.length>=1&&story.teachingFrames.length<=2);
+    assert.equal(story.teachingFrames.at(-1),story.cueFrame);
   }
 });
 

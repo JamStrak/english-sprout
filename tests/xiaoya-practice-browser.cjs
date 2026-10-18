@@ -6,9 +6,11 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw new Error('Practice integration needs an isolated loopback server.');
-const out=path.resolve(process.env.XIAOYA_PRACTICE_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-practice'));
+const out=path.resolve(process.env.XIAOYA_PRACTICE_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v09-practice'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const A='xiaoya-english:garden:v1',B='xiaoya-english:meadow:v1',STATE='xiaoya-english:state:v1',PLAN='xiaoya-english:practice-plan:v1';
+// Stable v0.6 IDs, independent of the current phrase-first catalogue order.
+const ORIGINAL_IDS=['hello-morning','hello-welcome','hello-goodbye','food-water','food-more','food-no-thanks','play-box','play-ball','play-bridge','care-hands','care-zip','care-socks','outside-cat','outside-bird','outside-dog','bed-book','bed-story','bed-night'];
 const results=[];let browser;
 
 async function fixture({width=390,height=844,query='',now='2026-10-18T12:00:00+08:00'}={}){
@@ -65,22 +67,29 @@ async function plan(p){return p.evaluate(async({A,B,STATE,PLAN})=>{
   });
 },{A,B,STATE,PLAN});}
 async function seed(p,{a=['food-water'],b=[],legacy=[],date='2026-10-17',allOriginal=false}={}){
-  const info=await p.evaluate(async({a,b,legacy,date,allOriginal,A,B,STATE})=>{
+  const info=await p.evaluate(async({a,b,legacy,date,allOriginal,originalIds,A,B,STATE})=>{
     const base=document.querySelector('script[type="module"][src]').src;
-    const [ga,gb,l,s]=await Promise.all(['garden.js','garden-meadow.js','learning.js','stories.js'].map(file=>import(new URL(file,base))));
+    const [ga,gb,l,s,c]=await Promise.all(['garden.js','garden-meadow.js','learning.js','stories.js','curriculum.js'].map(file=>import(new URL(file,base))));
     let va=ga.createGarden(),vb=gb.createMeadow(),state=l.createState();
     a.forEach((eventId,i)=>va=ga.rewardRound(va,{roundId:`qa-a-${i}`,eventId,date}));
     b.forEach((eventId,i)=>vb=gb.rewardRound(vb,{roundId:`qa-b-${i}`,eventId,date}));
-    if(allOriginal)legacy=s.STORIES.slice(0,18).map(x=>x.id);
+    if(allOriginal)legacy=originalIds;
     legacy.forEach(id=>state=l.completeEvent(state,id,date));
     if(a.length)localStorage.setItem(A,JSON.stringify(va));if(b.length)localStorage.setItem(B,JSON.stringify(vb));
     if(legacy.length)localStorage.setItem(STATE,JSON.stringify(state));
-    return{stories:s.STORIES.map(x=>({id:x.id,lessonId:x.event.lessonId,context:x.event.contexts[1].id})),legacy};
-  },{a,b,legacy,date,allOriginal,A,B,STATE});
+    return{stories:s.STORIES.map(x=>({id:x.id,lessonId:x.event.lessonId,contexts:x.event.contexts.map(context=>context.id),teachingFrames:x.teachingFrames})),legacy,coreIds:c.CORE_PHRASE_EVENT_IDS};
+  },{a,b,legacy,date,allOriginal,originalIds:ORIGINAL_IDS,A,B,STATE});
   await reload(p);return info;
 }
 async function next(p){await parent(p);await click(p,'next-event');await p.locator('main.event-view').waitFor();}
-async function checkup(p,id){await parent(p);await p.locator('.story-library>details>summary').click();await p.locator(`[data-checkup="${id}"]`).click();await p.locator('[data-phase="request"]').waitFor();}
+async function checkup(p,id){
+  await parent(p);
+  const library=p.locator('.story-library>details');
+  if(!await library.evaluate(e=>e.open))await library.locator(':scope>summary').click();
+  const target=p.locator(`[data-checkup="${id}"]`),extension=target.locator('xpath=ancestor::details[contains(@class,"extension-phrases")]');
+  if(await extension.count()&&!await extension.evaluate(e=>e.open))await extension.locator(':scope>summary').click();
+  await target.click();await p.locator('[data-phase="request"]').waitFor();
+}
 async function observe(p,result='independent'){
   await click(p,'observe');await unlock(p);await p.locator('#observed-help').waitFor();
   await p.locator(`[data-observation="${result}"]`).click();await p.locator('[data-phase="resolved"]').waitFor();
@@ -121,27 +130,32 @@ async function test(name,fn,options){
 }
 
 async function run(){
-  await test('Legacy completion-only saves resume all 18 known stories and expose the first expanded sentence',async({p})=>{
+  await test('Legacy 18-story completion saves retain every ID, aggregate 16 phrases, and expose the first unseen core phrase',async({p})=>{
     const data=await seed(p,{a:[],allOriginal:true});const before=await saved(p,STATE),schedule=await plan(p);
-    assert.equal(schedule.cards.length,18);assert.equal(schedule.unseenIds[0],data.stories[18].id);
+    assert.equal(schedule.cards.length,16);assert.equal(schedule.unseenIds[0],'hello-everyone');
+    assert.deepEqual(Object.keys(before.completions).sort(),[...ORIGINAL_IDS].sort());
+    assert(schedule.unseenIds.every(id=>data.coreIds.includes(id)),'Automatic new lessons contain only core phrases');
+    assert(!schedule.unseenIds.includes('hello-morning'),'A previously played core phrase is never a new lesson again');
+    assert(schedule.unseenIds.includes('food-hungry'),'Different phrases under the same request goal retain separate progress');
     assert(!schedule.unseenIds.includes('food-water'));assert.equal(schedule.next.mode,'review');
-    await parent(p);assert.match(await p.locator('.practice-plan').innerText(),/已接触 18 个故事/);
+    await parent(p);assert.match(await p.locator('.practice-plan').innerText(),/已接触 16 句表达/);
     const entry=p.locator('.practice-plan [data-action="new-event"]');assert(await entry.isVisible());assert.equal(await entry.evaluate(e=>!!e.closest('details')),false);
-    await entry.click();await p.locator(`[data-phase="story"][data-event="${data.stories[18].id}"][data-practice-mode="new"]`).waitFor();
+    await entry.click();await p.locator('[data-phase="story"][data-event="hello-everyone"][data-practice-mode="new"]').waitFor();
     await p.locator('[data-action="story-continue"]:enabled').waitFor({timeout:30000});
-    assert.deepEqual([...new Set(await p.evaluate(id=>qa.frames.filter(x=>x.event===id).map(x=>x.frame),data.stories[18].id))],['0','1','2','3']);
+    assert.deepEqual([...new Set(await p.evaluate(()=>qa.frames.filter(x=>x.event==='hello-everyone').map(x=>x.frame)))],['1'],'The new phrase uses one focused teaching scene');
+    assert.equal(await p.evaluate(lesson=>qa.plays.filter(x=>x.url.endsWith(`/${lesson}.mp3`)).length,data.stories.find(x=>x.id==='hello-everyone').lessonId),1,'One target English phrase is played once');
     assert.deepEqual(await saved(p,STATE),before,'Merely playing a new story never creates mastery evidence');
     assert.equal(await saved(p,PLAN),null,'Watching frames alone is not a completed practice round');
   });
   await test('A plus B plus legacy contacts share due reviews, real completions, and a new story after two reviews',async({p})=>{
-    await seed(p,{a:['food-water'],b:['play-box'],legacy:['hello-goodbye']});
+    await seed(p,{a:['hello-everyone'],b:['hello-morning'],legacy:['family-love']});
     let schedule=await plan(p);assert.equal(schedule.cards.length,3);assert.equal(schedule.dueIds.length,3);
-    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'food-water');assert.equal(await p.locator('main').getAttribute('data-practice-mode'),'review');
+    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'hello-everyone');assert.equal(await p.locator('main').getAttribute('data-practice-mode'),'review');
     await watch(p);await finish(p);let log=await saved(p,PLAN);assert.equal(log.entries.length,1);assert.equal(log.entries[0].mode,'review');assert.equal(log.entries[0].attemptId,null);assert.equal(log.entries[0].rewardVariant,'a');
-    assert.equal((await card(p,'food-water')).dueDate,'2026-10-19');assert.equal((await saved(p,STATE)).evidence.length,0);
-    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'play-box');const evidence=await observe(p);assert.equal(evidence.helped,false);
+    assert.equal((await card(p,'hello-everyone')).dueDate,'2026-10-19');assert.equal((await saved(p,STATE)).evidence.length,0);
+    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'hello-morning');const evidence=await observe(p);assert.equal(evidence.helped,false);
     await finish(p);log=await saved(p,PLAN);assert.equal(log.entries.length,2);assert.equal(log.entries[1].attemptId,evidence.attemptId);
-    assert.equal((await card(p,'play-box')).dueDate,'2026-10-21');assert.equal((await card(p,'play-box')).lastOutcome,'parent-independent');
+    assert.equal((await card(p,'hello-morning')).dueDate,'2026-10-21');assert.equal((await card(p,'hello-morning')).lastOutcome,'parent-independent');
     schedule=await plan(p);assert.equal(schedule.reviewStreak,2);assert.equal(schedule.dueIds.length,1);assert.equal(schedule.next.mode,'new');
     const newId=schedule.next.eventId;await reload(p);assert.equal((await plan(p)).next.eventId,newId);assert.equal((await plan(p)).next.mode,'new');
     await parent(p);await p.locator('[data-variant="b"]').click();await p.locator('main.home-view').waitFor();assert.equal((await plan(p)).next.eventId,newId);
@@ -149,27 +163,48 @@ async function run(){
     await click(p,'next-event');await p.locator(`[data-phase="story"][data-event="${newId}"][data-practice-mode="new"]`).waitFor();
     assert.equal((await saved(p,A)).rounds.length,3);assert.equal((await saved(p,B)).rounds.length,1);
   });
-  for(const [width,height] of [[320,568],[390,844]])await test(`Due review starts silently in a different request context and fits ${width}px`,async({p})=>{
-    const info=await seed(p);await next(p);await p.locator('[data-phase="request"]').waitFor();
-    assert.equal(await p.locator('main').getAttribute('data-context'),info.stories[0].context);
+  for(const [width,height] of [[320,568],[390,844]])await test(`Due review starts silently in the familiar request context and fits ${width}px`,async({p})=>{
+    const info=await seed(p),story=info.stories.find(x=>x.id==='food-water');await next(p);await p.locator('[data-phase="request"]').waitFor();
+    assert.equal(await p.locator('main').getAttribute('data-event'),'food-water');assert.equal(await p.locator('main').getAttribute('data-context'),story.contexts[0]);
     await p.waitForTimeout(1200);assert.equal(await p.locator('[data-action="story-continue"]').count(),0);
-    assert.equal(await p.evaluate(lesson=>qa.plays.filter(x=>x.url.endsWith(`/${lesson}.mp3`)).length,info.stories[0].lessonId),0,'No automatic English answer during recall');
+    assert.equal(await p.evaluate(lesson=>qa.plays.filter(x=>x.url.endsWith(`/${lesson}.mp3`)).length,story.lessonId),0,'No automatic English answer during recall');
     assert.equal(await p.locator('[data-action="sample"]').count(),1);await layout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`due-request-${width}.png`),fullPage:true});
-    await click(p,'sample');await p.waitForFunction(lesson=>qa.audios.some(x=>x.url.endsWith(`/${lesson}.mp3`)&&x.ended),info.stories[0].lessonId);
+    await click(p,'sample');await p.waitForFunction(lesson=>qa.audios.some(x=>x.url.endsWith(`/${lesson}.mp3`)&&x.ended),story.lessonId);
     const evidence=await observe(p);assert.equal(evidence.helped,true);assert.equal(evidence.result,'supported');await finish(p);
     assert.equal((await card(p,'food-water')).intervalDays,1);assert.equal((await card(p,'food-water')).lastOutcome,'supported');await layout(p);
   },{width,height});
   await test('Parent assessment without a garden reward persists, repeated same-day checks cannot skip intervals',async({p})=>{
-    await seed(p);const originalGarden=await saved(p,A);await checkup(p,'food-water');
+    const info=await seed(p),story=info.stories.find(x=>x.id==='food-water');const originalGarden=await saved(p,A);await checkup(p,'food-water');
+    assert.equal(await p.locator('main').getAttribute('data-context'),story.contexts[0],'No independent evidence means the first checkup remains familiar');
     const e1=await observe(p);await finish(p,{assessment:true});let log=await saved(p,PLAN);assert.equal(log.entries[0].attemptId,e1.attemptId);assert.equal(log.entries[0].mode,'review');assert.equal(log.entries[0].rewardVariant,null);assert.deepEqual(await saved(p,A),originalGarden);
     assert.equal((await card(p,'food-water')).stage,1);assert.equal((await card(p,'food-water')).dueDate,'2026-10-21');
-    await checkup(p,'food-water');await observe(p);await finish(p,{assessment:true});assert.equal((await saved(p,PLAN)).entries.length,2);
+    await checkup(p,'food-water');assert.equal(await p.locator('main').getAttribute('data-context'),story.contexts[1],'A parent can request a changed context after confirmed independence');await observe(p);await finish(p,{assessment:true});assert.equal((await saved(p,PLAN)).entries.length,2);
     let c=await card(p,'food-water');assert.equal(c.stage,1);assert.equal(c.completedDays,2);assert.equal(c.playCount,3);assert.equal(c.dueDate,'2026-10-21');
     await reload(p);c=await card(p,'food-water');assert.equal(c.stage,1);assert.equal(c.practicedToday,true);assert.equal(c.due,false);
     assert((await saved(p,PLAN)).entries.every(entry=>entry.rewardVariant===null));assert.deepEqual(await saved(p,A),originalGarden,'Assessment logs never acquire garden rewards during restoration');assert.equal(await saved(p,B),null);
     await p.evaluate(()=>qa.setTime('2026-10-21T00:01:00+08:00'));await reload(p);assert.equal((await card(p,'food-water')).due,true);assert.equal((await plan(p)).next.mode,'review');
-    await next(p);const e3=await observe(p);await finish(p);c=await card(p,'food-water');assert.equal(c.stage,2);assert.equal(c.dueDate,'2026-10-28');assert.equal((await saved(p,PLAN)).entries.at(-1).attemptId,e3.attemptId);
+    await next(p);assert.equal(await p.locator('main').getAttribute('data-context'),story.contexts[0],'Normal review returns to the familiar picture even after transfer checkups');const e3=await observe(p);await finish(p);c=await card(p,'food-water');assert.equal(c.stage,2);assert.equal(c.dueDate,'2026-10-28');assert.equal((await saved(p,PLAN)).entries.at(-1).attemptId,e3.attemptId);
+  });
+  await test('One phrase across A and B scenes keeps its first familiar scene, raw IDs, and one same-day review interval',async({p})=>{
+    const info=await seed(p,{a:['care-zip'],b:['play-box']}),familiar=info.stories.find(x=>x.id==='care-zip'),other=info.stories.find(x=>x.id==='play-box');
+    const originalA=await saved(p,A),originalB=await saved(p,B);
+    let schedule=await plan(p),c=schedule.cards[0];
+    assert.equal(schedule.cards.length,1);assert.equal(c.phraseId,'needs-08');assert.equal(c.eventId,'care-zip');assert.equal(c.completedDays,1);assert.equal(c.playCount,2);
+    assert.deepEqual(schedule.dueIds,['care-zip']);assert.equal(schedule.unseenIds[0],'hello-everyone');
+    assert(!['care-zip','play-box','play-bridge'].some(id=>schedule.unseenIds.includes(id)),'Alternate extension scenes do not become extra new lessons');
+    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'care-zip');assert.equal(await p.locator('main').getAttribute('data-context'),familiar.contexts[0]);
+    const first=await observe(p);await finish(p);c=await card(p,'care-zip');assert.equal(c.stage,1);assert.equal(c.dueDate,'2026-10-21');
+    await checkup(p,'play-box');assert.equal(await p.locator('main').getAttribute('data-context'),other.contexts[0],'Parent checkup may use another setting after independent speech');
+    const second=await observe(p);await finish(p,{assessment:true});
+    schedule=await plan(p);c=schedule.cards[0];assert.equal(schedule.cards.length,1);assert.equal(c.eventId,'care-zip');assert.equal(c.stage,1);assert.equal(c.completedDays,2);assert.equal(c.playCount,4);assert.equal(c.dueDate,'2026-10-21');assert.equal(schedule.reviewStreak,1);
+    const log=await saved(p,PLAN);assert.deepEqual(log.entries.map(x=>x.eventId),['care-zip','play-box']);assert.deepEqual(log.entries.map(x=>x.attemptId),[first.attemptId,second.attemptId]);assert.deepEqual(log.entries.map(x=>x.rewardVariant),['a',null]);
+    const afterA=await saved(p,A);assert.deepEqual(afterA.rounds[0],originalA.rounds[0]);assert.equal(afterA.rounds.length,2);assert.equal(afterA.rounds[1].eventId,'care-zip');assert.equal(afterA.rounds[1].roundId,log.entries[0].roundId);assert.deepEqual(await saved(p,B),originalB);
+    assert.equal(await p.locator('.story-library [data-phrase="needs-08"]').count(),1,'Parent library shows one phrase, not three scene cards');
+    await p.evaluate(()=>qa.setTime('2026-10-21T00:01:00+08:00'));await reload(p);schedule=await plan(p);assert.deepEqual(schedule.dueIds,['care-zip']);
+    await next(p);assert.equal(await p.locator('main').getAttribute('data-event'),'care-zip');assert.equal(await p.locator('main').getAttribute('data-context'),familiar.contexts[0],'Cross-day review must not switch to the canonical or most recent scene');
+    assert.deepEqual(await saved(p,PLAN),log);assert.deepEqual(await saved(p,B),originalB);
+    await p.screenshot({animations:'disabled',path:path.join(out,'same-phrase-familiar-review.png'),fullPage:true});
   });
   for(const failedKey of [PLAN,A])await test(`A failed ${failedKey===PLAN?'practice log':'garden reward'} write retries one frozen round with its original evidence`,async({p})=>{
     await seed(p);await next(p);const evidence=await observe(p);await failOneWrite(p,failedKey);await click(p,'finish');await p.getByRole('heading',{name:'这一步还没保存'}).waitFor();
@@ -232,7 +267,7 @@ async function run(){
     },PLAN);
     for(let i=0;i<2;i++){
       await reload(p);await parent(p);const schedule=await plan(p);
-      assert.equal(schedule.cards.length,1);assert.equal(schedule.cards[0].eventId,'food-water');assert.equal(schedule.unseenIds[0],'play-box');
+      assert.equal(schedule.cards.length,1);assert.equal(schedule.cards[0].eventId,'food-water');assert.equal(schedule.unseenIds[0],'hello-everyone');
       assert.deepEqual(await saved(p,PLAN),old);assert.equal(await saved(p,A),null);assert.equal(await saved(p,B),null);
     }
   });

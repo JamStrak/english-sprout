@@ -1,5 +1,5 @@
 import {EVENTS} from './content.js';
-import {STORIES} from './stories.js';
+import {CORE_PHRASE_EVENT_IDS, phraseIdFor} from './curriculum.js';
 import {createState, effectiveEvidence, localDay} from './learning.js';
 
 /** A local participation log. Scheduling is not evidence of mastery. */
@@ -149,19 +149,22 @@ function history(plan, rounds, learningState, date) {
 
 /** Derive a deterministic, refresh-safe plan shared by both gardens.
  * cards are scheduling metadata only: stage is an interval index, not proficiency.
- * dueIds excludes stories already completed today. next is review/new/free;
+ * Alternate scenes share one phrase card, whose eventId stays the first familiar
+ * scene. Raw event/round/attempt IDs remain in the logs for attribution and rewards.
+ * dueIds excludes phrases already completed today. next is review/new/free;
  * free play stays available when everything is current, and never fakes mastery.
  */
 export function getPracticePlan(plan, {rounds = [], learningState = createState(), date = localDay()} = {}) {
   validatePracticePlan(plan);
   date = localDay(date);
   const contacts = history(plan, rounds, learningState, date);
-  const cardsById = new Map();
+  const cardsByPhrase = new Map();
   const handledDays = new Set();
   let reviewStreak = 0;
   for (const item of contacts) {
-    const existing = cardsById.get(item.eventId);
-    const key = `${item.eventId}:${item.date}`;
+    const phraseId = phraseIdFor(item.eventId);
+    const existing = cardsByPhrase.get(phraseId);
+    const key = `${phraseId}:${item.date}`;
     if (handledDays.has(key)) {
       existing.playCount++;
       existing.lastSequence = item.sequence;
@@ -187,8 +190,8 @@ export function getPracticePlan(plan, {rounds = [], learningState = createState(
         dueDate = addPracticeDays(item.date, 1);
       }
     }
-    cardsById.set(item.eventId, {
-      eventId: item.eventId, lessonId: eventMap.get(item.eventId).lessonId,
+    cardsByPhrase.set(phraseId, {
+      eventId: existing?.eventId ?? item.eventId, lessonId: phraseId, phraseId,
       firstDate: existing?.firstDate ?? item.date, lastDate: item.date,
       dueDate, stage, intervalDays,
       completedDays: (existing?.completedDays ?? 0) + 1,
@@ -201,20 +204,23 @@ export function getPracticePlan(plan, {rounds = [], learningState = createState(
       else if (item.mode === 'review') reviewStreak++;
     }
   }
-  const cards = STORIES.filter(story => cardsById.has(story.id)).map(story => {
-    const {lastSequence, ...card} = cardsById.get(story.id);
+  // Keep core order predictable, with already-played extensions still reviewable.
+  // A phrase can have several events, so ordering must also deduplicate by phrase.
+  const orderedPhrases = [...new Set([...CORE_PHRASE_EVENT_IDS, ...EVENTS.map(event => event.id)].map(phraseIdFor))];
+  const cards = orderedPhrases.filter(id => cardsByPhrase.has(id)).map(id => {
+    const {lastSequence, ...card} = cardsByPhrase.get(id);
     return {...card, due: card.dueDate <= date && !card.practicedToday};
   });
-  const unseenIds = STORIES.filter(story => !cardsById.has(story.id)).map(story => story.id);
+  const unseenIds = CORE_PHRASE_EVENT_IDS.filter(id => !cardsByPhrase.has(phraseIdFor(id)));
   const dueIds = cards.filter(card => card.due).sort((a, b) => a.dueDate.localeCompare(b.dueDate)).map(card => card.eventId);
   let next = null;
   if (dueIds.length && (!unseenIds.length || reviewStreak < 2)) {
     const eventId = dueIds[0];
-    next = {eventId, mode: 'review', reason: 'due', dueDate: cardsById.get(eventId).dueDate};
+    next = {eventId, mode: 'review', reason: 'due', dueDate: cardsByPhrase.get(phraseIdFor(eventId)).dueDate};
   } else if (unseenIds.length) {
     next = {eventId: unseenIds[0], mode: 'new', reason: dueIds.length ? 'new-after-reviews' : 'unseen', dueDate: null};
   } else if (cards.length) {
-    const oldest = [...cardsById.values()].sort((a, b) => a.lastDate.localeCompare(b.lastDate) || a.lastSequence - b.lastSequence)[0];
+    const oldest = [...cardsByPhrase.values()].sort((a, b) => a.lastDate.localeCompare(b.lastDate) || a.lastSequence - b.lastSequence)[0];
     next = {eventId: oldest.eventId, mode: 'free', reason: 'all-current', dueDate: oldest.dueDate};
   }
   return {date, next, cards, dueIds, unseenIds, reviewStreak};

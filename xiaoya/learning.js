@@ -1,5 +1,6 @@
 /** Independent, local-only product state. Evidence is never inferred from furniture or recognition candidates. */
 import {THEMES, EVENTS, ITEMS, GOALS, ALPHABET_NODES, ALPHABET_CORE_GOALS} from './content.js';
+import {phraseIdFor, phraseEvents} from './curriculum.js';
 
 export const STORAGE_KEY = 'xiaoya-english:state:v1';
 const PRODUCT = 'xiaoya-english';
@@ -154,8 +155,7 @@ export function effectiveEvidence(state) { validateState(state); return effectiv
 function setting(entry) { return findEvent(entry.eventId).contexts.find((x)=>x.id===entry.contextId).settingId; }
 function transferred(entries) { return entries.some((a,index)=>entries.slice(index+1).some((b)=>a.date!==b.date && setting(a)!==setting(b))); }
 function reliableSpeech(entry) { return entry.kind==='speech' && entry.source==='parent' && entry.result==='independent' && !entry.helped; }
-function deriveStatus(state,id,records=effective(state)) {
-  const entries=records.filter((x)=>x.goalId===id);
+function statusFromEntries(entries,played) {
   const listeningEntries=entries.filter((x)=>x.kind==='listening' && x.result==='independent' && !x.helped);
   const independentEntries=entries.filter(reliableSpeech);
   const supportedEntries=entries.filter((x)=>x.kind==='speech'&&x.source==='parent'&&x.result==='supported');
@@ -163,15 +163,33 @@ function deriveStatus(state,id,records=effective(state)) {
   const independent=independentEntries.length>0;
   const supported=supportedEntries.length>0;
   const retained=transferred(independentEntries);
-  const played=EVENTS.some((event)=>event.goalId===id&&own(state.completions,event.id));
-  return {goalId:id,listening,supported,independent,retained,passed:retained,
+  return {listening,supported,independent,retained,passed:retained,
     level:retained?'passed':independent?'independent':supported?'supported':listening?'listening':played||entries.length?'participated':'unseen',
     listeningCount:listeningEntries.length,supportedCount:supportedEntries.length,independentCount:independentEntries.length,
     candidateCount:entries.filter((x)=>x.kind==='speech'&&x.source==='machine'&&['independent','supported'].includes(x.result)).length,
     lastDate:entries.reduce((last,x)=>x.date>last?x.date:last,''),evidenceCount:entries.length};
 }
 
+function deriveStatus(state,id,records=effective(state)) {
+  const entries=records.filter((x)=>x.goalId===id);
+  const played=EVENTS.some((event)=>event.goalId===id&&own(state.completions,event.id));
+  return {goalId:id,...statusFromEntries(entries,played)};
+}
+
 export function goalStatus(state,goalId) { validateState(state); findGoal(goalId); return deriveStatus(state,goalId); }
+
+/** A phrase shares evidence only with scenes teaching the same lesson, never all
+ * phrases under a communication goal. Distinct event IDs alone are not transfer:
+ * retained speech still needs parent observations on different days and settings.
+ * This does not replace the stricter exact-phrase evidence used to reveal text.
+ */
+export function phraseStatus(state,eventId) {
+  validateState(state);
+  const event=findEvent(eventId), phraseId=phraseIdFor(eventId);
+  const entries=effective(state).filter(x=>phraseIdFor(x.eventId)===phraseId);
+  const played=phraseEvents(eventId).some(item=>own(state.completions,item.id));
+  return {eventId,phraseId,goalId:event.goalId,...statusFromEntries(entries,played)};
+}
 
 /** Completing play awards the fixed item, even without speaking. Same-day repeats are idempotent. */
 export function completeEvent(state,eventId,date=localDay()) {
@@ -199,6 +217,17 @@ export function checkupContext(state,eventId) {
   const records=effective(state).filter(x=>x.goalId===event.goalId && reliableSpeech(x));
   const recent=records.reverse().sort((a,b)=>b.date.localeCompare(a.date))[0];
   return recent ? event.contexts.find(x=>x.settingId!==setting(recent))??event.contexts[0] : event.contexts[1]??event.contexts[0];
+}
+
+/** Start checkups in the familiar context until this phrase has reliable parent
+ * evidence. Only then may a checkup change setting; ordinary practice stays put.
+ */
+export function phraseCheckupContext(state,eventId) {
+  validateState(state);
+  const event=findEvent(eventId), phraseId=phraseIdFor(eventId);
+  const records=effective(state).filter(x=>phraseIdFor(x.eventId)===phraseId && reliableSpeech(x));
+  const recent=records.reverse().sort((a,b)=>b.date.localeCompare(a.date))[0];
+  return recent ? event.contexts.find(x=>x.settingId!==setting(recent))??event.contexts[0] : event.contexts[0];
 }
 
 /** Pick inside the requested theme only. A review may change setting, never fabricate transfer evidence. */
