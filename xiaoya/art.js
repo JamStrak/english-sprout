@@ -1,3 +1,4 @@
+import {paperLayer} from './paper-art.js';
 /* Original, text-free paper-toy illustrations for 小芽英语. */
 let serial = 0;
 const C = { ink:'#4b5544',green:'#75995f',leaf:'#547d49',mint:'#d9e7c5',cream:'#fff8e7',orange:'#d68862',yellow:'#efc66c',blue:'#9fc8c6',pink:'#e7b9a9',wood:'#c7a67c',dark:'#836b51' };
@@ -28,11 +29,12 @@ function sprout(mood='happy') {
     ${leaf(3,62,.28,35)}${listening?`${ell(45,4,8,11,C.green)}${line('M50-4q9 8 0 16',C.leaf,2.4)}`:''}`;
 }
 
-export function buddy(mood='happy') { return tag(at(90,91,.92,sprout(mood)),'0 0 180 190','class="buddy-svg"'); }
+export function buddy(mood='happy') { return tag(paperLayer('buddy-welcome',at(90,91,.92,sprout(mood)),{width:180,height:190}),'0 0 180 190','class="buddy-svg"'); }
 
 export function icon(name,size=32) {
   name=({house:'home',replay:'again',sparkle:'star'})[name]||name;
   const paths = {
+    leaf: `<path d="M16 29V16C6 18 2 11 3 4c11-2 16 4 13 12C17 6 24 2 31 4c1 8-4 15-15 12" fill="currentColor"/>`,
     back: line('M19 5L8 16l11 11'), close:line('M8 8l16 16M24 8L8 24'),
     play:'<path d="M11 6L27 16L11 26Z" fill="currentColor"/>', pause:`${rect(8,5,6,22,2,'currentColor')}${rect(20,5,6,22,2,'currentColor')}`,
     sound: `<path d="M5 12H10L17 6V26L10 20H5Z" fill="currentColor"/>${line('M22 11q6 5 0 10M26 7q10 9 0 18','currentColor',2.7)}`,
@@ -363,4 +365,11 @@ export function sceneArt(eventOrScene,phase='before') {
 
 export function roomArt() {
   return tag(`${rect(0,0,600,420,0,'#f3e9d2')}<path d="M0 278H600V420H0Z" fill="#d9bd96"/>${line('M0 279h600','#c4a984',7)}${line('M0 348h600M150 280l-28 140M430 280l39 140','#cbb08c',2)}${at(44,17,1.37,windowArt())}${rect(390,77,125,13,5,C.wood)}${at(424,59,.54,toy('plant'))}${rect(477,36,19,39,3,C.orange)}${rect(499,43,12,32,2,C.green)}${at(516,248,1.1,sprout('happy'))}${ell(291,353,145,34,'#c6a57d','opacity=".18"')}`,'0 0 600 420','class="room-svg"');
+}
+
+/** Small original paper portraits; voice identity never depends on OS emoji. */
+export function voicePortrait(id) {
+  const fox=id==='ryan',cat=id==='pip',fill=fox?'#C88E65':cat?'#B4BBA7':'#C7AB83';
+  const ears=fox||cat?`<path d="M14 31L12 8L34 22M66 31L68 8L46 22" fill="${fill}"/><path d="M18 26L17 15L29 24M62 26L63 15L51 24" fill="#DDB8A2"/>`:`${dot(19,23,12,fill)}${dot(61,23,12,fill)}${dot(19,23,7,'#DCC7A7')}${dot(61,23,7,'#DCC7A7')}`;
+  return tag(`${ell(40,43,37,35,'#E5E6D7')}${ears}<path d="M13 39C12 17 67 15 68 39L64 60Q42 80 17 62Z" fill="${fill}"/>${fox?'<path d="M14 41L38 49L66 41L61 62Q41 75 20 61Z" fill="#F0E6D4"/>':ell(40,55,19,15,'#EDE1CA')}${dot(28,41,2.8,'#344B45')}${dot(53,41,2.8,'#344B45')}<path d="M36 49Q40 46 44 49L40 54Z" fill="#344B45"/>${line('M40 54v3m-7 0q7 7 14 0','#344B45',1.8)}${cat?line('M15 49l-9-2m9 7l-9 2m58-7l9-2m-9 7l9 2','#6F7A67',1.5):''}`,'0 0 80 82');
 }

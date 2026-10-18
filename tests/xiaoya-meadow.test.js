@@ -253,7 +253,11 @@ test('every watering changes actual plant geometry, with a separate full-bloom s
       assert.match(svg,new RegExp(`data-bloom="${stage===flower.waterNeeded}"`));
       assert.match(svg,new RegExp(`data-scale="${flower.scale}"`));
       assert.match(svg,/data-part="soil"/);
-      assert.doesNotMatch(svg,/<(?:image|text|foreignObject|script|rect)\b|(?:href=|NaN|Infinity|data-part="pot")/);
+      assert.doesNotMatch(svg,/<(?:text|foreignObject|script|rect)\b|(?:NaN|Infinity|data-part="pot")/);
+      const paperKey=stage===flower.waterNeeded?`flower-${flower.id}`:stage===0?'seed-in-soil':stage/flower.waterNeeded<.5?'sprout':'bud';
+      assert.match(svg,new RegExp(`data-paper-art="${paperKey}"`));
+      assert.match(svg,/<g data-paper-fallback>/);
+      assert.match(svg,/<image[^>]+opacity="0"/);
       assert.equal(svg.includes('data-part="flower"'),stage===flower.waterNeeded);
       // Attribute changes alone do not count: check the actual stem's drawn path.
       art.push(svg.match(/data-part="stem" d="([^"]+)"/)[1]);

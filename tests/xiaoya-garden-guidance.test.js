@@ -14,6 +14,7 @@ import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
+import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
@@ -57,7 +58,7 @@ function fixture(initial=gardening.createGarden()){
   const audio={playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
     stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){return Promise.resolve(true);},
     releaseAudioSession(){audio.stopSound();},speechReady(){return false;}};
-  const sandbox={...practicePlan,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,JSON,
+  const sandbox={...practicePlan,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,JSON,
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search:''},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};

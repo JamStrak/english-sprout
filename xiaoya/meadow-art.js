@@ -1,4 +1,5 @@
 import {FLOWERS} from './garden-meadow.js';
+import {paperPlantLayer} from './paper-art.js';
 
 const n=(value)=>Number(value.toFixed(2));
 const petals=(count,rx,ry,color)=>Array.from({length:count},(_,i)=>`<ellipse cx="0" cy="-20" rx="${rx}" ry="${ry}" fill="${color}" stroke="#927657" stroke-opacity=".17" stroke-width="1.5" transform="rotate(${n(i*360/count)})"/>`).join('');
@@ -41,5 +42,11 @@ export function meadowPlantArt(input,waterings=0) {
     const open=n((progress-.5)*28);
     head=`<g data-part="bud" transform="translate(80 ${top})"><path d="M0 9q-${budSize+open} -7-${budSize} -${budSize+3}Q-5 -${budSize+10} 0 -${budSize+3}q6-8 ${budSize} 0Q${budSize+open} 2 0 9Z" fill="${flower.color}" stroke="#698d5b" stroke-width="2"/><path d="M-9 5L0 10 9 5M0 9V-5" stroke="#81a565" stroke-width="3" stroke-linecap="round"/></g>`;
   }
-  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}"><ellipse data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/><path data-part="stem" d="M80 162Q${n(76-progress*3)} ${n(162-stemHeight/2)} 80 ${top}" stroke="#608b55" stroke-width="${n(3+progress*3)}" stroke-linecap="round"/>${leaves}${head}<path d="M67 165l-3-7m31 7 3-9" stroke="#88aa6d" stroke-width="3" stroke-linecap="round"/></svg>`;
+  const vector=`<path data-part="stem" d="M80 162Q${n(76-progress*3)} ${n(162-stemHeight/2)} 80 ${top}" stroke="#608b55" stroke-width="${n(3+progress*3)}" stroke-linecap="round"/>${leaves}${head}<path d="M67 165l-3-7m31 7 3-9" stroke="#88aa6d" stroke-width="3" stroke-linecap="round"/>`;
+  const key=bloom?`flower-${flower.id}`:growth===0?'seed-in-soil':progress<.5?'sprout':'bud';
+  // Shared canvases include substantial transparent space above early growth.
+  // Keep the planted seed legible, and grow every pour around the actual root.
+  const height=n(120+progress*46),width=n(height*384/512);
+  const paper=paperPlantLayer(key,vector,{rootY:164,width,height});
+  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}"><ellipse data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/>${paper}</svg>`;
 }

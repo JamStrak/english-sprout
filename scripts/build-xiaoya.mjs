@@ -2,9 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.9.0';
-const MODULES = ['app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
+export const XIAOYA_VERSION = '0.10.0';
+const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
+const ICONS = ['icon.svg', 'icon-192.png', 'icon-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
 /** Add only public Xiaoya files to an already-built dist. */
@@ -20,11 +21,16 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
     files.set(name, text);
   }
   for (const name of SHARED) files.set(`shared/${name}`, await fs.readFile(path.join(root, 'src', name), 'utf8'));
+  const icons = new Map();
+  for (const name of ICONS) icons.set(name, await fs.readFile(path.join(root, 'public/xiaoya/icons', name)));
   const hash = crypto.createHash('sha256').update(XIAOYA_VERSION).update(template).update(swTemplate).update(manifest);
   for (const [name, bytes] of files) hash.update(name).update(bytes);
+  for (const [name, bytes] of icons) hash.update(`icons/${name}`).update(bytes);
   const build = hash.digest('hex').slice(0, 12);
   const release = `releases/${build}`;
   const output = path.join(dist, 'xiaoya');
+  await fs.mkdir(path.join(output, 'icons'), {recursive:true});
+  for (const [name, bytes] of icons) await fs.writeFile(path.join(output, 'icons', name), bytes);
   // A new pathname avoids stale Chinese bytes even while the parent product's
   // previous service worker still controls this tab. Keep legacy URLs for tabs
   // that have not reloaded; audio is fetched on demand, never in the core shell.
@@ -42,10 +48,10 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
   await fs.mkdir(path.join(output, release, 'shared'), {recursive:true});
   for (const [name, bytes] of files) await fs.writeFile(path.join(output, release, name), bytes);
   const html = template.replaceAll('__XIAOYA_BUILD__', build).replaceAll('__XIAOYA_VERSION__', XIAOYA_VERSION)
-    .replaceAll('xiaoya/app.js', `xiaoya/${release}/app.js`).replaceAll('xiaoya/style.css', `xiaoya/${release}/style.css`).replaceAll('xiaoya/feedback.css', `xiaoya/${release}/feedback.css`).replaceAll('xiaoya/meadow.css', `xiaoya/${release}/meadow.css`);
+    .replaceAll('xiaoya/app.js', `xiaoya/${release}/app.js`).replaceAll('xiaoya/style.css', `xiaoya/${release}/style.css`).replaceAll('xiaoya/feedback.css', `xiaoya/${release}/feedback.css`).replaceAll('xiaoya/meadow.css', `xiaoya/${release}/meadow.css`).replaceAll('xiaoya/paper.css', `xiaoya/${release}/paper.css`);
   await fs.writeFile(path.join(output, 'index.html'), html);
   await fs.writeFile(path.join(output, 'manifest.webmanifest'), manifest);
-  const core = ['./', './index.html', './manifest.webmanifest', ...Array.from(files.keys(), name => `./${release}/${name}`)];
+  const core = ['./', './index.html', './manifest.webmanifest', ...ICONS.map(name => `./icons/${name}`), ...Array.from(files.keys(), name => `./${release}/${name}`)];
   const integrity = {};
   for (const file of core) integrity[file] = digest(await fs.readFile(path.join(output, file === './' ? 'index.html' : file)));
   const sw = swTemplate.replaceAll('__XIAOYA_BUILD__', build).replace('__XIAOYA_CORE__', JSON.stringify(core))

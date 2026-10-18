@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Paper art checks require a loopback server.');
-const out=path.resolve(process.env.XIAOYA_PAPER_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v09-paper-art'));
+const out=path.resolve(process.env.XIAOYA_PAPER_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v10-paper-art'));
 const gardenOnly=process.env.XIAOYA_PAPER_GARDEN==='1';
 const filter=gardenOnly?/^GARDEN/:process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const ART=[['family-love','love-paper-v1.webp'],['hello-thanks','thanks-paper-v1.webp'],['outside-go-home','home-paper-v1.webp']];
@@ -55,7 +55,7 @@ async function fixture({story='family-love',width=390,height=844,offline=false,m
   try{
     await p.goto(`${origin}/xiaoya/?story=${story}${garden?'&garden=b':''}`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.9.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
+    assert.equal(version,'0.10.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
     return{c,p,requests,responses,errors,releaseFailure,story,file};
   }catch(error){releaseFailure?.();await c.close();throw error;}
 }
@@ -69,11 +69,17 @@ async function pictureState(p,id){return p.locator(`[data-picture-id="${id}"]`).
   const s=getComputedStyle(e),rect=e.getBoundingClientRect();return{width:parseFloat(s.width),height:parseFloat(s.height),backgroundSize:s.backgroundSize,backgroundPosition:s.backgroundPosition,backgroundImage:s.backgroundImage,transform:s.transform,single:e.classList.contains('single-picture'),frame:Number(e.dataset.storyFrame),bounds:{x:rect.x,y:rect.y,width:rect.width,height:rect.height}};
 });}
 function wholePicture(actual,url){
-  assert(actual.single,'Single-image layout marker is required');assert.equal(actual.backgroundSize,'cover','A single picture must not use the four-panel sprite zoom');
+  assert(actual.single,'Single-image layout marker is required');assert.equal(actual.backgroundSize,'contain','A single picture must remain fully visible without cropping or sprite zoom');
   assert.equal(actual.backgroundPosition,'50% 50%');assert(actual.backgroundImage.includes(url));assert.equal(actual.transform,'none');
   const ratio=actual.width/actual.height;assert(Math.abs(ratio-1.4)<0.025,`Picture viewport must show approximately 7:5, received ${ratio}`);
-  const cropped=ratio>1.4?1-1.4/ratio:1-ratio/1.4;assert(cropped<0.018,'Cover may trim only the negligible border difference, never a story panel');
-  return{...actual,ratio,croppedFraction:cropped};
+  return{...actual,ratio,croppedFraction:0};
+}
+async function welcomingHome(p,requests=[]){
+  assert.equal(await p.locator('.home-welcome .home-companion [data-paper-art="buddy-welcome"]').count(),1,'Home keeps the same welcoming 小芽 rather than showing a lesson answer');
+  assert.equal(await p.locator('.home-welcome [data-primary]').count(),1,'Home has one primary action');
+  assert.equal(await p.locator('.home-welcome [data-picture-id],.home-welcome .story-picture').count(),0,'A story picture appears only after lesson entry');
+  assert(!requests.some(r=>/\/stories\/.+\.webp(?:\?|$)/.test(r.url)),'Fresh home must not request story or meadow images');
+  return{fixedBuddy:true,primaryActions:1,pictureRequests:0,...await layout(p)};
 }
 async function layout(p){
   const state=await p.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight,text:document.getElementById('app').innerText}));
@@ -138,11 +144,12 @@ async function test(name,fn,options){
 }
 
 async function run(){
-  for(const [id,file] of ART)for(const [width,height] of [[390,844],[768,1024]])await test(`${id} ${width}px: native full image and same-picture English replay`,async({p})=>{
+  for(const [id,file] of ART)for(const [width,height] of [[390,844],[768,1024]])await test(`${id} ${width}px: native full image and same-picture English replay`,async({p,requests})=>{
     const meta=await storyMeta(p,id);assert.equal(meta.file,file);assert.equal(meta.layout,'single');
+    const home=await welcomingHome(p,requests);await p.screenshot({animations:'disabled',path:path.join(out,`${id}-home-${width}.png`)});
+    await ready(p,id);await ended(p,meta.lessonId,1);
     const native=await decode(p,meta.url);assert.equal(native.width,1400);assert.equal(native.height,1000);assert(native.complete);
-    const home=wholePicture(await pictureState(p,id),meta.url);await layout(p);await p.screenshot({animations:'disabled',path:path.join(out,`${id}-home-${width}.png`)});
-    await ready(p,id);await ended(p,meta.lessonId,1);const story=wholePicture(await pictureState(p,id),meta.url);await layout(p);
+    const story=wholePicture(await pictureState(p,id),meta.url);await layout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`${id}-story-${width}.png`)});
     await tap(p,'story-replay');await p.locator('[data-phase="request"]').waitFor();await ended(p,meta.lessonId,2);
     const replay=wholePicture(await pictureState(p,id),meta.url);assert.equal(replay.backgroundImage,story.backgroundImage);assert.equal(replay.frame,meta.cueFrame);await layout(p);
@@ -150,26 +157,30 @@ async function run(){
     return{native,home,story,replay,nativeAudio:await p.evaluate(()=>qaPaper.audios)};
   },{story:id,width,height});
 
-  for(const [id,file] of ART)for(const review of [false,true])await test(`${id}: 404 becomes stable SVG on ${review?'direct review':'home'}`,async({p,requests,releaseFailure})=>{
-    if(review){await tap(p,'next-event');await p.locator(`[data-event="${id}"][data-phase="request"][data-practice-mode="review"]`).waitFor();releaseFailure();}
+  for(const [id,file] of ART)for(const review of [false,true])await test(`${id}: 404 becomes stable SVG on ${review?'direct review':'new story'}`,async({p,requests,releaseFailure})=>{
+    await welcomingHome(p,requests);
+    if(review){await tap(p,'next-event');await p.locator(`[data-event="${id}"][data-phase="request"][data-practice-mode="review"]`).waitFor();releaseFailure();}else await ready(p,id);
     await p.locator('.story-picture.vector-picture svg').waitFor();assert.equal(await p.locator('[data-picture-id]').count(),0);
     const meta=await storyMeta(p,id);if(review)assert.equal(await p.locator('main').getAttribute('data-context'),meta.context);
     await layout(p);const failed=()=>requests.filter(r=>new URL(r.url).pathname.endsWith(`/stories/${file}`)).length;
     const first=failed(),renders=await p.evaluate(()=>qaPaper.renders);assert(first>0&&first<=3,'The real image was attempted without a retry storm');
     await p.waitForTimeout(1400);assert.equal(failed(),first,'No failed-image retry loop');assert.equal(await p.evaluate(()=>qaPaper.renders),renders,'No fallback render loop');
     if(review){assert.deepEqual(await p.evaluate(()=>qaPaper.audios),[],'Direct review is silent');await tap(p,'sample');await ended(p,meta.lessonId,1);await p.locator('.vector-picture svg').waitFor();assert.equal(failed(),first,'Replay retains SVG fallback without retrying failed image');}
-    await p.screenshot({animations:'disabled',path:path.join(out,`${id}-missing-${review?'review':'home'}.png`)});
-    return{injectedStatus:404,failedImageRequests:first,stableRenders:renders,view:review?'direct review':'home'};
+    await p.screenshot({animations:'disabled',path:path.join(out,`${id}-missing-${review?'review':'story'}.png`)});
+    return{injectedStatus:404,failedImageRequests:first,stableRenders:renders,view:review?'direct review':'new story'};
   },{story:id,missing:true,holdFailure:review,review});
 
   for(const [id] of ART)await test(`${id}: previously viewed image survives an offline cold page`,async f=>{
-    const {c,p}=f,meta=await storyMeta(p,id);await decode(p,meta.url);
+    const {c,p}=f,meta=await storyMeta(p,id);await welcomingHome(p,f.requests);
     await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:30000});
+    await ready(p,id);await ended(p,meta.lessonId,1);await decode(p,meta.url);
     await p.waitForFunction(async url=>{const names=await caches.keys();for(const name of names)if(name.startsWith('xiaoya-core-')&&(await(await caches.open(name)).match(url))?.status===200)return true;return false;},meta.url,{timeout:30000});
     const scope=await p.evaluate(async()=>(await navigator.serviceWorker.ready).scope);assert.equal(scope,`${origin}/xiaoya/`);
     await p.close();await c.setOffline(true);f.p=await c.newPage();f.p.setDefaultTimeout(20000);
     await f.p.goto(`${origin}/xiaoya/?story=${id}`,{waitUntil:'domcontentloaded'});await f.p.locator('main.home-view').waitFor();
-    assert.equal(await f.p.evaluate(()=>navigator.onLine),false);const native=await decode(f.p,meta.url);assert.equal(native.width,1400);assert.equal(native.height,1000);
+    assert.equal(await f.p.evaluate(()=>navigator.onLine),false);await welcomingHome(f.p);
+    await ready(f.p,id);await ended(f.p,meta.lessonId,1);
+    const native=await decode(f.p,meta.url);assert.equal(native.width,1400);assert.equal(native.height,1000);
     const picture=wholePicture(await pictureState(f.p,id),meta.url);assert.equal(await f.p.locator('.vector-picture').count(),0);
     const [response,cachedBytes]=await Promise.all([
       f.p.waitForResponse(response=>response.url()===meta.url&&response.fromServiceWorker(),{timeout:10000}).then(r=>({url:r.url(),status:r.status(),worker:r.fromServiceWorker()})),
@@ -181,12 +192,12 @@ async function run(){
     return{native,picture,scope,workerResponse:response,cachedBytes};
   },{story:id,offline:true});
 
-  await test('First home installs shell without prefetching all six story images',async({p,requests})=>{
-    const meta=await storyMeta(p,'family-love');await decode(p,meta.url);await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:30000});await p.waitForTimeout(1200);
+  await test('First home installs shell without requesting or caching story images',async({p,requests})=>{
+    await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:30000});await p.waitForTimeout(1200);const home=await welcomingHome(p,requests);
     const images=[...new Set(requests.map(r=>r.url).filter(url=>/\/stories\/.+\.webp(?:\?|$)/.test(url)))];
-    assert.deepEqual(images,[meta.url],'Only the picture actually visible on first home may be requested');
+    assert.deepEqual(images,[],'The fixed companion home must not request lesson images');
     const cached=await p.evaluate(async()=>{const urls=[];for(const name of await caches.keys())if(name.startsWith('xiaoya-core-'))for(const r of await(await caches.open(name)).keys())if(/\/stories\/.+\.webp/.test(r.url))urls.push(r.url);return [...new Set(urls)];});
-    assert.deepEqual(cached,[meta.url],'Shell install does not cache every illustration');return{requestedImages:images,cachedImages:cached};
+    assert.deepEqual(cached,[],'Shell install must not cache unseen story images');return{home,requestedImages:images,cachedImages:cached};
   },{offline:true});
 
   await test('Paper and deep-tea theme retains readable icon and primary-button contrast',async({p})=>{
@@ -195,7 +206,7 @@ async function run(){
     const contrast=c=>{const luminance=[c.color,c.background].map(v=>ratio(v.match(/\d+/g).slice(0,3).map(Number))).sort((a,b)=>b-a);return(luminance[0]+.05)/(luminance[1]+.05);};
     const vars=await p.evaluate(()=>({paper:getComputedStyle(document.documentElement).getPropertyValue('--paper').trim(),ink:getComputedStyle(document.documentElement).getPropertyValue('--ink').trim(),theme:document.querySelector('meta[name="theme-color"]').content}));
     assert.equal(vars.paper.toUpperCase(),'#EFEADF');assert.equal(vars.ink.toUpperCase(),'#344B45');assert.equal(vars.theme.toUpperCase(),'#EFEADF');
-    const home=await colors('.story-card-play');await ready(p,'family-love');const primary=await colors('[data-action="story-continue"]'),secondary=await colors('[data-action="story-replay"]');
+    const home=await colors('.home-welcome [data-primary]');await ready(p,'family-love');const primary=await colors('[data-action="story-continue"]'),secondary=await colors('[data-action="story-replay"]');
     await tap(p,'parent');await p.locator('#parent-answer').waitFor();const gate=await colors('[data-action="gate-submit"]');
     const samples={home,primary,secondary,gate};for(const [name,c]of Object.entries(samples)){c.contrast=contrast(c);assert(c.contrast>=4.5,`${name} contrast ${c.contrast} is below 4.5:1`);}
     for(const name of ['home','primary','gate']){assert.equal(samples[name].color,'rgb(239, 234, 223)');assert.equal(samples[name].background,'rgb(52, 75, 69)');}

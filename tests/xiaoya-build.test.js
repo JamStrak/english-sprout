@@ -21,13 +21,15 @@ async function fixture(t) {
     'audio.js':"export const ready=()=>import('./speech-local.js'); export const match=()=>import('../src/speech-match.js');",
     'speech-local.js':"import './speech-assets.js'; import './speech-signal.js'; import '../src/speech-download.js'; export const worker=new URL('./speech-worker.js',import.meta.url);"
   };
-  for (const name of ['app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
+  for (const name of ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), 'replacement voice bytes');
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
+  await fs.mkdir(path.join(root, 'public/xiaoya/icons'), {recursive:true});
+  for (const name of ['icon.svg','icon-192.png','icon-512.png']) await fs.copyFile(path.join(project, 'public/xiaoya/icons', name), path.join(root, 'public/xiaoya/icons', name));
   const result = await buildXiaoya({root});
   // The outer build copies public media; it must stay outside the eager shell.
   await fs.mkdir(path.join(root, 'dist/xiaoya/stories'), {recursive:true});
@@ -101,6 +103,10 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.match(speech, /new URL\('\.\/speech-worker.js',import.meta.url\)/);
   for (const name of ['speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js']) assert.ok(built.core.includes(`./releases/${built.build}/${name}`), `The small ${name} module must be available offline`);
   assert.ok(built.core.includes(`./releases/${built.build}/shared/speech-download.js`));
+  for (const name of ['icon.svg','icon-192.png','icon-512.png']) {
+    assert.ok(built.core.includes(`./icons/${name}`), 'PWA identity is included in the verified offline shell');
+    assert.deepEqual(await fs.readFile(path.join(built.output, 'icons', name)), await fs.readFile(path.join(project, 'public/xiaoya/icons', name)));
+  }
   await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/shared/speech-local.js`)), {code:'ENOENT'});
   assert.ok(built.core.every(file => !/model-en-us|vosk-0\.0\.8|whisper-tiny-en-v1|\.(mp3|webp|onnx|wasm)$/.test(file)));
   assert.equal(await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');

@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Compact integration requires a loopback server.');
-const out=path.resolve(process.env.XIAOYA_COMPACT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v09-compact'));
+const out=path.resolve(process.env.XIAOYA_COMPACT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v10-compact'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const PLAN='xiaoya-english:practice-plan:v1';
 const EXPECTED_CORE=['hello-everyone','hello-morning','family-love','hello-thanks','hello-youre-welcome','hello-sorry','hello-okay','hello-goodbye','bed-night','hello-welcome','hello-excuse','outside-go-home','outside-ready','family-come','food-eat','food-hungry','feelings-happy','feelings-tired','play-turn','play-your-turn','play-can-do','play-did-it','play-good-job','play-again'];
@@ -48,7 +48,11 @@ async function fixture({width=390,height=844,story='hello-everyone'}={}){
   try{
     await p.goto(`${origin}/xiaoya/?story=${encodeURIComponent(story)}`);await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.9.0');if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
+    assert.equal(version,'0.10.0');if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
+    assert.equal(await p.locator('.home-welcome .home-companion [data-paper-art="buddy-welcome"]').count(),1,'The first screen has the same welcoming 小芽 for every phrase');
+    assert.equal(await p.locator('.home-welcome [data-primary]').count(),1,'Home has one primary action');
+    assert.equal(await p.locator('.home-welcome [data-picture-id],.home-welcome .story-picture').count(),0,'Home does not reveal a lesson picture');
+    assert(!requests.some(r=>/\/stories\/.+\.webp(?:\?|$)/.test(r.url)),'Home does not request lesson images before entry');
     return{c,p,requests,errors};
   }catch(error){await c.close();throw error;}
 }

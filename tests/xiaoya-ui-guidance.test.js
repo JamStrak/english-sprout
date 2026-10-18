@@ -15,6 +15,7 @@ import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as curriculum from '../xiaoya/curriculum.js';
+import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. This fixture models button attributes, not browser layout.
@@ -46,7 +47,7 @@ function fixture({storyId=''}={}){
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={...practicePlan,...curriculum,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
+  const sandbox={...practicePlan,...curriculum,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
     location:{search:storyId?`?story=${storyId}`:''},URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
   vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,
@@ -217,22 +218,29 @@ test('leaving, hiding and opening a parent modal release preparation without ren
   }
 });
 
-test('home and direct review recover failed pictures without a render or request loop',async()=>{
-  for(const mode of ['home','review']){
-    const f=fixture(mode==='home'?{storyId:'food-water'}:{});
-    if(mode==='review'){const story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});}
+test('home keeps its companion and defers lesson pictures until practice',()=>{
+    const f=fixture({storyId:'food-water'});
+    assert.match(f.html(),/home-companion/);
+    assert.match(f.html(),/data-paper-art="buddy-welcome"/);
+    assert.doesNotMatch(f.html(),/data-picture-id|story-picture/);
+    f.render();f.render();assert.equal(f.images.length,0);
+    assert.deepEqual(f.buttons().filter(b=>b.hasAttribute('data-primary')).map(b=>b.dataset.action),['next-event']);
+});
+
+test('direct review recovers failed pictures without a render or request loop',async()=>{
+    const f=fixture();
+    const story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});
     assert.match(f.html(),/data-picture-id="food-water"/);
     f.render();f.render();assert.equal(f.images.length,1);
     f.images[0].onerror();await flush();
     assert.match(f.html(),/vector-picture/);assert.doesNotMatch(f.html(),/data-picture-id="food-water"/);
     f.render();assert.equal(f.images.length,1);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
-  }
 });
 
 test('late picture failures cannot redraw a different page or interrupt its activity',async()=>{
-  const f=fixture({storyId:'food-water'});f.navigate('parent');const before=f.renders();
+  const f=fixture(),story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});f.navigate('parent');const before=f.renders();
   f.images[0].onerror();await flush();assert.equal(f.renders(),before);assert.equal(f.sounds.length,0);
-  f.setPage('home');assert.match(f.html(),/vector-picture/);assert.equal(f.images.length,1);
+  f.setPage('home');assert.match(f.html(),/home-companion/);assert.doesNotMatch(f.html(),/story-picture/);assert.equal(f.images.length,1);
 });
 
 test('failed story art falls back and advances the short teaching sequence only once',async()=>{
