@@ -22,7 +22,7 @@ import { installPaperArt } from '../xiaoya/paper-art.js';
 const source=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
 const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});return {promise,resolve};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function fixture({storyId=''}={}){
+function fixture({storyId='',recognized=null}={}){
   let nodes=[],html='',timerId=0,renders=0;
   const images=[];
   const timers=new Map(),sounds=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
@@ -46,11 +46,13 @@ function fixture({storyId=''}={}){
     cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
-    speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
+    speechReady(){return recognized!==null;},recognize(){return Promise.resolve(recognized);},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
   const sandbox={...practicePlan,...curriculum,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
+    // Evidence validation intentionally accepts plain objects from its own realm.
+    recordEvidence:(state,input)=>learning.recordEvidence(state,JSON.parse(JSON.stringify(input))),
     location:{search:storyId?`?story=${storyId}`:''},URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
-  vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,
+  vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,
     getSession:()=>session,getState:()=>state,
     setMic(value){prefs.mic=value;},
     setPage(value){page=value;session=null;modal=null;render();},
@@ -62,6 +64,53 @@ function fixture({storyId=''}={}){
     guided:()=>nodes.filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action).sort(),
     async nextDelay(){await flush();const timer=[...timers].find(([,value])=>value.delay<2000);assert.ok(timer,'Expected a story frame delay');timers.delete(timer[0]);timer[1].fn();await flush();}};
 }
+
+test('three-star assessment celebrates once before spoken praise; repaint and replay do not celebrate again',async()=>{
+  for(const assessmentMode of [false,true]){
+    const f=fixture({recognized:{matched:true,stars:3,heard:'hello everyone'}}),s=f.setSession({assessmentMode});
+    await f.assessClip(s,'blob:test',s.speechGeneration);
+    assert.equal(s.phase,'resolved');assert.equal(s.assessment.stars,3);
+    assert.deepEqual([...f.calls.effects],['three-stars']);assert.equal(f.sounds.length,0);
+    f.render();f.render();assert.equal(f.calls.effects.length,1);
+    const pending=[...f.timers.values()].find(timer=>timer.delay===760);assert.ok(pending);
+    pending.fn();assert.equal(f.sounds.length,1);
+    assert.ok(f.sounds[0].file.endsWith(assessmentMode?'speech-saved.mp3':'speech-pass.mp3'));
+    f.sounds[0].resolve(true);await flush();
+    f.assessmentVoice();assert.equal(f.sounds.length,2);assert.equal(f.calls.effects.length,1);
+  }
+});
+
+test('one and two stars retain immediate feedback without the three-star celebration',async()=>{
+  for(const [stars,matched,cue] of [[1,false,'retry'],[2,false,'partial'],[2,true,'pass']]){
+    const f=fixture({recognized:{matched,stars,heard:'hello'}}),s=f.setSession();
+    await f.assessClip(s,'blob:test',s.speechGeneration);
+    assert.equal(f.calls.effects?.length||0,0);assert.equal(f.sounds.length,1);
+    assert.ok(f.sounds[0].file.endsWith(`speech-${cue}.mp3`));
+    assert.equal([...f.timers.values()].some(timer=>timer.delay===760),false);
+  }
+});
+
+test('three-star delayed praise cannot outlive its screen, attempt, modal or foreground state',async()=>{
+  for(const action of ['home','modal','suspend','hidden','attempt','reward']){
+    const f=fixture({recognized:{matched:true,stars:3,heard:'hello everyone'}}),s=f.setSession();
+    await f.assessClip(s,'blob:test',s.speechGeneration);
+    const pending=[...f.timers.values()].find(timer=>timer.delay===760);assert.ok(pending);
+    if(action==='home')f.navigate('home');
+    if(action==='modal')f.openModal({type:'mic'});
+    if(action==='suspend')f.suspend();
+    if(action==='hidden')f.document.hidden=true;
+    if(action==='attempt')s.speechGeneration++;
+    if(action==='reward')s.phase='reward';
+    pending.fn();assert.equal(f.sounds.length,0,action);
+  }
+});
+
+test('an assessment arriving after departure cannot celebrate or save speech evidence',async()=>{
+  const result=deferred(),f=fixture({recognized:result.promise}),s=f.setSession();
+  const pending=f.assessClip(s,'blob:test',s.speechGeneration);f.navigate('home');
+  result.resolve({matched:true,stars:3,heard:'hello everyone'});await pending;
+  assert.equal(f.calls.effects?.length||0,0);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
+});
 
 test('every child practice state has exactly one ear, always the English demonstration',()=>{
   const f=fixture();

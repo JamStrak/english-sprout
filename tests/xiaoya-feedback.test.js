@@ -248,6 +248,33 @@ test('sound is optional, quiet, short, and starts without delaying the immediate
   assert.equal(oscillator.disconnected, true);
 });
 
+test('three stars emit three ascending chimes and timed sparkles, finishing in under half a second', () => {
+  const f = fixture();
+  f.api.play('three-stars', {target:f.button});
+  assert.equal(f.decorations().length, 3);
+  assert.deepEqual(f.decorations().map(node => node.styles.get('--fx-delay')), ['0ms','120ms','240ms']);
+  f.tick(0);
+  assert.equal(f.oscillators.length, 1);
+  const oscillator = f.oscillators[0];
+  const frequencies = oscillator.frequency.calls.map(call => call[1]);
+  assert.equal(frequencies.length, 3);
+  assert.ok(frequencies[0] < frequencies[1] && frequencies[1] < frequencies[2]);
+  assert.ok(oscillator.stops[0] - oscillator.started < .5);
+  const peaks = f.gains[0].gain.calls.filter(call => call[0] === 'linear' && call[1] > 0);
+  assert.ok(peaks.every(call => call[1] > .022 && call[1] <= .04));
+  f.tick(1000);assert.equal(oscillator.disconnected, true);assert.equal(f.decorations().length, 0);
+});
+
+test('three stars respect mute and reduced motion and remain usable without Web Audio', () => {
+  for (const options of [{webAudio:false}, {reduced:true}]) {
+    const f = fixture(options);f.api.setMuted(true);
+    assert.equal(f.api.play('three-stars', {target:f.button}), true);
+    assert.equal(f.decorations().length, options.reduced ? 1 : 3);
+    f.tick(1000);assert.equal(f.oscillators.length, 0);assert.equal(f.decorations().length, 0);
+    f.api.setMuted(false);f.tick(1000);assert.equal(f.oscillators.length, 0);
+  }
+});
+
 test('muted, silent, denied sound and ready never construct an audio context', () => {
   for (const mode of ['muted','silent','denied','per-call','ready']) {
     const f = fixture({canSound:() => mode !== 'denied'});

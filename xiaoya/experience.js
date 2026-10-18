@@ -83,7 +83,7 @@ const english=s=>lessonAudio(s.event,selectedVoice);
 function applyGuide(){for(const button of document.querySelectorAll('[data-action]'))button.classList.toggle('is-guided',!modal&&!button.disabled&&(guideActions.includes(button.dataset.action)||guideActions.includes('primary')&&button.hasAttribute('data-primary')));}
 function cancelFeedbackVoice(){clearTimeout(feedbackVoiceTimer);feedbackVoiceTimer=null;}
 function stopSpeech(){soundGeneration++;audio.stopSound();speaking=false;effects.setSilent(false);}
-function feedbackVoice(callback){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},340);}
+function feedbackVoice(callback,delay=340){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},delay);}
 function clearGuide(){guideGeneration++;guideActions=[];applyGuide();}
 async function sound(file,targets=[]){const generation=++guideGeneration,playback=++soundGeneration;guideActions=targets;speaking=true;effects.setSilent(true);applyGuide();try{return await audio.playSound(file);}catch{toast('声音暂时没有播放，请再点一次刚才的按钮。联网听过后可离线再听。');return false;}finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration)clearGuide();}}
 const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],'open-pack':['pack'],seed:['plant'],water:['water'],next:['next-event']};
@@ -147,7 +147,15 @@ async function assessClip(s,url,g){const current=()=>session===s&&s.speechGenera
   const prepared=audio.speechReady()||await(s.preparation||prepareFor(s).then(()=>true,()=>false));if(!current())return;if(!prepared)throw new Error('model unavailable');s.assessment={status:'assessing',stars:0};render();const recognized=await audio.recognize(url,s.event.accepted);if(!current())return;if(!recognized)throw new Error('no assessment');
   s.assessment={status:recognized.matched?'matched':'retry',stars:recognized.stars};
   if(recognized.heard?.trim()){const attemptId=uid();if(!save(recordEvidence(state,{attemptId,eventId:s.event.id,contextId:s.context.id,kind:'speech',result:recognized.matched?(s.helped?'supported':'independent'):'unclear',source:'machine',helped:s.helped,date:today()})))return;s.attemptId=attemptId;}
-  if(recognized.matched)s.phase='resolved';render();if(!recognized.matched)prepareMicrophone();speechFeedback(recognized.matched?(s.assessmentMode?'saved':'pass'):recognized.stars===2?'partial':'retry');
+  if(recognized.matched)s.phase='resolved';render();if(!recognized.matched)prepareMicrophone();
+  const cue=recognized.matched?(s.assessmentMode?'saved':'pass'):recognized.stars===2?'partial':'retry';
+  if(recognized.matched&&recognized.stars===3){
+    const generation=uiGeneration;
+    effects.play('three-stars',{target:document.querySelector('[data-action="assessment-voice"]')});
+    // Leave room for the short chime, including the output device's startup budget.
+    // This never locks input; any next action cancels the pending spoken praise.
+    feedbackVoice(()=>{if(generation===uiGeneration&&session===s&&s.speechGeneration===g&&s.phase==='resolved'&&!modal&&!document.hidden)speechFeedback(cue);},760);
+  }else speechFeedback(cue);
 }catch{if(!current())return;s.assessment={status:'unavailable',stars:0};render();speechFeedback('wait');}}
 function retryAssessment(){const s=session;if(!s?.pendingClip)return;s.preparation=prepareFor(s).then(()=>true,()=>false);assessClip(s,s.pendingClip,++s.speechGeneration);}
 async function watch(){const s=session;if(!s||s.teaching)return;cancelAttempt(s);s.helped=true;s.teaching=true;const g=s.speechGeneration;render();const explained=await narrate('watch');if(session!==s||s.speechGeneration!==g)return;const ok=explained&&await sound(english(s));if(session!==s||s.speechGeneration!==g)return;s.teaching=false;if(ok)s.phase='resolved';render();}
