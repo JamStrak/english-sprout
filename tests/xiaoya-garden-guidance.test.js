@@ -164,9 +164,10 @@ test('tapping an existing flower gives immediate visual and sound feedback witho
   await f.advance(11800);assert.equal(f.sounds.length,1);await f.finishSound();await f.advance(30000);assert.equal(f.sounds.length,1);
 });
 
-test('quiet guidance removes constant hand motions while keeping explicit-help affordances and reduced-motion support',()=>{
+test('hands stay hidden until an idle hint while tactile affordances and reduced-motion support remain',()=>{
   const css=fs.readFileSync(new URL('../xiaoya/style.css',import.meta.url),'utf8');
-  assert.match(css,/\[data-guidance=quiet\] \.primary-wrap:not\(:has\(\.is-guided\)\) \.tap-cue\{display:none\}/);
+  assert.match(css,/\.tap-cue\{display:none;/);
+  assert.match(css,/\.primary-wrap\.is-idle-hint:has\(button:enabled\) \.tap-cue\{display:block\}/);
   assert.match(css,/\.garden-plant:not\(:disabled\)\{[^}]*border-color:[^}]*box-shadow:/);
   assert.match(css,/\.seed-reveal\{[^}]*pointer-events:none/);
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{[^]*animation:none!important/);

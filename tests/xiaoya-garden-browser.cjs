@@ -26,7 +26,7 @@ async function fixture(options={}){
       Object.defineProperty(Array.prototype,'at',{configurable:true,value:undefined});
     }
     if(denyMic){localStorage.setItem(PREFS,JSON.stringify({mic:true}));navigator.mediaDevices.getUserMedia=async()=>{qa.micCalls++;throw new DOMException('Test permission denied','NotAllowedError');};}
-    window.qa={errors:[],audios:[],plays:[],frames:[],chimes:[],hold:null,held:null,micCalls:0};
+    window.qa={errors:[],audios:[],plays:[],frames:[],chimes:[],contexts:[],hold:null,held:null,micCalls:0};
     window.addEventListener('error',event=>qa.errors.push(event.message));
     window.addEventListener('unhandledrejection',event=>qa.errors.push(String(event.reason)));
     const NativeAudio=window.Audio;
@@ -43,6 +43,8 @@ async function fixture(options={}){
     };window.Audio.prototype=NativeAudio.prototype;
     const contextType=window.AudioContext||window.webkitAudioContext;
     if(contextType){
+      const TrackedContext=new Proxy(contextType,{construct(Type,args){const context=new Type(...args);qa.contexts.push(context);return context;}});
+      if(window.AudioContext)window.AudioContext=TrackedContext;else window.webkitAudioContext=TrackedContext;
       const createOscillator=contextType.prototype.createOscillator;
       contextType.prototype.createOscillator=function(...args){
         const oscillator=createOscillator.apply(this,args),start=oscillator.start,notes=[];
@@ -156,7 +158,10 @@ async function neutralPendingSeed(p,existing){
   assert(await seed.evaluate(async e=>{
     const m=await import(new URL('garden-art.js',document.querySelector('script[type="module"][src]').src));
     const expected=document.createElement('div');expected.innerHTML=m.seedArt();
-    return e.querySelector('svg').outerHTML===expected.querySelector('svg').outerHTML;
+    // Paper loading changes visibility/opacity only. Compare actual seed art,
+    // including its neutral SVG fallback, without those transient attributes.
+    const normalize=svg=>{const copy=svg.cloneNode(true);for(const node of copy.querySelectorAll('[data-paper-art],[data-paper-image],[data-paper-fallback]')){node.removeAttribute('data-paper-state');node.removeAttribute('opacity');node.removeAttribute('visibility');}return copy.outerHTML;};
+    return normalize(e.querySelector('svg'))===normalize(expected.querySelector('svg'));
   }),'The pending seed keeps its neutral color instead of revealing the hidden flower variety');
   assert.equal(await p.locator('main [data-primary][data-action="plant"]:enabled').count(),1,'The empty planting pot is the single primary planting entry');
   assert.equal(await p.locator('main [data-action="plant"]').count(),1);
@@ -303,6 +308,9 @@ async function test(name,fn,options){
   });
   await test('Three planted flowers make garden actions quiet while rewards, neutral seeds and explicit help still work',async({p})=>{
     await seedGrownGarden(p);await openGarden(p,'pack');
+    // Production deliberately drops cold-device effects instead of replaying
+    // them late. Observe the real output clock before checking warm feedback.
+    await p.waitForFunction(()=>qa.contexts.some(context=>context.state==='running'&&context.currentTime>0),null,{timeout:30000});
     assert.equal(await p.locator('main.garden-view').getAttribute('data-guidance'),'quiet');
     assert.equal(await p.locator('main .tap-cue:visible').count(),0,'Experienced gardeners do not receive a persistent pointing hand');
     await noAutomaticGardenPrompt(p);
@@ -322,7 +330,7 @@ async function test(name,fn,options){
     assert.deepEqual(await garden(p),after,'Touching a mature flower cannot charge water or create another reward');await noAutomaticGardenPrompt(p);
     await p.evaluate(()=>{qa.hold='garden-next.mp3';qa.held=null;});await click(p,'help');
     await heldGuide(p,'garden-next.mp3',['next-event']);
-    assert.equal(await p.locator('main .tap-cue:visible').count(),1,'Explicit help restores the pointing cue for its spoken action');
+    assert.equal(await p.locator('main .tap-cue:visible').count(),0,'Spoken help highlights the button without a premature idle hand');
     await p.screenshot({animations:'disabled',path:path.join(out,'quiet-garden-explicit-help-390.png'),fullPage:true});await untouchedLearning(p);
   });
   await test('Quiet garden waits a real 15 seconds after activity, reminds once, and rearms only after new activity',async({p})=>{

@@ -59,3 +59,45 @@
  .reward-choice svg{width:60px;height:60px}
 }
 @media(prefers-reduced-motion:reduce){.reward-choice.is-guided,.short-on-shells{animation:none}.seed-purchase:active{transform:none}}
+
+/* Let children listen to each resource before committing the pending gift. */
+.reward-view[data-choice=true]{gap:22px;padding:12px 12px 28px}
+.reward-choice{position:relative;padding:12px;gap:6px;min-height:166px}
+.reward-choice-resource{display:flex;align-items:center;gap:5px}
+.reward-choice-resource>svg{width:65px;height:65px}
+.reward-purpose{display:flex;align-items:center;gap:9px;opacity:.9;pointer-events:none}
+.reward-purpose>span{font-size:23px}
+.reward-purpose>svg{width:58px;height:58px}
+.reward-choice[aria-pressed=true]{border:3px solid #6b8764;box-shadow:0 6px 0 #6b8764,0 0 0 5px #b9c9a945}
+.reward-selected{position:absolute;top:-12px;right:-8px;background:#6b8764;color:#fff;border-radius:50%;padding:5px;display:flex}
+.reward-selected>svg{width:24px;height:24px}
+.reward-confirm-slot{min-height:112px;display:grid;place-items:center}
+.reward-confirm-slot .primary-orb{position:relative}
+.confirm-resource{position:absolute;bottom:-3px;right:-7px;width:34px;height:34px;border-radius:50%;background:#fff8e8;box-shadow:0 2px 0 #cabd9e;padding:4px}
+.confirm-resource>svg{width:100%;height:100%}
+.reward-treasure .reward-resource{display:flex;align-items:center;gap:6px;min-height:72px;padding:8px 12px;border:2px solid #dbc9a6;border-radius:22px;background:#fff6e2;color:inherit;font:inherit;cursor:pointer;box-shadow:0 3px 0 #cbb998}
+.reward-resource[data-action=water-purpose]{border-color:#b7ccc0;background:#e9f1e8;box-shadow:0 3px 0 #a9bcb2}
+.reward-resource:active{transform:translateY(2px)}
+.reward-resource.is-guided{animation:economy-invite 1.5s ease-in-out infinite}
+.recall-options{display:flex;gap:18px;align-items:center}
+.recall-option{width:102px;height:102px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px solid #c7b99b;border-radius:29px;background:#f8efd9;color:#6e624b;box-shadow:0 5px 0 #c7b99b;font:inherit;font-size:15px;cursor:pointer}
+.recall-option[data-action=record]{background:#e2ead9;border-color:#b4c1a4;box-shadow:0 5px 0 #a8b998}
+.recall-option:active{transform:translateY(3px)}
+.recall-option.is-guided{animation:economy-invite 1.5s ease-in-out infinite}
+.recall-option+ .recall-option.is-guided{animation-delay:.25s}
+@media(max-width:360px){.recall-options{gap:12px}.recall-option{width:88px;height:92px}.reward-treasure .reward-resource{padding:6px;gap:2px}.reward-treasure .reward-resource svg{width:48px;height:58px}}
+@media(max-height:660px) and (max-width:600px){
+ .reward-view[data-choice=true]{gap:12px;padding:6px 12px 16px}
+ .reward-view[data-choice=true] .reward-buddy{height:84px;width:110px}
+ .reward-view[data-choice=true] .reward-buddy svg{max-height:84px}
+ .reward-choice{min-height:144px;padding:9px}
+ .reward-choice-resource>svg{width:56px;height:56px}
+ .reward-purpose>svg{width:47px;height:47px}
+ .reward-confirm-slot{min-height:104px}
+}
+@media(prefers-reduced-motion:reduce){.recall-option.is-guided,.reward-resource.is-guided{animation:none}}
+
+/* Equal, quiet affordances: neither recall nor resource choice gets a hand. */
+.recall-option:not(:disabled):not(:active),.reward-choice:not(:disabled):not(:active){animation:choice-breathe 3.6s ease-in-out infinite}
+@keyframes choice-breathe{50%{scale:1.025;filter:brightness(1.025)}}
+@media(prefers-reduced-motion:reduce){.recall-option,.reward-choice{animation:none!important}}

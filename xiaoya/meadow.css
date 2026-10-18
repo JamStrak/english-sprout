@@ -24,7 +24,7 @@
 .story-picture.vector-picture{background:none;display:grid;place-items:center}.vector-picture>svg{width:100%;height:100%;display:block}.vector-picture.moving>svg{animation:meadow-scene 3s ease-out both}
 @keyframes meadow-grow{0%{transform:scale(.91) rotate(-3deg)}55%{transform:scale(1.07) rotate(2deg)}100%{transform:none}}
 @keyframes meadow-target{0%,100%{opacity:.6;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
-@keyframes meadow-invite{0%,80%,100%{transform:translateY(0)}88%{transform:translateY(-5px) rotate(-3deg)}94%{transform:translateY(-2px) rotate(3deg)}}
+@keyframes meadow-invite{50%{transform:scale(1.025);box-shadow:0 5px 0 #d0bf9a,0 0 12px #c7d8b866}}
 @keyframes meadow-splash{0%{opacity:0;transform:translateY(-16px) scale(.5)}30%{opacity:1}100%{opacity:0;transform:translateY(26px) scale(1.2)}}
 @keyframes meadow-scene{from{transform:scale(1.025)}to{transform:scale(1)}}
 @media(max-width:480px){.meadow-view{gap:7px}.meadow-field{border-radius:28px;border-width:4px;height:48svh;min-height:258px}.meadow-tool{width:76px;height:76px;border-radius:25px}.meadow-tool>svg{width:60px;height:60px}.meadow-tools{gap:22px;padding-top:8px}.meadow-top{padding:0 3px}.meadow-collection-button{padding:8px 10px}.flower-stamp{height:72px}}
@@ -33,7 +33,6 @@
 .meadow-field .meadow-plant:active:not(:disabled){transform:translate(-50%,-88%) scale(.97)}
 
 .meadow-tool.is-guided{outline:3px solid #ad773a;outline-offset:5px;animation:guide-glow 1.3s ease-in-out infinite!important}
-.meadow-view[data-guidance=quiet] .meadow-tool.inviting:not(.is-guided){animation:none}
 .meadow-view[data-guidance=quiet] .meadow-landing{display:none}
 
 /* Water lives above all flower layers, with a stationary 48px touch target. */

@@ -48,7 +48,8 @@ async function fixture({width=390,height=844,story='hello-everyone'}={}){
   try{
     await p.goto(`${origin}/xiaoya/?story=${encodeURIComponent(story)}`);await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.11.0');if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
+    const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'../dist/xiaoya/version.json'),'utf8'));
+    assert.equal(version,expected.version);assert.equal(build,expected.build);if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
     assert.equal(await p.locator('.home-welcome .home-companion [data-paper-art="buddy-welcome"]').count(),1,'The first screen has the same welcoming 小芽 for every phrase');
     assert.equal(await p.locator('.home-welcome [data-primary]').count(),1,'Home has one primary action');
     assert.equal(await p.locator('.home-welcome [data-picture-id],.home-welcome .story-picture').count(),0,'Home does not reveal a lesson picture');
@@ -126,17 +127,17 @@ async function run(){
     return{id,lessonId:story.lessonId,teachingFrames:story.teachingFrames,actualClips:helped.plays.map(x=>x.url)};
   },{story:id});
 
-  for(const id of ['hello-everyone','hello-sorry'])await test(`Due review ${id}: silent familiar cue, one requested English replay`,async({p})=>{
+  for(const id of ['hello-everyone','hello-sorry'])await test(`Due review ${id}: spoken recall invitation, one requested English replay`,async({p})=>{
     const story=(await catalogue(p)).stories.find(s=>s.id===id);
     await p.evaluate(async({key,id})=>{
       const base=document.querySelector('script[type="module"][src]').src,m=await import(new URL('practice-plan.js',base));
       localStorage.setItem(key,JSON.stringify(m.recordPractice(m.createPracticePlan(),{roundId:'qa-compact-review',eventId:id,date:'2026-10-17',mode:'new',rewardVariant:null})));
     },{key:PLAN,id});
     await p.reload();await p.locator('main.home-view').waitFor();await click(p,'next-event');await p.locator(`[data-event="${id}"][data-phase="request"][data-practice-mode="review"]`).waitFor();
-    await p.waitForTimeout(1300);const before=await audioState(p);assert.deepEqual(before.plays,[],'Recall never automatically gives the answer');assert.deepEqual(before.frames,[],'Recall never starts teaching frames');
+    await p.waitForTimeout(1300);const before=await audioState(p);assert.equal(before.plays.length,1);assert(before.plays[0].url.endsWith('/flow-recall.mp3'),'Recall explains the choice without giving the English answer');assert.deepEqual(before.frames,[],'Recall never starts teaching frames');
     assert.equal(await p.locator('main').getAttribute('data-context'),story.context);assert.equal(Number(await p.locator('[data-story-frame]').getAttribute('data-story-frame')),story.cueFrame);
     await childLayout(p);await click(p,'sample');await ended(p,`/${story.lessonId}.mp3`);const after=await audioState(p);
-    assert.equal(after.plays.length,1);assert(after.plays[0].url.endsWith(`/${story.lessonId}.mp3`));assert.deepEqual(after.frames,[]);assert.equal(await p.locator('[data-phase="request"]').count(),1);
+    assert.equal(after.plays.length,2);assert(after.plays[1].url.endsWith(`/${story.lessonId}.mp3`));assert.deepEqual(after.frames,[]);assert.equal(await p.locator('[data-phase="request"]').count(),1);
     return{event:id,context:story.context,actualClips:after.plays};
   },{story:id});
 

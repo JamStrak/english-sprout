@@ -112,7 +112,7 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .modal-card input:not([type=checkbox]){background:#FFFCF5;border-color:#A8B99D;border-radius:13px}
 .toast{background:var(--ink);color:var(--paper);border-radius:19px 22px 17px 20px}
 @keyframes paper-breathe{50%{opacity:.2;transform:scale(1.05)}}
-@keyframes paper-invite{50%{translate:0 -4px;box-shadow:0 8px 0 #9BB08E66}}
+@keyframes paper-invite{50%{scale:1.025;box-shadow:0 5px 0 #9BB08E66,0 0 12px #c7d8b866}}
 @keyframes paper-arrive{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
 @media(max-width:600px){
  .app-shell{padding:0 16px}.topbar{height:80px;gap:10px}.brand{font-size:14px;letter-spacing:1px}.topbar>div{gap:7px}

@@ -95,7 +95,14 @@ async function observe(p,result='independent'){
   await p.locator(`[data-observation="${result}"]`).click();await p.locator('[data-phase="resolved"]').waitFor();
   return(await saved(p,STATE)).evidence.at(-1);
 }
-async function watch(p){await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();}
+async function watch(p){
+  // Recall first asks the child to listen or speak. The listen-only completion
+  // remains available after deliberately choosing the English sample.
+  if(await p.locator('[data-recall-ready]').count()){
+    await click(p,'sample');await p.waitForFunction(()=>qa.audios.at(-1)?.ended);
+  }
+  await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
+}
 async function finish(p,{assessment=false}={}){await click(p,'finish');await p.locator(assessment?'.parent-view':'.reward-view').waitFor();}
 async function card(p,id){return(await plan(p)).cards.find(x=>x.eventId===id);}
 async function layout(p){
@@ -163,12 +170,12 @@ async function run(){
     await click(p,'next-event');await p.locator(`[data-phase="story"][data-event="${newId}"][data-practice-mode="new"]`).waitFor();
     assert.equal((await saved(p,A)).rounds.length,3);assert.equal((await saved(p,B)).rounds.length,1);
   });
-  for(const [width,height] of [[320,568],[390,844]])await test(`Due review starts silently in the familiar request context and fits ${width}px`,async({p})=>{
+  for(const [width,height] of [[320,568],[390,844]])await test(`Due review introduces a spoken listen-or-speak choice in the familiar request context and fits ${width}px`,async({p})=>{
     const info=await seed(p),story=info.stories.find(x=>x.id==='food-water');await next(p);await p.locator('[data-phase="request"]').waitFor();
     assert.equal(await p.locator('main').getAttribute('data-event'),'food-water');assert.equal(await p.locator('main').getAttribute('data-context'),story.contexts[0]);
     await p.waitForTimeout(1200);assert.equal(await p.locator('[data-action="story-continue"]').count(),0);
     assert.equal(await p.evaluate(lesson=>qa.plays.filter(x=>x.url.endsWith(`/${lesson}.mp3`)).length,story.lessonId),0,'No automatic English answer during recall');
-    assert.equal(await p.locator('[data-action="sample"]').count(),1);await layout(p);
+    assert.equal(await p.locator('[data-action="sample"]').count(),1);assert.equal(await p.locator('[data-action="record"][data-primary]').count(),0);await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/flow-recall.mp3')));await layout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`due-request-${width}.png`),fullPage:true});
     await click(p,'sample');await p.waitForFunction(lesson=>qa.audios.some(x=>x.url.endsWith(`/${lesson}.mp3`)&&x.ended),story.lessonId);
     const evidence=await observe(p);assert.equal(evidence.helped,true);assert.equal(evidence.result,'supported');await finish(p);
@@ -293,7 +300,11 @@ async function run(){
       await other.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key:A,value:intended.a});
       await other.evaluate(()=>qa.releaseGardenLock());
       await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)||'null')?.rounds.length===1,B,{timeout:5000});
-      assert.deepEqual(await saved(p,A),intended.a);assert.deepEqual((await saved(p,B)).rounds,[intended.b]);assert.deepEqual(await saved(p,PLAN),intended.log);
+      assert.deepEqual(await saved(p,A),intended.a);
+      const restoredB=await saved(p,B);
+      assert.deepEqual(restoredB.rounds,[{...intended.b,starter:true,reward:'starter'}]);
+      assert.equal(restoredB.shells,2);assert.equal(restoredB.water,5,'The first B round restores its starter supplies');
+      assert.deepEqual(await saved(p,PLAN),intended.log);
       const beforeB=await saved(p,B);await reload(p);await parent(p);assert.deepEqual(await saved(p,A),intended.a);assert.deepEqual(await saved(p,B),beforeB);
     }finally{await other.evaluate(()=>qa.releaseGardenLock?.()).catch(()=>{});await other.close();}
   });

@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clips": [
+    {
+      "id": "flow-recall",
+      "text": "这句还记得吗？点耳朵听一遍，或者点话筒说。",
+      "file": "flow-recall.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 30332,
+      "seconds": 4.968,
+      "sha256": "9b1662a60733c90cf0a9df540dad4d413821bc7983d1e1e4239333ccb8ccbe9a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这句还记得吗点耳朵听一遍或者点话筒说",
+        "final_end_seconds": 4.4
+      }
+    },
+    {
+      "id": "flow-choice",
+      "text": "贝壳可以买种子，水滴可以浇花。点一个，听听看。",
+      "file": "flow-choice.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 34076,
+      "seconds": 5.592,
+      "sha256": "f338b3a564f358c7297e05063627c8365cd55e7b76f75dd4e99398e94d948b8e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "贝壳可以买种子水滴可以浇花点一个听听看",
+        "final_end_seconds": 5.025
+      }
+    },
+    {
+      "id": "flow-shells",
+      "text": "贝壳可以买种子。想要贝壳，就点下面的小礼物。",
+      "file": "flow-shells.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31772,
+      "seconds": 5.208,
+      "sha256": "733d4814615a287c8aaf062ba4164a7e5dfd2e923c25e2a5dd187d568a8db380",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "贝壳可以买种子想要贝壳就点下面的小礼物",
+        "final_end_seconds": 4.625
+      }
+    },
+    {
+      "id": "flow-water",
+      "text": "水滴可以浇花。想要水滴，就点下面的小礼物。",
+      "file": "flow-water.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31484,
+      "seconds": 5.16,
+      "sha256": "9c0604143c07cfc0beedf91c36c0b522e58da7734ba4d327a2c9cc5d901ea1e5",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "水滴可以浇花想要水滴就点下面的小礼物",
+        "final_end_seconds": 4.5875
+      }
+    },
+    {
+      "id": "flow-shell-use",
+      "text": "贝壳可以买种子。攒起来，买喜欢的种子吧。",
+      "file": "flow-shell-use.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28748,
+      "seconds": 4.704,
+      "sha256": "2221d3998dbff4fa77cda0678d14b92398c99dc95a48a01950ac1f6fc41e8944",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "贝壳可以买种子攒起来买喜欢的种子吧",
+        "final_end_seconds": 4.1375
+      }
+    },
+    {
+      "id": "flow-water-use",
+      "text": "水滴可以浇花，让小苗慢慢长大。",
+      "file": "flow-water-use.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 22412,
+      "seconds": 3.648,
+      "sha256": "68f8713135e80f946f3715f583c9643bcd15011edad7c83b306b5de4b97d0642",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "水滴可以浇花让小苗慢慢长大",
+        "final_end_seconds": 3.0625
+      }
+    },
+    {
+      "id": "flow-pass",
+      "text": "我听懂啦！点亮小礼物，收下奖励吧。",
+      "file": "flow-pass.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 26876,
+      "seconds": 4.392,
+      "sha256": "d24fa6ac77ed573a80a3000e1b1206a7289a8585d9d224be195baccf5d57b57d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "我听懂啦点亮小礼物收下奖励吧",
+        "final_end_seconds": 3.8125
+      }
+    }
+  ]
+}
