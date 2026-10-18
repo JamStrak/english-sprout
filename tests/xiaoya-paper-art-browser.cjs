@@ -7,13 +7,19 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Paper art checks require a loopback server.');
-const out=path.resolve(process.env.XIAOYA_PAPER_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v10-paper-art'));
+const out=path.resolve(process.env.XIAOYA_PAPER_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v11-paper-art'));
 const gardenOnly=process.env.XIAOYA_PAPER_GARDEN==='1';
 const filter=gardenOnly?/^GARDEN/:process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
-const ART=[['family-love','love-paper-v1.webp'],['hello-thanks','thanks-paper-v1.webp'],['outside-go-home','home-paper-v1.webp']];
+const CORE=['hello-everyone','hello-morning','family-love','hello-thanks','hello-youre-welcome','hello-sorry','hello-okay','hello-goodbye','bed-night','hello-welcome','hello-excuse','outside-go-home','outside-ready','family-come','food-eat','food-hungry','feelings-happy','feelings-tired','play-turn','play-your-turn','play-can-do','play-did-it','play-good-job','play-again'];
+const LEGACY_FILES={'family-love':'love-paper-v1.webp','hello-thanks':'thanks-paper-v1.webp','outside-go-home':'home-paper-v1.webp'};
+const REVISED_FILES={'hello-youre-welcome':'hello-youre-welcome-paper-v2.webp'};
+const ART=CORE.map(id=>[id,REVISED_FILES[id]||LEGACY_FILES[id]||`${id}-paper-v1.webp`]);
+const FOCUS=['hello-sorry','hello-okay','play-again','hello-youre-welcome'];
+const FAULT_ART=ART.filter(([id])=>id in LEGACY_FILES||FOCUS.includes(id));
+const OFFLINE_ART=ART.filter(([id])=>id in LEGACY_FILES||id==='play-again'||id==='hello-youre-welcome');
 const PLAN='xiaoya-english:practice-plan:v1';
 const MEADOW='xiaoya-english:meadow:v1',GARDEN_FILE='garden-paper-v1.webp';
-const report={origin,nativeImageDecode:true,nativeServiceWorker:true,nativeAudio:true,playbackRate:4,microphoneUsed:false,asrAccuracyTested:false,faultInjection:'404 cases only; isolated synthetic due-review saves',checks:[]};
+const report={origin,nativeImageDecode:true,nativeServiceWorker:true,nativeAudio:true,playbackRate:4,microphoneUsed:false,asrAccuracyTested:false,faultInjection:'404 cases only; isolated synthetic due-review saves',coverage:{coreImages:24,viewports:[390,768],newAndFamiliarReview:true,missingPictures:FAULT_ART.map(([id])=>id),offlinePictures:OFFLINE_ART.map(([id])=>id)},checks:[]};
 let browser;
 const tap=(p,action)=>p.locator(`[data-action="${action}"]`).first().tap();
 const save=()=>fs.writeFileSync(path.join(out,gardenOnly?'results-garden.json':filter?'results-filtered.json':'results.json'),JSON.stringify(report,null,2));
@@ -40,31 +46,40 @@ async function fixture({story='family-love',width=390,height=844,offline=false,m
       localStorage.setItem(PLAN,JSON.stringify({schemaVersion:1,product:'xiaoya-english-practice-plan',entries:[{roundId:'qa-paper-review',eventId:story,date:'2026-10-17',attemptId:null,mode:'new',rewardVariant:null}]}));
       sessionStorage.setItem('qa-paper-seeded','yes');
     }
-    const q=window.qaPaper={errors:[],audios:[],microphoneCalls:0,renders:0};
+    const q=window.qaPaper={errors:[],audios:[],frames:[],readyAt:null,microphoneCalls:0,renders:0};
     window.addEventListener('error',e=>{if(e.message)q.errors.push(e.message);});
     window.addEventListener('unhandledrejection',e=>q.errors.push(String(e.reason)));
     const NativeAudio=Audio;
     window.Audio=function(...args){
       const a=new NativeAudio(...args),entry={url:String(args[0]||''),ended:false,error:false};a.playbackRate=4;q.audios.push(entry);
-      a.addEventListener('playing',()=>entry.playedAt=performance.now());a.addEventListener('ended',()=>entry.ended=true);a.addEventListener('error',()=>entry.error=true);return a;
+      a.addEventListener('playing',()=>entry.playedAt=performance.now());a.addEventListener('ended',()=>{entry.ended=true;entry.endedAt=performance.now();});a.addEventListener('error',()=>entry.error=true);return a;
     };window.Audio.prototype=NativeAudio.prototype;
     if(navigator.mediaDevices?.getUserMedia){const gum=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=(...args)=>{q.microphoneCalls++;return gum(...args);};}
-    new MutationObserver(records=>{q.renders+=records.filter(r=>r.type==='childList'&&r.target.id==='app').length;}).observe(document,{subtree:true,childList:true});
+    new MutationObserver(records=>{
+      q.renders+=records.filter(r=>r.type==='childList'&&r.target.id==='app').length;
+      const main=document.querySelector('main[data-phase="story"]'),e=main?.querySelector('[data-story-frame]');
+      if(!e)return;
+      const svg=e.querySelector('svg'),body=svg?.innerHTML||'',fingerprint=Array.from(body).reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))|0,0);
+      const item={event:main.dataset.event,frame:Number(e.dataset.storyFrame),kind:e.classList.contains('vector-picture')?'vector':'paper',cues:[...e.querySelectorAll('[data-cue]')].map(e=>e.dataset.cue),svgFingerprint:body?fingerprint:null,at:performance.now()},last=q.frames[q.frames.length-1];
+      if(!last||last.event!==item.event||last.frame!==item.frame||last.kind!==item.kind)q.frames.push(item);
+      if(q.readyAt===null&&document.querySelector('[data-action="story-continue"]:enabled'))q.readyAt=performance.now();
+    }).observe(document,{subtree:true,childList:true});
   },{origin,story,review,PLAN});
   const p=await c.newPage();p.setDefaultTimeout(20000);
   try{
     await p.goto(`${origin}/xiaoya/?story=${story}${garden?'&garden=b':''}`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.10.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
+    assert.equal(version,'0.11.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
     return{c,p,requests,responses,errors,releaseFailure,story,file};
   }catch(error){releaseFailure?.();await c.close();throw error;}
 }
 
 async function storyMeta(p,id){return p.evaluate(async id=>{
   const base=document.querySelector('script[type="module"][src]').src,{storyFor}=await import(new URL('stories.js',base));
-  const s=storyFor(id);return{id:s.id,file:s.image,layout:s.imageLayout,lessonId:s.event.lessonId,cueFrame:s.cueFrame,context:s.event.contexts[0].id,url:new URL(`xiaoya/stories/${s.image}`,document.baseURI).href};
+  const s=storyFor(id);return{id:s.id,file:s.image,layout:s.imageLayout,lessonId:s.event.lessonId,cueFrame:s.cueFrame,teachingFrames:s.teachingFrames,introFrame:s.introFrame??null,context:s.event.contexts[0].id,url:new URL(`xiaoya/stories/${s.image}`,document.baseURI).href};
 },id);}
 async function decode(p,url){return p.evaluate(async url=>{const image=new Image();image.src=url;await image.decode();return{width:image.naturalWidth,height:image.naturalHeight,complete:image.complete,url:image.currentSrc};},url);}
+function nativePicture(native,id){const expected=id in LEGACY_FILES?[1400,1000]:[980,700];assert.deepEqual([native.width,native.height],expected,'Decoded bytes must have the original full-picture dimensions');assert(native.complete);}
 async function pictureState(p,id){return p.locator(`[data-picture-id="${id}"]`).evaluate(e=>{
   const s=getComputedStyle(e),rect=e.getBoundingClientRect();return{width:parseFloat(s.width),height:parseFloat(s.height),backgroundSize:s.backgroundSize,backgroundPosition:s.backgroundPosition,backgroundImage:s.backgroundImage,transform:s.transform,single:e.classList.contains('single-picture'),frame:Number(e.dataset.storyFrame),bounds:{x:rect.x,y:rect.y,width:rect.width,height:rect.height}};
 });}
@@ -88,6 +103,35 @@ async function layout(p){
 }
 async function ready(p,id){await tap(p,'next-event');await p.locator(`[data-event="${id}"][data-phase="story"]`).waitFor();await p.locator('[data-action="story-continue"]:enabled').waitFor({timeout:35000});}
 async function ended(p,lesson,count){await p.waitForFunction(({lesson,count})=>qaPaper.audios.filter(a=>a.url.endsWith(`/${lesson}.mp3`)&&a.ended).length>=count,{lesson,count},{timeout:30000});}
+function onlyCurrentPicture(requests,file){
+  const urls=[...new Set(requests.map(r=>r.url).filter(url=>/\/stories\/.+\.webp(?:\?|$)/.test(url)))];
+  assert.deepEqual(urls.map(url=>new URL(url).pathname.split('/').pop()),[file],'Only the current story picture may be requested');return urls;
+}
+async function teachingTrace(p,meta,{fallback=false}={}){
+  const trace=await p.evaluate(()=>({frames:qaPaper.frames,readyAt:qaPaper.readyAt,audios:qaPaper.audios}));
+  const frames=trace.frames.filter(f=>f.event===meta.id),distinct=frames.filter((f,i)=>i===0||f.frame!==frames[i-1].frame).map(f=>f.frame);
+  const expected=meta.id==='play-again'?[0,meta.cueFrame]:[meta.cueFrame];
+  assert.deepEqual(meta.teachingFrames,expected);assert.deepEqual(distinct,expected,'Teaching never repeats the same paper image as multiple story beats');
+  const final=frames[frames.length-1];assert.equal(final.kind,fallback?'vector':'paper');
+  if(meta.id==='play-again'){
+    assert.equal(meta.introFrame,0);assert.equal(frames[0].kind,'vector');assert(frames[0].cues.includes('fallen-blocks'),'Retry starts from the fallen tower');
+    if(fallback)assert.notEqual(final.svgFingerprint,frames[0].svgFingerprint,'Missing paper art must retain a visibly different retry action, not two copies of fallen blocks');
+  }
+  const english=trace.audios.filter(a=>a.url.endsWith(`/${meta.lessonId}.mp3`));assert.equal(english.length,1);assert(english[0].ended&&!english[0].error);
+  assert(trace.readyAt>=english[0].endedAt,'Speaking becomes ready only after the phrase finishes');
+  const readyDelay=trace.readyAt-english[0].endedAt;assert(readyDelay<250,`Speaking should be ready immediately after the real audio ended (${readyDelay} ms)`);
+  assert.equal(await p.locator('[data-action="story-continue"]:enabled').getAttribute('aria-label'),'轮到我说啦');
+  assert.equal(await p.locator('.story-progress').count(),expected.length===2?1:0);
+  return{...trace,readyDelay};
+}
+async function familiarReview(p,meta){
+  await p.evaluate(async({key,id})=>{const m=await import(new URL('practice-plan.js',document.querySelector('script[type="module"][src]').src));localStorage.setItem(key,JSON.stringify(m.recordPractice(m.createPracticePlan(),{roundId:'qa-paper-review',eventId:id,date:'2026-10-17',mode:'new',rewardVariant:null})));},{key:PLAN,id:meta.id});
+  await p.reload({waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();await tap(p,'next-event');await p.locator(`[data-event="${meta.id}"][data-phase="request"][data-practice-mode="review"]`).waitFor();
+  await p.waitForTimeout(600);assert.deepEqual(await p.evaluate(()=>qaPaper.audios),[],'Familiar review must not automatically reveal the spoken answer');assert.deepEqual(await p.evaluate(()=>qaPaper.frames),[],'Review skips the teaching sequence');
+  assert.equal(await p.locator('main').getAttribute('data-context'),meta.context);const cue=wholePicture(await pictureState(p,meta.id),meta.url);assert.equal(cue.frame,meta.cueFrame);
+  await tap(p,'sample');await ended(p,meta.lessonId,1);const replay=wholePicture(await pictureState(p,meta.id),meta.url);assert.equal(replay.backgroundImage,cue.backgroundImage);assert.equal(replay.frame,meta.cueFrame);assert.deepEqual(await p.evaluate(()=>qaPaper.frames),[]);await layout(p);
+  return{cue,replay,audios:await p.evaluate(()=>qaPaper.audios)};
+}
 async function seedGarden(p,{rounds=2,plants=0,pending=true}={}){
   const state=await p.evaluate(async({key,rounds,plants,pending})=>{
     const m=await import(new URL('garden-meadow.js',document.querySelector('script[type="module"][src]').src));let s=m.createMeadow();
@@ -144,33 +188,47 @@ async function test(name,fn,options){
 }
 
 async function run(){
-  for(const [id,file] of ART)for(const [width,height] of [[390,844],[768,1024]])await test(`${id} ${width}px: native full image and same-picture English replay`,async({p,requests})=>{
+  for(const [id,file] of ART)for(const [width,height] of [[390,844],[768,1024]])await test(`${id} ${width}px: native full image, new teaching and familiar review replay`,async({p,requests})=>{
     const meta=await storyMeta(p,id);assert.equal(meta.file,file);assert.equal(meta.layout,'single');
     const home=await welcomingHome(p,requests);await p.screenshot({animations:'disabled',path:path.join(out,`${id}-home-${width}.png`)});
-    await ready(p,id);await ended(p,meta.lessonId,1);
-    const native=await decode(p,meta.url);assert.equal(native.width,1400);assert.equal(native.height,1000);assert(native.complete);
+    await ready(p,id);await ended(p,meta.lessonId,1);const trace=await teachingTrace(p,meta);
+    const native=await decode(p,meta.url);nativePicture(native,id);
     const story=wholePicture(await pictureState(p,id),meta.url);await layout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`${id}-story-${width}.png`)});
     await tap(p,'story-replay');await p.locator('[data-phase="request"]').waitFor();await ended(p,meta.lessonId,2);
     const replay=wholePicture(await pictureState(p,id),meta.url);assert.equal(replay.backgroundImage,story.backgroundImage);assert.equal(replay.frame,meta.cueFrame);await layout(p);
     assert.equal(await p.locator('.vector-picture').count(),0);assert.equal(await p.evaluate(key=>localStorage.getItem(key),PLAN),null);
-    return{native,home,story,replay,nativeAudio:await p.evaluate(()=>qaPaper.audios)};
+    const nativeAudio=await p.evaluate(()=>qaPaper.audios);assert.equal(nativeAudio.length,2);assert.deepEqual(await p.evaluate(()=>qaPaper.frames),trace.frames,'Ear replay does not restart or change the story frames');
+    const review=await familiarReview(p,meta);await p.screenshot({animations:'disabled',path:path.join(out,`${id}-review-${width}.png`)});
+    return{native,home,story,replay,trace,nativeAudio,review,requestedPictures:onlyCurrentPicture(requests,file)};
   },{story:id,width,height});
 
-  for(const [id,file] of ART)for(const review of [false,true])await test(`${id}: 404 becomes stable SVG on ${review?'direct review':'new story'}`,async({p,requests,releaseFailure})=>{
+  for(const [id,file] of FAULT_ART)for(const review of [false,true])await test(`${id}: 404 becomes stable SVG on ${review?'direct review':'new story'}`,async({p,requests,releaseFailure})=>{
     await welcomingHome(p,requests);
     if(review){await tap(p,'next-event');await p.locator(`[data-event="${id}"][data-phase="request"][data-practice-mode="review"]`).waitFor();releaseFailure();}else await ready(p,id);
     await p.locator('.story-picture.vector-picture svg').waitFor();assert.equal(await p.locator('[data-picture-id]').count(),0);
     const meta=await storyMeta(p,id);if(review)assert.equal(await p.locator('main').getAttribute('data-context'),meta.context);
+    const trace=review?null:await teachingTrace(p,meta,{fallback:true});
+    assert.equal(await p.locator('.vector-picture svg').getAttribute('data-story'),id);assert.equal(Number(await p.locator('[data-story-frame]').getAttribute('data-story-frame')),meta.cueFrame);
+    if(id==='hello-sorry'||id==='hello-okay'){
+      assert.equal(await p.locator('.vector-picture [data-cue="fallen-blocks"]').count(),1,'Apology and reassurance retain the fallen-block cause');
+      assert.equal(await p.locator('.vector-picture [data-character="sprout"]').getAttribute('data-mood'),id==='hello-sorry'?'sorry':'happy');
+      assert.equal(await p.locator('.vector-picture [data-character="sprout"]').getAttribute('data-pose'),id==='hello-sorry'?'hold':'offer');
+    }
     await layout(p);const failed=()=>requests.filter(r=>new URL(r.url).pathname.endsWith(`/stories/${file}`)).length;
     const first=failed(),renders=await p.evaluate(()=>qaPaper.renders);assert(first>0&&first<=3,'The real image was attempted without a retry storm');
     await p.waitForTimeout(1400);assert.equal(failed(),first,'No failed-image retry loop');assert.equal(await p.evaluate(()=>qaPaper.renders),renders,'No fallback render loop');
-    if(review){assert.deepEqual(await p.evaluate(()=>qaPaper.audios),[],'Direct review is silent');await tap(p,'sample');await ended(p,meta.lessonId,1);await p.locator('.vector-picture svg').waitFor();assert.equal(failed(),first,'Replay retains SVG fallback without retrying failed image');}
+    if(review){assert.deepEqual(await p.evaluate(()=>qaPaper.audios),[],'Direct review is silent');await tap(p,'sample');await ended(p,meta.lessonId,1);}
+    else{await tap(p,'story-replay');await p.locator('[data-phase="request"]').waitFor();await ended(p,meta.lessonId,2);}
+    await p.locator('.vector-picture svg').waitFor();assert.equal(failed(),first,'Replay retains SVG fallback without retrying failed image');
+    const cueBefore=await p.locator('.vector-picture svg').evaluate(e=>e.innerHTML);await tap(p,'context-help');await ended(p,meta.context,1);await ended(p,meta.lessonId,review?2:3);
+    const audios=await p.evaluate(()=>qaPaper.audios),last=audios.slice(-2);assert(last[0].url.endsWith(`/xiaoya/audio/v3/${meta.context}.mp3`));assert(last[1].url.endsWith(`/${meta.lessonId}.mp3`));assert(last.every(a=>a.ended&&!a.error));assert(last[1].playedAt>=last[0].endedAt,'Help plays Chinese first, then English');
+    assert.equal(await p.locator('.vector-picture svg').evaluate(e=>e.innerHTML),cueBefore,'Help keeps the same familiar semantic picture');assert.equal(failed(),first,'Help does not retry a failed picture');onlyCurrentPicture(requests,file);
     await p.screenshot({animations:'disabled',path:path.join(out,`${id}-missing-${review?'review':'story'}.png`)});
-    return{injectedStatus:404,failedImageRequests:first,stableRenders:renders,view:review?'direct review':'new story'};
+    return{injectedStatus:404,failedImageRequests:first,stableRenders:renders,view:review?'direct review':'new story',trace,helpAudio:last};
   },{story:id,missing:true,holdFailure:review,review});
 
-  for(const [id] of ART)await test(`${id}: previously viewed image survives an offline cold page`,async f=>{
+  for(const [id,file] of OFFLINE_ART)await test(`${id}: previously viewed image survives an offline cold page`,async f=>{
     const {c,p}=f,meta=await storyMeta(p,id);await welcomingHome(p,f.requests);
     await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:30000});
     await ready(p,id);await ended(p,meta.lessonId,1);await decode(p,meta.url);
@@ -179,8 +237,8 @@ async function run(){
     await p.close();await c.setOffline(true);f.p=await c.newPage();f.p.setDefaultTimeout(20000);
     await f.p.goto(`${origin}/xiaoya/?story=${id}`,{waitUntil:'domcontentloaded'});await f.p.locator('main.home-view').waitFor();
     assert.equal(await f.p.evaluate(()=>navigator.onLine),false);await welcomingHome(f.p);
-    await ready(f.p,id);await ended(f.p,meta.lessonId,1);
-    const native=await decode(f.p,meta.url);assert.equal(native.width,1400);assert.equal(native.height,1000);
+    await ready(f.p,id);await ended(f.p,meta.lessonId,1);const trace=await teachingTrace(f.p,meta);
+    const native=await decode(f.p,meta.url);nativePicture(native,id);
     const picture=wholePicture(await pictureState(f.p,id),meta.url);assert.equal(await f.p.locator('.vector-picture').count(),0);
     const [response,cachedBytes]=await Promise.all([
       f.p.waitForResponse(response=>response.url()===meta.url&&response.fromServiceWorker(),{timeout:10000}).then(r=>({url:r.url(),status:r.status(),worker:r.fromServiceWorker()})),
@@ -189,7 +247,7 @@ async function run(){
     assert.equal(cachedBytes.status,200);assert(cachedBytes.bytes>10000,'The real cached picture has image bytes');
     assert.equal(response.status,200);await layout(f.p);
     await f.p.screenshot({animations:'disabled',path:path.join(out,`${id}-offline-cold.png`)});
-    return{native,picture,scope,workerResponse:response,cachedBytes};
+    onlyCurrentPicture(f.requests,file);return{native,picture,scope,workerResponse:response,cachedBytes,trace};
   },{story:id,offline:true});
 
   await test('First home installs shell without requesting or caching story images',async({p,requests})=>{

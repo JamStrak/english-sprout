@@ -250,3 +250,36 @@ test('failed story art falls back and advances the short teaching sequence only 
   assert.match(f.html(),/vector-picture/);assert.equal(f.sounds.length,1);
   f.sounds[0].resolve(true);await playing;assert.equal(s.storyReady,true);assert.equal(f.images.length,1);
 });
+
+test('try again teaches a fallen tower before rebuilding, without repeating its paper image',async()=>{
+  const f=fixture(),story=stories.storyFor('play-again');
+  assert.deepEqual(story.teachingFrames,[0,1]);
+  const s=f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'}),playing=f.playStory();
+  assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="fallen-blocks"/);
+  assert.doesNotMatch(f.html(),/data-picture-id="play-again"/);
+  assert.equal(f.images.length,1);f.images[0].onload();await f.nextDelay();
+  assert.match(f.html(),/data-picture-id="play-again" data-story-frame="1"/);
+  assert.doesNotMatch(f.html(),/data-cue="fallen-blocks"/);
+  await f.nextDelay();assert.equal(f.sounds.length,1);f.sounds[0].resolve(true);await playing;
+  assert.equal(s.storyReady,true);assert.equal(f.writes.length,0);
+});
+
+test('try again image failure preserves different visible actions for both teaching beats',async()=>{
+  const f=fixture(),story=stories.storyFor('play-again');
+  f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'});
+  const playing=f.playStory(),intro=storyArt.storyFrame(story,0);
+  f.images[0].onerror();await f.nextDelay();
+  assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="retry-picking-up-block"/);
+  const drawing=svg=>svg.replace(/\sdata-[\w-]+="[^"]*"/g,'');
+  assert.notEqual(drawing(intro),drawing(storyArt.storyFrame(story,1)));
+  await f.nextDelay();f.sounds[0].resolve(true);await playing;
+  assert.equal(f.getSession().storyReady,true);assert.equal(f.images.length,1);
+});
+
+test('familiar try again review starts at the final picture without playing the answer',()=>{
+  const f=fixture(),story=stories.storyFor('play-again');
+  f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true,frame:0});
+  assert.match(f.html(),/data-picture-id="play-again" data-story-frame="1"/);
+  assert.doesNotMatch(f.html(),/data-cue="fallen-blocks"|story-progress/);
+  assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
+});

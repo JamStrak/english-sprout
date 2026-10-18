@@ -161,8 +161,10 @@ function comic(id,f,alt=false,theme='play'){
     }
     case 'play-tower':case 'play-again':{
       const again=id==='play-again';sprout.pose=bear.pose=f<2?'ask':done?'up':'offer';
+      if(again&&f===1){sprout.pose='offer';bear.pose='open';}
       if(again&&alt){rear=cue('ball-goal',rect(250,204,10,51,2,C.red)+rect(330,204,10,51,2,C.red)+rect(249,199,92,12,3,C.blue));front=cue(f<2?'missed-goal':done?'goal-reached':'retry-ball-roll',prop('ball',f<2?346:act?203:288,f<2?265:245,.8));if(act)front+=motion('M156 244h27');}
       else{rear=alt?oval(206,249,109,35,'#e9d4a6'):mat();front=f<2?(again?scattered():block(168,248,C.red)+block(210,248,C.blue)+block(247,247,C.yellow)):stack(done?4:2,205,236,alt);if(act)front+=cue('block-being-added',alt?rect(190,162,30,21,2,'#dcc08b'):block(205,160,C.yellow));}
+      if(again&&!alt&&f===1)front+=cue('retry-picking-up-block',block(145,199,C.yellow));
       if(done)front+=gleam(235,101,.8);break;
     }
     case 'play-did-it':{

@@ -49,7 +49,7 @@ async function fixture({width=390,height=844,motion='reduce',garden='a',missing=
   try{
     await p.goto(`${origin}/xiaoya/?story=family-love&garden=${garden}`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.10.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
+    assert.equal(version,'0.11.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else{report.version=version;report.build=build;}
     return{c,p,requests,responses,errors,width,height,motion,garden};
   }catch(e){await c.close();throw e;}
 }

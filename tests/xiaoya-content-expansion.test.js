@@ -28,11 +28,14 @@ test('55 scenes preserve all legacy event IDs and add core expressions',()=>{
   }
 });
 
-test('original three AI comics remain available, all other stories have vector art',()=>{
-  for(const [id,image] of [['food-water','water-v1.webp'],['play-box','help-v1.webp'],['hello-goodbye','goodbye-v2.webp']]){
+test('legacy comic files remain available while goodbye uses its new single scene',()=>{
+  for(const [id,image] of [['food-water','water-v1.webp'],['play-box','help-v1.webp']]){
     assert.equal(storyFor(id).image,image);
     assert.ok(read('public/xiaoya/stories/'+image).length>1000);
   }
+  assert.ok(read('public/xiaoya/stories/goodbye-v2.webp').length>1000,'Keep old asset for already open legacy tabs');
+  assert.equal(storyFor('hello-goodbye').image,'hello-goodbye-paper-v1.webp');
+  assert.equal(storyFor('hello-goodbye').cueFrame,2,'Preserve familiar cue and source frame semantics');
   assert.ok(STORIES.filter(story=>story.image).length>=3);
   for(const story of STORIES.filter(story=>!story.image))assert.ok(storyFrame(story,0).startsWith('<svg'));
 });

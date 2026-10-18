@@ -1,0 +1,504 @@
+{
+  "batch": "v03-teaching",
+  "study_id": "610f2d54d7e6",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "model": "Not exposed by tool",
+    "transparent_background": false
+  },
+  "style_id": "handdraw-273",
+  "palette_id": "tea-milk",
+  "sources": [
+    {
+      "index": 0,
+      "file": "originals/sheet-01.png",
+      "sha256": "b91088e7e856511fde1ddaedeba9143e4865115176d0d83992c2dd8f6bf3e8e0",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-c77bd1b8-669c-4e64-90b1-069e1f95d6db.png"
+    },
+    {
+      "index": 1,
+      "file": "originals/sheet-02.png",
+      "sha256": "9a27d8976a0f8868ddc53baf90e95c6e50f2db5d6c8e0c5fe0f9e63867b7d8cc",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-f2d1857a-781e-47e3-bf67-106bde3bb0e7.png"
+    },
+    {
+      "index": 2,
+      "file": "originals/sheet-03.png",
+      "sha256": "4867b64e4047ec93818fc85971abb807e0488404634e32b88ddfdb03b623d99a",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-3b5e42bc-a907-4858-a508-d693b906db10.png"
+    },
+    {
+      "index": 3,
+      "file": "originals/sheet-04.png",
+      "sha256": "bbafaebaf084a832e8d6d6295e1bed3009bca62d6d11f75959e590cb08bbb26c",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-d3d060c3-9ee3-4f39-af73-3aff2f02d5d9.png"
+    },
+    {
+      "index": 4,
+      "file": "originals/sheet-05.png",
+      "sha256": "f380d01aaf387cdfd98f3a9cab2e8c8546fe07ea428216f77f5ebe88334289b9",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-bee574a9-4155-49fb-84d8-8aebdb2b5b08.png"
+    },
+    {
+      "index": 5,
+      "file": "originals/sheet-06.png",
+      "sha256": "0863bf2e2f36f8410069be1a2ac1411de45b7baa4aa1822f7fd8760a66a5e207",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-ff5cf109-446a-459d-b73c-8d2cc6f82e49.png"
+    },
+    {
+      "index": 6,
+      "file": "originals/sheet-07.png",
+      "sha256": "6388a02c6cfe8d16bacc927753faa52c2ab5b693b7a9072e5f2feb57652efbe4",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-088c3067-67e8-4785-aecd-fe62a880b314.png"
+    },
+    {
+      "index": 7,
+      "file": "originals/sheet-08.png",
+      "sha256": "4572f2b3ca0b4e198e234d5707b966189a5af62c2afbb4c3b65b984a16865696",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-63fcbeec-1ec9-424e-9762-bf30061ed516.png"
+    },
+    {
+      "index": 8,
+      "file": "originals/sheet-09.png",
+      "sha256": "9939a10eaedbbb3d1d468f00c8f97a7ae92ce37e8f1e80c7854b958e48e676dc",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-d9e75f44-ace8-4e6f-bfc4-d41f873405d7.png"
+    },
+    {
+      "index": 9,
+      "file": "originals/sheet-10.png",
+      "sha256": "d6200381db3393eba69341dbdfe03e53e8bfc7e85d50b85c548fe57fb06dd358",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-08d39c96-cb70-465a-8bce-f9d202d733e2.png"
+    },
+    {
+      "index": 10,
+      "file": "originals/sheet-11.png",
+      "sha256": "a876d9d5e014c5b0e1448b303deb202b7558d9d7a8ca4628f5fdfde8c7a9f53f",
+      "generated_source": "C:\\Users\\Jam\\.codex\\generated_images\\019ff4f9-dc2f-7a61-8f79-b108371098e5\\exec-f5ab43f0-30ca-4b15-bb0b-325fcec1847e.png"
+    }
+  ],
+  "processing": "Byte-identical source archive; split sheet at horizontal midpoint; remove <=1 edge pixel for 7:5; RGB PNG masters; Lanczos 980x700; WebP quality88 method6. No repainting or background removal.",
+  "presentation_notes": "21 supplementary teaching illustrations. Existing family-love / hello-thanks / outside-go-home retained. hello-sorry, hello-okay and play-again have multi-frame teaching behavior that must preserve event and response meaning; use a single presentation explicitly or keep distinct SVG teaching frames.",
+  "total_runtime_bytes": 1508902,
+  "assets": [
+    {
+      "key": "hello-everyone",
+      "meaning": "大家好：小芽向两位朋友招手",
+      "card": "cards/hello-everyone-paper-v1.png",
+      "runtime": "runtime/hello-everyone-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 57860,
+      "sha256": "98962683908d77a69967f0d8bbbd062b32372934fbca1a44b645675a41521490",
+      "card_sha256": "885758ee71739091b75ccb691df7f31ece9aa85db4076b7fc86c21f57435e4cc",
+      "source_sheet": 0,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "hello-morning",
+      "meaning": "早上好：窗边醒来，清晨太阳",
+      "card": "cards/hello-morning-paper-v1.png",
+      "runtime": "runtime/hello-morning-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 88420,
+      "sha256": "a695d687b53259145158df6d57ac81d79da9727d5aa3d09880d5f56f13fa8ee5",
+      "card_sha256": "1db5068dcdba9e85b114a4157ef44d086ee2d1ede759cf528eead2052d971b1f",
+      "source_sheet": 0,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "hello-youre-welcome",
+      "meaning": "不客气：小芽给予苹果后回应小熊",
+      "card": "cards/hello-youre-welcome-paper-v1.png",
+      "runtime": "runtime/hello-youre-welcome-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 66316,
+      "sha256": "d919f4e8998584ef4964fc1c6a1451885d88fa6fe6e657f0af15234d2310832b",
+      "card_sha256": "2736f909d1d15e97abf6fe681e66bb1d08f946a7efcf187fcf6e642c72b3c1bd",
+      "source_sheet": 1,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "hello-sorry",
+      "meaning": "对不起：小芽为碰倒小熊积木道歉",
+      "card": "cards/hello-sorry-paper-v1.png",
+      "runtime": "runtime/hello-sorry-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 60826,
+      "sha256": "a1264e8dd878c253853725ae0f43f71740e52a8192310a5fc9b1345ce72b1b70",
+      "card_sha256": "696d273645b29b762482208aa20d10ea3c637d8c75639e05fd264fe778df2bec",
+      "source_sheet": 1,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": true
+    },
+    {
+      "key": "hello-okay",
+      "meaning": "没关系：小芽安慰为碰倒积木道歉的小熊",
+      "card": "cards/hello-okay-paper-v1.png",
+      "runtime": "runtime/hello-okay-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 73198,
+      "sha256": "f81db0884cadcd1842c5c6fd86c4a00d59044d59a24bdc918477a3a52fa23050",
+      "card_sha256": "165d43e1849040076edbd377d4c5fc337b94e63c0250161857198af7f541d66f",
+      "source_sheet": 2,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": true
+    },
+    {
+      "key": "hello-goodbye",
+      "meaning": "再见：小熊离开，小芽挥手告别",
+      "card": "cards/hello-goodbye-paper-v1.png",
+      "runtime": "runtime/hello-goodbye-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 68982,
+      "sha256": "54f650f62b2fc7cd90013887ad3a7682f2a8b561a69fff4f01c538564f491f30",
+      "card_sha256": "12680b3ea704d8bd19ab64d191a8b0a15363346cf3617a380a2ab9ec36d52aaf",
+      "source_sheet": 2,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "bed-night",
+      "meaning": "晚安：月亮窗前的睡前时刻",
+      "card": "cards/bed-night-paper-v1.png",
+      "runtime": "runtime/bed-night-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 85552,
+      "sha256": "56da563f34ab333049384e66b4bae5c4a92b15ae11cca4b0cbd8fd7b130e9226",
+      "card_sha256": "9c4d6cb413125ce3b13f113ffd6699de6dd0c8722874cb850beed3aa7aad5f05",
+      "source_sheet": 3,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "hello-welcome",
+      "meaning": "初次见面问好：两位朋友在花园握手",
+      "card": "cards/hello-welcome-paper-v1.png",
+      "runtime": "runtime/hello-welcome-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 88308,
+      "sha256": "f239f2c7aa8c763afb9b0c6ca685f5fa6cade1d6989c47b3497fff8ae0f02ee5",
+      "card_sha256": "8f62119acafb85189efde4f9d1e84f017dfc7d15b256c1a76dc397c9b0f31165",
+      "source_sheet": 3,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "hello-excuse",
+      "meaning": "打扰一下：礼貌向正在阅读的小熊示意",
+      "card": "cards/hello-excuse-paper-v1.png",
+      "runtime": "runtime/hello-excuse-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 73800,
+      "sha256": "4cf26aad0710262975d0658d8ab4b3246121690d9efae99e3351b07ca506b341",
+      "card_sha256": "43ee6354088a8373c648148f75f0f7e576deab15ef4feec2808d02a96de527b6",
+      "source_sheet": 4,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "outside-ready",
+      "meaning": "准备好出发：鞋子和背包已就绪",
+      "card": "cards/outside-ready-paper-v1.png",
+      "runtime": "runtime/outside-ready-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 76110,
+      "sha256": "b316d2d577dbc1d93896ee9e5be013965eab552f7d6d7453e421da8e88ce79d9",
+      "card_sha256": "1b07e3d9b743c8e47fde58958212bcc2ae1a5c3615b36bb1ac657c44d56db0c7",
+      "source_sheet": 4,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "family-come",
+      "meaning": "过来：小芽招手邀请小熊靠近自己",
+      "card": "cards/family-come-paper-v1.png",
+      "runtime": "runtime/family-come-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 53498,
+      "sha256": "efe0aac5a2a43b36d6494c4d1e13f4809927b4792315625caeda61c5acb0b9c8",
+      "card_sha256": "30a4285a5f6e203a1dd523c44d24e31da84b75802469564daa870fa4f8f719f9",
+      "source_sheet": 5,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "food-eat",
+      "meaning": "开饭：准备好的饭桌边邀请伙伴用餐",
+      "card": "cards/food-eat-paper-v1.png",
+      "runtime": "runtime/food-eat-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 69812,
+      "sha256": "18820855b39af55133206fbeb3d790c041a41eef324637df1729099272613d31",
+      "card_sha256": "ef2890be3fbb287743b1b54475b21994088899b2adbebf9d64cdccf0a1dccad4",
+      "source_sheet": 5,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "food-hungry",
+      "meaning": "我饿了：期待食物，并非腹痛",
+      "card": "cards/food-hungry-paper-v1.png",
+      "runtime": "runtime/food-hungry-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 72456,
+      "sha256": "0e6de9a6492e795268461bad90338f6b2ae21222c7b6070c9105b610f545ad9b",
+      "card_sha256": "3e7856d947771f2cf3e72c5e90cfb5ff350f21d513719932a4095a2c1dd95a69",
+      "source_sheet": 6,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "feelings-happy",
+      "meaning": "我很开心：和朋友一起玩耍",
+      "card": "cards/feelings-happy-paper-v1.png",
+      "runtime": "runtime/feelings-happy-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 74482,
+      "sha256": "e50d95860948cd044e1971bb6971d27668d2ed52462c9b72a77324ced42393f0",
+      "card_sha256": "8751a03b8dd3536ba2ff6706514a9d11c17cbe0dfebf443409559a74e5fa1209",
+      "source_sheet": 6,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "feelings-tired",
+      "meaning": "我累了：白天玩耍后的休息",
+      "card": "cards/feelings-tired-paper-v1.png",
+      "runtime": "runtime/feelings-tired-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 69870,
+      "sha256": "2748fcbc6d5eb61845d2f54f90b8f096b4728593677f2f8e8cbd92c02f223d06",
+      "card_sha256": "8270315ad612c0e596c2eba99f80275993432df7a1a0f0871184759065355a1a",
+      "source_sheet": 7,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-turn",
+      "meaning": "轮到我：小熊滑完，小芽准备接着玩",
+      "card": "cards/play-turn-paper-v1.png",
+      "runtime": "runtime/play-turn-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 70654,
+      "sha256": "3555d85f490ff16640ae8ac0cec5450ca43bef00b5942fd0b27a7a674fa1c3d7",
+      "card_sha256": "65bfbcec712cc2e0bf05c00e57b07046d43f649636fe9882bf0f49941c8e71c3",
+      "source_sheet": 7,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-your-turn",
+      "meaning": "轮到你：邀请小熊放下一块积木",
+      "card": "cards/play-your-turn-paper-v1.png",
+      "runtime": "runtime/play-your-turn-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 74030,
+      "sha256": "046cac359bb07b5734d60aa9fe0e1eca2b490687f5de335f3e6bc4caacd3a415",
+      "card_sha256": "1073f724a72fe0aa49223ea14014499cd29c4a6c42f438024ac2c300b4b8b97b",
+      "source_sheet": 8,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-can-do",
+      "meaning": "我能做到：拿着尚未放下的最后一块拼图",
+      "card": "cards/play-can-do-paper-v1.png",
+      "runtime": "runtime/play-can-do-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 67064,
+      "sha256": "545f57f44c66bd0e16ddb350869929a0b8458683189f3a2f7866f0c1dc4bf07d",
+      "card_sha256": "9a75a969d7a027b43fc37c18291849255b514f49479dd559d3c030cb8020b434",
+      "source_sheet": 8,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-did-it",
+      "meaning": "我做到了：拼图已完成",
+      "card": "cards/play-did-it-paper-v1.png",
+      "runtime": "runtime/play-did-it-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 76396,
+      "sha256": "6439cbe00d8bf32402f3bdbd0abd0e6f977abe1da4497bf25e43280c2b219b22",
+      "card_sha256": "d637282c13c8faaee2488ccf15f5a0121ff4e13ae126e19947e201d8c0feb592",
+      "source_sheet": 9,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-good-job",
+      "meaning": "你做得好：赞扬小熊完成的积木塔",
+      "card": "cards/play-good-job-paper-v1.png",
+      "runtime": "runtime/play-good-job-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 78992,
+      "sha256": "b68fe48eabd9a2551f4ac6e4699c9cb9e66646c06c958367bdd1958c18229543",
+      "card_sha256": "b22ccec5c3d90192b8294076ea82cba31441d53cac05e994b7af88e8675ce624",
+      "source_sheet": 9,
+      "source_crop": [
+        0,
+        749,
+        1049,
+        1498
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": false
+    },
+    {
+      "key": "play-again",
+      "meaning": "再试一次：重新搭建积木",
+      "card": "cards/play-again-paper-v1.png",
+      "runtime": "runtime/play-again-paper-v1.webp",
+      "width": 980,
+      "height": 700,
+      "bytes": 62276,
+      "sha256": "1856bd399b6010448292ddec456f0dd96ce3078ae8679d9614ac5e5b59d85810",
+      "card_sha256": "b33ac0338d7d2eb7c4990afdb8a8924adb994dd456ec49accf5fa50bd551929f",
+      "source_sheet": 10,
+      "source_crop": [
+        0,
+        0,
+        1049,
+        749
+      ],
+      "opaque_background": true,
+      "multi_frame_in_app": true
+    }
+  ]
+}

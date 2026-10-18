@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Compact integration requires a loopback server.');
-const out=path.resolve(process.env.XIAOYA_COMPACT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v10-compact'));
+const out=path.resolve(process.env.XIAOYA_COMPACT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v11-compact'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const PLAN='xiaoya-english:practice-plan:v1';
 const EXPECTED_CORE=['hello-everyone','hello-morning','family-love','hello-thanks','hello-youre-welcome','hello-sorry','hello-okay','hello-goodbye','bed-night','hello-welcome','hello-excuse','outside-go-home','outside-ready','family-come','food-eat','food-hungry','feelings-happy','feelings-tired','play-turn','play-your-turn','play-can-do','play-did-it','play-good-job','play-again'];
@@ -48,7 +48,7 @@ async function fixture({width=390,height=844,story='hello-everyone'}={}){
   try{
     await p.goto(`${origin}/xiaoya/?story=${encodeURIComponent(story)}`);await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.10.0');if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
+    assert.equal(version,'0.11.0');if(report.build)assert.equal(build,report.build,'Server build changed during this run; rerun against one finished build.');else{report.build=build;report.version=version;}
     assert.equal(await p.locator('.home-welcome .home-companion [data-paper-art="buddy-welcome"]').count(),1,'The first screen has the same welcoming 小芽 for every phrase');
     assert.equal(await p.locator('.home-welcome [data-primary]').count(),1,'Home has one primary action');
     assert.equal(await p.locator('.home-welcome [data-picture-id],.home-welcome .story-picture').count(),0,'Home does not reveal a lesson picture');
@@ -108,7 +108,7 @@ async function test(name,fn,options){
 async function run(){
   for(const id of EXPECTED_CORE)await test(`Core ${id}: compact new teaching, phrase-only replay, Chinese then English help`,async({p})=>{
     const data=await catalogue(p);assert.deepEqual(data.core,EXPECTED_CORE);const story=data.stories.find(s=>s.id===id),suffix=`/${story.lessonId}.mp3`;
-    assert([1,2].includes(story.teachingFrames.length));await readyStory(p,id);await ended(p,suffix);
+    assert.deepEqual(story.teachingFrames,id==='play-again'?[0,story.cueFrame]:[story.cueFrame],'Core teaching only retains a second beat where it establishes the retry cause');await readyStory(p,id);await ended(p,suffix);
     const initial=await audioState(p);
     assert.deepEqual(initial.frames.filter(x=>x.event===id).map(x=>x.frame),story.teachingFrames,'Only the intended teaching scene(s) are displayed');
     assert.equal(initial.plays.length,1,'Initial lesson plays exactly one English phrase');assert(initial.plays[0].url.endsWith(suffix));
@@ -157,7 +157,7 @@ async function run(){
     await readyStory(p,'hello-everyone');views.single=await childLayout(p);await p.screenshot({animations:'disabled',path:path.join(out,`single-${width}.png`)});
     await click(p,'story-replay');await ended(p,'/hello-01.mp3',2);views.request=await childLayout(p);
     await click(p,'context-help');await ended(p,'/hello-01.mp3',3);views.help=await childLayout(p);
-    await openCore(p,'hello-sorry');views.two=await childLayout(p);await p.screenshot({animations:'disabled',path:path.join(out,`two-${width}.png`)});
+    await openCore(p,'play-again');views.two=await childLayout(p);assert.equal(await p.locator('.story-progress').count(),1);await p.screenshot({animations:'disabled',path:path.join(out,`two-${width}.png`)});
     await click(p,'story-replay');await p.locator('[data-phase="request"]').waitFor();views.twoRequest=await childLayout(p);
     return views;
   },{width,height});

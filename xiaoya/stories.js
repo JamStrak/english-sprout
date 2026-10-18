@@ -7,9 +7,29 @@ const illustrated = {
   'family-love':{image:'love-paper-v1.webp',imageLayout:'single'},
   'hello-thanks':{image:'thanks-paper-v1.webp',imageLayout:'single'},
   'outside-go-home':{image:'home-paper-v1.webp',imageLayout:'single'},
+  'hello-everyone':{image:'hello-everyone-paper-v1.webp',imageLayout:'single'},
+  'hello-morning':{image:'hello-morning-paper-v1.webp',imageLayout:'single'},
+  'hello-youre-welcome':{image:'hello-youre-welcome-paper-v2.webp',imageLayout:'single'},
+  'hello-sorry':{image:'hello-sorry-paper-v1.webp',imageLayout:'single'},
+  'hello-okay':{image:'hello-okay-paper-v1.webp',imageLayout:'single'},
+  'bed-night':{image:'bed-night-paper-v1.webp',imageLayout:'single'},
+  'hello-welcome':{image:'hello-welcome-paper-v1.webp',imageLayout:'single'},
+  'hello-excuse':{image:'hello-excuse-paper-v1.webp',imageLayout:'single'},
+  'outside-ready':{image:'outside-ready-paper-v1.webp',imageLayout:'single'},
+  'family-come':{image:'family-come-paper-v1.webp',imageLayout:'single'},
+  'food-eat':{image:'food-eat-paper-v1.webp',imageLayout:'single'},
+  'food-hungry':{image:'food-hungry-paper-v1.webp',imageLayout:'single'},
+  'feelings-happy':{image:'feelings-happy-paper-v1.webp',imageLayout:'single'},
+  'feelings-tired':{image:'feelings-tired-paper-v1.webp',imageLayout:'single'},
+  'play-turn':{image:'play-turn-paper-v1.webp',imageLayout:'single'},
+  'play-your-turn':{image:'play-your-turn-paper-v1.webp',imageLayout:'single'},
+  'play-can-do':{image:'play-can-do-paper-v1.webp',imageLayout:'single'},
+  'play-did-it':{image:'play-did-it-paper-v1.webp',imageLayout:'single'},
+  'play-good-job':{image:'play-good-job-paper-v1.webp',imageLayout:'single'},
+  'play-again':{image:'play-again-paper-v1.webp',imageLayout:'single',introFrame:0},
   'food-water':{image:'water-v1.webp',frames:['玩球后，小芽口渴了','杯子空了，小芽向朋友要水','朋友把水倒进杯子','小芽喝到了水'],cueFrame:1},
   'play-box':{image:'help-v1.webp',frames:['玩具在盖紧的箱子里','小芽打不开，向朋友求助','朋友和小芽一起打开箱子','小芽拿到了玩具'],cueFrame:1},
-  'hello-goodbye':{image:'goodbye-v2.webp',frames:['两个朋友一起玩','朋友背起小包，准备离开','朋友回头挥手告别','伙伴回应，朋友向外走远'],cueFrame:2},
+  'hello-goodbye':{image:'hello-goodbye-paper-v1.webp',imageLayout:'single',frames:['两个朋友一起玩','朋友背起小包，准备离开','朋友回头挥手告别','伙伴回应，朋友向外走远'],cueFrame:2},
 };
 const intermediate = {
   'hello-morning':'小芽睁开眼睛，挥手回应朋友', 'hello-welcome':'新朋友走近，小芽挥手迎接',
@@ -35,7 +55,9 @@ export const STORIES = Object.freeze(ordered.map(event=>{
   const frames = Object.freeze(art?.frames || (event.id==='play-did-it'?['拼图还差最后一块','小芽把最后一块放进空位','小芽开心地举手，告诉朋友自己做到了','朋友为小芽拍拍手']:[event.setup,event.request,intermediate[event.id]||event.request,event.resolution]));
   const cueFrame=art?.cueFrame??(event.id==='play-did-it'?2:1);
   return Object.freeze({id:event.id,event,...art,frames,cueFrame,
-    teachingFrames:Object.freeze(twoFrames.has(event.id)?[0,cueFrame]:[cueFrame]),
+    // A single picture never stands in for two different beats. "Try again"
+    // retains the fallen-tower vector intro, then its new rebuilding picture.
+    teachingFrames:Object.freeze(art?.introFrame!=null?[art.introFrame,cueFrame]:!art?.imageLayout&&twoFrames.has(event.id)?[0,cueFrame]:[cueFrame]),
     vector:Object.freeze({kind:event.illustration,action:event.id,theme:event.theme}),
     helpAudio:event.id,
   });
