@@ -13,6 +13,7 @@ import * as gardening from '../xiaoya/garden.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
+import * as practicePlan from '../xiaoya/practice-plan.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
@@ -54,9 +55,9 @@ function fixture(initial=gardening.createGarden()){
     createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}};}
   }
   const audio={playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
-    stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){},
+    stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){return Promise.resolve(true);},
     releaseAudioSession(){audio.stopSound();},speechReady(){return false;}};
-  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,JSON,
+  const sandbox={...practicePlan,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,JSON,
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search:''},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
@@ -79,18 +80,18 @@ function fixture(initial=gardening.createGarden()){
 test('new gardeners get next-step speech; planting the third pot immediately ends automatic speech',async()=>{
   const f=fixture(reward(grown(2)));f.enterGarden();assert.match(f.html(),/data-guidance="new"/);
   assert.match(f.sounds.at(-1).file,/garden-open-pack\.mp3$/);await f.finishSound();
-  await f.click('pack');assert.match(f.sounds.at(-1).file,/garden-seed\.mp3$/);await f.finishSound();
+  await f.click('pack');await f.advance(340);assert.match(f.sounds.at(-1).file,/garden-seed\.mp3$/);await f.finishSound();
   const before=f.sounds.length;await f.click('plant');
   assert.equal(f.getGarden().plants.length,3);assert.match(f.html(),/data-guidance="quiet"/);
   assert.equal(f.sounds.length,before,'The third planted seed counts, even before it blooms');
   await f.click('water');await f.click('water');assert.equal(f.sounds.length,before);
-  assert.equal(f.getGarden().plants.at(-1).waterings,2);assert.ok(f.calls.chimes>=13);
+  assert.equal(f.getGarden().plants.at(-1).waterings,2);assert.deepEqual(f.calls.effects,['seed','plant','water','bloom']);
 });
 
-test('first-time seed, watering and bloom actions still have immediate spoken guidance',async()=>{
+test('first-time seed, watering and bloom actions play their short cue before spoken guidance',async()=>{
   const f=fixture(reward(grown(0)));f.enterGarden();await f.finishSound();
   for(const [action,cue] of [['pack','seed'],['plant','water'],['water','water'],['water','bloom']]){
-    const count=f.sounds.length;await f.click(action);
+    const count=f.sounds.length;await f.click(action);await f.advance(340);
     assert.equal(f.sounds.length,count+1);assert.match(f.sounds.at(-1).file,new RegExp(`garden-${cue}\\.mp3$`));await f.finishSound();
   }
   assert.equal(f.getGarden().water,0);assert.equal(f.getGarden().shells,0);assert.equal(f.getGarden().plants[0].waterings,2);
@@ -100,7 +101,7 @@ test('experienced entry and a complete seed cycle keep sound effects without rep
   const f=fixture(reward(grown(3)));f.enterGarden();
   assert.equal(f.sounds.length,0);assert.match(f.html(),/data-guidance="quiet"/);
   for(const action of ['pack','plant','water','water'])await f.click(action);
-  assert.equal(f.sounds.length,0);assert.equal(f.calls.chimes,13);
+  assert.equal(f.sounds.length,0);assert.deepEqual(f.calls.effects,['seed','plant','water','bloom']);
   assert.equal(f.getGarden().plants.length,4);assert.equal(f.getGarden().water,0);assert.equal(f.getGarden().shells,0);
   assert.ok(f.writes.every(write=>write.key===gardening.GARDEN_KEY),'Garden actions never write learning evidence');
   await f.click('help');assert.match(f.sounds.at(-1).file,/garden-next\.mp3$/);
@@ -147,7 +148,7 @@ test('seed reveal has no flower preview or fake target; only the empty planting 
   assert.equal(f.button('seed-voice'),undefined);assert.equal(f.button('plant').body,gardenArt.plantArt(null,-1));
   assert.ok(f.buttons().filter(button=>button.dataset.plant).every(button=>button.disabled));
   const before=JSON.stringify(f.getGarden());await f.click('plant-1');assert.equal(JSON.stringify(f.getGarden()),before);
-  assert.equal(f.calls.chimes,0);assert.equal(f.writes.length,0);
+  assert.deepEqual(f.calls.effects??[],[]);assert.equal(f.writes.length,0);
   await f.click('plant');assert.equal(f.getGarden().plants.length,4);assert.ok(f.plant('plant-1')&&!f.plant('plant-1').disabled);
   assert.doesNotMatch(f.html(),/seed-reveal/);
 });
@@ -156,7 +157,7 @@ test('tapping an existing flower gives immediate visual and sound feedback witho
   const f=fixture(grown(3));f.enterGarden();const before=JSON.stringify(f.getGarden());await f.click('plant-2');
   assert.equal(f.getFeedback().plantId,'plant-2');assert.equal(f.getFeedback().kind,'bloom');
   assert.ok(f.plant('plant-2').classList.contains('just-watered'));assert.match(f.html(),/bloom-sparkles/);
-  assert.equal(f.calls.chimes,4);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
+  assert.deepEqual(f.calls.effects,['bloom']);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
   assert.equal(JSON.stringify(f.getGarden()),before);await f.advance(3200);
   assert.equal(f.getFeedback(),null);assert.equal(f.sounds.length,0);
   await f.advance(11800);assert.equal(f.sounds.length,1);await f.finishSound();await f.advance(30000);assert.equal(f.sounds.length,1);

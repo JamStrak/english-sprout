@@ -108,7 +108,13 @@ async function touchDrag(f,from,to,{cancel=false}={}){
 }
 async function center(locator){const r=await locator.boundingBox();assert(r,'Touch target exists');return{x:r.x+r.width/2,y:r.y+r.height/2};}
 async function storyInfo(p,id){return p.evaluate(async id=>{const m=await import(new URL('stories.js',document.querySelector('script[type="module"][src]').src));const s=m.storyFor(id);return{id:s.id,lessonId:s.event.lessonId,cueFrame:s.cueFrame,frames:s.frames,image:s.image};},id);}
-async function startStory(p,id){await parent(p);await p.locator(`[data-story="${id}"]`).click();await p.locator(`[data-phase="story"][data-event="${id}"]`).waitFor();}
+async function startStory(p,id){await parent(p);await p.locator('.story-library>details>summary').click();await p.locator(`[data-story="${id}"]`).click();await p.locator(`[data-phase="story"][data-event="${id}"]`).waitFor();}
+async function silentRequest(p){
+  await click(p,'story-continue');await p.locator('[data-phase="request"]').waitFor();
+  // The primary mic is now actionable on its first tap. These garden tests
+  // deliberately decline recording and continue through the assisted route.
+  await p.locator('[data-action="disable-mic"]').waitFor();await click(p,'disable-mic');
+}
 async function throughStory(p,id){
   await p.locator('[data-action="story-continue"]:enabled').waitFor({timeout:30000});
   const s=await storyInfo(p,id),frames=await p.evaluate(id=>qa.frames.filter(x=>x.event===id).map(x=>x.frame),id);
@@ -287,12 +293,12 @@ async function runCases(){
   for(const id of ['food-hungry','play-roll','care-teeth','outside-rain','bed-hug'])await test(`Expanded story ${id} teaches with four wordless frames and correctly timed local audio`,async({p})=>{
     await startStory(p,id);const s=await throughStory(p,id);assert(!s.image,'The initial expansion needs no generated image download');
     await p.screenshot({animations:'disabled',path:path.join(out,`story-${id}.png`),fullPage:true});
-    await click(p,'story-continue');await p.locator('[data-phase="request"]').waitFor();await childLayout(p);
+    await silentRequest(p);await childLayout(p);
     assert.equal(await p.locator('[data-action="sample"]').count(),1);assert.equal(await p.locator('[data-action="context-help"]').count(),1);await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'reduce'});
   await test('An expanded story completes the B reward loop once without falsely recording mastery',async({p})=>{
     const rawA=await seedA(p);await startStory(p,'food-spoon');await throughStory(p,'food-spoon');
-    await click(p,'story-continue');await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
+    await silentRequest(p);await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
     await p.locator('[data-action="finish"]').evaluate(button=>{button.click();button.click();});await p.locator('.reward-view').waitFor();
     const rewarded=await meadow(p);assert.deepEqual([rewarded.shells,rewarded.water,rewarded.rounds.length],[3,5,1]);assert.equal(rewarded.rounds[0].eventId,'food-spoon');
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),A_KEY),rawA);await untouchedLearning(p);
@@ -301,7 +307,7 @@ async function runCases(){
     const complete=await meadow(p);assert.deepEqual([complete.shells,complete.water,complete.plants[0].waterings],[0,0,5]);await childLayout(p);await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'reduce'});
   await test('A reward queued before switching to B remains attached to its original garden',async({p})=>{
-    const rawA=await seedA(p),before=JSON.parse(rawA);await startStory(p,'food-spoon');await throughStory(p,'food-spoon');await click(p,'story-continue');await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
+    const rawA=await seedA(p),before=JSON.parse(rawA);await startStory(p,'food-spoon');await throughStory(p,'food-spoon');await silentRequest(p);await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
     await p.evaluate(key=>{navigator.locks.request(key,()=>new Promise(resolve=>{qa.releaseRewardLock=resolve;}));},A_KEY);await p.waitForFunction(()=>typeof qa.releaseRewardLock==='function');
     try{await p.locator('[data-action="finish"]').evaluate(button=>button.click());await switchVariant(p,'b');}finally{await p.evaluate(()=>qa.releaseRewardLock());}
     await p.waitForFunction(({key,n})=>JSON.parse(localStorage.getItem(key)).rounds.length===n,{key:A_KEY,n:before.rounds.length+1});

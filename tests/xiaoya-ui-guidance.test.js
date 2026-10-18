@@ -13,6 +13,7 @@ import * as gardening from '../xiaoya/garden.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
+import * as practicePlan from '../xiaoya/practice-plan.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. This fixture models button attributes, not browser layout.
@@ -42,7 +43,7 @@ function fixture(){
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return false;},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
+  const sandbox={...practicePlan,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,meadow,audio,document,localStorage,
     location:{search:''},URL,URLSearchParams,navigator:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout(id){timers.delete(id);}};
   vm.runInNewContext(source+`;globalThis.ui={render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,
@@ -142,7 +143,7 @@ test('replaying feedback points to the ear without writing another learning obse
   await f.actions.replay();assert.equal(f.calls.replay,1);assert.equal(f.writes.length,0);
 });
 
-test('story Chinese help has a visible ear; practice-only instructions wait until entering practice',async()=>{
+test('story Chinese help has a visible ear; its microphone starts recording on the first tap',async()=>{
   const f=fixture(),s=f.setSession({phase:'story'}),playing=f.playStory(true);
   for(let frame=0;frame<4;frame++){
     await f.nextDelay();
@@ -154,8 +155,7 @@ test('story Chinese help has a visible ear; practice-only instructions wait unti
   }
   await playing;assert.equal(s.storyReady,true);assert.equal(s.phase,'story');assert.equal(f.sounds.length,2);
   assert.equal(f.sounds.some(sound=>sound.file.endsWith('garden-speak.mp3')),false);
-  f.storyContinue();assert.equal(s.phase,'request');assert.match(f.sounds.at(-1).file,/garden-speak\.mp3$/);assert.deepEqual(f.guided(),['record','sample']);
-  f.sounds.at(-1).resolve(true);await flush();
+  f.storyContinue();assert.equal(s.phase,'request');assert.equal(s.waiting,true);assert.equal(f.captures.length,1);assert.equal(f.sounds.length,2);assert.deepEqual(f.guided(),[]);
 });
 
 test('replay, prompt and help glyphs are genuinely different from the English ear',()=>{
@@ -170,7 +170,7 @@ test('replay, prompt and help glyphs are genuinely different from the English ea
 
 test('entering speaking warms an opted-in microphone once, never just from rendering',()=>{
   const f=fixture();f.setSession({phase:'story',storyReady:true});
-  assert.equal(f.calls.prepareRecording,0);f.storyContinue();assert.equal(f.calls.prepareRecording,1);
+  assert.equal(f.calls.prepareRecording,0);f.prepareMicrophone();assert.equal(f.calls.prepareRecording,1);f.storyContinue();assert.equal(f.captures.length,1);
   f.render();f.render();assert.equal(f.calls.prepareRecording,1,'Rendering cannot renew the idle microphone deadline');
   const g=fixture();g.setSession({phase:'story',storyReady:true});g.setMic(false);g.storyContinue();
   assert.equal(g.calls.prepareRecording,0,'Parent opt-in is still required');
@@ -196,7 +196,7 @@ test('click immediately shows preparation and preserves warmth; only native read
 
 test('leaving, hiding and opening a parent modal release preparation without rendering it open again',()=>{
   for(const exit of [f=>f.navigate('home'),f=>f.suspend(),f=>f.openModal({type:'mic'})]){
-    const f=fixture();f.setSession({phase:'story',storyReady:true});f.storyContinue();
+    const f=fixture();f.setSession({phase:'story',storyReady:true});f.prepareMicrophone();f.storyContinue();
     const cancellations=f.calls.cancelRecording;exit(f);
     assert(f.calls.cancelRecording>cancellations);
     assert.notEqual(f.calls.cancelOptions.at(-1)?.keepPrepared,true);

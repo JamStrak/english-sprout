@@ -45,8 +45,10 @@ async function fixture(options={}){
     if(contextType){
       const createOscillator=contextType.prototype.createOscillator;
       contextType.prototype.createOscillator=function(...args){
-        const oscillator=createOscillator.apply(this,args),start=oscillator.start;
-        oscillator.start=function(...args){qa.chimes.push({frequency:oscillator.frequency.value,time:performance.now()});return start.apply(this,args);};
+        const oscillator=createOscillator.apply(this,args),start=oscillator.start,notes=[];
+        const setFrequency=oscillator.frequency.setValueAtTime.bind(oscillator.frequency);
+        oscillator.frequency.setValueAtTime=function(value,at){notes.push({frequency:value,at});return setFrequency(value,at);};
+        oscillator.start=function(...args){qa.chimes.push({frequency:oscillator.frequency.value,time:performance.now(),notes});return start.apply(this,args);};
         return oscillator;
       };
     }
@@ -90,6 +92,7 @@ async function gate(p){
   await p.locator('#parent-answer').fill(String(digits[0]+digits[1]));await click(p,'gate-submit');
 }
 async function parent(p){await click(p,'parent');if(await p.locator('#parent-answer').count())await gate(p);await p.locator('.parent-view').waitFor();}
+async function selectedStory(p,story){await parent(p);await p.locator('.story-library>details>summary').click();await p.locator(`[data-story="${story.id}"]`).click();await phase(p,'story');assert.equal(await p.locator('main[data-phase]').getAttribute('data-event'),story.id);await noOldChildUi(p);}
 async function start(p,story=STORIES[0]){
   await click(p,'next-event');await phase(p,'story');
   assert.equal(await p.locator('main[data-phase]').getAttribute('data-event'),story.id);
@@ -97,7 +100,13 @@ async function start(p,story=STORIES[0]){
   await noOldChildUi(p);
 }
 async function throughStory(p){await p.locator('main[data-phase="story"] [data-story-frame="3"]').waitFor();await p.locator('[data-action="story-continue"]:enabled').waitFor();}
-async function request(p){await throughStory(p);await click(p,'story-continue');await phase(p,'request');}
+async function request(p){
+  await throughStory(p);await click(p,'story-continue');await phase(p,'request');
+  // One tap now requests recording. The silent participation scenarios decline
+  // that request rather than granting permission or accidentally taking a clip.
+  if(await p.locator('#parent-answer').count())await click(p,'close');
+  else if(await p.locator('[data-action="disable-mic"]').count())await click(p,'disable-mic');
+}
 async function finishByWatching(p){await click(p,'watch');await phase(p,'resolved');await click(p,'finish');await phase(p,'reward');}
 async function openGarden(p,next){await click(p,'garden');await p.locator(`main[data-garden-next="${next}"]`).waitFor();}
 async function bloomNewFlower(p){
@@ -133,8 +142,13 @@ async function noAutomaticGardenPrompt(p){
   // Real audio is preloaded locally. Allow an accidental automatic play to surface.
   await p.waitForTimeout(450);assert.equal((await gardenPrompts(p)).length,0,'Experienced gardeners must not hear an automatic long instruction after each action');
 }
+async function completeBloomChime(p,since){
+  // Feedback schedules the bloom's three notes on a single oscillator. Check
+  // the actual frequency timeline, not the obsolete number of oscillators.
+  await p.waitForFunction(since=>qa.chimes.slice(since).some(chime=>chime.notes.length===3&&chime.notes.every((n,i)=>n.frequency===[520,780,1040][i])&&chime.notes[1].at>chime.notes[0].at&&chime.notes[2].at>chime.notes[1].at),since);
+}
 async function neutralPendingSeed(p,existing){
-  const seed=p.locator('.seed-reveal');assert.equal(await seed.count(),1);
+  const seed=p.locator('.seed-reveal');await seed.waitFor();assert.equal(await seed.count(),1);
   assert.equal(await seed.getAttribute('aria-hidden'),'true');
   assert.equal(await seed.locator('button,[data-action],.garden-plant,.plant-art').count(),0,'The revealed seed contains no interactive pot or grown-flower preview');
   assert.equal(await seed.getAttribute('data-action'),null);assert.notEqual(await seed.evaluate(e=>e.tagName),'BUTTON');
@@ -199,7 +213,7 @@ async function test(name,fn,options){
     const target=await p.evaluate(()=>qa.plays.filter(x=>x.url.includes('needs-01.mp3')));
     assert.equal(target.length,1);assert.equal(target[0].frame,'1');assert(target[0].url.includes('/characters/pip/'));
     assert.equal(await garden(p),null);await untouchedLearning(p);
-    await click(p,'story-continue');await phase(p,'request');
+    await request(p);
     await p.evaluate(()=>{qa.hold='needs-01.mp3';qa.held=null;});await click(p,'watch');
     await p.waitForFunction(()=>!!qa.held);
     assert.equal(await p.locator('main').getAttribute('data-phase'),'request','Assisted audio must finish before rewards are available');
@@ -225,9 +239,9 @@ async function test(name,fn,options){
     assert.equal(planted.plants[0].seedId,saved.pendingSeed.id);assert.equal(planted.pendingSeed,null);
     await p.reload();await p.locator('main.home-view').waitFor();await openGarden(p,'water');assert.deepEqual(await garden(p),planted);await untouchedLearning(p);
   });
-  await test('Three complete rounds rotate the three stories and grow three different flowers',async({p})=>{
+  await test('Three parent-selected stories complete three rounds and grow three different flowers',async({p})=>{
     for(const [index,story] of STORIES.entries()){
-      await start(p,story);await request(p);await finishByWatching(p);await openGarden(p,'pack');await bloomNewFlower(p);
+      await selectedStory(p,story);await request(p);await finishByWatching(p);await openGarden(p,'pack');await bloomNewFlower(p);
       const state=await garden(p);assert.equal(state.rounds.length,index+1);assert.equal(state.rounds[index].eventId,story.id);assert.equal(state.plants.length,index+1);
       assert.deepEqual([state.shells,state.water],[0,0]);assert.equal(new Set(state.plants.map(x=>x.flowerId)).size,index+1);
     }
@@ -255,7 +269,7 @@ async function test(name,fn,options){
     await untouchedLearning(p);assert.equal(await garden(p),null);
   });
   await test('Denied microphone stays unassessed and the assisted route remains available',async({p})=>{
-    await start(p);await request(p);await click(p,'record');await p.locator('[data-assessment][data-status="unavailable"]').waitFor();
+    await start(p);await request(p);await p.locator('[data-assessment][data-status="unavailable"]').waitFor();
     assert.equal(await p.evaluate(()=>qa.micCalls),1);await phase(p,'request');assert.equal(await p.locator('[data-action="finish"]').count(),0);
     await singleExampleEar(p,'sample');
     assert.equal(await p.locator('[data-action="assessment-voice"] [data-icon="sound"]').count(),1,'Feedback replay is a speaker, not a second ear');
@@ -269,8 +283,8 @@ async function test(name,fn,options){
     await heldGuide(p,'/food-water.mp3',['story-replay']);await singleExampleEar(p,'story-replay');
     await p.screenshot({animations:'disabled',path:path.join(out,'story-help-one-ear.png'),fullPage:true});
     await p.evaluate(()=>{qa.hold=null;return qa.held.audio.play();});await throughStory(p);
-    await p.evaluate(()=>{qa.hold='garden-speak.mp3';qa.held=null;});await click(p,'story-continue');await phase(p,'request');
-    await heldGuide(p,'garden-speak.mp3',['record','sample']);await singleExampleEar(p,'sample');
+    await request(p);await singleExampleEar(p,'sample');
+    assert.equal(await p.evaluate(()=>qa.plays.filter(x=>x.url.endsWith('garden-speak.mp3')).length),0,'The first microphone action does not play a redundant spoken instruction');
     await p.screenshot({animations:'disabled',path:path.join(out,'request-one-ear-guidance.png'),fullPage:true});
     await p.evaluate(()=>{qa.hold='/food-water.mp3';qa.held=null;});await click(p,'context-help');
     await heldGuide(p,'/food-water.mp3',['sample']);await singleExampleEar(p,'sample');
@@ -304,7 +318,7 @@ async function test(name,fn,options){
     const beforeBloom=await p.evaluate(()=>qa.chimes.length);
     await p.locator('[data-plant="plant-1"]').click();
     await p.locator('[data-plant="plant-1"].just-watered').waitFor();await p.locator('.bloom-sparkles').waitFor();
-    assert(await p.evaluate(n=>qa.chimes.length>=n+4,beforeBloom),'A mature flower responds with the complete short bloom chime');
+    await completeBloomChime(p,beforeBloom);
     assert.deepEqual(await garden(p),after,'Touching a mature flower cannot charge water or create another reward');await noAutomaticGardenPrompt(p);
     await p.evaluate(()=>{qa.hold='garden-next.mp3';qa.held=null;});await click(p,'help');
     await heldGuide(p,'garden-next.mp3',['next-event']);
@@ -355,8 +369,12 @@ async function test(name,fn,options){
     assert.equal((await gardenPrompts(p)).length,1,'Pagehide cancels a rearmed idle reminder');await untouchedLearning(p);
   });
   await test('Missing story artwork cannot advance or reward; replay recovers after the asset returns',async({c,p})=>{
-    const target=/\/xiaoya\/stories\/water-v1\.webp(?:\?.*)?$/;await c.route(target,r=>r.abort('failed'));
+    const target=/\/xiaoya\/stories\/water-v1\.webp(?:\?.*)?$/;let blocked=0;await c.route(target,r=>{blocked++;return r.abort('failed');});
+    // The home story card now shares this picture. Reload after installing the
+    // failure so an already rendered card cannot satisfy the story from memory.
+    await p.reload();await p.locator('main.home-view [data-action="next-event"]').waitFor();
     await start(p);await p.locator('[data-primary][data-action="story-replay"]:enabled').waitFor();
+    assert(blocked>0,'The missing-art scenario must actually reject an image request');
     assert.equal(await p.locator('[data-action="story-continue"]').count(),0);assert.equal(await garden(p),null);await untouchedLearning(p);
     await c.unroute(target);await click(p,'story-replay');await request(p);await finishByWatching(p);await untouchedLearning(p);
   });
@@ -393,12 +411,12 @@ async function test(name,fn,options){
   await test('Parent checkups stay neutral, change context after reliable speech and lock help as supported',async({p})=>{
     await parent(p);
     async function openNeutralCheckup(expectedContext){
+      await p.locator('.story-library>details>summary').click();
       const before=await p.evaluate(()=>({plays:qa.plays.length,audios:qa.audios.length}));
       await p.locator('[data-checkup="food-water"]').click();await phase(p,'request');
-      await p.waitForFunction(before=>qa.audios.slice(before).some(x=>x.url.endsWith('garden-speak.mp3')&&x.ended),before.audios);
+      await p.waitForTimeout(350);
       const played=await p.evaluate(before=>qa.plays.slice(before).map(x=>x.url),before.plays);
-      assert.equal(played.length,1,'Checkup entry plays only the neutral microphone instruction');
-      assert(played[0].endsWith('garden-speak.mp3'),'No semantic Chinese cue or English answer at checkup entry');
+      assert.equal(played.length,0,'Checkup entry stays silent: no English answer, semantic Chinese cue or redundant microphone instruction');
       assert.equal(await p.locator('main[data-context]').getAttribute('data-context'),expectedContext);
       assert.equal(await p.locator('[data-action="story-continue"]').count(),0);
     }
@@ -447,7 +465,7 @@ async function test(name,fn,options){
     const target=await last.boundingBox(),chimes=await p.evaluate(()=>qa.chimes.length);
     await p.touchscreen.tap(target.x+target.width/2,target.y+target.height/2);
     await p.locator('[data-plant="plant-4"].just-watered').waitFor();await p.locator('.bloom-sparkles').waitFor();
-    assert(await p.evaluate(n=>qa.chimes.length>=n+4,chimes),'Touching the fourth flower triggers the bloom chime');
+    await completeBloomChime(p,chimes);
     assert.deepEqual(await garden(p),before,'A mature flower tap changes no saved garden state or rewards');
     assert(Math.abs(await grid.evaluate(e=>e.scrollTop)-position)<=2,'The bloom render preserves the internal garden scroll position');
     assert(await fourthVisible(),'The flower that was just tapped remains visible during its feedback');
@@ -461,7 +479,7 @@ async function test(name,fn,options){
   for(const [width,height,reducedMotion] of [[320,568,'no-preference'],[390,844,'no-preference'],[320,568,'reduce']])await test(`Story and growing garden fit ${width}x${height}, motion ${reducedMotion}`,async({p})=>{
     await assertLayout(p);await start(p);await assertLayout(p);await throughStory(p);await assertLayout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`story-${width}-${reducedMotion}.png`),fullPage:true});
-    await click(p,'story-continue');await phase(p,'request');await assertLayout(p);
+    await request(p);await assertLayout(p);
     await finishByWatching(p);await assertLayout(p);await openGarden(p,'pack');await assertLayout(p);
     await click(p,'pack');await assertLayout(p);
     await p.screenshot({animations:'disabled',path:path.join(out,`pending-seed-${width}-${reducedMotion}.png`),fullPage:true});
