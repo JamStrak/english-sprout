@@ -35,3 +35,23 @@
 .meadow-tool.is-guided{outline:3px solid #ad773a;outline-offset:5px;animation:guide-glow 1.3s ease-in-out infinite!important}
 .meadow-view[data-guidance=quiet] .meadow-tool.inviting:not(.is-guided){animation:none}
 .meadow-view[data-guidance=quiet] .meadow-landing{display:none}
+
+/* Water lives above all flower layers, with a stationary 48px touch target. */
+.meadow-view{isolation:isolate}
+.meadow-field{flex-shrink:0}
+.meadow-water-layer{position:absolute;inset:0;z-index:200;pointer-events:none;visibility:hidden}
+.meadow-water-layer.is-ready{visibility:visible}
+.meadow-water-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.meadow-water-links path{fill:none;stroke:#fffaf0;stroke-width:3;stroke-linecap:round;stroke-dasharray:3 5;filter:drop-shadow(0 1px 1px #344b4550)}
+.meadow-water-target{position:absolute;width:48px;height:48px;min-height:48px;padding:5px;transform:translate(-50%,-50%);border:2px solid #fffdf5;border-radius:50%;background:#ecfcff;box-shadow:0 3px 0 #3d929a,0 0 0 3px #ffffff85;display:grid;place-items:center;pointer-events:auto;touch-action:manipulation;cursor:pointer}
+.meadow-water-target>span{display:block;width:34px;height:34px;pointer-events:none;animation:meadow-water-beacon 1.5s ease-in-out infinite}
+.meadow-water-target svg{width:100%;height:100%;pointer-events:none}
+.meadow-field .meadow-water-target:active{transform:translate(-50%,-50%);background:#a8e2ea;box-shadow:0 1px 0 #3d929a,0 0 0 5px #ffffffb0}
+.meadow-water-target:focus-visible{outline:3px solid #344b45;outline-offset:4px}
+.meadow-water-target.just-watered{background:#b4e8eb;box-shadow:0 3px 0 #3d929a,0 0 0 4px #fff4b5}
+.meadow-water-target[aria-disabled=true]{background:#e6ece8;border-color:#fff9e9;box-shadow:0 3px 0 #8b9f99}
+.meadow-water-target[aria-disabled=true]>span{animation:none;opacity:.55}
+.meadow-view[data-tool=can] .meadow-field{touch-action:pan-y}
+.meadow-view[data-tool=can] .meadow-plant.can-water:before{display:none}
+.meadow-view:has(.has-water-overflow) .meadow-tools{position:sticky;bottom:0;z-index:210;border-radius:28px;background:#efeaddf2;box-shadow:0 -3px 18px #344b4518}
+@keyframes meadow-water-beacon{0%,100%{opacity:.7;transform:translateY(1px) scale(.94)}50%{opacity:1;transform:translateY(-2px) scale(1.04)}}

@@ -211,7 +211,7 @@ async function runCases(){
     await plant.click();assert.deepEqual(await meadow(p),initial,'A plant tap without a held watering tool cannot water');
     await click(p,'meadow-can');const stages=[];
     for(let i=1;i<=5;i++){
-      await plant.click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});
+      await p.locator('[data-water-plant="plant-1"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});
       const state=await meadow(p);assert.equal(state.water,initial.water-i);assert.equal(state.plants[0].waterings,i);
       stages.push(await plant.locator('svg[data-growth]').getAttribute('data-growth'));
       assert.equal(await plant.locator('svg[data-bloom]').getAttribute('data-bloom'),String(i===5));
@@ -241,9 +241,9 @@ async function runCases(){
   await test('Giant flowers need ten pours, keep their saved position and visibly exceed ordinary flowers',async({p})=>{
     await seedB(p,{rounds:4,plants:3,waterings:{'plant-1':5,'plant-2':5}});await openGarden(p,'b');
     const giant=p.locator('[data-meadow-plant="plant-3"]');await click(p,'meadow-can');
-    for(let i=1;i<=9;i++){await giant.click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===i,{key:B_KEY,i});assert.equal(await giant.locator('[data-bloom]').getAttribute('data-bloom'),'false');}
+    for(let i=1;i<=9;i++){await p.locator('[data-water-plant="plant-3"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===i,{key:B_KEY,i});assert.equal(await giant.locator('[data-bloom]').getAttribute('data-bloom'),'false');}
     const nine=await meadow(p);assert.equal(nine.water,1);
-    await p.reload();await openGarden(p,'b');assert.deepEqual(await meadow(p),nine);await click(p,'meadow-can');await giant.click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===10,B_KEY);
+    await p.reload();await openGarden(p,'b');assert.deepEqual(await meadow(p),nine);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-3"]').click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===10,B_KEY);
     const ten=await meadow(p);assert.equal(ten.plants[2].waterings,10);assert.equal(ten.water,0);assert.equal(await giant.locator('[data-bloom]').getAttribute('data-bloom'),'true');
     assert.equal(await giant.locator('[data-giant]').getAttribute('data-giant'),'true');
     const large=await giant.boundingBox(),small=await p.locator('[data-meadow-plant="plant-1"]').boundingBox();
@@ -269,8 +269,12 @@ async function runCases(){
     await click(p,'help');const target=p.locator('[data-action="meadow-seed"].is-guided');await target.waitFor();
     const guide=await target.evaluate(e=>({outline:getComputedStyle(e).outlineWidth,animation:getComputedStyle(e).animationName}));assert.equal(guide.outline,'3px');assert(guide.animation.includes('guide-glow'),'Requested help visibly points to the same seed tool as its voice');
     await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/meadow-seed.mp3')));await p.screenshot({animations:'disabled',path:path.join(out,'quiet-garden-help.png'),fullPage:true});
-    await click(p,'meadow-can');assert.equal(await p.locator('.meadow-plant.can-water').count(),3);
-    const ring=await p.locator('.meadow-plant.can-water').first().evaluate(e=>getComputedStyle(e,'::before').borderTopWidth);assert.equal(ring,'3px','A held watering can still marks the plants that can be watered');await untouchedLearning(p);
+    await click(p,'meadow-can');assert.equal(await p.locator('[data-water-plant]').count(),3);
+    for(const target of await p.locator('[data-water-plant]').all()){
+      const point=await center(target),id=await target.getAttribute('data-water-plant');
+      assert.equal(await p.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest('[data-water-plant]')?.dataset.waterPlant,point),id,'The held watering can shows a separate reachable drop for every unfinished plant');
+      assert(await target.evaluate(e=>e.getAnimations({subtree:true}).some(a=>a.playState==='running'&&a.effect?.getTiming().iterations===Infinity)),'Each drop visibly invites touch after the can is selected');
+    }await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'no-preference'});
   await test('Two tabs serialize queued pours against the latest balance without losing either operation',async({c,p})=>{
     await seedB(p,{rounds:1,plants:1});await openGarden(p,'b');await click(p,'meadow-can');
@@ -280,7 +284,7 @@ async function runCases(){
     await p.evaluate(key=>{navigator.locks.request(key,()=>new Promise(resolve=>{qa.releaseGardenLock=resolve;}));},B_KEY);
     await p.waitForFunction(()=>typeof qa.releaseGardenLock==='function');
     try{
-      await Promise.all([p,other].map(tab=>tab.locator('[data-meadow-plant="plant-1"]').click()));
+      await Promise.all([p,other].map(tab=>tab.locator('[data-water-plant="plant-1"]').click()));
     }finally{await p.evaluate(()=>qa.releaseGardenLock());}
     await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===2,B_KEY);
     const state=await meadow(p);assert.equal(state.water,3);assert.equal(state.plants[0].waterings,2);assert.deepEqual(await meadow(other),state);
@@ -288,13 +292,13 @@ async function runCases(){
   },{query:'?garden=b',reducedMotion:'reduce'});
   for(const [width,height,reducedMotion] of [[320,568,'no-preference'],[320,568,'reduce'],[768,1024,'no-preference']])await test(`Meadow touch controls fit ${width}x${height}, motion ${reducedMotion}`,async({p})=>{
     await seedB(p,{rounds:3,plants:2,pending:true});await openGarden(p,'b');await childLayout(p);
-    await selectedSeedTo(p,.62,.7);await childLayout(p);await click(p,'meadow-can');await p.locator('[data-meadow-plant="plant-3"]').click();await childLayout(p);
+    await selectedSeedTo(p,.62,.7);await childLayout(p);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-3"]').click();await childLayout(p);
     assert.equal((await meadow(p)).plants[2].waterings,1);
     await p.screenshot({animations:'disabled',path:path.join(out,`meadow-${width}-${reducedMotion}.png`),fullPage:true});
   },{query:'?garden=b',viewport:{width,height},isMobile:true,hasTouch:true,reducedMotion});
   await test('A giant seed placed at the grass edge stays visible and reachable as it grows',async({p})=>{
     await seedB(p,{rounds:3,plants:2,pending:true});await openGarden(p,'b');await selectedSeedTo(p,.98,.28);await click(p,'meadow-can');
-    for(let i=1;i<=10;i++){await p.locator('[data-meadow-plant="plant-3"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===i,{key:B_KEY,i});}
+    for(let i=1;i<=10;i++){await p.locator('[data-water-plant="plant-3"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[2].waterings===i,{key:B_KEY,i});}
     await childLayout(p);const field=await p.locator('[data-meadow-field]').boundingBox(),plant=await p.locator('[data-meadow-plant="plant-3"]').boundingBox();
     assert(plant.x>=field.x-1&&plant.y>=field.y-1&&plant.x+plant.width<=field.x+field.width+1&&plant.y+plant.height<=field.y+field.height+1,'Growing flowers remain inside the visible grass at its boundaries');
     await p.mouse.move(plant.x+plant.width/2,plant.y+plant.height/2);await p.mouse.down();
@@ -305,9 +309,9 @@ async function runCases(){
     await seedB(p,{rounds:1,plants:1});await openGarden(p,'b');
     await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:25000});
     assert.equal(await p.evaluate(async()=>(await navigator.serviceWorker.ready).scope),origin+'/xiaoya/');
-    await click(p,'meadow-can');await p.locator('[data-meadow-plant="plant-1"]').click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B_KEY);const before=await meadow(p);
+    await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B_KEY);const before=await meadow(p);
     await c.setOffline(true);await p.reload();await p.locator('main.home-view').waitFor();await openGarden(p,'b');
-    assert.deepEqual(await meadow(p),before);await click(p,'meadow-can');await p.locator('[data-meadow-plant="plant-1"]').click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===2,B_KEY);
+    assert.deepEqual(await meadow(p),before);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').click();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===2,B_KEY);
     const after=await meadow(p);assert.equal(after.plants[0].waterings,before.plants[0].waterings+1);assert.equal(after.water,before.water-1);
     await childLayout(p);await untouchedLearning(p);
   },{query:'?garden=b',serviceWorkers:'allow',reducedMotion:'reduce'});
@@ -325,7 +329,7 @@ async function runCases(){
     const rewarded=await meadow(p);assert.deepEqual([rewarded.shells,rewarded.water,rewarded.rounds.length],[2,5,1]);assert.equal(rewarded.rounds[0].eventId,'food-spoon');assert.equal(rewarded.rounds[0].reward,'starter');
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),A_KEY),rawA);await untouchedLearning(p);
     await click(p,'garden');await p.locator('.meadow-view').waitFor();await buyPack(p);await selectedSeedTo(p,.53,.69);await click(p,'meadow-can');
-    for(let i=1;i<=5;i++){await p.locator('[data-meadow-plant="plant-1"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});}
+    for(let i=1;i<=5;i++){await p.locator('[data-water-plant="plant-1"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});}
     const complete=await meadow(p);assert.deepEqual([complete.shells,complete.water,complete.plants[0].waterings],[0,0,5]);await childLayout(p);await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'reduce'});
   await test('A reward queued before switching to B remains attached to its original garden',async({p})=>{

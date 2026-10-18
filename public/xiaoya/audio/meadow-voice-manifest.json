@@ -149,6 +149,24 @@
         "text": "看这是你已经种出来的小花蝴蝶结花还有不同的颜色呢",
         "final_end_seconds": 5.75
       }
+    },
+    {
+      "id": "meadow-water-drops",
+      "text": "点一下小水壶，再点小苗头上的水滴。点一次，浇一滴水。",
+      "file": "meadow-water-drops.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 37388,
+      "seconds": 6.144,
+      "sha256": "7c6e181e739c2494aad30b2f0146672457dc2d3ce56160cef255032e7fbb599d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "点一下小水壶再点小苗头上的水滴点一次浇一滴水",
+        "final_end_seconds": 5.5625
+      }
     }
   ]
 }

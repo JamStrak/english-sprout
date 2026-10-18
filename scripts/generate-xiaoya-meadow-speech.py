@@ -28,6 +28,7 @@ ROWS = [
     {'id':'meadow-giant','text':'哇，是巨型花种子！它要喝十次水，才能开出大大的花。'},
     {'id':'meadow-empty','text':'小水壶空啦。再玩一个故事，就能带水回来。'},
     {'id':'meadow-collection','text':'看，这是你已经种出来的小花。蝴蝶结花，还有不同的颜色呢。'},
+    {'id':'meadow-water-drops','text':'点一下小水壶，再点小苗头上的水滴。点一次，浇一滴水。'},
 ]
 
 
@@ -53,7 +54,7 @@ def main():
         # Validate every staged clip and any previous export before changing public.
         for row in rows:
             entry = state['entries'].get(row['id'])
-            if not EDGE.intact(entry, EDGE.request(row)):
+            if not EDGE.intact(entry, EDGE.request(row)) or not entry['word_coverage']['matches_prompt']:
                 raise RuntimeError('Incomplete or changed clip: ' + row['id'])
             destination = EDGE.BASE.PUBLIC / (row['id'] + '.mp3')
             if destination.exists() and EDGE.BASE.sha(destination) != entry['metrics']['sha256']:
