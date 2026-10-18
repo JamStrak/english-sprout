@@ -1,4 +1,4 @@
-import {FLOWERS,nextAction} from './garden-meadow.js';
+import {FLOWERS,nextAction,pendingRewards} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt} from './garden-art.js';
 import {icon} from './art.js';
@@ -8,7 +8,7 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
   const next=nextAction(state),seed=state.pendingSeed,thirsty=state.plants.find(p=>p.waterings<flowerFor(p.flowerId).waterNeeded);
   const flower=seed&&flowerFor(seed.flowerId),collected=new Set(state.plants.filter(p=>p.waterings===flowerFor(p.flowerId).waterNeeded).map(p=>p.flowerId));
   return `${header}<main class="meadow-view" data-garden-next="${next}" data-guidance="${state.plants.length>=3?'quiet':'new'}" data-tool="${tool||''}">
-    <div class="meadow-top">${balance}<button class="meadow-collection-button" data-action="meadow-collection" aria-label="看我的花朵收藏">${icon('star',24)}<b>${collected.size}<small> / ${FLOWERS.length}</small></b></button></div>
+    <div class="meadow-top">${balance}${pendingRewards(state).length?`<button class="icon-button" data-action="collect-reward" aria-label="领取还没选的小礼物">${icon('star',28)}</button>`:''}<button class="meadow-collection-button" data-action="meadow-collection" aria-label="看我的花朵收藏">${icon('star',24)}<b>${collected.size}<small> / ${FLOWERS.length}</small></b></button></div>
     <div class="meadow-field ${tool?'has-tool':''} ${backgroundUrl?'has-paper':''}" ${backgroundUrl?`data-picture-id="garden-background" style="--meadow-picture:url('${backgroundUrl}')"`:''} data-meadow-field role="group" aria-label="自由播种的小花园，先拿起种子再点草地" tabindex="0">
       <div class="meadow-sky" aria-hidden="true"><i></i><i></i><span>☀</span></div><div class="meadow-path" aria-hidden="true"></div>
       ${Array.from({length:16},(_,i)=>`<i class="meadow-grass" aria-hidden="true" style="left:${5+(i*37)%90}%;top:${30+(i*19)%62}%"></i>`).join('')}
@@ -16,9 +16,9 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
       ${tool==='seed'?`<span class="meadow-landing" aria-hidden="true">${icon('tap',40)}<i></i></span>`:!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
     </div>
     <div class="meadow-tools">
-      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.giant?'巨型花':''}种子，放到草地上">${seedArt()}${flower.giant?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="pack" ${state.shells<3?'disabled':''} aria-label="用三枚贝壳买一袋种子">${packArt()}<span class="meadow-cost">${shellArt()}3</span></button>`}
+      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.giant?'巨型花':''}种子，放到草地上">${seedArt()}${flower.giant?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}2+</span></button>`}
       <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="拿起水壶，再点小苗浇水">${canArt()}<span class="meadow-cost">${dropArt()}${state.water}</span></button>
-      <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，带回贝壳和水">${icon('play',40)}</button>
+      <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，选择贝壳或水">${icon('play',40)}</button>
     </div>
   </main>`;
 }

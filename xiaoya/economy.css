@@ -1,0 +1,61 @@
+.seed-shop-view{max-width:600px;margin:0 auto;padding:8px 18px 24px;min-height:calc(100dvh - 90px)}
+.seed-shop-view>.wallet{justify-content:center;margin:8px auto 24px}
+.seed-shop-shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px;align-items:start}
+.seed-offer{position:relative;min-width:0;border-radius:28px;background:#f8f2e5;box-shadow:0 5px 0 #d5c9b1,0 10px 24px #74634d12;border:2px solid #e3d8c4}
+.seed-purchase{width:100%;display:flex;flex-direction:column;align-items:center;padding:18px 10px 16px;gap:8px;border:0;border-radius:26px;background:transparent;color:#645545;cursor:pointer;touch-action:manipulation}
+.shop-card-label{font-size:16px;font-weight:650;letter-spacing:1px}
+.seed-offer:not(.mystery-offer):not(.is-reserved) .shop-card-label{padding-right:30px}
+.offer-picture,.mystery-picture{display:block;width:100%;height:155px;position:relative;pointer-events:none}
+.offer-picture>svg,.mystery-picture>svg{width:100%;height:100%;overflow:visible}
+.offer-picture>.offer-seed{position:absolute;right:1px;bottom:-3px;width:46px;height:46px;background:#f3ead5;border-radius:50%;padding:6px;box-shadow:0 2px 0 #d6c6ab}
+.offer-seed svg{width:100%;height:100%}
+.mystery-picture>b{position:absolute;left:46%;top:40%;font-size:30px;color:#745d40}
+.seed-price{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px;width:100%;font-size:24px}
+.seed-price>svg{width:31px;height:31px}
+.shell-progress{display:flex;justify-content:center;gap:4px;flex-basis:100%;margin-top:2px}
+.shell-progress i{width:10px;height:10px;border:1px solid #b49d73;border-radius:50%;background:#e6dcc8}
+.shell-progress i.filled{background:#e9bf71;border-color:#ba914c}
+.reserve-seed{position:absolute;top:-14px;right:-6px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#f5e9ce;border:2px solid #c9b88e;box-shadow:0 3px 0 #c9b88e;color:#8e794e}
+.reserve-seed.is-kept{background:#d8e3c3;border-color:#a1b080;color:#536848}
+.seed-offer.is-reserved{grid-column:1/-1;width:calc(50% - 7px);justify-self:center;background:#eef0df;border-color:#b7c29b}
+.is-reserved .offer-picture{height:115px}
+.shop-footer{display:flex;justify-content:center;gap:34px;margin-top:26px}
+.seed-purchase:active{transform:scale(.96)}
+.reward-choices{display:flex;gap:22px;width:100%;max-width:420px;justify-content:center}
+.reward-choice{width:43%;min-height:168px;padding:16px;border-radius:28px;border:2px solid #d8c6a5;box-shadow:0 6px 0 #cbb998;background:#faf0d7;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;font-size:34px;color:#735f40}
+.reward-choice.water-choice{background:#e6eee7;border-color:#b2c8bd;box-shadow:0 6px 0 #a9bcb2}
+.reward-choice svg{width:80px;height:80px}
+.reward-choice:active{transform:translateY(4px);box-shadow:0 2px 0 #b4a481}
+.reward-choice.is-guided{animation:economy-invite 1.5s ease-in-out infinite}
+.reward-choice+.reward-choice.is-guided{animation-delay:.3s}
+.reward-view .wallet{align-self:center;justify-content:center;margin-bottom:0}
+.reward-view[data-choice=true] .reward-buddy{height:150px}
+.reward-view[data-choice=true] .reward-buddy svg{max-height:150px}
+.reward-view .choice-help{margin-top:16px}
+.reward-preview .resource-or,.round-goal .resource-or{font-size:15px;margin:0 7px;color:#82765c}
+.reservation-choices{display:flex;gap:20px;justify-content:center;margin:16px 0}
+.reservation-choices button{min-width:64px;min-height:56px}
+.modal-card .reservation-picture{max-width:180px;margin:auto}
+.short-on-shells{animation:economy-nudge .4s ease 2}
+@keyframes economy-invite{50%{transform:translateY(-5px)}}
+@keyframes economy-nudge{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@media(max-width:360px){.seed-shop-view{padding:6px 14px 20px}.seed-shop-shelf{gap:18px 12px}.offer-picture,.mystery-picture{height:120px}.seed-purchase{padding:16px 7px 13px}.shop-card-label{font-size:14px}.shell-progress{gap:3px}.shell-progress i{width:9px;height:9px}.is-reserved .offer-picture{height:95px}.reward-choices{gap:14px}.reward-choice{min-height:145px}}
+@media(max-height:660px) and (max-width:600px){
+ .seed-shop-view{padding-top:4px;padding-bottom:12px;min-height:0}
+ .seed-shop-view>.wallet{margin:0 auto 18px}
+ .seed-shop-shelf{gap:16px 12px}
+ .seed-purchase{padding:10px 7px;gap:6px}
+ .offer-picture,.mystery-picture{height:92px}
+ .seed-offer.is-reserved{width:100%;border-radius:22px}
+ .is-reserved .seed-purchase{display:grid;grid-template-columns:1fr 82px 1fr;gap:6px;min-height:92px;padding:7px 10px}
+ .is-reserved .offer-picture{height:76px}
+ .is-reserved .offer-seed{width:32px;height:32px;padding:4px}
+ .is-reserved .shop-card-label{font-size:14px;letter-spacing:0}
+ .shop-footer{margin-top:14px}
+ .reward-view[data-choice=true]{min-height:0;gap:14px;padding:12px 0 16px}
+ .reward-view[data-choice=true] .reward-buddy{height:110px;width:135px}
+ .reward-view[data-choice=true] .reward-buddy svg{max-height:110px}
+ .reward-choice{min-height:145px;padding:12px;font-size:30px;gap:8px}
+ .reward-choice svg{width:60px;height:60px}
+}
+@media(prefers-reduced-motion:reduce){.reward-choice.is-guided,.short-on-shells{animation:none}.seed-purchase:active{transform:none}}

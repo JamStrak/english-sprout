@@ -110,10 +110,12 @@ function history(plan, rounds, learningState, date) {
   }
   const contacts = new Map();
   rounds.forEach((value, index) => {
-    fields(value, ['roundId', 'eventId', 'date']); round(value);
+    const receipt = own(value, 'reward') || own(value, 'starter');
+    fields(value, receipt ? ['roundId', 'eventId', 'date', 'starter', 'reward'] : ['roundId', 'eventId', 'date']); round(value);
+    if (receipt && (!['legacy','starter','pending','shells','water'].includes(value.reward) || value.starter !== (value.reward === 'starter'))) fail('花园参与补给记录错误');
     const previous = contacts.get(value.roundId);
     if (previous && (previous.eventId !== value.eventId || previous.date !== value.date)) fail('两座花园的互动编号冲突');
-    if (!previous) contacts.set(value.roundId, {...value, origin: 'legacy', order: index, mode: 'review'});
+    if (!previous) contacts.set(value.roundId, {roundId:value.roundId,eventId:value.eventId,date:value.date, origin: 'legacy', order: index, mode: 'review'});
   });
   plan.entries.forEach((value, index) => {
     const previous = contacts.get(value.roundId);

@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clips": [
+    {
+      "id": "economy-choice",
+      "text": "这次想带回什么？点贝壳，或者点水滴。",
+      "file": "economy-choice.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28460,
+      "seconds": 4.656,
+      "sha256": "df6d539741a6cdbfefe82c969e64c342c178abf0715a95df098cf5c8a7bbdeca",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这次想带回什么点贝壳或者点水滴",
+        "final_end_seconds": 4.0625
+      }
+    },
+    {
+      "id": "economy-shells",
+      "text": "两枚小贝壳，收好啦！攒起来，可以买喜欢的种子。",
+      "file": "economy-shells.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 32924,
+      "seconds": 5.4,
+      "sha256": "89f401e3a1892ccdff68f4304a82998b5731fa28ae6d8433e139e9529e5b0583",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "两枚小贝壳收好啦攒起来可以买喜欢的种子",
+        "final_end_seconds": 4.825
+      }
+    },
+    {
+      "id": "economy-water",
+      "text": "五滴水，收好啦！去给小苗浇水吧。",
+      "file": "economy-water.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 26012,
+      "seconds": 4.248,
+      "sha256": "cf7d6a5d374ff7e7c877d177ee79d78b81925f939d98b08654106f0ff8289c44",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "五滴水收好啦去给小苗浇水吧",
+        "final_end_seconds": 3.675
+      }
+    },
+    {
+      "id": "economy-starter",
+      "text": "送你第一份小礼物！两枚贝壳，还有五滴水。去种一朵小花吧。",
+      "file": "economy-starter.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 40412,
+      "seconds": 6.648,
+      "sha256": "679ad2d4aaa0a56e5965cb57f582734d87db81b17818ae6e2e96ad5d685396b2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "送你第一份小礼物两枚贝壳还有五滴水去种一朵小花吧",
+        "final_end_seconds": 6.075
+      }
+    },
+    {
+      "id": "economy-shop",
+      "text": "这里有两种种子包。问号包，打开有惊喜。旁边这包，可以看到会长出什么花。",
+      "file": "economy-shop.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 48620,
+      "seconds": 8.016,
+      "sha256": "cfd5cd11ba58ae051cb83ec762b886f082db2e9ba1b58f622901e8b86179c8fd",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这里有两种种子包问号包打开有惊喜旁边这包可以看到会长出什么花",
+        "final_end_seconds": 7.45
+      }
+    },
+    {
+      "id": "economy-reserve",
+      "text": "先帮你留下来。攒够贝壳，再来带它回家。",
+      "file": "economy-reserve.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28892,
+      "seconds": 4.728,
+      "sha256": "475745a63d64ec2eee537c593cebf2fbb12696f4d484bbdcae520a38f8229eb4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "先帮你留下来攒够贝壳再来带它回家",
+        "final_end_seconds": 4.15
+      }
+    },
+    {
+      "id": "economy-replace",
+      "text": "要换成这包吗？原来留下的那包，就放回商店啦。",
+      "file": "economy-replace.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 30908,
+      "seconds": 5.064,
+      "sha256": "835aff0a87d397aa6565f301442fd3809caf203ed59b574b4f521870bfc5b498",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "要换成这包吗原来留下的那包就放回商店啦",
+        "final_end_seconds": 4.5
+      }
+    },
+    {
+      "id": "economy-short",
+      "text": "贝壳还不够。可以先帮你留下来，再去玩一会儿英语。",
+      "file": "economy-short.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31052,
+      "seconds": 5.088,
+      "sha256": "bbb8856da7fa1fafd173035793bdbb1d1ff3591122e362342df7d780bd552e6d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "贝壳还不够可以先帮你留下来再去玩一会儿英语",
+        "final_end_seconds": 4.5125
+      }
+    },
+    {
+      "id": "economy-pack",
+      "text": "用两枚贝壳，打开一包惊喜种子。",
+      "file": "economy-pack.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 21260,
+      "seconds": 3.456,
+      "sha256": "f22e7f5b6fbeb1bd70bff6e0eb69fe5587a08fa561a647de3b989a1f48c84d01",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "用两枚贝壳打开一包惊喜种子",
+        "final_end_seconds": 2.875
+      }
+    },
+    {
+      "id": "economy-earned",
+      "text": "小礼物还在这里。点贝壳，或者点水滴，选一份带回家。",
+      "file": "economy-earned.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 36668,
+      "seconds": 6.024,
+      "sha256": "c2f8e3ba93b95b430d206a554206cc0a7237f7544988d5ac162f575d6ac329f4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小礼物还在这里点贝壳或者点水滴选一份带回家",
+        "final_end_seconds": 5.4625
+      }
+    },
+    {
+      "id": "economy-shop-ready",
+      "text": "去看看种子吧。可以开惊喜包，也可以攒贝壳买喜欢的花。",
+      "file": "economy-shop-ready.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 35804,
+      "seconds": 5.88,
+      "sha256": "04f966ba6e7c1406bab0c28a2f82ff379b7929bc6a713503acd5964da543c66a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "去看看种子吧可以开惊喜包也可以攒贝壳买喜欢的花",
+        "final_end_seconds": 5.3125
+      }
+    },
+    {
+      "id": "economy-water-short",
+      "text": "水用完啦。再玩一会儿英语，带些水回来吧。",
+      "file": "economy-water-short.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28460,
+      "seconds": 4.656,
+      "sha256": "118a8d69f03d2d05d0822b68d01c32192e0efcdf43903b93e38bc8463a3371e4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "水用完啦再玩一会儿英语带些水回来吧",
+        "final_end_seconds": 4.0875
+      }
+    },
+    {
+      "id": "economy-shells-short",
+      "text": "贝壳还不够。再和小芽玩一会儿，带些贝壳回来吧。",
+      "file": "economy-shells-short.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31052,
+      "seconds": 5.088,
+      "sha256": "5f548cb1c74d0505df4fab5a6fc89cc6e0fba81fe15dbaeae0b8c3f71c6cc624",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "贝壳还不够再和小芽玩一会儿带些贝壳回来吧",
+        "final_end_seconds": 4.5125
+      }
+    }
+  ]
+}

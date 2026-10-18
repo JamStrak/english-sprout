@@ -479,3 +479,15 @@ test('phrase aggregation never permits an attempt from an alternate event to imp
   assert.equal(phraseIdFor('care-zip'),phraseIdFor('play-box'));
   assert.throws(()=>getPracticePlan(plan,{learningState:state,date:day}),/不属于本轮故事/);
 });
+
+
+test('B resource choices and pending gifts cannot change review scheduling or count as mastery',()=>{
+  const base={...round('gift'),starter:false,reward:'pending'};
+  const expected=getPracticePlan(createPracticePlan(),{rounds:[round('gift')],date:day});
+  for(const reward of ['legacy','pending','shells','water','starter']){
+    const result=getPracticePlan(createPracticePlan(),{rounds:[{...base,reward,starter:reward==='starter'}],date:day});
+    assert.deepEqual(result,expected);
+  }
+  for(const invalid of [{...base,stars:3},{...base,reward:'mastered'},{...base,starter:true}])
+    assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[invalid],date:day}));
+});

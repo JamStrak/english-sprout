@@ -1,4 +1,4 @@
-// v0.7 A/B garden + expanded story browser regression. Uses disposable contexts
+// A/B garden + current phrase-first story browser regression. Uses disposable contexts
 // only; never attaches to a user's browser or reads their localStorage.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const assert=require('node:assert/strict');
@@ -71,18 +71,31 @@ async function meadow(p){return p.evaluate(key=>JSON.parse(localStorage.getItem(
 async function seedB(p,{rounds=1,plants=0,waterings={},pending=false}={}){
   const value=await p.evaluate(async({key,rounds,plants,waterings,pending})=>{
     const m=await import(new URL('garden-meadow.js',document.querySelector('script[type="module"][src]').src));
-    let s=m.createMeadow();
-    for(let i=0;i<rounds;i++){
-      s=m.rewardRound(s,{roundId:`qa-b-${i}`,eventId:['food-water','play-box','hello-goodbye'][i%3],date:'2026-10-17'});
-      if(i<plants)s=m.plantSeed(m.openSeedPack(s),{x:.2+(i%3)*.3,y:.7-(Math.floor(i/3)%2)*.3});
+    let s=m.rewardRound(m.createMeadow(),{roundId:'qa-b-starter',eventId:'food-water',date:'2026-10-17'});
+    // `rounds` describes the original watering budget for the interaction
+    // scenarios. Earn it through the current one-resource-per-round rules.
+    for(let i=1;i<rounds;i++){
+      const roundId=`qa-b-water-${i}`;s=m.rewardRound(s,{roundId,eventId:'play-box',date:'2026-10-17'});s=m.claimReward(s,roundId,'water');
     }
-    if(pending)s=m.openSeedPack(s);
+    const purchases=plants+Number(pending);
+    for(let i=0;s.shells<purchases*m.ECONOMY.packPrice;i++){
+      const roundId=`qa-b-shells-${i}`;s=m.rewardRound(s,{roundId,eventId:'hello-goodbye',date:'2026-10-17'});s=m.claimReward(s,roundId,'shells');
+    }
+    // Deterministic injected draws select the specimens needed by growth tests;
+    // the product UI remains random, covered separately by the economy suite.
+    const specimens=['daisy','bow-pink','giant-daisy','bow-blue'];
+    for(let i=0;i<purchases;i++){
+      const flower=specimens[i%specimens.length],draw=i===0?0:(m.FLOWERS.findIndex(f=>f.id===flower)+.1)/m.FLOWERS.length;
+      s=m.openSeedPack(s,draw);
+      if(i<plants)s=m.plantSeed(s,{x:.2+(i%3)*.3,y:.7-(Math.floor(i/3)%2)*.3});
+    }
     for(const [id,count] of Object.entries(waterings))for(let i=0;i<count;i++)s=m.waterPlant(s,id);
     localStorage.setItem(key,JSON.stringify(s));return s;
   },{key:B_KEY,rounds,plants,waterings,pending});
   await p.reload();await p.locator('main.home-view').waitFor();return value;
 }
 async function fieldPoint(p,x,y){const r=await p.locator('[data-meadow-field]').boundingBox();assert(r);return{x:r.x+r.width*x,y:r.y+r.height*y};}
+async function buyPack(p){await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();}
 async function tapField(p,x,y){const point=await fieldPoint(p,x,y);await p.mouse.click(point.x,point.y);}
 async function selectedSeedTo(p,x,y){const count=await p.locator('[data-meadow-plant]').count();await click(p,'meadow-seed');await tapField(p,x,y);await p.waitForFunction(n=>document.querySelectorAll('[data-meadow-plant]').length===n,count+1);}
 async function untouchedLearning(p){assert.equal(await p.evaluate(key=>localStorage.getItem(key),STATE_KEY),null,'Participation is not evidence of language mastery');}
@@ -107,8 +120,16 @@ async function touchDrag(f,from,to,{cancel=false}={}){
   }finally{await session.detach();}
 }
 async function center(locator){const r=await locator.boundingBox();assert(r,'Touch target exists');return{x:r.x+r.width/2,y:r.y+r.height/2};}
-async function storyInfo(p,id){return p.evaluate(async id=>{const m=await import(new URL('stories.js',document.querySelector('script[type="module"][src]').src));const s=m.storyFor(id);return{id:s.id,lessonId:s.event.lessonId,cueFrame:s.cueFrame,frames:s.frames,image:s.image};},id);}
-async function startStory(p,id){await parent(p);await p.locator('.story-library>details>summary').click();await p.locator(`[data-story="${id}"]`).click();await p.locator(`[data-phase="story"][data-event="${id}"]`).waitFor();}
+async function storyInfo(p,id){return p.evaluate(async id=>{const m=await import(new URL('stories.js',document.querySelector('script[type="module"][src]').src));const s=m.storyFor(id);return{id:s.id,lessonId:s.event.lessonId,cueFrame:s.cueFrame,frames:s.frames,teachingFrames:s.teachingFrames,image:s.image};},id);}
+async function startStory(p,id){
+  await parent(p);
+  const target=p.locator(`[data-story="${id}"]`);
+  // The parent library deliberately keeps extension lessons in nested details.
+  // Expand each actual ancestor using its visible summary before choosing it.
+  const depth=await target.evaluate(e=>{let n=0;for(let a=e.parentElement;a;a=a.parentElement)if(a.tagName==='DETAILS')n++;return n;});
+  for(let i=depth;i>=1;i--){const details=target.locator(`xpath=ancestor::details[${i}]`);if(!await details.evaluate(e=>e.open))await details.locator(':scope>summary').click();}
+  await target.click();await p.locator(`[data-phase="story"][data-event="${id}"]`).waitFor();
+}
 async function silentRequest(p){
   await click(p,'story-continue');await p.locator('[data-phase="request"]').waitFor();
   // The primary mic is now actionable on its first tap. These garden tests
@@ -118,11 +139,11 @@ async function silentRequest(p){
 async function throughStory(p,id){
   await p.locator('[data-action="story-continue"]:enabled').waitFor({timeout:30000});
   const s=await storyInfo(p,id),frames=await p.evaluate(id=>qa.frames.filter(x=>x.event===id).map(x=>x.frame),id);
-  assert.deepEqual([...new Set(frames)],['0','1','2','3'],'The story plays four visual beats before speaking');
+  assert.deepEqual([...new Set(frames)],s.teachingFrames.map(String),'The story plays only its meaningful teaching beats before speaking');
   const plays=await p.evaluate(({id,lesson})=>qa.plays.filter(x=>x.event===id&&x.url.endsWith(`/${lesson}.mp3`)),{id,lesson:s.lessonId});
   assert(plays.length>0,'The real local target audio played');assert(plays.every(x=>x.frame===String(s.cueFrame)),'Target audio is coupled to its meaning frame');
   assert.equal(await p.locator('[data-choice]').count(),0,'The old answer-matching quiz is absent');
-  assert.equal(await p.locator('[data-story-frame] svg').count(),1,'New stories render their lightweight vector picture');
+  assert.equal(await p.locator('[data-story-frame] svg').count(),s.image?0:1,'Generated stories use their single picture; vector extension stories retain their semantic illustration');
   await childLayout(p);await untouchedLearning(p);return s;
 }
 async function diagnostic(p){return p.evaluate(()=>({build:document.querySelector('meta[name="xiaoya-build"]')?.content,main:document.querySelector('main')?.outerHTML,storage:Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('xiaoya')).map(k=>[k,localStorage.getItem(k)])),qa:{errors:qa.errors,frames:qa.frames,plays:qa.plays,audios:qa.audios.map(x=>({url:x.url,ended:x.ended,error:x.error,paused:x.audio.paused}))}})).catch(error=>({error:error.message}));}
@@ -142,7 +163,7 @@ async function runCases(){
   await test('A is the default and parent A/B switching preserves both independent gardens',async({p})=>{
     const rawA=await seedA(p);await openGarden(p,'a');
     assert.equal(await p.locator('[data-meadow-field]').count(),0);
-    await switchVariant(p,'b');await seedB(p);await openGarden(p,'b');await click(p,'pack');
+    await switchVariant(p,'b');await seedB(p);await openGarden(p,'b');await buyPack(p);
     await selectedSeedTo(p,.43,.68);const b=await meadow(p);
     assert.equal(b.plants.length,1);assert.equal(b.plants[0].waterings,0);
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),A_KEY),rawA);
@@ -173,8 +194,8 @@ async function runCases(){
   },{query:'?garden=b',reducedMotion:'reduce'});
   await test('B pending seed survives refresh without purchase or variety changes and preserves A',async({p})=>{
     const rawA=await seedA(p);await seedB(p,{rounds:2});await openGarden(p,'b');
-    await click(p,'pack');const bought=await meadow(p);
-    assert.deepEqual([bought.shells,bought.water,bought.seedPacksOpened,bought.plants.length],[3,10,1,0]);
+    await buyPack(p);const bought=await meadow(p);
+    assert.deepEqual([bought.shells,bought.water,bought.seedPacksOpened,bought.plants.length],[0,10,1,0]);
     assert.equal(bought.pendingSeed.id,'seed-1');
     await p.reload();await openGarden(p,'b');assert.deepEqual(await meadow(p),bought);
     await selectedSeedTo(p,.37,.73);const planted=await meadow(p);
@@ -290,8 +311,9 @@ async function runCases(){
     const after=await meadow(p);assert.equal(after.plants[0].waterings,before.plants[0].waterings+1);assert.equal(after.water,before.water-1);
     await childLayout(p);await untouchedLearning(p);
   },{query:'?garden=b',serviceWorkers:'allow',reducedMotion:'reduce'});
-  for(const id of ['food-hungry','play-roll','care-teeth','outside-rain','bed-hug'])await test(`Expanded story ${id} teaches with four wordless frames and correctly timed local audio`,async({p})=>{
-    await startStory(p,id);const s=await throughStory(p,id);assert(!s.image,'The initial expansion needs no generated image download');
+  for(const id of ['food-hungry','play-roll','care-teeth','outside-rain','bed-hug'])await test(`Expanded story ${id} teaches with meaningful wordless frames and correctly timed local audio`,async({p})=>{
+    await startStory(p,id);const s=await throughStory(p,id);assert.deepEqual(s.teachingFrames,[s.cueFrame],'These phrases move directly from the meaning picture to speaking');
+    assert.equal(Boolean(s.image),id==='food-hungry','The core phrase has its supplied paper picture; extension phrases retain vector illustrations');
     await p.screenshot({animations:'disabled',path:path.join(out,`story-${id}.png`),fullPage:true});
     await silentRequest(p);await childLayout(p);
     assert.equal(await p.locator('[data-action="sample"]').count(),1);assert.equal(await p.locator('[data-action="context-help"]').count(),1);await untouchedLearning(p);
@@ -300,9 +322,9 @@ async function runCases(){
     const rawA=await seedA(p);await startStory(p,'food-spoon');await throughStory(p,'food-spoon');
     await silentRequest(p);await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
     await p.locator('[data-action="finish"]').evaluate(button=>{button.click();button.click();});await p.locator('.reward-view').waitFor();
-    const rewarded=await meadow(p);assert.deepEqual([rewarded.shells,rewarded.water,rewarded.rounds.length],[3,5,1]);assert.equal(rewarded.rounds[0].eventId,'food-spoon');
+    const rewarded=await meadow(p);assert.deepEqual([rewarded.shells,rewarded.water,rewarded.rounds.length],[2,5,1]);assert.equal(rewarded.rounds[0].eventId,'food-spoon');assert.equal(rewarded.rounds[0].reward,'starter');
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),A_KEY),rawA);await untouchedLearning(p);
-    await click(p,'garden');await p.locator('.meadow-view').waitFor();await click(p,'pack');await selectedSeedTo(p,.53,.69);await click(p,'meadow-can');
+    await click(p,'garden');await p.locator('.meadow-view').waitFor();await buyPack(p);await selectedSeedTo(p,.53,.69);await click(p,'meadow-can');
     for(let i=1;i<=5;i++){await p.locator('[data-meadow-plant="plant-1"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});}
     const complete=await meadow(p);assert.deepEqual([complete.shells,complete.water,complete.plants[0].waterings],[0,0,5]);await childLayout(p);await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'reduce'});
