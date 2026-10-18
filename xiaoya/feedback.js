@@ -48,7 +48,8 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
   };
   const point = (value, fallback) => {
     if (finite(value?.x) && finite(value?.y)) return {x: value.x, y: value.y};
-    const rect = value?.getBoundingClientRect?.();
+    const anchor = value?.querySelector?.('[data-feedback-anchor]') || value;
+    const rect = anchor?.getBoundingClientRect?.();
     if (rect && [rect.left, rect.top, rect.width, rect.height].every(finite)) {
       return {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2};
     }
@@ -169,11 +170,19 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
     const record = targets.get(target);
     if (!record) return;
     record.forEach(clear); targets.delete(target);
-    target.classList.remove('xiaoya-fx-target', 'xiaoya-fx-press', 'xiaoya-fx-pop');
+    target.classList.remove('xiaoya-fx-target', 'xiaoya-fx-press', 'xiaoya-fx-pop', 'xiaoya-fx-seed');
   }
   function bump(target, press = false) {
+    target = target?.querySelector?.('[data-feedback-body]') || target;
     if (!target?.classList || motion?.matches) return;
     releaseTarget(target);
+    if (press && target.dataset?.feedbackKind === 'seed') {
+      // Restart even when a child taps again before the previous wiggle ends.
+      target.getBoundingClientRect();
+      target.classList.add('xiaoya-fx-seed');
+      targets.set(target, [later(() => releaseTarget(target), 640)]);
+      return;
+    }
     const name = press ? 'xiaoya-fx-press' : 'xiaoya-fx-pop';
     target.classList.add('xiaoya-fx-target', name);
     const release = later(() => target.classList.remove(name), press ? 75 : 145);
@@ -182,13 +191,14 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
   }
   function visual(kind, options) {
     const center = point(options.from || options.target);
+    const tapPoint = finite(options.x) && finite(options.y) ? point(options) : center;
     if (motion?.matches) {
-      particle('ring', center, {size:kind === 'tap' ? 26 : 44, duration:220, reduced:true});
+      particle('ring', kind === 'tap' ? tapPoint : center, {size:kind === 'tap' ? 26 : 44, duration:220, reduced:true});
       return;
     }
     if (kind === 'tap') {
       bump(options.target, true);
-      particle('ring', finite(options.x) && finite(options.y) ? point(options) : center, {size:26, duration:280});
+      particle('ring', tapPoint, {size:26, duration:280});
     } else if (kind === 'ready') {
       particle('ring', center, {size:64, duration:380, color:'#71ac87'});
     } else if (kind === 'reward') {

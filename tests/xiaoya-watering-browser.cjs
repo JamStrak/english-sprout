@@ -6,7 +6,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Use an isolated loopback server.');
-const out=path.resolve(process.env.XIAOYA_WATERING_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-v121-watering'));
+const out=path.resolve(process.env.XIAOYA_WATERING_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-watering'));
+const expectedBuild=JSON.parse(fs.readFileSync(path.join(__dirname,'../dist/xiaoya/version.json'),'utf8'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const B='xiaoya-english:meadow:v1',A='xiaoya-english:garden:v1',STATE='xiaoya-english:state:v1';
 const report={origin,scope:'Disposable Edge contexts only. Legal model-generated fixtures, native touch and CDP touch drags, real Web Locks, native local audio at 4x. No user profile, microphone, ASR, child data or external requests. Background/page lifecycle events are synthesized; touch input is native browser input. Browser emulation is not a physical-device test.',checks:[]};
@@ -51,7 +52,8 @@ async function fixture({width=390,height=844,motion='reduce',serviceWorkers='blo
   try{
     await p.goto(origin+'/xiaoya/?garden=b');await p.locator('.home-view').waitFor();
     const build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content'),version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content');
-    assert.equal(version,'0.12.1');
+    assert.equal(version,expectedBuild.version);
+    assert.equal(build,expectedBuild.build,'The server must serve the current local build.');
     if(report.build)assert.equal(build,report.build,'Do not replace the build during a run.');else Object.assign(report,{build,version});
     return{c,p,requests,errors};
   }catch(e){await c.close();throw e;}
@@ -76,7 +78,14 @@ async function seed(p,{plants=[plant()],waterRounds=null,pending=false}={}){
   await p.reload();await p.locator('.home-view').waitFor();return value;
 }
 async function garden(p){await click(p,'garden');await p.locator('.meadow-view').waitFor();}
-async function chooseCan(p){await click(p,'meadow-can');await p.waitForFunction(()=>document.querySelector('.meadow-view')?.dataset.tool==='can');}
+async function chooseCan(p){
+  // The can breathes continuously. Use a real touch at its verified hit point
+  // instead of waiting for Playwright's two-frame bounding-box stability.
+  const point=await center(p.locator('[data-action="meadow-can"]'));
+  assert.equal(await p.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest('[data-action]')?.dataset.action,point),'meadow-can');
+  await nativeTap(p,point);
+  await p.waitForFunction(()=>document.querySelector('.meadow-view')?.dataset.tool==='can');
+}
 async function bounds(locator){const b=await locator.boundingBox();assert(b,'The real touch target exists');return b;}
 async function center(locator){const b=await bounds(locator);return{x:b.x+b.width/2,y:b.y+b.height/2};}
 async function hit(p,id){

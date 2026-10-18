@@ -401,6 +401,64 @@ test('destroy is idempotent and removes lifecycle listeners; unsupported audio k
   }
 });
 
+test('pointer rings use the touched coordinates, including zero, with or without reduced motion', () => {
+  for (const reduced of [false, true]) {
+    const f = fixture({reduced});
+    f.api.tap(f.button, {x:0, y:302, silent:true});
+    assert.equal(f.decorations()[0].styles.get('left'), '0px');
+    assert.equal(f.decorations()[0].styles.get('top'), '302px');
+    f.api.destroy();
+  }
+});
+
+test('plant feedback animates only the body and keyboard feedback uses the fixed soil anchor', () => {
+  const f = fixture();
+  const body = f.doc.createElement('g'), soil = f.doc.createElement('ellipse');
+  soil.rect = {left:110, top:290, width:28, height:8};
+  f.button.querySelector = selector => selector === '[data-feedback-body]' ? body : soil;
+  f.api.tap(f.button, {silent:true});
+  assert.deepEqual([...f.button.classes], ['existing-guide']);
+  assert.ok(body.classList.contains('xiaoya-fx-press'));
+  assert.equal(f.decorations()[0].styles.get('left'), '124px');
+  assert.equal(f.decorations()[0].styles.get('top'), '294px');
+  f.tick(280);
+  assert.equal(body.classes.size, 0);
+  f.api.play('bloom', {target:f.button, silent:true});
+  assert.ok(body.classList.contains('xiaoya-fx-pop'));
+  assert.deepEqual([...f.button.classes], ['existing-guide']);
+  f.api.cancel();
+  assert.equal(body.classes.size, 0);
+});
+
+test('a seed wiggle stays visible, restarts on another tap, and cancels on departure', () => {
+  const f = fixture(), body = f.doc.createElement('g');
+  body.dataset = {feedbackKind:'seed'};
+  f.button.querySelector = selector => selector === '[data-feedback-body]' ? body : null;
+  f.api.tap(f.button, {silent:true});
+  f.tick(400);
+  assert.ok(body.classList.contains('xiaoya-fx-seed'), 'Feedback must last long enough to notice');
+  assert.deepEqual([...f.button.classes], ['existing-guide']);
+  f.api.tap(f.button, {silent:true});
+  f.tick(400);
+  assert.ok(body.classList.contains('xiaoya-fx-seed'), 'An old cleanup must not cut off the new wiggle');
+  f.tick(240);
+  assert.equal(body.classes.size, 0);
+  f.api.tap(f.button, {silent:true});
+  f.api.cancel();
+  assert.equal(body.classes.size, 0);
+  assert.equal(f.timers.size, 0);
+});
+
+test('reduced motion keeps seed tap feedback stationary', () => {
+  const f = fixture({reduced:true}), body = f.doc.createElement('g');
+  body.dataset = {feedbackKind:'seed'};
+  f.button.querySelector = selector => selector === '[data-feedback-body]' ? body : null;
+  f.api.tap(f.button, {x:12,y:34,silent:true});
+  assert.equal(body.classes.size, 0);
+  assert.equal(f.decorations()[0].styles.get('top'), '34px');
+  f.api.destroy();
+});
+
 test('invalid anchors stay finite and CSS isolates decoration from layout and pointer input', () => {
   const f = fixture();
   f.api.play('plant', {from:{x:NaN,y:Infinity}, silent:true});

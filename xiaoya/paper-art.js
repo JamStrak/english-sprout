@@ -38,6 +38,7 @@ export function installPaperArt(root=globalThis.document) {
   if(!Observer)return ()=>{}; // Without enhancement, all original art survives.
   const bound=new WeakMap();
   const saved=new Set();
+  const loaded=new Set();
   const document=root.ownerDocument||root;
   let active=true;
   const selector='image[data-paper-image]';
@@ -70,10 +71,15 @@ export function installPaperArt(root=globalThis.document) {
       fallback.setAttribute('visibility',ready?'hidden':'visible');
       layer.setAttribute('data-paper-state',ready?'ready':'fallback');
     };
-    const load=()=>{show(true);if(active)remember(PAPER_ASSETS[key]);},error=()=>show(false);
+    const load=()=>{if(!active||!root.contains(image))return;loaded.add(key);show(true);remember(PAPER_ASSETS[key]);};
+    const error=()=>{if(!active||!root.contains(image))return;loaded.delete(key);show(false);};
     bound.set(image,{load,error});
     image.addEventListener('load',load);
     image.addEventListener('error',error);
+    // A garden tap redraws the same cached picture. Restore its known artwork
+    // before paint so neither the picture nor its hit shape flashes to vector.
+    // Native errors still restore the fallback; a new installation starts cold.
+    if(loaded.has(key))show(true);
   }
   function scan(node) {
     if(node.matches?.(selector))bind(node);

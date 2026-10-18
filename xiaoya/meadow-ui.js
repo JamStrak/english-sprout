@@ -13,7 +13,7 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
       <div class="meadow-sky" aria-hidden="true"><i></i><i></i><span>☀</span></div><div class="meadow-path" aria-hidden="true"></div>
       ${Array.from({length:16},(_,i)=>`<i class="meadow-grass" aria-hidden="true" style="left:${5+(i*37)%90}%;top:${30+(i*19)%62}%"></i>`).join('')}
       ${state.plants.map(p=>{const f=flowerFor(p.flowerId),bloom=p.waterings===f.waterNeeded;return `<button class="meadow-plant ${bloom?'is-bloom':'is-growing'} ${f.giant?'is-giant':''} ${feedback?.plantId===p.id?'just-watered':''} ${tool==='can'&&!bloom&&state.water?'can-water':''}" data-meadow-plant="${p.id}" data-waterings="${p.waterings}" data-needed="${f.waterNeeded}" style="--soil-x:${p.x*100}%;--soil-y:${p.y*100}%;--scale:${f.scale};z-index:${Math.round(p.y*100)}" aria-label="${f.name}，已浇${p.waterings}次，共需${f.waterNeeded}次${bloom?'，已经开花':''}">${meadowPlantArt(f,p.waterings)}${!bloom?`<span class="meadow-drops" aria-hidden="true">${Array.from({length:f.waterNeeded},(_,i)=>`<i class="${i<p.waterings?'filled':''}"></i>`).join('')}</span>`:''}${feedback?.plantId===p.id?`<span class="meadow-splash" aria-hidden="true">${bloom?'✦':dropArt()}</span>`:''}</button>`;}).join('')}
-      ${tool==='can'?`<div class="meadow-water-layer" data-water-layer><svg class="meadow-water-links" aria-hidden="true"></svg>${state.plants.filter(p=>p.waterings<flowerFor(p.flowerId).waterNeeded).map(p=>`<button class="meadow-water-target ${feedback?.plantId===p.id?'just-watered':''}" data-water-plant="${p.id}" aria-label="给${flowerFor(p.flowerId).name}浇一滴水，还需${flowerFor(p.flowerId).waterNeeded-p.waterings}滴" ${state.water?'':'aria-disabled="true"'}><span>${dropArt()}</span></button>`).join('')}</div>`:''}
+      ${tool==='can'?`<div class="meadow-water-layer" data-water-layer><svg class="meadow-water-links" aria-hidden="true"></svg>${state.plants.filter(p=>p.waterings<flowerFor(p.flowerId).waterNeeded).map(p=>`<button class="meadow-water-target ${feedback?.plantId===p.id?'just-watered':''}" data-water-plant="${p.id}" aria-label="给${flowerFor(p.flowerId).name}浇一滴水，还需${flowerFor(p.flowerId).waterNeeded-p.waterings}滴" ${state.water?'':'aria-disabled="true"'}><span data-feedback-body>${dropArt()}</span></button>`).join('')}</div>`:''}
       ${tool==='seed'?`<span class="meadow-landing" aria-hidden="true">${icon('tap',40)}<i></i></span>`:!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
     </div>
     <div class="meadow-tools">
@@ -125,7 +125,7 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
       suppressUntil=Date.now()+450;
       const hit=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-water-plant]');
       if(active()&&read().tool==='can'&&!tap.moved&&Math.hypot(event.clientX-tap.x,event.clientY-tap.y)<8&&hit?.dataset.waterPlant===tap.plantId){
-        event.preventDefault();onTouch();onWater(tap.plantId);
+        event.preventDefault();onTouch(event,hit);onWater(tap.plantId);
       }
       return;
     }
@@ -144,13 +144,17 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
     if(event.detail!==0&&Date.now()<suppressUntil){event.preventDefault();event.stopImmediatePropagation();return;}
     if(!active())return;
     const drop=event.target.closest('[data-water-plant]');
-    if(drop){event.preventDefault();event.stopImmediatePropagation();onTouch();onWater(drop.dataset.waterPlant);return;}
+    if(drop){event.preventDefault();event.stopImmediatePropagation();onTouch(event,drop);onWater(drop.dataset.waterPlant);return;}
     const plant=event.target.closest('[data-meadow-plant]'),field=event.target.closest('[data-meadow-field]');
     if(!field)return;
-    const {tool}=read();onTouch();
+    // This capture handler owns field feedback. Do not also bump the whole
+    // positioning button in the app's generic click handler.
+    event.stopImmediatePropagation();
+    const {tool}=read();onTouch(event,plant);
     if(tool==='seed'){const point=event.detail===0?{x:.5,y:.65}:position(event);if(point)onPlant(point);}
     else if(plant)onWater(plant.dataset.meadowPlant);
-    else if(tool==='can'){const target=plantAt(event);if(target)onWater(target);}
+    // Empty ground must not water an unrelated nearby seedling. The generous
+    // nearest-plant fallback is only for dragging a watering can onto the field.
   },true);
   root.addEventListener('keydown',event=>{if(active()&&event.target.matches?.('[data-meadow-field]')&&['Enter',' '].includes(event.key)){event.preventDefault();if(read().tool==='seed')onPlant({x:.5,y:.65});}});
   return clear;

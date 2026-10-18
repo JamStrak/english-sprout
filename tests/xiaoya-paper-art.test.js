@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {MEADOW_HIT_SHAPES} from '../xiaoya/meadow-hit-shapes.js';
 import {PAPER_ASSETS,paperLayer,paperPlantLayer,installPaperArt} from '../xiaoya/paper-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt,plantArt} from '../xiaoya/garden-art.js';
 import {meadowPlantArt} from '../xiaoya/meadow-art.js';
@@ -35,6 +38,15 @@ function fixture({cached=false,failCache=false,observer=true,build='012345abcdef
   return {root,view,calls,add};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('plant hit outlines match the currently shipped art assets',()=>{
+  const keys=['seed-in-soil','sprout','bud',...FLOWERS.map(f=>`flower-${f.id}`)];
+  assert.deepEqual(Object.keys(MEADOW_HIT_SHAPES).sort(),keys.sort());
+  for(const key of keys){
+    const hash=createHash('sha256').update(fs.readFileSync(new URL(`../public/${PAPER_ASSETS[key]}`,import.meta.url))).digest('hex');
+    assert.equal(MEADOW_HIT_SHAPES[key].sha256,hash,`${key}: regenerate hit outlines after replacing artwork`);
+  }
+});
 
 test('paper map covers tools, three shared growth stages and twelve stable flowers with nested-host relative paths',()=>{
   assert.equal(Object.keys(PAPER_ASSETS).length,21);
@@ -74,13 +86,13 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
   for(const flower of FLOWERS) {
     const mature=meadowPlantArt(flower,flower.waterNeeded);
     assert.match(mature,new RegExp(`data-paper-art="flower-${flower.id}"`));
-    assert.match(mature,/<ellipse data-part="soil"[^>]+\/><g data-paper-art=/);
+    assert.match(mature,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body><g data-paper-art=/);
     for(let count=0;count<flower.waterNeeded;count++) {
       const art=meadowPlantArt(flower,count);
       const key=count===0?'seed-in-soil':count/flower.waterNeeded<.5?'sprout':'bud';
       assert.match(art,new RegExp(`data-paper-art="${key}"`));
       assert.match(art,/<g data-paper-fallback><path data-part="stem"/);
-      assert.match(art,/<ellipse data-part="soil"[^>]+\/><g data-paper-art=/);
+      assert.match(art,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body(?: data-feedback-kind="seed")?><g data-paper-art=/);
     }
   }
   for(const [stage,key] of [[0,'seed-in-soil'],[1,'sprout'],[2,'flower-daisy']]) {
@@ -136,6 +148,26 @@ test('broken image keeps its vector; removed or disposed nodes cannot receive a 
   assert.equal(broken.layer.getAttribute('data-paper-state'),'fallback');assert.equal(broken.fallback.getAttribute('visibility'),'visible');assert.equal(broken.image.getAttribute('opacity'),'0');
   const removed=add('seed');root.remove(removed.layer);removed.image.dispatchEvent(new Event('load'));assert.equal(removed.layer.getAttribute('data-paper-state'),'loading');
   const late=add('water-drop');dispose();late.image.dispatchEvent(new Event('load'));assert.equal(late.layer.getAttribute('data-paper-state'),'loading');
+});
+
+test('a previously loaded picture stays ready across redraws, but a real load error restores fallback',()=>{
+  const {root,add}=fixture();const dispose=installPaperArt(root);
+  const first=add('seed');first.image.dispatchEvent(new Event('load'));
+  root.remove(first.layer);
+  const redrawn=add('seed');
+  assert.equal(redrawn.layer.getAttribute('data-paper-state'),'ready');
+  assert.equal(redrawn.fallback.getAttribute('visibility'),'hidden');
+  assert.equal(redrawn.image.getAttribute('opacity'),'1');
+  // A stale detached image cannot invalidate the current picture.
+  first.image.dispatchEvent(new Event('error'));
+  assert.equal(add('seed').layer.getAttribute('data-paper-state'),'ready');
+  redrawn.image.dispatchEvent(new Event('error'));
+  assert.equal(redrawn.layer.getAttribute('data-paper-state'),'fallback');
+  assert.equal(redrawn.fallback.getAttribute('visibility'),'visible');
+  assert.equal(add('seed').layer.getAttribute('data-paper-state'),'loading');
+  dispose();
+  installPaperArt(root);
+  assert.equal(add('seed').layer.getAttribute('data-paper-state'),'loading');
 });
 
 test('unrecognized or replaced image href is never enhanced or persisted',async()=>{

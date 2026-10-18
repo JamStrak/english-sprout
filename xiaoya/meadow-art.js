@@ -1,5 +1,6 @@
 import {FLOWERS} from './garden-meadow.js';
 import {paperPlantLayer} from './paper-art.js';
+import {MEADOW_HIT_SHAPES} from './meadow-hit-shapes.js';
 
 const n=(value)=>Number(value.toFixed(2));
 const petals=(count,rx,ry,color)=>Array.from({length:count},(_,i)=>`<ellipse cx="0" cy="-20" rx="${rx}" ry="${ry}" fill="${color}" stroke="#927657" stroke-opacity=".17" stroke-width="1.5" transform="rotate(${n(i*360/count)})"/>`).join('');
@@ -48,5 +49,9 @@ export function meadowPlantArt(input,waterings=0) {
   // Keep the planted seed legible, and grow every pour around the actual root.
   const height=n(120+progress*46),width=n(height*384/512);
   const paper=paperPlantLayer(key,vector,{rootY:164,width,height});
-  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}"><ellipse data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/>${paper}</svg>`;
+  // Hit the painted silhouette, not the full canvas's transparent rectangle.
+  // Keep targets outside the animated body so a tap never moves its next target.
+  const hitScale=Math.min(height/512,width/384),hitX=80-192*hitScale,hitY=164-512*.88*hitScale;
+  const hit=`<g data-plant-hit="paper" transform="translate(${hitX} ${hitY}) scale(${hitScale})"><path d="${MEADOW_HIT_SHAPES[key].path}" fill="transparent" stroke="transparent" stroke-width="${growth===0?18:8}" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g><g data-plant-hit="vector" opacity="0">${vector}<ellipse cx="80" cy="164" rx="28" ry="12"/></g>`;
+  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}"><ellipse data-feedback-anchor data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/><g data-plant-body data-feedback-body${growth===0?' data-feedback-kind="seed"':''}>${paper}</g>${hit}</svg>`;
 }
