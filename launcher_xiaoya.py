@@ -149,11 +149,14 @@ def show_error(message: str):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="小芽英语本机预览")
     parser.add_argument("--no-browser", action="store_true", help="仅启动或复用服务，不自动打开浏览器（维护用）")
+    parser.add_argument("--garden", choices=("a", "b"), help="临时预览指定花园，不更改已保存的花园偏好")
     args = parser.parse_args(argv)
     server = None
     try:
         port, server, thread = start_or_reuse(ROOT)
         url = f"http://{HOST}:{port}/xiaoya/"
+        if args.garden:
+            url += f"?garden={args.garden}"
         if not args.no_browser and not webbrowser.open(url):
             show_error(f"小芽英语已启动，但未能自动打开浏览器。\n请用浏览器打开：{url}")
         if thread is not None:

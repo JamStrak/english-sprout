@@ -110,6 +110,15 @@ class XiaoyaLauncherTests(unittest.TestCase):
         build.assert_not_called()
         self.assertEqual((self.root / "dist/xiaoya/index.html").read_text(), "new-product")
 
+    def test_garden_preview_uses_actual_service_port_without_changing_saved_preferences(self):
+        for garden in ("a", "b"):
+            with self.subTest(garden=garden), patch.object(launcher, "start_or_reuse", return_value=(24759, None, None)), patch.object(launcher.webbrowser, "open", return_value=True) as browser:
+                launcher.main(["--garden", garden])
+                browser.assert_called_once_with(f"http://127.0.0.1:24759/xiaoya/?garden={garden}")
+        with patch.object(launcher, "start_or_reuse", return_value=(24759, None, None)), patch.object(launcher.webbrowser, "open") as browser:
+            launcher.main(["--garden", "b", "--no-browser"])
+            browser.assert_not_called()
+
     def test_missing_build_uses_hidden_internal_builder(self):
         index = self.root / "dist/xiaoya/index.html"
         index.unlink()
@@ -167,6 +176,7 @@ class XiaoyaLauncherTests(unittest.TestCase):
         self.assertIn('fso.BuildPath(base, "launcher.py")', wrapper)
         self.assertIn('pythonw.exe', wrapper)
         self.assertIn(', 0, False', wrapper)
+        self.assertIn('" --garden b"', wrapper)
 
 
 if __name__ == "__main__":
