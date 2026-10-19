@@ -50,8 +50,9 @@ test('a completed delivery covers every active and retained story without four-p
       :[requirement.assetId];
     for(const id of requiredIds)assert(ids.has(id),'Missing audited usage: '+id);
   }
-  assert.equal(STORIES.length,55);
-  for(const story of STORIES){
+  const legacy=STORIES.filter(story=>story.event.audioPack!=='phrases-v015');
+  assert.equal(legacy.length,55);
+  for(const story of legacy){
     assert(story.image,story.id+' primary');assert.equal(story.imageLayout,'single',story.id);
     if(story.introFrame!=null)assert(story.introImage,story.id+' intro');
     for(const phase of ['request','resolved'])assert(story.alternateImages?.[phase],story.id+' '+phase);

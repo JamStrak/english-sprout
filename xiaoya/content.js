@@ -1,3 +1,5 @@
+import {PHRASE_PACK_V015_EVENTS, PHRASE_PACK_V015_ITEMS} from './phrase-pack-v015.js';
+
 /** Small, offline-friendly content catalogue. English is for audio and the parent/exploration views only. */
 function freeze(value) {
   if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); }
@@ -206,7 +208,7 @@ const phraseRows = [
 ];
 rows.push(...phraseRows);
 
-export const EVENTS = freeze(rows.map((r) => {
+export const EVENTS = freeze([...rows.map((r) => {
   const [id,theme,title,icon,goalId,lessonId,english,chinese,itemId,itemName,itemIcon,setup,request,help,resolution,otherSetup,otherRequest,otherHelp,otherScene,otherSetting,accepted] = r;
   const settingId = id === 'care-zip' ? 'coat-zip' : id;
   return {id,theme,scene:id,title,name:title,icon,goalId,lessonId,phraseId:lessonId,english,chinese,audio:`./audio/characters/pip/${lessonId}.mp3`,itemId,
@@ -222,9 +224,9 @@ export const EVENTS = freeze(rows.map((r) => {
         .filter((row)=>row[0]!==id && row[4]!==goalId).slice(0,2)
         .map((row)=>({id:row[0],scene:row[0],icon:row[3],label:row[7],correct:false}))],
   };
-}));
+}), ...PHRASE_PACK_V015_EVENTS]);
 
-export const ITEMS = freeze(rows.map((r) => ({id:r[8],name:r[9],title:r[9],icon:r[10],eventId:r[0],theme:r[1],replayEventId:r[0]})));
+export const ITEMS = freeze([...rows.map((r) => ({id:r[8],name:r[9],title:r[9],icon:r[10],eventId:r[0],theme:r[1],replayEventId:r[0]})), ...PHRASE_PACK_V015_ITEMS]);
 
 /** Product gates, not a validated developmental scale. All three are reachable without text. */
 export const ALPHABET_CORE_GOALS = freeze(['help','request','together']);

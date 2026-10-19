@@ -2,10 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.14.1';
+export const XIAOYA_VERSION = '0.15.0';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 MODULES.push('seed-shop.js', 'economy.css', 'meadow-hit-shapes.js', 'audio-pack.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'story-assets.js', 'story-pictures.js');
+MODULES.push('phrase-pack-v015.js', 'phrase-assets-v015.js');
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -40,7 +41,7 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
   // Prepare every shipped voice, including all three English partners. Models
   // and artwork stay separate; this pack contains only public static MP3s.
   const audio = [];
-  for (const [directory, url, recursive] of [['public/xiaoya/audio', './audio/v3/', false], ['public/audio', '../audio/', true]]) {
+  for (const [directory, url, recursive] of [['public/xiaoya/audio', './audio/v3/', false], ['public/audio', '../audio/', true], ['public/xiaoya/audio/phrases-v015', './audio/phrases-v015/', true]]) {
     for (const name of await soundFiles(path.join(root, directory))) {
       if (!recursive && name.includes('/')) continue;
       const bytes = await fs.readFile(path.join(root, directory, name));
@@ -71,6 +72,12 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
     for (const name of voiceFiles.filter(name => name.endsWith('.mp3'))) {
       await fs.copyFile(path.join(publicAudio, name), path.join(voiceOutput, name));
     }
+  }
+  // Copy only approved sound files; provenance and generator logs are not runtime assets.
+  for (const name of await soundFiles(path.join(publicAudio, 'phrases-v015'))) {
+    const target = path.join(output, 'audio/phrases-v015', name);
+    await fs.mkdir(path.dirname(target), {recursive:true});
+    await fs.copyFile(path.join(publicAudio, 'phrases-v015', name), target);
   }
   await fs.mkdir(path.join(output, release, 'shared'), {recursive:true});
   for (const [name, bytes] of files) await fs.writeFile(path.join(output, release, name), bytes);

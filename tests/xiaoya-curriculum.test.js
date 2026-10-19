@@ -20,12 +20,22 @@ const originalIds = [
   'play-tower', 'play-again', 'play-did-it', 'play-tidy', 'outside-hand',
   'outside-rain', 'bed-hug',
 ];
+const originalCoreIds = [
+  'hello-everyone', 'hello-morning', 'family-love',
+  'hello-thanks', 'hello-youre-welcome', 'hello-sorry', 'hello-okay',
+  'hello-goodbye', 'bed-night', 'hello-welcome', 'hello-excuse',
+  'outside-go-home', 'outside-ready', 'family-come', 'food-eat',
+  'food-hungry', 'feelings-happy', 'feelings-tired',
+  'play-turn', 'play-your-turn', 'play-can-do', 'play-did-it',
+  'play-good-job', 'play-again',
+];
 
-test('first release contains 24 distinct recorded expressions with no duplicate story lessons', () => {
-  assert.equal(CORE_PHRASE_EVENT_IDS.length, 24);
+test('84 distinct core expressions retain the original first 24 lessons in the same order', () => {
+  assert.equal(CORE_PHRASE_EVENT_IDS.length, 84);
+  assert.deepEqual(CORE_PHRASE_EVENT_IDS.slice(0, 24), originalCoreIds);
   assert.ok(Object.isFrozen(CORE_PHRASE_EVENT_IDS));
-  assert.equal(new Set(CORE_PHRASE_EVENT_IDS).size, 24);
-  assert.equal(new Set(CORE_PHRASE_EVENT_IDS.map(phraseIdFor)).size, 24);
+  assert.equal(new Set(CORE_PHRASE_EVENT_IDS).size, 84);
+  assert.equal(new Set(CORE_PHRASE_EVENT_IDS.map(phraseIdFor)).size, 84);
   assert.equal(CORE_PHRASE_EVENT_IDS[0], 'hello-everyone');
   for (const english of ['I love you.', 'Good morning.', 'Good night.', 'Thank you.',
     "You're welcome.", "I'm sorry.", "That's okay.", 'See you later.', "Let's go home."]) {
@@ -37,9 +47,9 @@ test('first release contains 24 distinct recorded expressions with no duplicate 
   }
 });
 
-test('every core expression matches its shipped English and Chinese line with all three usable voices', () => {
+test('all original core expressions retain their shipped English and Chinese lines and three usable voices', () => {
   assert.equal(VOICES.length, 3);
-  for (const id of CORE_PHRASE_EVENT_IDS) {
+  for (const id of originalCoreIds) {
     const event = eventFor(id);
     const source = recorded.find(lesson => lesson.id === phraseIdFor(id));
     assert.ok(source, id);

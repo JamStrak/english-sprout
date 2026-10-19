@@ -1,3 +1,5 @@
+import {PHRASE_PACK_V015_EVENT_IDS} from './phrase-pack-v015.js';
+const phrasePackIds = new Set(PHRASE_PACK_V015_EVENT_IDS);
 /** Voice choices belong to this app; the older English Sprout preference is independent. */
 export const VOICE_KEY = 'xiaoya-english:voice:v1';
 const DEFAULT_VOICE = 'pip';
@@ -30,6 +32,7 @@ export function lessonAudio(eventOrLessonId, voice = readVoice()) {
     ? eventOrLessonId : eventOrLessonId?.lessonId ?? eventOrLessonId?.phraseId;
   if (typeof lessonId !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(lessonId)) return '';
   const selected = normalizeVoice(voice);
+  if (phrasePackIds.has(lessonId)) return `xiaoya/audio/phrases-v015/${lessonId}/${selected}.mp3`;
   const directory = selected === 'aiden' ? '' : selected === 'ryan' ? 'ryan/' : 'characters/pip/';
   return `./audio/${directory}${lessonId}.mp3`;
 }

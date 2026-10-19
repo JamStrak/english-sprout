@@ -11,13 +11,14 @@ const curriculum=JSON.parse(read('public/data/curriculum.json'));
 const additions=EVENTS.filter(event=>event.illustration==='comic');
 const original=['hello-morning','hello-welcome','hello-goodbye','food-water','food-more','food-no-thanks','play-box','play-ball','play-bridge','care-hands','care-zip','care-socks','outside-cat','outside-bird','outside-dog','bed-book','bed-story','bed-night'];
 
-test('55 scenes preserve all legacy event IDs and add core expressions',()=>{
-  assert.equal(STORIES.length,55);
+test('115 scenes preserve all legacy event IDs and add 60 distinct expressions',()=>{
+  assert.equal(STORIES.length,115);
   assert.equal(additions.length,24);
   assert.deepEqual(EVENTS.slice(0,18).map(event=>event.id),original);
-  assert.equal(new Set(STORIES.map(story=>story.id)).size,55);
-  assert.equal(new Set(EVENTS.map(event=>event.lessonId)).size,53);
-  assert.equal(new Set(ITEMS.map(item=>item.id)).size,55);
+  assert.equal(new Set(STORIES.map(story=>story.id)).size,115);
+  assert.equal(new Set(EVENTS.map(event=>event.lessonId)).size,113);
+  assert.equal(new Set(ITEMS.map(item=>item.id)).size,115);
+  assert.equal(EVENTS.filter(event=>event.audioPack!=='phrases-v015').length,55);
   for(const story of STORIES){
     assert.equal(storyFor(story.id),story);
     assert.equal(story.frames.length,4);
@@ -43,7 +44,7 @@ test('legacy comic files remain available while teaching uses reviewed single sc
 });
 
 test('every expanded phrase exactly matches a recorded curriculum line in all three voices',()=>{
-  for(const event of EVENTS){
+  for(const event of EVENTS.filter(event=>event.audioPack!=='phrases-v015')){
     const lesson=curriculum.lessons.find(lesson=>lesson.id===event.lessonId);
     assert.ok(lesson,event.id);
     assert.equal(event.english,lesson.english,event.id);
@@ -65,7 +66,7 @@ test('all source storyboard frames render locally without text, invalid geometry
     }
     // Ignore frame metadata, so four identical drawings cannot satisfy this test.
     const pictures=frames.map(svg=>svg.replace(/data-frame="\d"/g,'').replace(/paper-grain-\d+/g,'paper-grain'));
-    if(story.event.illustration!=='phrase')assert.equal(new Set(pictures).size,4,story.id+' legacy source frames remain available');
+    if(!['phrase','daily'].includes(story.event.illustration))assert.equal(new Set(pictures).size,4,story.id+' legacy source frames remain available');
     assert.ok(story.teachingFrames.length>=1&&story.teachingFrames.length<=2);
     assert.equal(story.teachingFrames.at(-1),story.cueFrame);
   }

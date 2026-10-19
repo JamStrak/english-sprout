@@ -33,11 +33,21 @@ function passUnit(state, unit = first, date = today, prefix = unit.id) {
   return state;
 }
 
-test('six fixed units cover 24 distinct core expressions and export immutable constants', () => {
+test('21 fixed units cover 84 distinct core expressions, keeping six legacy units and only two seed milestones', () => {
   assert.equal(CHALLENGE_KEY, 'xiaoya-english:challenges:v1');
   assert.deepEqual(CHALLENGE_UNITS.flatMap(unit => unit.eventIds), CORE_PHRASE_EVENT_IDS);
-  assert.deepEqual(CHALLENGE_UNITS.map(unit => unit.id), ['challenge-1', 'challenge-2', 'challenge-3', 'challenge-4', 'challenge-5', 'challenge-6']);
-  assert.equal(new Set(CHALLENGE_UNITS.flatMap(unit => unit.eventIds.map(phraseIdFor))).size, 24);
+  assert.equal(CHALLENGE_UNITS.length, 21);
+  assert.ok(CHALLENGE_UNITS.every(unit => unit.eventIds.length === 4));
+  assert.deepEqual(CHALLENGE_UNITS.map(unit => unit.id), Array.from({length: 21}, (_, index) => `challenge-${index + 1}`));
+  assert.deepEqual(CHALLENGE_UNITS.slice(0, 6).map(unit => unit.eventIds), [
+    ['hello-everyone', 'hello-morning', 'family-love', 'hello-thanks'],
+    ['hello-youre-welcome', 'hello-sorry', 'hello-okay', 'hello-goodbye'],
+    ['bed-night', 'hello-welcome', 'hello-excuse', 'outside-go-home'],
+    ['outside-ready', 'family-come', 'food-eat', 'food-hungry'],
+    ['feelings-happy', 'feelings-tired', 'play-turn', 'play-your-turn'],
+    ['play-can-do', 'play-did-it', 'play-good-job', 'play-again'],
+  ]);
+  assert.equal(new Set(CHALLENGE_UNITS.flatMap(unit => unit.eventIds.map(phraseIdFor))).size, 84);
   assert.deepEqual(CHALLENGE_RESULTS, ['independent', 'supported', 'not_yet', 'unclear', 'device_error']);
   assert.deepEqual(CHALLENGE_MILESTONES, [3, 6]);
   assert.ok(Object.isFrozen(CHALLENGE_UNITS) && CHALLENGE_UNITS.every(unit => Object.isFrozen(unit) && Object.isFrozen(unit.eventIds)));
@@ -236,7 +246,7 @@ test('schema 1 saves strictly normalize without changing progress, receipts, or 
 
 test('help logs reject unknown or duplicate identifiers, wrong phrases, private fields and invalid ordering', () => {
   const empty = createChallenges(); const state = recordChallengeHelp(empty, helpInput());
-  for (const patch of [{unitId: 'challenge-7'}, {eventId: 'missing'}, {eventId: CHALLENGE_UNITS[1].eventIds[0]}, {date: '2026-02-29'}, {audio: 'private'}, {afterAttemptCount: 0}]) {
+  for (const patch of [{unitId: 'challenge-22'}, {eventId: 'missing'}, {eventId: CHALLENGE_UNITS[1].eventIds[0]}, {date: '2026-02-29'}, {audio: 'private'}, {afterAttemptCount: 0}]) {
     assert.throws(() => recordChallengeHelp(empty, {...helpInput(), ...patch}));
   }
   assert.throws(() => recordChallengeHelp(state, helpInput('help-one', {eventId: first.eventIds[1]})), /不能覆盖/);
@@ -288,6 +298,7 @@ test('first clears generate one stable receipt per unit and milestones only at t
     assert.deepEqual(summary.receipts[index], {id: `challenge:first-clear:${unit.id}`, unitId: unit.id, date: today});
     assert.equal(summary.milestones[0].reached, index >= 2);
     assert.equal(summary.milestones[1].reached, index >= 5);
+    assert.deepEqual(summary.milestones.map(milestone => milestone.count), [3, 6]);
   }
   const before = getChallenges(state, {date: today});
   state = passUnit(state, first, '2026-10-20', 'repeat');
@@ -373,7 +384,7 @@ test('malformed logs reject unknown IDs, non-unit expressions, forged results, d
     {...valid, attempts: [{...valid.attempts[0], id: '__proto__'}]},
     {...valid, attempts: [{...valid.attempts[0], eventId: 'unknown'}]},
     {...valid, attempts: [{...valid.attempts[0], eventId: CHALLENGE_UNITS[1].eventIds[0]}]},
-    {...valid, attempts: [{...valid.attempts[0], unitId: 'challenge-7'}]},
+    {...valid, attempts: [{...valid.attempts[0], unitId: 'challenge-22'}]},
     {...valid, attempts: [{...valid.attempts[0], result: 'three-stars'}]},
     {...valid, attempts: [{...valid.attempts[0], helped: 0}]},
     {...valid, attempts: [{...valid.attempts[0], helped: true}]},
@@ -389,4 +400,54 @@ test('malformed logs reject unknown IDs, non-unit expressions, forged results, d
   assert.throws(() => recordChallengeAttempt(valid, input('back', {date: yesterday})), /日期不能倒退/);
   assert.throws(() => recordInvitation(valid, {id: 'one', unitId: first.id, date: today}), /编号重复/);
   assert.throws(() => getChallenges(valid, {practicePlan: {cards: [...studied().cards, studied().cards[0]]}, date: today}), /重复/);
+});
+
+test('a serialized six-unit-era save keeps clears and help history while new units require their own studied phrases', () => {
+  const old = {
+    schemaVersion: 2, product: 'xiaoya-english-challenges',
+    attempts: ['hello-everyone', 'hello-morning', 'family-love', 'hello-thanks'].map((eventId, index) => ({
+      id: `old-step-${index}`, unitId: 'challenge-1', eventId, date: yesterday,
+      attemptId: `old-speech-${index}`, result: 'independent', helped: false, source: 'parent', retryAfterAttemptId: null,
+    })),
+    helps: [{id: 'old-help', unitId: 'challenge-2', eventId: 'hello-sorry', date: yesterday, afterAttemptCount: 4}],
+    invitations: [{id: 'old-invitation', unitId: 'challenge-1', date: '2026-10-16'}],
+    deferrals: [{id: 'old-later', unitId: 'challenge-2', date: yesterday}],
+  };
+  const restored = validateChallenges(clone(old));
+  assert.deepEqual(restored, old);
+  const summary = getChallenges(restored, {practicePlan: studied(24), date: today});
+  assert.equal(summary.units.length, 21);
+  assert.deepEqual(summary.completedUnitIds, ['challenge-1']);
+  assert.deepEqual(summary.receipts, [{id: 'challenge:first-clear:challenge-1', unitId: 'challenge-1', date: yesterday}]);
+  assert.ok(summary.units.slice(6).every(unit => !unit.available && !unit.ready && unit.completedCount === 0));
+  const expanded = getChallenges(restored, {practicePlan: studied(28), date: today});
+  assert.equal(expanded.units[6].available, true);
+  assert.equal(expanded.units[6].ready, true);
+  assert.ok(expanded.units.slice(7).every(unit => !unit.available));
+  const completed = passUnit(restored, CHALLENGE_UNITS[6]);
+  assert.deepEqual(completed.helps, old.helps);
+  assert.deepEqual(completed.invitations, old.invitations);
+  assert.deepEqual(completed.deferrals, old.deferrals);
+  assert.deepEqual(completed.attempts.slice(0, 4), old.attempts);
+  assert.deepEqual(validateChallenges(clone(completed)), completed);
+  assert.deepEqual(getChallenges(completed, {date: today}).completedUnitIds, ['challenge-1', 'challenge-7']);
+  assert.deepEqual(restored, old);
+});
+
+test('last new unit is independently reachable without clearing earlier units or generating extra seed milestones', () => {
+  const unit = CHALLENGE_UNITS[20];
+  const practicePlan = {cards: unit.eventIds.map(eventId => ({eventId, firstDate: yesterday, lastDate: yesterday, lastOutcome: 'machine-candidate'}))};
+  let state = createChallenges();
+  const before = getChallenges(state, {practicePlan, date: today});
+  assert.ok(before.units.slice(0, 20).every(item => !item.available));
+  assert.equal(before.units[20].available, true);
+  assert.equal(before.units[20].ready, true);
+  assert.equal(invitationFor(state, {practicePlan, date: today}).id, 'challenge-21');
+  state = passUnit(state, unit);
+  const after = getChallenges(validateChallenges(clone(state)), {practicePlan, date: today});
+  assert.deepEqual(after.completedUnitIds, ['challenge-21']);
+  assert.deepEqual(after.receipts, [{id: 'challenge:first-clear:challenge-21', unitId: 'challenge-21', date: today}]);
+  assert.deepEqual(after.milestones.map(item => [item.count, item.reached]), [[3, false], [6, false]]);
+  const replayed = passUnit(state, unit, '2026-10-20', 'last-replay');
+  assert.deepEqual(getChallenges(replayed, {date: '2026-10-20'}).receipts, after.receipts);
 });

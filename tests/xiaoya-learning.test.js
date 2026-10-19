@@ -28,11 +28,11 @@ function deepFreeze(value) {
   return value;
 }
 
-test('content contains six themes, 55 unique events/items and 26 reachable discovery nodes',()=>{
-  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,55); assert.equal(ITEMS.length,55); assert.equal(ALPHABET_NODES.length,26);
+test('content contains six themes, 115 unique events/items and the same 26 reachable discovery nodes',()=>{
+  assert.equal(THEMES.length,6); assert.equal(EVENTS.length,115); assert.equal(ITEMS.length,115); assert.equal(ALPHABET_NODES.length,26);
   for(const theme of THEMES) assert.ok(EVENTS.filter((event)=>event.theme===theme.id).length>=3);
-  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,55);
-  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,55);
+  assert.equal(new Set(EVENTS.map((event)=>event.id)).size,115);
+  assert.equal(new Set(ITEMS.map((item)=>item.id)).size,115);
   assert.deepEqual(ALPHABET_NODES.map((node)=>node.letter).join(''),'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
   assert.equal(new Set(ALPHABET_NODES.map((node)=>node.id)).size,26);
   for(const node of ALPHABET_NODES) {
@@ -41,9 +41,11 @@ test('content contains six themes, 55 unique events/items and 26 reachable disco
   }
 });
 
-test('every quoted phrase is an exact existing curriculum line with an existing Pip recording',()=>{
+test('all 55 legacy events keep the exact existing curriculum lines and Pip recordings',()=>{
   const curriculum=JSON.parse(fs.readFileSync(new URL('../public/data/curriculum.json',import.meta.url),'utf8'));
-  for(const event of EVENTS) {
+  const legacy=EVENTS.filter(event=>event.audioPack!=='phrases-v015');
+  assert.equal(legacy.length,55);
+  for(const event of legacy) {
     const lesson=curriculum.lessons.find((lesson)=>lesson.id===event.lessonId);
     assert.equal(event.english,lesson.english,event.id);
     assert.equal(event.chinese,lesson.chinese,event.id);
@@ -52,8 +54,8 @@ test('every quoted phrase is an exact existing curriculum line with an existing 
   }
 });
 
-test('contexts carry concrete different tasks and choices contain three distinct intentions',()=>{
-  for(const event of EVENTS) {
+test('legacy contexts retain concrete different tasks and three distinct intentions',()=>{
+  for(const event of EVENTS.filter(event=>event.audioPack!=='phrases-v015')) {
     assert.equal(event.contexts.length,2);
     assert.notEqual(event.contexts[0].settingId,event.contexts[1].settingId);
     assert.notEqual(event.contexts[0].setup,event.contexts[1].setup);
@@ -295,12 +297,30 @@ test('a valid correction can close current progression without deleting earned c
   assert.equal(validateState(state),state);
 });
 
-test('every catalogued phrase has a no-text path to its own stable evidence',()=>{
+test('legacy multi-context phrases retain their no-text path to stable evidence',()=>{
   let state=collectedState();
-  for(const event of EVENTS) {
+  for(const event of EVENTS.filter(event=>event.audioPack!=='phrases-v015')) {
     state=addPair(state,event.id,`exact-${event.id}`);
     assert.equal(canRevealPhrase(state,event.lessonId),true,event.id);
   }
+});
+
+test('new single-context phrases never invent transfer evidence or reveal spelling after familiar-scene repeats',()=>{
+  const newEvents=EVENTS.filter(event=>event.audioPack==='phrases-v015');
+  assert.equal(newEvents.length,60);
+  let state=collectedState();
+  for(const event of newEvents) {
+    assert.equal(event.contexts.length,1);
+    for(const [index,date] of ['2026-10-18','2026-10-19'].entries()) {
+      state=recordEvidence(state,entry(`daily-${event.id}-${index}`,event.id,date,{contextId:phraseCheckupContext(state,event.id).id,phraseId:event.lessonId}));
+    }
+    assert.equal(checkupContext(state,event.id).id,event.id);
+    assert.equal(phraseCheckupContext(state,event.id).id,event.id);
+    assert.equal(phraseStatus(state,event.id).independent,true);
+    assert.equal(phraseStatus(state,event.id).retained,false);
+    assert.equal(canRevealPhrase(state,event.lessonId),false,event.id);
+  }
+  assert.equal(Object.keys(state.alphabet.letters).length,26,'letters alone do not certify new phrases');
 });
 
 test('invalid evidence, mismatched IDs and private payloads are rejected',()=>{

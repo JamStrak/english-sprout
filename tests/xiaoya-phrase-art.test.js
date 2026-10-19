@@ -92,7 +92,7 @@ test('transfer objects follow the stated situation instead of only recolouring t
 });
 
 test('all 42 existing stories keep their four-frame rendering and legacy scene path',()=>{
-  const original=EVENTS.filter(event=>!newIds.includes(event.id));assert.equal(original.length,42);
+  const original=EVENTS.filter(event=>event.audioPack!=='phrases-v015'&&!newIds.includes(event.id));assert.equal(original.length,42);
   for(const event of original)for(const index of [0,1,2,3]){
     const svg=storyFrame({event},index);
     assert.match(svg,new RegExp(`data-story="${event.id}"`));

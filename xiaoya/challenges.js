@@ -5,7 +5,7 @@ import {addPracticeDays} from './practice-plan.js';
 /** Game progress is separate from the learning evidence and reward ledgers. */
 export const CHALLENGE_KEY = 'xiaoya-english:challenges:v1';
 export const CHALLENGE_RESULTS = Object.freeze(['independent', 'supported', 'not_yet', 'unclear', 'device_error']);
-export const CHALLENGE_UNITS = Object.freeze(Array.from({length: 6}, (_, index) => Object.freeze({
+export const CHALLENGE_UNITS = Object.freeze(Array.from({length: CORE_PHRASE_EVENT_IDS.length / 4}, (_, index) => Object.freeze({
   id: `challenge-${index + 1}`,
   title: `小芽挑战 ${index + 1}`,
   eventIds: Object.freeze(CORE_PHRASE_EVENT_IDS.slice(index * 4, index * 4 + 4)),

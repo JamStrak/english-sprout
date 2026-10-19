@@ -8,7 +8,7 @@ import {webcrypto} from 'node:crypto';
 import {buildXiaoya} from '../scripts/build-xiaoya.mjs';
 
 const project = path.resolve(import.meta.dirname, '..');
-async function fixture(t) {
+async function fixture(t,{phrasePack=false}={}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'xiaoya-build-'));
   t.after(() => fs.rm(root, {recursive:true, force:true}));
   await fs.mkdir(path.join(root, 'xiaoya'), {recursive:true});
@@ -21,7 +21,7 @@ async function fixture(t) {
     'audio.js':"export const ready=()=>import('./speech-local.js'); export const match=()=>import('../src/speech-match.js');",
     'speech-local.js':"import './speech-assets.js'; import './speech-signal.js'; import '../src/speech-download.js'; export const worker=new URL('./speech-worker.js',import.meta.url);"
   };
-  for (const name of ['story-assets.js', 'story-pictures.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'meadow-hit-shapes.js', 'economy.css', 'seed-shop.js', 'paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
+  for (const name of ['phrase-pack-v015.js', 'phrase-assets-v015.js', 'story-assets.js', 'story-pictures.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'meadow-hit-shapes.js', 'economy.css', 'seed-shop.js', 'paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
@@ -33,6 +33,12 @@ async function fixture(t) {
     await fs.writeFile(path.join(root, 'public/audio', directory, 'hello-01.mp3'), new Uint8Array([1,2,3,4,5,6]));
   }
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
+  if(phrasePack){
+    const directory=path.join(root,'public/xiaoya/audio/phrases-v015/daily-peekaboo');
+    await fs.mkdir(directory,{recursive:true});
+    for(const voice of ['aiden','ryan','pip','hint'])await fs.writeFile(path.join(directory,`${voice}.mp3`),new Uint8Array([1,2,3,4,5,6]));
+    await fs.writeFile(path.join(directory,'private.log'),'not-public');
+  }
   await fs.mkdir(path.join(root, 'public/xiaoya/icons'), {recursive:true});
   for (const name of ['icon-paper-v04-48.png','icon-paper-v04-192.png','icon-paper-v04-512.png']) await fs.copyFile(path.join(project, 'public/xiaoya/icons', name), path.join(root, 'public/xiaoya/icons', name));
   const result = await buildXiaoya({root});
@@ -162,6 +168,25 @@ test('audio bytes fingerprint the release and the published voice pack', async t
   assert.ok(manifest.every(entry => entry.bytes === 6 && /^[a-f0-9]{64}$/.test(entry.sha256)));
   await fs.writeFile(path.join(built.root, 'public/xiaoya/audio/guide-hello.mp3'), 'new voice');
   assert.notEqual((await buildXiaoya({root:built.root})).build, built.build);
+});
+
+test('new phrase voices are copied, fingerprinted and ready for first playback offline',async t=>{
+  const built=await fixture(t,{phrasePack:true}),sw=await worker(built);
+  const manifest=JSON.parse(await fs.readFile(path.join(built.output,`releases/${built.build}/audio-pack.json`),'utf8'));
+  assert.equal(manifest.length,8);
+  await sw.lifecycle('install');sw.setOnline(false);
+  const requests=sw.fetched.length;
+  for(const voice of ['aiden','ryan','pip','hint']){
+    const relative=`audio/phrases-v015/daily-peekaboo/${voice}.mp3`;
+    assert.deepEqual([...await fs.readFile(path.join(built.output,relative))],[1,2,3,4,5,6]);
+    assert(manifest.some(entry=>entry.url===`./${relative}`));
+    const response=await sw.fetchRequest(new Request(new URL(relative,sw.scope),{headers:{Range:'bytes=1-3'}}));
+    assert.equal(response.status,206);assert.deepEqual([...new Uint8Array(await response.arrayBuffer())],[2,3,4]);
+  }
+  assert.equal(sw.fetched.length,requests);
+  await assert.rejects(fs.stat(path.join(built.output,'audio/phrases-v015/daily-peekaboo/private.log')),{code:'ENOENT'});
+  await fs.appendFile(path.join(built.root,'public/xiaoya/audio/phrases-v015/daily-peekaboo/pip.mp3'),'changed');
+  assert.notEqual((await buildXiaoya({root:built.root})).build,built.build);
 });
 
 test('corrupt voices block activation and retry resumes from the verified partial pack', async t => {

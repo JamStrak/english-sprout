@@ -1,0 +1,906 @@
+{
+  "version": "0.15.0",
+  "status": "complete",
+  "assets": [
+    {
+      "id": "daily-how-are-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-how-are-you.webp",
+      "target": "xiaoya/stories/daily-how-are-you-paper-v015.webp",
+      "sha256": "c06acc13297bd2f9a4245c0e558f691ed0684ea5ec10d2381cb782f3af0fd158",
+      "bytes": 113468,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-how-are-you.json"
+    },
+    {
+      "id": "daily-fine-thank-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-fine-thank-you.webp",
+      "target": "xiaoya/stories/daily-fine-thank-you-paper-v015.webp",
+      "sha256": "4fff55e32b805b46779db76eed304c2b8a9d09d1bc657a16ea4436113f62e876",
+      "bytes": 77662,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-fine-thank-you.json"
+    },
+    {
+      "id": "daily-peekaboo",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-peekaboo.webp",
+      "target": "xiaoya/stories/daily-peekaboo-paper-v015.webp",
+      "sha256": "4ba7d9138a4ab662eb16e949134d351048cc396a9040d1ed6461eecefcc29f96",
+      "bytes": 94154,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-peekaboo.json"
+    },
+    {
+      "id": "daily-welcome-back",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-welcome-back.webp",
+      "target": "xiaoya/stories/daily-welcome-back-paper-v015.webp",
+      "sha256": "1e71f894654eeddffd59f7acdd60ac826a635e7924fda4854c06120a83b889b9",
+      "bytes": 169740,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-welcome-back.json"
+    },
+    {
+      "id": "daily-guess-what",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-guess-what.webp",
+      "target": "xiaoya/stories/daily-guess-what-paper-v015.webp",
+      "sha256": "7156e3e3dd891f72b8803723564e915637bc9608d031275ec27e0b34891d9035",
+      "bytes": 84050,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-guess-what.json"
+    },
+    {
+      "id": "daily-have-a-nice-day",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-have-a-nice-day.webp",
+      "target": "xiaoya/stories/daily-have-a-nice-day-paper-v015.webp",
+      "sha256": "f51b479c7d20926feca2a2f127ef8290fb1f3ee1e052883ca46dbb08f81a2509",
+      "bytes": 139788,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-have-a-nice-day.json"
+    },
+    {
+      "id": "daily-have-fun",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-have-fun.webp",
+      "target": "xiaoya/stories/daily-have-fun-paper-v015.webp",
+      "sha256": "0aa3a6992680d860782ea5fee63abbca89ddef0ec460ea9d28dafe9f62b32fb8",
+      "bytes": 152234,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview-07; consistent torn-paper characters, natural limbs/ownership, no text, distinct scene. Abstract conversational meaning uses recorded Chinese help; no child comprehension claim.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-have-fun.json"
+    },
+    {
+      "id": "daily-time-to-go",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-time-to-go.webp",
+      "target": "xiaoya/stories/daily-time-to-go-paper-v015.webp",
+      "sha256": "5a08b85fa43a2866e4454ae6b3affa30b95343710dece1a6f344db9ffc1f2d36",
+      "bytes": 124144,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-time-to-go.txt"
+    },
+    {
+      "id": "daily-im-coming",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-im-coming.webp",
+      "target": "xiaoya/stories/daily-im-coming-paper-v015.webp",
+      "sha256": "09fcb77fcabfbd04e640b704186473442977f61a054ab6b4304662d4f1661b88",
+      "bytes": 117596,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-im-coming.txt"
+    },
+    {
+      "id": "daily-wait-for-me",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-wait-for-me.webp",
+      "target": "xiaoya/stories/daily-wait-for-me-paper-v015.webp",
+      "sha256": "b75e844612befbf5a9a8bcab516a24baee11c5d7082567f49b32a1a6cb86c426",
+      "bytes": 130000,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-wait-for-me.txt"
+    },
+    {
+      "id": "daily-just-a-minute",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-just-a-minute.webp",
+      "target": "xiaoya/stories/daily-just-a-minute-paper-v015.webp",
+      "sha256": "2c7ce1ef9ffebad46c2d257a166fd6b3e82e242615d71a820d20a04bfc29d4b3",
+      "bytes": 139416,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-just-a-minute.txt"
+    },
+    {
+      "id": "daily-lets-clean-up",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-lets-clean-up.webp",
+      "target": "xiaoya/stories/daily-lets-clean-up-paper-v015.webp",
+      "sha256": "44d86ab00b90da6bfdec2a2b5cd709476b44988b854ca471be6cee603e92857f",
+      "bytes": 94918,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-lets-clean-up.txt"
+    },
+    {
+      "id": "daily-all-done",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-all-done.webp",
+      "target": "xiaoya/stories/daily-all-done-paper-v015.webp",
+      "sha256": "49d3eb80db9a511aeb4497d6e0bd418542216bca56632fa024c97c488ce6664c",
+      "bytes": 92426,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-all-done.txt"
+    },
+    {
+      "id": "daily-wake-up",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-wake-up.webp",
+      "target": "xiaoya/stories/daily-wake-up-paper-v015.webp",
+      "sha256": "cf31d20d48a1b2d0dc375223ad5f239dd1d043c923025f1453c850468d8437a1",
+      "bytes": 133800,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual 980x700 runtime pixels and overview; clear departure, response, waiting, dressing, cleanup, completion and waking scenes; no text or visible anatomy errors.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-wake-up.txt"
+    },
+    {
+      "id": "daily-im-cold",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-im-cold.webp",
+      "target": "xiaoya/stories/daily-im-cold-paper-v015.webp",
+      "sha256": "86fd95359d715a5b30a73b60c15d6fd8f9090c0556fd35cfe5e37d2cb2b44681",
+      "bytes": 88992,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-im-cold.json"
+    },
+    {
+      "id": "daily-im-scared",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-im-scared.webp",
+      "target": "xiaoya/stories/daily-im-scared-paper-v015.webp",
+      "sha256": "3cb021d7a2ce065bbdb00120367429008ecfa558ef4037bf4f86099fc371e8f7",
+      "bytes": 113314,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-im-scared.json"
+    },
+    {
+      "id": "daily-it-hurts",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-it-hurts.webp",
+      "target": "xiaoya/stories/daily-it-hurts-paper-v015.webp",
+      "sha256": "713764db9be8efc541d24784c3d53b0e7ab9ea95deeffb55cd1305f3681e4189",
+      "bytes": 93264,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-it-hurts.json"
+    },
+    {
+      "id": "daily-feel-sick",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-feel-sick.webp",
+      "target": "xiaoya/stories/daily-feel-sick-paper-v015.webp",
+      "sha256": "b6a783144e990f9b83c2bc351cafff528d3f98eb7dcd285895058b061a1eac85",
+      "bytes": 84952,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-feel-sick.json"
+    },
+    {
+      "id": "daily-need-to-pee",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-need-to-pee.webp",
+      "target": "xiaoya/stories/daily-need-to-pee-paper-v015.webp",
+      "sha256": "0e185d60e3fb3f4ecd94f88f1de7644ca88f4c544c467fcf47160d55d791d593",
+      "bytes": 94234,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-need-to-pee.json"
+    },
+    {
+      "id": "daily-are-you-okay",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-are-you-okay.webp",
+      "target": "xiaoya/stories/daily-are-you-okay-paper-v015.webp",
+      "sha256": "fdceabfa64621ced91167653f0f8b1873a217d76d05286ccf8669362881c8eda",
+      "bytes": 81978,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-are-you-okay.json"
+    },
+    {
+      "id": "daily-dont-worry",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-dont-worry.webp",
+      "target": "xiaoya/stories/daily-dont-worry-paper-v015.webp",
+      "sha256": "0866d208dee4dd90b84cad3c582549dc500105a27c1e4bcea912438d82d3afec",
+      "bytes": 80502,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected all seven individual runtime pictures; clear feelings and care actions, intact anatomy, empty toilet with fully clothed character; abstract reassurance supported by bundled Chinese hint.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch01.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-dont-worry.json"
+    },
+    {
+      "id": "daily-happy-birthday",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-happy-birthday.webp",
+      "target": "xiaoya/stories/daily-happy-birthday-paper-v015.webp",
+      "sha256": "c45416910b4c3bb3cbfedff9adcf839784b84a7fa3d2de147405d79bd68956ab",
+      "bytes": 81084,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-happy-birthday.json"
+    },
+    {
+      "id": "daily-whats-your-name",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-whats-your-name.webp",
+      "target": "xiaoya/stories/daily-whats-your-name-paper-v015.webp",
+      "sha256": "0b4f8e9983201fbb8ad25b3bca964f41826f99a81463ce20dff9c0410eafc4a4",
+      "bytes": 70930,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-whats-your-name.json"
+    },
+    {
+      "id": "daily-miss-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-miss-you.webp",
+      "target": "xiaoya/stories/daily-miss-you-paper-v015.webp",
+      "sha256": "196f76d808b00cfb5e29db21c463f1036a6ee74daeee3ea3878c3ad24985a2b4",
+      "bytes": 79248,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-miss-you.json"
+    },
+    {
+      "id": "daily-yes-please",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-yes-please.webp",
+      "target": "xiaoya/stories/daily-yes-please-paper-v015.webp",
+      "sha256": "fc9f05d9b29e06916ab348ed02ad3fd9e3ed5887b5bd685502a21c2316237745",
+      "bytes": 89484,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-yes-please.json"
+    },
+    {
+      "id": "daily-here-you-are",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-here-you-are.webp",
+      "target": "xiaoya/stories/daily-here-you-are-paper-v015.webp",
+      "sha256": "55de3554bdbbcec1ff400c1dc73eaca17fef43249eed4d3180789bcc55d44029",
+      "bytes": 95258,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-here-you-are.json"
+    },
+    {
+      "id": "daily-this-is-for-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-this-is-for-you.webp",
+      "target": "xiaoya/stories/daily-this-is-for-you-paper-v015.webp",
+      "sha256": "146d0247a8400004896ff6c4deb9e630623b10f7f951923a9260712c333bbe56",
+      "bytes": 91416,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-this-is-for-you.json"
+    },
+    {
+      "id": "daily-after-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-after-you.webp",
+      "target": "xiaoya/stories/daily-after-you-paper-v015.webp",
+      "sha256": "6b7011e50b6dd8d5be16003c162ce97c4f94819064847cc1bbc2a31a2d75f1c6",
+      "bytes": 130842,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19: root inspected individual runtime pictures 08-14; birthday, introduction, longing, accepting, handing over, gifting and yielding have distinct intention cues; hand and object ownership checked.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-after-you.json"
+    },
+    {
+      "id": "daily-sweet-dreams",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-sweet-dreams.webp",
+      "target": "xiaoya/stories/daily-sweet-dreams-paper-v015.webp",
+      "sha256": "4d7f393add36b4362f4a4d9b784223933198aa72c5c90e6b31a047d8b7fc7122",
+      "bytes": 116618,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-sweet-dreams.txt"
+    },
+    {
+      "id": "daily-slow-down",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-slow-down.webp",
+      "target": "xiaoya/stories/daily-slow-down-paper-v015.webp",
+      "sha256": "64e6f3d7b972db81989acd2b26c06ed0c78ad85beb88d52cbcd75e64efbc51bb",
+      "bytes": 127362,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-slow-down.txt"
+    },
+    {
+      "id": "daily-take-a-break",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-take-a-break.webp",
+      "target": "xiaoya/stories/daily-take-a-break-paper-v015.webp",
+      "sha256": "885cc279090eed6bbd0e67df16ee601f59053ef8b4a14440f056de2b3bee9b06",
+      "bytes": 132122,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-take-a-break.txt"
+    },
+    {
+      "id": "daily-are-you-ready",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-are-you-ready.webp",
+      "target": "xiaoya/stories/daily-are-you-ready-paper-v015.webp",
+      "sha256": "e127aef29f6a5348f40fc65c2d5301feec1987d874e8e9cac41ee71314d67aef",
+      "bytes": 84224,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-are-you-ready.txt"
+    },
+    {
+      "id": "daily-ready-set-go",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-ready-set-go.webp",
+      "target": "xiaoya/stories/daily-ready-set-go-paper-v015.webp",
+      "sha256": "d0b2f4c796f043b08b7ae99ffc23080b038149ae2ddcc8b0de51a0058e3332dd",
+      "bytes": 103692,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-ready-set-go.txt"
+    },
+    {
+      "id": "daily-high-five",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-high-five.webp",
+      "target": "xiaoya/stories/daily-high-five-paper-v015.webp",
+      "sha256": "e2135f6eb29d734e88851cb12db061199986457b087efe547ab2322766eaca38",
+      "bytes": 85060,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-high-five.txt"
+    },
+    {
+      "id": "daily-thats-mine",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-thats-mine.webp",
+      "target": "xiaoya/stories/daily-thats-mine-paper-v015.webp",
+      "sha256": "afdecf01333c9294e47d912ad8b7ea6b837e3753c6a1b0cc35c929002465af4f",
+      "bytes": 92570,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-thats-mine.txt"
+    },
+    {
+      "id": "daily-that-tickles",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-that-tickles.webp",
+      "target": "xiaoya/stories/daily-that-tickles-paper-v015.webp",
+      "sha256": "374484a44df08f6e216748f973d71af271909f78196c3ae9ac0450ff59b7060a",
+      "bytes": 90294,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-that-tickles.json"
+    },
+    {
+      "id": "daily-dont-like-it",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-dont-like-it.webp",
+      "target": "xiaoya/stories/daily-dont-like-it-paper-v015.webp",
+      "sha256": "7b645c11d176f0ba4cbd5c866b2177edd9b718c02e861b4a0a242c2661ad9db6",
+      "bytes": 88968,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-dont-like-it.json"
+    },
+    {
+      "id": "daily-stop-please",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-stop-please.webp",
+      "target": "xiaoya/stories/daily-stop-please-paper-v015.webp",
+      "sha256": "e16b8d9cfda19faf4b0ba6d1345bf7041c1c210889134a8cc9f76d96eb527268",
+      "bytes": 83034,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-stop-please.json"
+    },
+    {
+      "id": "daily-where-are-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-where-are-you.webp",
+      "target": "xiaoya/stories/daily-where-are-you-paper-v015.webp",
+      "sha256": "67b541f9099addc3e851ccac3ee2a6f2c8fa36c04ae104a3df69f3009ac3458f",
+      "bytes": 103076,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-where-are-you.json"
+    },
+    {
+      "id": "daily-here-i-am",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-here-i-am.webp",
+      "target": "xiaoya/stories/daily-here-i-am-paper-v015.webp",
+      "sha256": "5a1ce9fd48277f9ebb38d12d4d903e0f840d7fe420fcdfc95cb839eb7b676b06",
+      "bytes": 102250,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-here-i-am.json"
+    },
+    {
+      "id": "daily-be-careful",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-be-careful.webp",
+      "target": "xiaoya/stories/daily-be-careful-paper-v015.webp",
+      "sha256": "ca2dae61cb17f1940c21ee26cbe21791c93244e34df78e2ff1d82f96baca0828",
+      "bytes": 96830,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-be-careful.json"
+    },
+    {
+      "id": "daily-found-it",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-found-it.webp",
+      "target": "xiaoya/stories/daily-found-it-paper-v015.webp",
+      "sha256": "4157ba01ffc59bba7ff46c8d81bff6300d50217da5f9530cce5e25088689f775",
+      "bytes": 127328,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: phrase scene, character ownership, hand orientation, text-free layout, visual clarity accepted; Chinese situation hint supports abstract meanings.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch02.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-found-it.json"
+    },
+    {
+      "id": "daily-lets-share",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-lets-share.webp",
+      "target": "xiaoya/stories/daily-lets-share-paper-v015.webp",
+      "sha256": "da7184ffd72b6d188bed03598112b88b1211e9540b3170ad34ea5983c0527575",
+      "bytes": 90668,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-lets-share.txt"
+    },
+    {
+      "id": "daily-follow-me",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-follow-me.webp",
+      "target": "xiaoya/stories/daily-follow-me-paper-v015.webp",
+      "sha256": "84d1e1d402bff8b311e1240c9b44c8ace10ef6474999642cdca840a62967348b",
+      "bytes": 151082,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-follow-me.txt"
+    },
+    {
+      "id": "daily-keep-going",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-keep-going.webp",
+      "target": "xiaoya/stories/daily-keep-going-paper-v015.webp",
+      "sha256": "393e23d88032e6281f249ba9b99f0240908e7611994e10798dd5b1ff485b6f67",
+      "bytes": 112134,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-keep-going.txt"
+    },
+    {
+      "id": "daily-take-your-time",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-take-your-time.webp",
+      "target": "xiaoya/stories/daily-take-your-time-paper-v015.webp",
+      "sha256": "603d5f03129474cf8d98a0861a665b0532a476d795d7fd6a213fe6df24463e48",
+      "bytes": 111800,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-take-your-time.txt"
+    },
+    {
+      "id": "daily-its-a-surprise",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-its-a-surprise.webp",
+      "target": "xiaoya/stories/daily-its-a-surprise-paper-v015.webp",
+      "sha256": "d35520e749bb1a4493dd5f1aaafc26d265f13bf7df8b83b14808d3e21cbaab2e",
+      "bytes": 76430,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-its-a-surprise.txt"
+    },
+    {
+      "id": "daily-make-a-wish",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\runtime\\daily-make-a-wish.webp",
+      "target": "xiaoya/stories/daily-make-a-wish-paper-v015.webp",
+      "sha256": "49d4c6dca1c245aba14635ed26ad21f0fb5704b9fbdcd54dba5bba868f0d23f0",
+      "bytes": 95860,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected final runtime image individually: sharing fruit, leading along path, encouraging unfinished puzzle, patiently waiting for shoes, hidden gift and candle wish are distinct; natural anatomy, consistent torn paper style, no text. Chinese audio supports abstract conversational meaning.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-b\\prompts\\daily-make-a-wish.txt"
+    },
+    {
+      "id": "daily-may-i-come-in",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-may-i-come-in.webp",
+      "target": "xiaoya/stories/daily-may-i-come-in-paper-v015.webp",
+      "sha256": "1c4c12b58948b0db41e0a6db7f82553902ce6206ab2618377181c1c3519162af",
+      "bytes": 123084,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-may-i-come-in.json"
+    },
+    {
+      "id": "daily-can-i-sit-here",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-can-i-sit-here.webp",
+      "target": "xiaoya/stories/daily-can-i-sit-here-paper-v015.webp",
+      "sha256": "ad07cffccc5b75c21cabb03bd85204e2804a02e3f5138bcef7dc7443db4fd4eb",
+      "bytes": 92716,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-can-i-sit-here.json"
+    },
+    {
+      "id": "daily-can-i-join-you",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-can-i-join-you.webp",
+      "target": "xiaoya/stories/daily-can-i-join-you-paper-v015.webp",
+      "sha256": "d0557cc36b9d8883a4cbc0fac41ff26d0dac4eac4bfaa56eec532870aabd9a12",
+      "bytes": 92958,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-can-i-join-you.json"
+    },
+    {
+      "id": "daily-can-i-try",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-can-i-try.webp",
+      "target": "xiaoya/stories/daily-can-i-try-paper-v015.webp",
+      "sha256": "2a4777e8af6e26053cabfcf7279a78008a1624122413b7110f0eca8b487f2609",
+      "bytes": 76392,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-can-i-try.json"
+    },
+    {
+      "id": "daily-can-i-borrow-this",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-can-i-borrow-this.webp",
+      "target": "xiaoya/stories/daily-can-i-borrow-this-paper-v015.webp",
+      "sha256": "2eaddf4547c874b189ad9b8c2bcebfa23c02dc41d8124a91e6c3ce6a42fd7447",
+      "bytes": 129216,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-can-i-borrow-this.json"
+    },
+    {
+      "id": "daily-can-i-help",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\runtime\\daily-can-i-help.webp",
+      "target": "xiaoya/stories/daily-can-i-help-paper-v015.webp",
+      "sha256": "9449b7020895d15653d9446adb6849df757448eba4ef9309683c5f0fb567fd9d",
+      "bytes": 105292,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\manifest-final.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-a\\prompts\\daily-can-i-help.json"
+    },
+    {
+      "id": "daily-dont-know",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-dont-know.webp",
+      "target": "xiaoya/stories/daily-dont-know-paper-v015.webp",
+      "sha256": "d791caa38a61593e842e6bd845065b1308227bf65502d99e72f68d96a07c6b55",
+      "bytes": 84104,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-dont-know.json"
+    },
+    {
+      "id": "daily-dont-understand",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-dont-understand.webp",
+      "target": "xiaoya/stories/daily-dont-understand-paper-v015.webp",
+      "sha256": "79c5d4b1a2f3cad3201743b59596591e4450153ad038bf8b39d8279fdd082cd6",
+      "bytes": 89832,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-dont-understand.json"
+    },
+    {
+      "id": "daily-say-it-again",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-say-it-again.webp",
+      "target": "xiaoya/stories/daily-say-it-again-paper-v015.webp",
+      "sha256": "6934d2113e34f23decae8799a7c0106cc67a6a03dd6a661ed0c1c772da4917ee",
+      "bytes": 72404,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-say-it-again.json"
+    },
+    {
+      "id": "daily-show-me",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-show-me.webp",
+      "target": "xiaoya/stories/daily-show-me-paper-v015.webp",
+      "sha256": "1c1e5d7fa846c8059660b988411810abc641735ec0e014088530c9cef6e01255",
+      "bytes": 89360,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-show-me.json"
+    },
+    {
+      "id": "daily-what-happened",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-what-happened.webp",
+      "target": "xiaoya/stories/daily-what-happened-paper-v015.webp",
+      "sha256": "0291b89bf353695afb9d337c4dc43346673491a86957440600831089a8310536",
+      "bytes": 113086,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-what-happened.json"
+    },
+    {
+      "id": "daily-have-an-idea",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\runtime\\daily-have-an-idea.webp",
+      "target": "xiaoya/stories/daily-have-an-idea-paper-v015.webp",
+      "sha256": "7efde168bea383e133737f11c024f7acb4dc166f62e33b3469f1d8ba40406887",
+      "bytes": 104306,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "2026-10-19 root inspected individual final runtime pixels: request remains before action, speaker and partner are distinct, gestures and object ownership plausible, no letters or false UI. Last group uses distinct uncertainty/listening/demonstration/problem/idea scenes. Recorded Chinese help supports abstract meaning; comprehension still needs child testing.",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\manifest-batch03.json",
+      "sourcePrompt": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v015-phrases\\batch-c\\prompts\\daily-have-an-idea.json"
+    }
+  ]
+}

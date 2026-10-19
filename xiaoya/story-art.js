@@ -325,6 +325,8 @@ function phraseScene(id,f,alt){
 
 function render(event,frame,context){
   const f=Math.max(0,Math.min(3,Number(frame)||0)),alt=!!context&&context.id!==event.contexts[0].id;
+  // A loading picture must not substitute an unrelated lesson's action.
+  if(event.illustration==='daily')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-story="${event.id}" data-frame="${f}" data-alternate="false" data-picture-placeholder="true">${rect(0,0,400,300,24,C.cream)}${person('sprout',200,194,'rest','happy',1.12)}</svg>`;
   if(event.illustration==='phrase')return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-hidden="true" focusable="false" data-story="${event.id}" data-phrase="${event.id}" data-frame="${f}" data-alternate="${alt}">${phraseScene(event.id,f,alt)}</svg>`;
   if(event.illustration!=='comic'){
     const scene=sceneArt({...event,...context},['before','request','resolved','resolved'][f]);

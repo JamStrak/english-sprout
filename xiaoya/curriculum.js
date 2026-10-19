@@ -1,4 +1,5 @@
 import {EVENTS} from './content.js';
+import {PHRASE_PACK_V015_EVENT_IDS} from './phrase-pack-v015.js';
 
 /** One familiar spoken expression per lesson. Alternate stories stay available
  * as optional contexts; they never become additional automatic new lessons. */
@@ -10,6 +11,9 @@ export const CORE_PHRASE_EVENT_IDS = Object.freeze([
   'food-hungry', 'feelings-happy', 'feelings-tired',
   'play-turn', 'play-your-turn', 'play-can-do', 'play-did-it',
   'play-good-job', 'play-again',
+  // Keep the original 24 lessons in place. The new pack introduces 49 easy
+  // expressions, then 11 later expressions, preserving approved order in each.
+  ...PHRASE_PACK_V015_EVENT_IDS,
 ]);
 
 const byEventId = new Map(EVENTS.map(event => [event.id, event]));
