@@ -1,5 +1,22 @@
 # 小芽英语 · 实施记录
 
+## 工程迁入指定 E 盘目录（2026-10-20）
+
+用户指出 C 盘空间吃紧，要求在指定项目根目录内新建工程。本轮将原 `C:\Users\Jam\.codex\worktrees\xiaoya-english-design\儿童英语练习` 完整迁入 `E:\AI新项目\其他实验\儿童英语练习\小芽英语`，保留分支 `codex/xiaoya-garden-ab`。迁移起点 `2616b12c386ddb4db2aa9543f3e3a4dedad0c521`，功能基线仍为 `51090a5` / v0.16.0；当前内测包仍为 `c6c3bbbd57b6`。未修改产品代码、生成媒体、重新构建或对外部署。
+
+先在 E 盘建立同提交工作树，完整复制除根 `.git` 指针外的 11,280 个文件（1,296,674,076 字节），包括被忽略的构建、资源和全部原测试记录。逐文件 SHA-256 一致；删除源目录前再次核对源文件清单、哈希、干净状态与 E 盘副本。索引刷新只消除 LF/CRLF 检出后的状态差异，没有源码内容变动。原 C 盘工作树已移除，释放约 1.21 GiB；Git 历史继续保存在 E 盘父仓库，原分支已切换至新目录。
+
+当前入口、使用说明、AI 接力说明和项目规则已更新；父仓库的导航也指向新子目录。后续本项目新增工作树、资源、构建包和测试产物均位于用户指定的 E 盘根目录内。父仓库 `.git/info/exclude` 本地排除 `/小芽英语/`，避免把新工作树嵌套提交到旧 main；旧产品及无关 `promo-video/` 未改动。历史记录中的旧 C 盘路径保持为历史事实。
+
+本轮验证：
+
+- `python -m unittest discover -s tests -p "test*launcher.py"`：27 项，26 通过、1 项因 Windows 符号链接权限条件跳过，11.390 秒。
+- 从 E 盘通过隐藏 Python 启动既有启动器；`/__xiaoya_english_health` 返回新目录身份 `4b97a8eb42b817c9b344348a`，实际使用端口 24756；重复启动复用同一服务。
+- 实际 HTTP 返回 v0.16.0 / `c6c3bbbd57b6` / internal；页面、一个 MP3 和一个 WebP 响应与本地文件字节一致。所有原 dist 文件的迁移哈希也已校验。
+- 未操作浏览器存档，origin 保持 `http://127.0.0.1:24756`；未重新执行完整功能或儿童体验验收，不把历史功能通过算作本轮重跑。
+
+本机证据：`test-results/migration-20261020.json` 保存全部原文件清单和哈希；`test-results/migration-startup-20261020.json` 保存启动、版本、资源与测试结果摘要。迁移提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询；日后以实际 HEAD 和构建核对。
+
 ## 跨 AI 接力文档整理（2026-10-19）
 
 本轮只更新文档，功能基线仍为 `51090a5` / v0.16.0，未重新构建、启动或部署，保留用户正在测试的内测构建 `c6c3bbbd57b6`。当前事实集中在 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md)，旧的混合长入口原样归档至 [历史快照](history/PROJECT_CONTEXT_before_relay_20261019.md)。新增 [文档索引](INDEX.md)、[AI 接力说明](AI_HANDOFF.md)、[任务交接模板](templates/AI_TASK_HANDOFF.md)、[技术地图](XIAOYA_ENGINEERING.md) 与 [内容流水线](XIAOYA_CONTENT_PIPELINE.md)，更新当前设计、使用和美术入口。旧产品文档及早期方案注明适用范围，保留历史验证原文。
