@@ -293,10 +293,10 @@ test('story help points to one English-story ear; garden help is a single questi
   f.setPage('home');assert.equal(f.ears().length,0);assert.match(f.button('help').body,/data-icon="help"/);
 });
 
-test('parent voice previews keep their three ears while generic help remains distinct',()=>{
+test('parent voice previews keep their three ears without child guidance',()=>{
   const f=fixture();f.setPage('parent');
   assert.deepEqual(f.ears().map(node=>node.dataset.previewVoice),voices.VOICES.map(voice=>voice.id));
-  assert.match(f.button('help').body,/data-icon="help"/);
+  assert.equal(f.button('help'),undefined);
 });
 
 test('spoken directions highlight their actual target and survive a renderer refresh',async()=>{
@@ -331,6 +331,19 @@ test('the one English ear cancels pending capture and late callbacks cannot rest
   assert.equal(s.recording,false);assert.equal(s.pendingClip,null);assert.equal(f.writes.length,0);
   assert.equal(f.sounds.at(-1).file,voices.lessonAudio(s.event,'pip'));assert.deepEqual(f.guided(),['sample']);
   f.sounds.at(-1).resolve(true);await sample;await recording;
+});
+
+test('parent page keeps home navigation without child help or a redundant parent entry',()=>{
+  const f=fixture();
+  assert.ok(f.button('help'));assert.ok(f.button('parent'));
+  f.navigate('parent');
+  assert.match(f.html(),/class="parent-view"/);
+  assert.equal(f.button('help'),undefined);assert.equal(f.button('parent'),undefined);
+  assert.ok(f.button('home'));assert.equal(f.sounds.length,0);
+  f.render();assert.equal(f.button('help'),undefined);assert.equal(f.button('parent'),undefined);
+  f.actions.home();assert.match(f.html(),/class="home-view\b/);
+  assert.ok(f.button('help'));assert.ok(f.button('parent'));
+  f.setSession();assert.ok(f.button('parent'));assert.ok(f.button('context-help'));
 });
 
 test('Chinese help names the one ear and stale help cannot autoplay after navigation',async()=>{

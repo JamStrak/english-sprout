@@ -56,7 +56,7 @@ async function fixture({story='play-again',hold=null,missing=null,alternate=fals
   try{
     await p.goto(`${origin}/xiaoya/?garden=b&story=${story}`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.14.0');if(report.build)assert.equal(build,report.build,'Build changed during suite');else Object.assign(report,{version,build});
+    assert.equal(version,'0.14.1');if(report.build)assert.equal(build,report.build,'Build changed during suite');else Object.assign(report,{version,build});
     return {c,p,requests,errors,release,story};
   }catch(error){release?.();await c.close();throw error;}
 }
@@ -85,6 +85,22 @@ async function test(name,fn,options={}){
 
 (async()=>{
   fs.mkdirSync(out,{recursive:true});browser=await chromium.launch({channel:'msedge',headless:true,args:['--autoplay-policy=no-user-gesture-required']});
+  await test('Parent navigation removes child help and the redundant parent button while home still works',async f=>{
+    await tap(f.p,'parent');await unlock(f.p);await f.p.locator('main.parent-view').waitFor();
+    assert.deepEqual(await f.p.locator('.topbar [data-action]').evaluateAll(es=>es.map(e=>e.dataset.action)),['home']);
+    assert.equal(await f.p.evaluate(()=>qaPictures.audio.length),0,'Opening parent settings cannot play a child instruction');
+    await f.p.screenshot({path:path.join(out,'parent-header-390.png'),animations:'disabled'});
+    await tap(f.p,'home');await f.p.locator('main.home-view').waitFor();
+    await f.p.locator('.topbar [data-action="help"]').waitFor();await f.p.locator('.topbar [data-action="parent"]').waitFor();
+    const s=await meta(f.p,f.story);await ready(f);await ended(f.p,s.lesson);
+    await f.p.locator('[data-action="story-help"]').waitFor();
+    await tap(f.p,'parent');await f.p.locator('main.parent-view').waitFor();
+    assert.deepEqual(await f.p.locator('.topbar [data-action]').evaluateAll(es=>es.map(e=>e.dataset.action)),['home']);
+    await f.p.setViewportSize({width:1366,height:900});
+    await f.p.screenshot({path:path.join(out,'parent-header-1366.png'),animations:'disabled'});
+    await tap(f.p,'home');await f.p.locator('main.home-view').waitFor();
+    return {parentActions:['home'],childHelpPreserved:true,viewports:[390,1366],returnedFromLesson:true};
+  });
   await test('P0 introduction and main picture load only after entry; real English completes',async f=>{
     assert.deepEqual(storyRequests(f),[]);const s=await meta(f.p,f.story);assert.equal(s.intro,files.intro);await ready(f);await ended(f.p,s.lesson);
     const view=await picture(f.p,files.main);assert(!view.vector&&view.single);assert.equal(view.size,'contain');

@@ -213,7 +213,11 @@ const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':
 const narrate=id=>sound(voice(`garden-${id}`),guideTargets[id]||[]);
 function button(action,label,glyph,extra=''){return `<button class="icon-button" data-action="${action}" aria-label="${esc(label)}" ${extra}>${icon(glyph)}</button>`;}
 function primary(action,label,body,extra=''){return `<div class="primary-wrap"><button class="primary-orb" data-primary data-action="${action}" aria-label="${esc(label)}" ${extra}>${body}</button><span class="tap-cue" aria-hidden="true">${icon('tap',36)}</span></div>`;}
-function header(){const localHelp=page==='event'&&['story','request'].includes(session?.phase);return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语</span><div>${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}</div></header>`;}
+function header(){
+  const localHelp=page==='event'&&['story','request'].includes(session?.phase);
+  const controls=page==='parent'?'':`${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}`;
+  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语</span><div>${controls}</div></header>`;
+}
 function balance(){const garden=activeGarden();return `<div class="wallet" aria-label="${garden.shells} 枚贝壳，${garden.water} 滴水"><span>${shellArt()}<b data-shells>${garden.shells}</b></span><span>${dropArt()}<b data-water>${garden.water}</b></span></div>`;}
 function flowerFor(id){return FLOWERS.find(f=>f.id===id);}
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
