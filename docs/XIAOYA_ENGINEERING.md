@@ -1,13 +1,13 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-19。功能基线：`codex/xiaoya-garden-ab` / `51090a5` / v0.16.0。本页按源码核对；本次整理未重新执行功能测试。当前状态和验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-20，当前 v0.16.1。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
 | 范围 | 新产品：小芽英语 | 旧产品：英语小芽 |
 | --- | --- | --- |
 | 源码 | `xiaoya/` | `src/` |
-| 浏览器入口 | `/xiaoya/`，B 花园用 `?garden=b` | `/` |
+| 浏览器入口 | `/xiaoya/`；启动器使用 `/xiaoya/start-<build>.html`，B 花园用 `?garden=b` | `/` |
 | UI 启动 | `xiaoya/app.js` → `experience.js` | 根 `index.html` 与 `src/` |
 | 版本来源 | `scripts/build-xiaoya.mjs` 的 `XIAOYA_VERSION` | `package.json` 的 `version`，当前 1.8.1 |
 | Windows 普通启动 | `启动小芽英语.vbs` → `launcher_xiaoya.py` | `启动英语小芽.vbs` → `launcher.py` |
@@ -85,6 +85,8 @@
 
 `audio-pack.js` 的 `startAudioPack` / `retryAudioPack` 等待匹配当前构建的控制器与缓存状态。`sw.template.js` 的核心缓存为 `xiaoya-core-<build>`，声音缓存为 `xiaoya-audio-v3`，识别缓存为 `english-sprout-speech-v1`。声音支持 Range 请求；整包下载可复用已校验项，安装成功后才接管。升级会兼顾仍开的旧标签页，不用清除全部缓存解决版本问题。
 
+v0.16.1 的启动器打开带构建指纹的独立 HTML 路径，绕过旧 SW 对 `/xiaoya/` 的缓存命中；单纯添加查询参数不能达到这个效果。该 HTML 与本次 `index.html` 字节一致，列入核心缓存与完整性清单。新版 SW 对 `/xiaoya/` 和 `index.html` 导航先请求服务器的新页面；网络失败或响应不属于本产品时，回退本 SW 已校验的离线入口，不把新 HTML 写进旧构建的缓存。新版页面不等待整个声音包完成才可打开；声音整包仍需完整校验后启用，现有活动页不会被强制刷新。
+
 图片按需缓存；改图优先使用明确的新资源路径并更新映射，避免同名文件被旧缓存覆盖。声音更换须让构建清单中的字节数和 SHA 变化，核对新产品声音缓存方案；旧产品声音则遵守 `src/media.js` 与根 `sw.template.js` 的版本同步约定。
 
 ### 本地识别的实现和限制
@@ -120,15 +122,15 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `scripts/build.mjs` 清理本仓的 `dist/`、复制 `public/` 与旧产品，再调用 `buildXiaoya`。两种构建都会覆盖同一个 dist，不能并发构建或在浏览器测试中途换渠道。`public/` 会整体进入发布包；不要把日志、真实存档、私密配置或生成过程文件放进这里。只部署公开构建的 dist，不发布工作树本身。
 
-`build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`audio-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
+`build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.16.0 核对值：内测 `c6c3bbbd57b6`，公开 `15b23ca28363`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.16.1 核对值：内测 `662cdacbb1dd`，公开 `c3fda79f50af`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
 `launcher_xiaoya.py` 从自身位置定位工程，使用 loopback `127.0.0.1`，候选端口 24756–24766。通过 `/__xiaoya_english_health` 的 app/protocol/project 身份验证复用同工程服务；其他应用占用端口则尝试后续端口。缺少 dist 时生成内测包；已有 dist 时不会擅自覆盖，因而要主动核对现有包是 internal 还是 public。
 
-重启电脑后双击当前工程的 `启动小芽英语.vbs`，它传入 `--garden b` 打开 B 花园临时预览；本机父目录的 `启动小芽英语最新版.vbs` 转交到此入口。`launcher_xiaoya.py --garden a|b` 支持指定预览，端口来自实际启动/复用结果；无参数调用保持原来路径和保存偏好的行为。VBS 修改日期只代表脚本最后修改时间，不代表其所加载的构建日期，版本以 GM 标题和 `/xiaoya/version.json` 为准。运行中刷新页面不会自动替你构建或替换错误工程；排查顺序是工程目录 → 服务健康身份 → dist 渠道/版本 → 页面实际版本 → 对应资源响应。只有需要更新的受控步骤才重启，不用结束所有 Python/Node 进程。
+重启电脑后双击当前工程的 `启动小芽英语.vbs`，它传入 `--garden b` 打开 B 花园临时预览；本机父目录的 `启动小芽英语最新版.vbs` 转交到此入口。`startup_path` 从本地 `version.json` 校验 12 位十六进制指纹、对应 HTML 文件及目录边界后选择新入口；旧构建没有该文件时兼容回退 `/xiaoya/`。`launcher_xiaoya.py --garden a|b` 支持指定预览，端口来自实际启动/复用结果；无参数仍选择新入口，但沿用保存的花园偏好。VBS 修改日期只代表脚本最后修改时间，不代表其所加载的构建日期，版本以 GM 标题和 `/xiaoya/version.json` 为准。运行中刷新页面不会自动替你构建或替换错误工程；排查顺序是工程目录 → 服务健康身份 → dist 渠道/版本 → 页面实际版本 → 对应资源响应。只有需要更新的受控步骤才重启，不用结束所有 Python/Node 进程。
 
 `.github/workflows/pages.yml` 在 main 推送或手动触发时执行 Node 单测、公开构建并发布 dist；这属于既有仓库 Pages 流程，新产品当前没有对外发布。保存接力提交不构成发布授权。换分支与 worktree 合作见 [AI 接力说明](AI_HANDOFF.md)。
 
@@ -146,6 +148,8 @@ v0.16.0 核对值：内测 `c6c3bbbd57b6`，公开 `15b23ca28363`。构建指纹
 | 识别与下载完整性 | `tests/xiaoya-speech-signal.test.js`、`speech-match.test.js`、`speech-download.test.js`、`speech-download-recovery.test.js`；`xiaoya-speech-quality.cjs`、`xiaoya-speech.cjs` |
 | GM 隔离、构建渠道 | `tests/xiaoya-build.test.js`、`xiaoya-runtime.test.js`；内测/公开两种构建分别运行 `tests/xiaoya-gm-browser.cjs` |
 | 启动器、端口 | `python -m unittest tests.test_launcher tests.test_xiaoya_launcher` |
+| 旧 SW 升级、首次启动、离线入口 | `tests/xiaoya-startup-update-browser.cjs`，独立服务与浏览器，保留旧 SW 缓存行为作回归 |
+| 首页挑战/花园入口排列与显隐 | `tests/xiaoya-home-entry-browser.cjs`，桌面、窄屏、横屏及真实开放条件 |
 | 共用构建或共享模块 | 上述相关项＋旧产品 `tests/browser.cjs`；必要时旧产品领域单测 |
 
 表格中省略 `tests/` 前缀的文件仍在 tests 目录。不是每次小改都把所有历史脚本跑一遍；根据修改路径和未解决风险扩展验证。浏览器用例有些注入假麦克风/识别结果，有些播放真实预制声音；报告需说清范围，不能只写“全部体验通过”。
@@ -168,7 +172,7 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-功能基线 `51090a5` 已有记录：Node 单测 688/688、GM 内测浏览器 9/9、公开隔离 1/1、旧产品浏览器 36/36、Python 启动器 27 项（26 通过、1 平台跳过）。可移植摘要见 [实施记录 v0.16.0](XIAOYA_IMPLEMENTATION.md) 和 [旧产品回归摘要](UI_QA_xiaoya-v016-legacy.md)。本页整理没有重跑这些检查。
+v0.16.1：Node 单测 689/689、GM 内测浏览器 9/9、公开隔离 1/1、旧产品浏览器 36/36、Python 启动器 30 项（29 通过、1 平台跳过）；最终包首页布局 7/7、旧 SW 升级 7/7、图片加载定向 4/4。完整命令、构建差异与实际范围见 [实施记录 v0.16.1](XIAOYA_IMPLEMENTATION.md) 和 [旧产品回归摘要](UI_QA_xiaoya-v0161-legacy.md)。
 
 原始日志在忽略入库的 `test-results/`，不会自动随 Git 转移。下一个 AI 不应凭这些历史数字宣称自己改动已通过；交回时写清提交、渠道、命令、通过/失败/跳过、证据路径及未测项。真实幼儿、物理麦克风、实体手机、长期学习效果与经济节奏仍需用户验收。
 

@@ -109,6 +109,9 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   const built = await fixture(t);
   assert.equal(await fs.readFile(path.join(built.root, 'dist/index.html'), 'utf8'), 'original-product');
   const html = await fs.readFile(path.join(built.output, 'index.html'), 'utf8');
+  const startup = `start-${built.build}.html`;
+  assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
+  assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
@@ -278,7 +281,7 @@ test('worker refuses activation when one core response is from another build', a
   assert.equal(sw.skipped(), 0);
 });
 
-test('query navigations use the current shell instead of an older cached query page, online and offline', async t => {
+test('query navigations prefer the network and fall back to this verified shell, never an older cached query page', async t => {
   const built = await fixture(t), sw = await worker(built);
   const currentHtml = await fs.readFile(path.join(built.output, 'index.html'), 'utf8');
   const oldCache = await sw.caches.open('xiaoya-core-old-query-release');
@@ -303,8 +306,28 @@ test('query navigations use the current shell instead of an older cached query p
       assert.equal(new URL(request.url).searchParams.get('story'), 'hello-goodbye');
     }
   }
-  assert.equal(sw.fetched.length, installedRequests, 'Installed current HTML must work without a navigation network request');
+  assert.equal(sw.fetched.length, installedRequests + urls.length * 2, 'Each navigation checks the network, including an offline attempt');
   assert.equal(await (await oldCache.match(urls[0])).text(), '<html>old query shell</html>', 'Old release assets stay intact for existing tabs');
+});
+
+test('a newer online shell does not replace this worker offline shell or interrupt existing clients', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  const original = await fs.readFile(path.join(built.output, 'index.html'), 'utf8');
+  await sw.lifecycle('install');
+  await sw.lifecycle('activate');
+  const newer = original.replaceAll(built.build, '0123456789ab');
+  await fs.writeFile(path.join(built.output, 'index.html'), newer);
+  const request = new Request(new URL('./?garden=b', sw.scope));
+  Object.defineProperty(request, 'mode', {value:'navigate'});
+  assert.equal(await (await sw.fetchRequest(request)).text(), newer, 'A new navigation must reach the published build before worker activation');
+  const cache = await sw.caches.open(`xiaoya-core-${built.build}`);
+  assert.equal(await (await cache.match(new URL('./index.html', sw.scope).href)).text(), original, 'An installed release remains atomic');
+  await fs.writeFile(path.join(built.output, 'index.html'), '<html>temporary upstream error</html>');
+  assert.equal(await (await sw.fetchRequest(request)).text(), original, 'A non-app network response must not replace the offline app');
+  sw.setOnline(false);
+  assert.equal(await (await sw.fetchRequest(request)).text(), original);
+  assert.equal(await (await sw.fetchRequest(new Request(new URL(`start-${built.build}.html`, sw.scope)))).text(), original);
+  assert.equal(sw.claimed(), 1, 'Navigation never reclaims or navigates another client');
 });
 
 test('story image loads on demand and remains available offline under a nested host', async t => {

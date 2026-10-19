@@ -6,6 +6,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/cod
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'../dist/xiaoya/version.json'),'utf8'));
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Use a loopback candidate server');
 const out=path.resolve(process.env.XIAOYA_PICTURES_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-story-pictures'));
@@ -56,7 +57,7 @@ async function fixture({story='play-again',hold=null,missing=null,alternate=fals
   try{
     await p.goto(`${origin}/xiaoya/?garden=b&story=${story}`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
     const version=await p.locator('meta[name="xiaoya-version"]').getAttribute('content'),build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
-    assert.equal(version,'0.14.1');if(report.build)assert.equal(build,report.build,'Build changed during suite');else Object.assign(report,{version,build});
+    assert.equal(version,expected.version);assert.equal(build,expected.build,'Served build must match the local candidate');if(report.build)assert.equal(build,report.build,'Build changed during suite');else Object.assign(report,{version,build});
     return {c,p,requests,errors,release,story};
   }catch(error){release?.();await c.close();throw error;}
 }

@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import threading
@@ -146,6 +147,23 @@ def show_error(message: str):
         print(message, file=sys.stderr)
 
 
+def startup_path(root: Path) -> str:
+    """Use an immutable entry without moving origin or touching browser data."""
+    output = root / "dist" / "xiaoya"
+    try:
+        metadata = json.loads((output / "version.json").read_text(encoding="utf-8"))
+        build = metadata.get("build") if isinstance(metadata, dict) else None
+    except (OSError, ValueError):
+        return "/xiaoya/"
+    if not isinstance(build, str) or not re.fullmatch(r"[a-f0-9]{12}", build):
+        return "/xiaoya/"
+    filename = f"start-{build}.html"
+    candidate = (output / filename).resolve()
+    if candidate.parent != output.resolve() or not candidate.is_file():
+        return "/xiaoya/"
+    return f"/xiaoya/{filename}"
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="小芽英语本机预览")
     parser.add_argument("--no-browser", action="store_true", help="仅启动或复用服务，不自动打开浏览器（维护用）")
@@ -154,7 +172,7 @@ def main(argv=None):
     server = None
     try:
         port, server, thread = start_or_reuse(ROOT)
-        url = f"http://{HOST}:{port}/xiaoya/"
+        url = f"http://{HOST}:{port}{startup_path(ROOT)}"
         if args.garden:
             url += f"?garden={args.garden}"
         if not args.no_browser and not webbrowser.open(url):

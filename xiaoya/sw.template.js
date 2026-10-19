@@ -125,10 +125,16 @@ self.addEventListener('fetch', event => {
     let cache, found;
     try {
       cache = await caches.open(isAudio ? AUDIO : isSpeech ? SPEECH : CACHE);
-      // Story/deep-link query strings choose app state, not a different shell.
-      // Never revive HTML from an older release's cached query URL.
+      // New navigations prefer the published shell. Existing documents keep
+      // their immutable modules and are never reloaded during a child activity.
+      // Keep this worker's verified offline shell intact even if the network
+      // serves a newer build while that build's audio pack is still installing.
       const entry = new URL(SCOPE);
       if (request.mode === 'navigate' && [entry.pathname, `${entry.pathname}index.html`].includes(url.pathname)) {
+        try {
+          const fresh = await fetch(new Request(request, {cache:'no-cache'}));
+          if (fresh.status === 200 && /<meta\s+name="xiaoya-build"\s+content="[a-f0-9]{12}"/.test(await fresh.clone().text())) return fresh;
+        } catch {}
         const shell = await cache.match(absolute('./index.html'));
         if (shell) return shell;
       }

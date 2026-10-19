@@ -63,7 +63,7 @@ git worktree add -b codex/feature-name 'D:\work\xiaoya-feature' <完整起点SHA
 
 ## 运行、测试与审核
 
-普通试用双击当前工程的 `启动小芽英语.vbs`，直接临时预览 B 花园；本机父目录也有 `启动小芽英语最新版.vbs` 转交入口。开发命令、环境变量和各项测试入口见 [技术地图](XIAOYA_ENGINEERING.md)。不要因根 `package.json` 的旧版本号、`npm run preview` 或旧文档误启旧应用。
+普通试用双击当前工程的 `启动小芽英语.vbs`，直接临时预览 B 花园；本机父目录也有 `启动小芽英语最新版.vbs` 转交入口。启动器按本地构建选择 `start-<build>.html`，绕过已安装旧服务工作线程的首页缓存，保留相同 origin 和存档。不能只凭 URL 或 VBS 日期判断版本，应核对 GM/页面实际版本与 `dist/xiaoya/version.json`。开发命令、环境变量和各项测试入口见 [技术地图](XIAOYA_ENGINEERING.md)。不要因根 `package.json` 的旧版本号、`npm run preview` 或旧文档误启旧应用。
 
 - `npm run build:dev` 生成内测版；`npm run build` 生成公开版，两者共用 `dist`。切换构建会影响正在试用的本地包，应记录最后保留的渠道和版本。
 - 正式版本交付运行 `npm test`、对应构建及与改动相关的检查；界面/媒体改动加新产品浏览器检查和旧产品回归，启动器变更加 Python 测试。纯文档更改核对事实、链接和差异即可。

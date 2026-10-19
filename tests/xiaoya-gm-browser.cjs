@@ -13,7 +13,7 @@ const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/Jam/.cache
 const root = path.resolve(__dirname, '..'), dist = path.join(root, 'dist');
 const publicBuild = process.env.XIAOYA_EXPECT_PUBLIC === '1';
 const filter = process.env.XIAOYA_TEST_FILTER ? new RegExp(process.env.XIAOYA_TEST_FILTER) : null;
-const out = path.join(root, 'test-results', publicBuild ? 'xiaoya-v016-gm-public' : 'xiaoya-v016-gm');
+const out = path.resolve(root, process.env.XIAOYA_GM_TEST_OUT || path.join('test-results', publicBuild ? 'xiaoya-v016-gm-public' : 'xiaoya-v016-gm'));
 const report = {startedAt: new Date().toISOString(), checks: [], scope: {publicBuild, nativeMedia: true, isolatedProfiles: true, microphoneUsed: false, realSpeechAssessmentTested: false, filter: filter?.source || null}};
 const forbidden = /(?:\/(?:speech|models?)\/|\/speech-local\.js|\.(?:onnx|wasm)(?:\?|$)|vosk|whisper)/i;
 const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.webmanifest':'application/manifest+json','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.mp3':'audio/mpeg'};

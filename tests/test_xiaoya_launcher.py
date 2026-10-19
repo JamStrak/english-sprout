@@ -20,6 +20,9 @@ class XiaoyaLauncherTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
+        root_patch = patch.object(launcher, "ROOT", self.root)
+        root_patch.start()
+        self.addCleanup(root_patch.stop)
         (self.root / "dist" / "xiaoya").mkdir(parents=True)
         (self.root / "dist" / "index.html").write_text("old-product", encoding="utf-8")
         (self.root / "dist" / "xiaoya" / "index.html").write_text("new-product", encoding="utf-8")
@@ -109,6 +112,28 @@ class XiaoyaLauncherTests(unittest.TestCase):
             launcher.ensure_build(self.root)
         build.assert_not_called()
         self.assertEqual((self.root / "dist/xiaoya/index.html").read_text(), "new-product")
+
+    def test_latest_build_uses_distinct_entry_on_reused_server_and_preserves_garden(self):
+        output = self.root / "dist/xiaoya"
+        build = "0123456789ab"
+        (output / "version.json").write_text(json.dumps({"build": build}), encoding="utf-8")
+        (output / f"start-{build}.html").write_text("latest immutable product", encoding="utf-8")
+        port = self.start()
+        with patch.object(launcher, "start_or_reuse", return_value=(port, None, None)), patch.object(launcher.webbrowser, "open", return_value=True) as browser:
+            launcher.main(["--garden", "b"])
+        url = f"http://127.0.0.1:{port}/xiaoya/start-{build}.html?garden=b"
+        browser.assert_called_once_with(url)
+        with self.opener.open(url, timeout=2) as response:
+            self.assertEqual(response.read(), b"latest immutable product")
+            self.assertEqual(response.headers["Cache-Control"], "no-cache")
+
+    def test_startup_metadata_is_validated_and_older_builds_fall_back_safely(self):
+        output = self.root / "dist/xiaoya"
+        self.assertEqual(launcher.startup_path(self.root), "/xiaoya/")
+        for value in ("not json", "[]", "null", '{"build": "../../private"}', '{"build": 123}', '{"build": "ABCDEF123456"}', '{"build": "0123456789ab"}'):
+            with self.subTest(metadata=value):
+                (output / "version.json").write_text(value, encoding="utf-8")
+                self.assertEqual(launcher.startup_path(self.root), "/xiaoya/")
 
     def test_garden_preview_uses_actual_service_port_without_changing_saved_preferences(self):
         for garden in ("a", "b"):
