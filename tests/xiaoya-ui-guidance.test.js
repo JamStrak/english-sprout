@@ -23,7 +23,7 @@ import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. Button visibility is explicit; physical layout stays in browser tests.
-const source=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
+const source='const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage;\n'+fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export const /gm,'const ');
 const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});return {promise,resolve};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false}={}){

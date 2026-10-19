@@ -104,6 +104,38 @@ class XiaoyaLauncherTests(unittest.TestCase):
             launcher.main([])
             browser.assert_called_once_with("http://127.0.0.1:24756/xiaoya/")
 
+    def test_existing_public_or_internal_build_is_never_overwritten(self):
+        with patch.object(launcher.subprocess, "run") as build:
+            launcher.ensure_build(self.root)
+        build.assert_not_called()
+        self.assertEqual((self.root / "dist/xiaoya/index.html").read_text(), "new-product")
+
+    def test_missing_build_uses_hidden_internal_builder(self):
+        index = self.root / "dist/xiaoya/index.html"
+        index.unlink()
+        script = self.root / "scripts/build.mjs"
+        script.parent.mkdir()
+        script.write_text("// fixture", encoding="utf-8")
+        def complete(*args, **kwargs):
+            index.write_text("internal-product", encoding="utf-8")
+            return Mock(returncode=0)
+        with patch.object(launcher.shutil, "which", return_value="node"), patch.object(launcher.subprocess, "run", side_effect=complete) as build:
+            launcher.ensure_build(self.root)
+        self.assertEqual(build.call_args.args[0], ["node", str(script), "--internal"])
+        self.assertEqual(build.call_args.kwargs["cwd"], self.root)
+        self.assertTrue(build.call_args.kwargs["capture_output"])
+        self.assertEqual(build.call_args.kwargs["creationflags"], launcher.subprocess.CREATE_NO_WINDOW if launcher.os.name == "nt" else 0)
+
+    def test_missing_build_has_actionable_failure(self):
+        (self.root / "dist/xiaoya/index.html").unlink()
+        with patch.object(launcher.shutil, "which", return_value=None), self.assertRaisesRegex(launcher.LaunchError, "npm run build:dev"):
+            launcher.ensure_build(self.root)
+        script = self.root / "scripts/build.mjs"
+        script.parent.mkdir()
+        script.write_text("// fixture", encoding="utf-8")
+        with patch.object(launcher.shutil, "which", return_value="node"), patch.object(launcher.subprocess, "run", return_value=Mock(returncode=1, stderr="test build error", stdout="")), self.assertRaisesRegex(launcher.LaunchError, "test build error"):
+            launcher.ensure_build(self.root)
+
     def test_owned_server_stays_running_and_shuts_down_cleanly(self):
         server, thread = Mock(), Mock()
         with patch.object(launcher, "start_or_reuse", return_value=(24756, server, thread)):

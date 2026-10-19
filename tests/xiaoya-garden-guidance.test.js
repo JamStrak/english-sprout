@@ -22,7 +22,7 @@ import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
-const source=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
+const source='const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage;\n'+fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export const /gm,'const ');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function reward(state){return gardening.rewardRound(state,{roundId:`garden-test-${state.rounds.length+1}`,eventId:'food-water',date:'2026-10-16'});}
 function grown(count){

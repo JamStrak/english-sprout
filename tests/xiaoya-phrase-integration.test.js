@@ -26,7 +26,7 @@ import {PHRASE_PACK_V015_EVENT_IDS} from '../xiaoya/phrase-pack-v015.js';
 const added = PHRASE_PACK_V015_EVENT_IDS.map(id => content.EVENTS.find(event => event.id === id));
 const copy = value => JSON.parse(JSON.stringify(value));
 const flush = () => new Promise(resolve => setImmediate(resolve));
-const controllerSource = fs.readFileSync(new URL('../xiaoya/experience.js', import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '');
+const controllerSource = 'const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage;\n'+fs.readFileSync(new URL('../xiaoya/experience.js', import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export const /gm,'const ');
 const audioSource = fs.readFileSync(new URL('../xiaoya/audio.js', import.meta.url), 'utf8')
   .replace("import {prepareSamples} from './speech-signal.js';", '')
   .replace(/export (async )?function /g, '$1function ')

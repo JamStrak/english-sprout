@@ -8,7 +8,7 @@ import {webcrypto} from 'node:crypto';
 import {buildXiaoya} from '../scripts/build-xiaoya.mjs';
 
 const project = path.resolve(import.meta.dirname, '..');
-async function fixture(t,{phrasePack=false}={}) {
+async function fixture(t,{phrasePack=false,internal=false}={}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'xiaoya-build-'));
   t.after(() => fs.rm(root, {recursive:true, force:true}));
   await fs.mkdir(path.join(root, 'xiaoya'), {recursive:true});
@@ -26,6 +26,9 @@ async function fixture(t,{phrasePack=false}={}) {
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.writeFile(path.join(root, 'xiaoya', 'audio-pack.js'), '/* audio preparation */');
+  await fs.writeFile(path.join(root, 'xiaoya', 'runtime.js'), "import {INTERNAL_BUILD} from './build-config.js'; export const enabled=INTERNAL_BUILD;");
+  await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
+  await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), new Uint8Array([1,2,3,4,5,6]));
   for (const directory of ['', 'ryan', 'characters/pip']) {
@@ -41,7 +44,11 @@ async function fixture(t,{phrasePack=false}={}) {
   }
   await fs.mkdir(path.join(root, 'public/xiaoya/icons'), {recursive:true});
   for (const name of ['icon-paper-v04-48.png','icon-paper-v04-192.png','icon-paper-v04-512.png']) await fs.copyFile(path.join(project, 'public/xiaoya/icons', name), path.join(root, 'public/xiaoya/icons', name));
-  const result = await buildXiaoya({root});
+  await fs.mkdir(path.join(root, 'public/xiaoya/stories'), {recursive:true});
+  await fs.writeFile(path.join(root, 'public/xiaoya/stories/goodbye-v2.webp'), 'public story bytes');
+  await fs.writeFile(path.join(root, 'public/xiaoya/stories/fallback.svg'), '<svg/>');
+  await fs.writeFile(path.join(root, 'public/xiaoya/stories/private.log'), 'not catalogued');
+  const result = await buildXiaoya({root,internal});
   // The outer build copies public media; it must stay outside the eager shell.
   await fs.mkdir(path.join(root, 'dist/xiaoya/stories'), {recursive:true});
   await fs.writeFile(path.join(root, 'dist/xiaoya/stories/goodbye-v2.webp'), 'public story bytes');
@@ -127,6 +134,54 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(again.build, built.build);
   await fs.appendFile(path.join(built.root, 'xiaoya/art.js'), '\n/* updated artwork */');
   assert.notEqual((await buildXiaoya({root:built.root})).build, built.build);
+});
+
+test('public is the default and contains no GM entry, workbench, stylesheet or asset catalogue', async t => {
+  const built = await fixture(t), release = path.join(built.output, 'releases', built.build);
+  assert.equal(built.channel, 'public');
+  assert.equal(JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8')).channel, 'public');
+  assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = false/);
+  assert.doesNotMatch(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /gm\.js/);
+  assert.ok(!built.core.some(file => /\/gm[.-]/.test(file)));
+  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
+  assert.ok(built.core.includes(`./releases/${built.build}/runtime.js`));
+  assert.ok(built.core.includes(`./releases/${built.build}/build-config.js`));
+});
+
+test('explicit internal builds fingerprint their channel and catalogue all static artwork and shipped audio', async t => {
+  const built = await fixture(t, {phrasePack:true,internal:true});
+  const release = path.join(built.output, 'releases', built.build);
+  assert.equal(built.channel, 'internal');
+  assert.equal(JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8')).channel, 'internal');
+  assert.match(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /import '\.\/gm\.js'/);
+  assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = true/);
+  for (const file of ['gm.js','gm.css','gm-catalog.json']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
+  const catalogue = JSON.parse(await fs.readFile(path.join(release, 'gm-catalog.json'), 'utf8'));
+  assert.equal(catalogue.images.length, 5);
+  assert.equal(catalogue.audio.length, 8);
+  assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/stories/goodbye-v2.webp' && entry.category === 'stories'));
+  assert.ok(catalogue.images.some(entry => entry.url.endsWith('/fallback.svg')));
+  assert.ok(catalogue.audio.some(entry => entry.url === 'audio/characters/pip/hello-01.mp3' && entry.category === 'pip'));
+  assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/phrases-v015/daily-peekaboo/hint.mp3' && entry.category === 'hint'));
+  assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/v3/guide-hello.mp3' && entry.category === 'guide'));
+  for (const entry of [...catalogue.images,...catalogue.audio]) {
+    assert.ok(entry.bytes > 0 && entry.name && /^[a-f0-9]{64}$/.test(entry.sha256));
+    assert.ok(!entry.url.startsWith('/') && !entry.url.includes('..') && !entry.url.includes('private'));
+    assert.ok(new URL(entry.url, 'https://host.test/nested/').pathname.startsWith('/nested/'));
+  }
+  assert.ok(built.core.every(file => !file.endsWith('.webp') && !file.endsWith('.mp3')), 'Catalogued media remain lazy, not eager shell downloads');
+  const sw = await worker(built);
+  await sw.lifecycle('install');
+  sw.setOnline(false);
+  const offlineCatalogue = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/gm-catalog.json`, sw.scope)));
+  assert.deepEqual(await offlineCatalogue.json(), catalogue, 'The review index itself is verified and available offline');
+  assert.ok(!sw.fetched.some(url => url.endsWith('.webp')), 'Reviewing the index never downloads the whole picture library');
+  const publicBuild = await buildXiaoya({root:built.root, dist:path.join(built.root, 'public-dist')});
+  assert.notEqual(publicBuild.build, built.build);
+  assert.equal(publicBuild.channel, 'public');
+  await fs.appendFile(path.join(built.root, 'public/xiaoya/stories/goodbye-v2.webp'), 'changed');
+  assert.notEqual((await buildXiaoya({root:built.root,internal:true})).build, built.build, 'Image changes invalidate the internal catalogue and shell');
+  await assert.rejects(buildXiaoya({root:built.root,internal:'true'}), /explicit boolean/);
 });
 
 test('worker verifies core and the full voice pack, leaving existing product caches intact', async t => {

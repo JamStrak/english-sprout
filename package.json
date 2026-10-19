@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:dev": "node scripts/build.mjs --internal",
     "test": "node --test tests/*.test.js",
     "preview": "python launcher.py --no-browser"
   }

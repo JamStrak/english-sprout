@@ -5,6 +5,9 @@ import {ANIMALS} from '../src/avatars.js';
 import {serializeCurriculum} from '../src/startup.js';
 import {buildXiaoya} from './build-xiaoya.mjs';
 const appVersion=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+const buildArgs=process.argv.slice(2);
+if(buildArgs.some(argument=>argument!=='--internal'))throw new Error('Unknown build option. Use --internal only for the local GM review build.');
+const internal=buildArgs.includes('--internal');
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root,'dist');
 // Only replace this project's generated dist directory.
@@ -53,4 +56,4 @@ sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(re
 await fs.writeFile(path.join(dist,'sw.js'),sw);
 await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:appVersion,build:version}));
 console.log('Built English Sprout '+appVersion+' · '+version);
-await buildXiaoya({root,dist});
+await buildXiaoya({root,dist,internal});

@@ -7,6 +7,8 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import threading
 import urllib.error
 import urllib.parse
@@ -88,6 +90,27 @@ def bind_available(root: Path, ports=PORTS) -> PreviewServer:
     raise LaunchError("小芽英语的本地启动端口暂时都被占用了。\n请关闭之前打开的本地工具后重试，或让 Codex 检查 24756–24766 端口。")
 
 
+def ensure_build(root: Path):
+    """Build a missing local preview once; never overwrite an existing release."""
+    if (root / "dist" / "xiaoya" / "index.html").is_file():
+        return
+    script = root / "scripts" / "build.mjs"
+    node = shutil.which("node")
+    if not script.is_file() or not node:
+        raise LaunchError("小芽英语还没有网页文件，且缺少首次构建需要的 Node.js 或项目文件。\n请让 Codex 检查项目，再运行 npm run build:dev。已有学习记录不会丢失。")
+    try:
+        result = subprocess.run(
+            [node, str(script), "--internal"], cwd=root, capture_output=True,
+            text=True, encoding="utf-8", errors="replace", timeout=180,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise LaunchError("小芽英语首次构建未能完成。\n请让 Codex 检查 Node.js，再运行 npm run build:dev。已有学习记录不会丢失。") from error
+    if result.returncode != 0 or not (root / "dist" / "xiaoya" / "index.html").is_file():
+        detail = (result.stderr or result.stdout or "没有生成网页文件").strip()[-1200:]
+        raise LaunchError(f"小芽英语首次构建失败，请让 Codex 检查后运行 npm run build:dev。\n{detail}")
+
+
 class StartupLock(_base.StartupLock):
     _fallback = threading.Lock()
 
@@ -105,6 +128,7 @@ class StartupLock(_base.StartupLock):
 def start_or_reuse(root: Path, ports=PORTS):
     ports = tuple(ports)
     with StartupLock(root):
+        ensure_build(root)
         port = find_existing(root, ports)
         if port is not None:
             return port, None, None

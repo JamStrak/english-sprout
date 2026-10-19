@@ -2,11 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.15.0';
+export const XIAOYA_VERSION = '0.16.0';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 MODULES.push('seed-shop.js', 'economy.css', 'meadow-hit-shapes.js', 'audio-pack.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'story-assets.js', 'story-pictures.js');
 MODULES.push('phrase-pack-v015.js', 'phrase-assets-v015.js');
+MODULES.push('runtime.js');
+const INTERNAL_MODULES = ['gm.js', 'gm.css'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -23,18 +25,51 @@ async function soundFiles(directory, prefix = '') {
   return files;
 }
 
-/** Add only public Xiaoya files to an already-built dist. */
-export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
+async function imageFiles(directory, prefix = '') {
+  const entries = await fs.readdir(directory, {withFileTypes:true}).catch(error => {
+    if (error.code === 'ENOENT') return []; throw error;
+  });
+  const files = [];
+  for (const entry of entries.sort((a,b) => a.name.localeCompare(b.name, 'en'))) {
+    const name = prefix + entry.name;
+    if (entry.isDirectory()) files.push(...await imageFiles(path.join(directory, entry.name), `${name}/`));
+    else if (entry.isFile() && /\.(png|jpe?g|webp|svg|gif|avif)$/i.test(entry.name)) files.push(name);
+  }
+  return files;
+}
+
+/** Public resource paths, never source paths or children's browser data. */
+async function gmCatalog(root, audio) {
+  const images = [];
+  for (const relative of await imageFiles(path.join(root, 'public/xiaoya'))) {
+    const bytes = await fs.readFile(path.join(root, 'public/xiaoya', relative));
+    images.push({url:`xiaoya/${relative}`, bytes:bytes.length, category:relative.split('/')[0], name:path.posix.basename(relative), sha256:digest(bytes)});
+  }
+  return JSON.stringify({images, audio:audio.map(entry => {
+    const url = new URL(entry.url, 'https://catalog.invalid/xiaoya/').pathname.slice(1);
+    const voice = url.includes('/phrases-v015/') ? path.posix.basename(url, '.mp3')
+      : url.startsWith('xiaoya/audio/') ? 'guide'
+      : url.includes('/characters/pip/') ? 'pip' : url.includes('/ryan/') ? 'ryan' : 'aiden';
+    return {...entry, url, name:path.posix.basename(url), category:voice};
+  })});
+}
+
+/** Build approved static files; the GM workbench requires explicit internal=true. */
+export async function buildXiaoya({root, dist = path.join(root, 'dist'), internal = false} = {}) {
+  if (typeof internal !== 'boolean') throw new TypeError('internal must be an explicit boolean');
+  const channel = internal ? 'internal' : 'public';
   const source = path.join(root, 'xiaoya');
   const template = await fs.readFile(path.join(source, 'index.html'), 'utf8');
   const swTemplate = await fs.readFile(path.join(source, 'sw.template.js'), 'utf8');
   const manifest = await fs.readFile(path.join(source, 'manifest.webmanifest'), 'utf8');
   const files = new Map();
-  for (const name of MODULES) {
+  for (const name of [...MODULES, ...(internal ? INTERNAL_MODULES : [])]) {
     let text = await fs.readFile(path.join(source, name), 'utf8');
     if (name.endsWith('.js')) text = text.replace(/(['"])\.\.\/src\/(speech-(?:local|match|download)\.js)\1/g, '$1./shared/$2$1');
     files.set(name, text);
   }
+  files.set('build-config.js', `// Generated build channel; URL parameters cannot change this.\nexport const INTERNAL_BUILD = ${internal};\nexport const BUILD_CHANNEL = '${channel}';\n`);
+  if (internal) files.set('app.js', `${files.get('app.js')}\nimport './gm.js';\n`);
   for (const name of SHARED) files.set(`shared/${name}`, await fs.readFile(path.join(root, 'src', name), 'utf8'));
   const icons = new Map();
   for (const name of ICONS) icons.set(name, await fs.readFile(path.join(root, 'public/xiaoya/icons', name)));
@@ -50,7 +85,8 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
     }
   }
   const audioManifest = JSON.stringify(audio);
-  const hash = crypto.createHash('sha256').update(XIAOYA_VERSION).update(template).update(swTemplate).update(manifest);
+  if (internal) files.set('gm-catalog.json', await gmCatalog(root, audio));
+  const hash = crypto.createHash('sha256').update(XIAOYA_VERSION).update(channel).update(template).update(swTemplate).update(manifest);
   hash.update(audioManifest);
   for (const [name, bytes] of files) hash.update(name).update(bytes);
   for (const [name, bytes] of icons) hash.update(`icons/${name}`).update(bytes);
@@ -93,7 +129,7 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist')} = {}) {
     .replace('/*__XIAOYA_INTEGRITY__*/{}', JSON.stringify(integrity))
     .replace('/*__XIAOYA_AUDIO__*/[]', audioManifest);
   await fs.writeFile(path.join(output, 'sw.js'), sw);
-  await fs.writeFile(path.join(output, 'version.json'), JSON.stringify({version:XIAOYA_VERSION, build, audio:{count:audio.length, bytes:audio.reduce((sum,file) => sum + file.bytes, 0)}}));
-  console.log(`Built 小芽英语 ${XIAOYA_VERSION} · ${build}`);
-  return {version:XIAOYA_VERSION, build, core};
+  await fs.writeFile(path.join(output, 'version.json'), JSON.stringify({version:XIAOYA_VERSION, build, channel, audio:{count:audio.length, bytes:audio.reduce((sum,file) => sum + file.bytes, 0)}}));
+  console.log(`Built 小芽英语 ${XIAOYA_VERSION} · ${build} · ${channel}`);
+  return {version:XIAOYA_VERSION, build, channel, core};
 }
