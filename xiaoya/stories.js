@@ -1,5 +1,6 @@
 import {EVENTS} from './content.js';
 import {CORE_PHRASE_EVENT_IDS} from './curriculum.js';
+import {STORY_ASSETS} from './story-assets.js';
 
 // A story ID always remains its original event ID. Replacing vector art with an
 // image later changes only `image`; it never resets evidence or garden rewards.
@@ -51,12 +52,12 @@ const first = CORE_PHRASE_EVENT_IDS;
 const twoFrames = new Set(['hello-sorry','hello-okay','play-again','food-full','care-zip']);
 const ordered = [...first.map(id=>EVENTS.find(event=>event.id===id)),...EVENTS.filter(event=>!first.includes(event.id))];
 export const STORIES = Object.freeze(ordered.map(event=>{
-  const art = illustrated[event.id];
+  const art = {...illustrated[event.id], ...STORY_ASSETS[event.id]};
   const frames = Object.freeze(art?.frames || (event.id==='play-did-it'?['拼图还差最后一块','小芽把最后一块放进空位','小芽开心地举手，告诉朋友自己做到了','朋友为小芽拍拍手']:[event.setup,event.request,intermediate[event.id]||event.request,event.resolution]));
   const cueFrame=art?.cueFrame??(event.id==='play-did-it'?2:1);
   return Object.freeze({id:event.id,event,...art,frames,cueFrame,
     // A single picture never stands in for two different beats. "Try again"
-    // retains the fallen-tower vector intro, then its new rebuilding picture.
+    // retains the fallen-tower intro, then its rebuilding picture.
     teachingFrames:Object.freeze(art?.introFrame!=null?[art.introFrame,cueFrame]:!art?.imageLayout&&twoFrames.has(event.id)?[0,cueFrame]:[cueFrame]),
     vector:Object.freeze({kind:event.illustration,action:event.id,theme:event.theme}),
     helpAudio:event.id,

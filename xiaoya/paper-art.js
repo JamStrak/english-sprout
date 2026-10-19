@@ -1,10 +1,13 @@
 // Optional art: the complete vector stays visible until this SVG image loads.
 // URLs are relative to the document's project-root <base>, not the JS release.
 const ROOT='xiaoya/paper/v1/';
+const NEXT_ROOT='xiaoya/paper/v2/';
 const FLOWER_IDS=['daisy','tulip','sunflower','bellflower','poppy','violet','bow-pink','bow-blue','bow-yellow','bow-purple','giant-daisy','giant-sunflower'];
 export const PAPER_ASSETS=Object.freeze(Object.fromEntries([
   ...['buddy-welcome','seed-pack','seed','watering-can','shell','water-drop','seed-in-soil','sprout','bud'].map(key=>[key,`${ROOT}${key}.webp`]),
   ...FLOWER_IDS.map(id=>[`flower-${id}`,`${ROOT}flowers/${id}.webp`]),
+  ...['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'].map(key=>[key,`${NEXT_ROOT}${key}.webp`]),
+  ...['bow-rainbow','bow-starlight'].map(id=>[`flower-${id}`,`${NEXT_ROOT}flowers/${id}.webp`]),
 ]));
 
 /** Keep the existing SVG root/viewBox and put only its replaceable body here. */

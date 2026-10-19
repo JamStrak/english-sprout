@@ -6,6 +6,7 @@ import * as content from '../xiaoya/content.js';
 import * as learning from '../xiaoya/learning.js';
 import * as stories from '../xiaoya/stories.js';
 import * as storyArt from '../xiaoya/story-art.js';
+import * as storyPictures from '../xiaoya/story-pictures.js';
 import * as meadow from '../xiaoya/garden-meadow.js';
 import * as meadowArt from '../xiaoya/meadow-art.js';
 import * as meadowUI from '../xiaoya/meadow-ui.js';
@@ -65,6 +66,8 @@ function fixture(initial=gardening.createGarden()){
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search:''},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
+  sandbox.Image=class {};
+  Object.assign(sandbox,storyPictures,{createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
     getGarden:()=>garden,getFeedback:()=>feedback};`,sandbox);
   async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener(event);await flush();}

@@ -2,8 +2,9 @@ import {icon} from './art.js';
 import {shellArt,dropArt,seedArt} from './garden-art.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {SPECIAL_FLOWERS} from './garden-meadow.js';
+import {paperLayer} from './paper-art.js';
 
-export const flagArt=()=>'<svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M20 55V10" stroke="#66785a" stroke-width="5" stroke-linecap="round"/><path d="M22 11Q34 4 48 14L43 23 48 31Q35 23 22 30Z" fill="#e5b96d" stroke="#9c7b56" stroke-width="2"/><path d="m34 14 2 4 5 1-4 3 1 4-4-2-4 2 1-4-3-3 4-1Z" fill="#fff9e8"/><ellipse cx="20" cy="56" rx="12" ry="3" fill="#80936c" opacity=".2"/></svg>';
+export const flagArt=()=>`<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">${paperLayer('challenge-flag','<path d="M20 55V10" stroke="#66785a" stroke-width="5" stroke-linecap="round"/><path d="M22 11Q34 4 48 14L43 23 48 31Q35 23 22 30Z" fill="#e5b96d" stroke="#9c7b56" stroke-width="2"/><path d="m34 14 2 4 5 1-4 3 1 4-4-2-4 2 1-4-3-3 4-1Z" fill="#fff9e8"/><ellipse cx="20" cy="56" rx="12" ry="3" fill="#80936c" opacity=".2"/>',{width:64,height:64})}</svg>`;
 export function challengeFlag(summary,{invite=false}={}) {
   if(!summary.units.some(u=>u.available))return '';
   return `<button class="challenge-flag ${invite?'is-invited':''}" data-action="challenges" aria-label="花园挑战，进度会保留${invite?'，可以来试试了':''}">${flagArt()}${invite?'<i aria-hidden="true"></i>':''}</button>`;

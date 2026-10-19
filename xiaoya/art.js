@@ -371,5 +371,8 @@ export function roomArt() {
 export function voicePortrait(id) {
   const fox=id==='ryan',cat=id==='pip',fill=fox?'#C88E65':cat?'#B4BBA7':'#C7AB83';
   const ears=fox||cat?`<path d="M14 31L12 8L34 22M66 31L68 8L46 22" fill="${fill}"/><path d="M18 26L17 15L29 24M62 26L63 15L51 24" fill="#DDB8A2"/>`:`${dot(19,23,12,fill)}${dot(61,23,12,fill)}${dot(19,23,7,'#DCC7A7')}${dot(61,23,7,'#DCC7A7')}`;
-  return tag(`${ell(40,43,37,35,'#E5E6D7')}${ears}<path d="M13 39C12 17 67 15 68 39L64 60Q42 80 17 62Z" fill="${fill}"/>${fox?'<path d="M14 41L38 49L66 41L61 62Q41 75 20 61Z" fill="#F0E6D4"/>':ell(40,55,19,15,'#EDE1CA')}${dot(28,41,2.8,'#344B45')}${dot(53,41,2.8,'#344B45')}<path d="M36 49Q40 46 44 49L40 54Z" fill="#344B45"/>${line('M40 54v3m-7 0q7 7 14 0','#344B45',1.8)}${cat?line('M15 49l-9-2m9 7l-9 2m58-7l9-2m-9 7l9 2','#6F7A67',1.5):''}`,'0 0 80 82');
+  const fallback=`${ell(40,43,37,35,'#E5E6D7')}${ears}<path d="M13 39C12 17 67 15 68 39L64 60Q42 80 17 62Z" fill="${fill}"/>${fox?'<path d="M14 41L38 49L66 41L61 62Q41 75 20 61Z" fill="#F0E6D4"/>':ell(40,55,19,15,'#EDE1CA')}${dot(28,41,2.8,'#344B45')}${dot(53,41,2.8,'#344B45')}<path d="M36 49Q40 46 44 49L40 54Z" fill="#344B45"/>${line('M40 54v3m-7 0q7 7 14 0','#344B45',1.8)}${cat?line('M15 49l-9-2m9 7l-9 2m58-7l9-2m-9 7l9 2','#6F7A67',1.5):''}`;
+  // Keep aiden/bear, ryan/fox and pip/cat identities, including the old bear
+  // fallback for unknown IDs. Square portraits fit inside the existing box.
+  return tag(paperLayer(`voice-${fox?'ryan':cat?'pip':'aiden'}`,fallback,{width:80,height:82}),'0 0 80 82');
 }

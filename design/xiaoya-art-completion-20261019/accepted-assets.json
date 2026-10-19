@@ -1,0 +1,2914 @@
+{
+  "version": "v04",
+  "status": "complete",
+  "laboratoryThread": "019ff4f9-dc2f-7a61-8f79-b108371098e5",
+  "assets": [
+    {
+      "assetId": "flower-bow-rainbow",
+      "batch": "P0",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P0/manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P0\\runtime\\flower-bow-rainbow-paper-v04.webp",
+      "target": "xiaoya/paper/v2/flowers/bow-rainbow.webp",
+      "sha256": "9577915b9775c4e7332b9e561594658a8aebb6b8a4de574179b7cf0fad36f595",
+      "bytes": 29464,
+      "dimensions": [
+        384,
+        512
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P0/checks/p0-on-paper.jpg and play-again-continuity.jpg reviewed in APP task; correct silhouettes, root placement and collapsed-to-rebuild sequence.",
+      "role": "plant"
+    },
+    {
+      "assetId": "flower-bow-starlight",
+      "batch": "P0",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P0/manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P0\\runtime\\flower-bow-starlight-paper-v04.webp",
+      "target": "xiaoya/paper/v2/flowers/bow-starlight.webp",
+      "sha256": "ee0033621cabcc3daa90fef39b889b79062e6d0979021ebda4a1ed8dd0320ffb",
+      "bytes": 28370,
+      "dimensions": [
+        384,
+        512
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P0/checks/p0-on-paper.jpg and play-again-continuity.jpg reviewed in APP task; correct silhouettes, root placement and collapsed-to-rebuild sequence.",
+      "role": "plant"
+    },
+    {
+      "assetId": "story-play-again-intro",
+      "batch": "P0",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P0/manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P0\\runtime\\story-play-again-intro-paper-v04.webp",
+      "target": "xiaoya/stories/story-play-again-intro-paper-v04.webp",
+      "sha256": "1a3c47a3d31f4fed62c4b620a92aa02d7f9fbdd8181c5b013c3dbdc37ba95347",
+      "bytes": 55826,
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P0/checks/p0-on-paper.jpg and play-again-continuity.jpg reviewed in APP task; correct silhouettes, root placement and collapsed-to-rebuild sequence.",
+      "eventId": "play-again",
+      "role": "intro"
+    },
+    {
+      "assetId": "story-food-water-primary",
+      "eventId": "food-water",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-water-paper-v4.webp",
+      "target": "xiaoya/stories/food-water-paper-v4.webp",
+      "bytes": 85278,
+      "sha256": "b4ced5eaabc68ee4f7511c13d268c48c96f4bf5a13375927238fce2ae0074a4d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "空杯、盛水透明壶和玩过的球关系清楚；小芽请求水，熊持壶；手脚正确。"
+    },
+    {
+      "assetId": "story-food-more-primary",
+      "eventId": "food-more",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-more-paper-v4.webp",
+      "target": "xiaoya/stories/food-more-paper-v4.webp",
+      "bytes": 93072,
+      "sha256": "1071f1fb5ea770968781d1d975b98f1ce5fc1eedce4f8af413f9d2d7e3f429fd",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "空盘请求更多、熊递苹果片、果碗明确；手脚正确。"
+    },
+    {
+      "assetId": "story-food-no-thanks-primary",
+      "eventId": "food-no-thanks",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-no-thanks-paper-v4.webp",
+      "target": "xiaoya/stories/food-no-thanks-paper-v4.webp",
+      "bytes": 93650,
+      "sha256": "176d4402d2cd116ff7cadbee00c7113bf9024c09dfe383f355db936b10728cc2",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "小芽掌心婉拒且另一手抚腹，熊递点心；礼貌拒绝语义清楚。"
+    },
+    {
+      "assetId": "story-play-box-primary",
+      "eventId": "play-box",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-box-paper-v4.webp",
+      "target": "xiaoya/stories/play-box-paper-v4.webp",
+      "bytes": 86372,
+      "sha256": "9c3c3b7d765b799d387c6ee05b2bc9ccbf72d1ceb570101dfc8ce484532d2eaf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "玩具箱盖关闭卡住，小芽请求帮助，熊准备帮忙；不是完成态。"
+    },
+    {
+      "assetId": "story-play-ball-primary",
+      "eventId": "play-ball",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-ball-paper-v4.webp",
+      "target": "xiaoya/stories/play-ball-paper-v4.webp",
+      "bytes": 76348,
+      "sha256": "8cb3bb5992fd9ccf798433fac8234fce4d479ef0c936186de2ad0b479ff2d200",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "小芽张开手臂邀请坐着的熊，球位于两者之间；邀请玩耍清楚。"
+    },
+    {
+      "assetId": "story-play-bridge-primary",
+      "eventId": "play-bridge",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-bridge-paper-v4.webp",
+      "target": "xiaoya/stories/play-bridge-paper-v4.webp",
+      "bytes": 126370,
+      "sha256": "fac5ba3f9a8d788ff145b5ca20a43ba24b1db017f31582abb0843458ec205cc3",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "双方各持最后一块桥板一端，水沟与积木支撑关系清楚；合作请求可读。"
+    },
+    {
+      "assetId": "story-care-socks-primary",
+      "eventId": "care-socks",
+      "batch": "P1-batch01",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch01.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-socks-paper-v4.webp",
+      "target": "xiaoya/stories/care-socks-paper-v4.webp",
+      "bytes": 90750,
+      "sha256": "f405d9ee5179dfa3c17c46560cc27deb1a217f2b954aa7136a93f00fc863f8d6",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P1/checks/p1-contact-01.jpg visually inspected; clear role/action and stable anatomy; laboratory full-resolution QA pass.",
+      "semanticReview": "小芽湿袜向水洼滴水，熊拿另一双干袜；湿/干区别清楚。"
+    },
+    {
+      "assetId": "story-hello-morning-alternate-request",
+      "eventId": "hello-morning",
+      "batch": "P2-core-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-morning-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-morning-alternate-paper-v1.webp",
+      "bytes": 100596,
+      "sha256": "2e96ce9cf389248999bf668558a6f2fac17f341369a11415a91e9b6d4f01b770",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "花园早晨浇花时双方招呼；问候正在发生，request/resolved共用。 pass: 双叶身份、浇花早晨、招呼正确；两者各两臂，水流进花盆土壤。"
+    },
+    {
+      "assetId": "story-hello-morning-alternate-resolved",
+      "eventId": "hello-morning",
+      "batch": "P2-core-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-morning-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-morning-alternate-paper-v1.webp",
+      "bytes": 100596,
+      "sha256": "2e96ce9cf389248999bf668558a6f2fac17f341369a11415a91e9b6d4f01b770",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "花园早晨浇花时双方招呼；问候正在发生，request/resolved共用。 pass: 双叶身份、浇花早晨、招呼正确；两者各两臂，水流进花盆土壤。"
+    },
+    {
+      "assetId": "story-hello-welcome-alternate-request",
+      "eventId": "hello-welcome",
+      "batch": "P2-core-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-welcome-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-welcome-alternate-paper-v1.webp",
+      "bytes": 84438,
+      "sha256": "4e1852e606ec57b8be99f00d78ccd2b864b139ffe966a0ae6f950863ac2665b1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "公园新朋友相互问候，无交接道具或离开暗示；初次见面由音频情境补足。 pass: 公园双向招呼；双叶小芽与熊各两臂且完整落地，长椅提供公园线索。"
+    },
+    {
+      "assetId": "story-hello-welcome-alternate-resolved",
+      "eventId": "hello-welcome",
+      "batch": "P2-core-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-welcome-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-welcome-alternate-paper-v1.webp",
+      "bytes": 84438,
+      "sha256": "4e1852e606ec57b8be99f00d78ccd2b864b139ffe966a0ae6f950863ac2665b1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "公园新朋友相互问候，无交接道具或离开暗示；初次见面由音频情境补足。 pass: 公园双向招呼；双叶小芽与熊各两臂且完整落地，长椅提供公园线索。"
+    },
+    {
+      "assetId": "story-hello-goodbye-alternate-request",
+      "eventId": "hello-goodbye",
+      "batch": "P2-core-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-goodbye-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-goodbye-alternate-paper-v1.webp",
+      "bytes": 111308,
+      "sha256": "5bd9d1f05123b005068a2568b709d3e8ab5668f094dcb8630f1feca744d98f1b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "公园分别，熊身体离开、回头挥手；告别双方响应可共用。 pass: 熊沿路离开回头挥手，小芽留原地响应；双叶与肢体连接正确。"
+    },
+    {
+      "assetId": "story-hello-goodbye-alternate-resolved",
+      "eventId": "hello-goodbye",
+      "batch": "P2-core-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-goodbye-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-goodbye-alternate-paper-v1.webp",
+      "bytes": 111308,
+      "sha256": "5bd9d1f05123b005068a2568b709d3e8ab5668f094dcb8630f1feca744d98f1b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "公园分别，熊身体离开、回头挥手；告别双方响应可共用。 pass: 熊沿路离开回头挥手，小芽留原地响应；双叶与肢体连接正确。"
+    },
+    {
+      "assetId": "story-bed-night-alternate-request",
+      "eventId": "bed-night",
+      "batch": "P2-core-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\bed-night-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-night-alternate-paper-v1.webp",
+      "bytes": 98592,
+      "sha256": "f0bb0bc61324d46517f0d78c76cbfcd4edfb224f06154956db151c7625c339bf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "帐篷睡袋入睡前双向晚安，保持安静未熟睡状态。 pass: 帐篷、睡袋与月亮明确露营晚安；小芽双叶完整、两手可见，熊两臂，睡袋支撑合理。"
+    },
+    {
+      "assetId": "story-bed-night-alternate-resolved",
+      "eventId": "bed-night",
+      "batch": "P2-core-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\bed-night-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-night-alternate-paper-v1.webp",
+      "bytes": 98592,
+      "sha256": "f0bb0bc61324d46517f0d78c76cbfcd4edfb224f06154956db151c7625c339bf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "帐篷睡袋入睡前双向晚安，保持安静未熟睡状态。 pass: 帐篷、睡袋与月亮明确露营晚安；小芽双叶完整、两手可见，熊两臂，睡袋支撑合理。"
+    },
+    {
+      "assetId": "story-hello-thanks-alternate-request",
+      "eventId": "hello-thanks",
+      "batch": "P2-core-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-thanks-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-thanks-alternate-paper-v1.webp",
+      "bytes": 79118,
+      "sha256": "7bef6fb416fa6bd9a668df84c022afe99eedeafd88b956f822801ab0ba277ebc",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "熊借蜡笔给小芽，小芽接物看熊致谢；交接方向明确，共用致谢时刻。 pass: 熊递单支红蜡笔给小芽；接受方向清楚，双方各两臂/双足，画无文字。"
+    },
+    {
+      "assetId": "story-hello-thanks-alternate-resolved",
+      "eventId": "hello-thanks",
+      "batch": "P2-core-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-thanks-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-thanks-alternate-paper-v1.webp",
+      "bytes": 79118,
+      "sha256": "7bef6fb416fa6bd9a668df84c022afe99eedeafd88b956f822801ab0ba277ebc",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-contact.jpg first five scenes visually inspected in APP task; dialogue gestures can share request/resolved still.",
+      "semanticReview": "熊借蜡笔给小芽，小芽接物看熊致谢；交接方向明确，共用致谢时刻。 pass: 熊递单支红蜡笔给小芽；接受方向清楚，双方各两臂/双足，画无文字。"
+    },
+    {
+      "assetId": "voice-aiden",
+      "batch": "P3",
+      "role": "paper-object",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\voice-aiden.webp",
+      "target": "xiaoya/paper/v2/voice-aiden.webp",
+      "bytes": 15164,
+      "sha256": "51058b4ab36ad95ebb503085292d444d242bcca3d7417beaec30a18f94de5d96",
+      "dimensions": [
+        256,
+        256
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "voice-ryan",
+      "batch": "P3",
+      "role": "paper-object",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\voice-ryan.webp",
+      "target": "xiaoya/paper/v2/voice-ryan.webp",
+      "bytes": 18028,
+      "sha256": "66f3e562a7f847768d05c62883862304e3c932e517e4eb84441e514c69ccd1f5",
+      "dimensions": [
+        256,
+        256
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "voice-pip",
+      "batch": "P3",
+      "role": "paper-object",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\voice-pip.webp",
+      "target": "xiaoya/paper/v2/voice-pip.webp",
+      "bytes": 14312,
+      "sha256": "508dc294205555e98d85c6135ba65a35d5c93c4d359588bd31bcd712c2e21375",
+      "dimensions": [
+        256,
+        256
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "challenge-flag",
+      "batch": "P3",
+      "role": "paper-object",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\challenge-flag.webp",
+      "target": "xiaoya/paper/v2/challenge-flag.webp",
+      "bytes": 14368,
+      "sha256": "1a15b9ada247f82ee349408169eecccb930fd3555b0b869fae55682cc10e363c",
+      "dimensions": [
+        256,
+        256
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "pot-front",
+      "batch": "P3",
+      "role": "paper-object",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\pot-front.webp",
+      "target": "xiaoya/paper/v2/pot-front.webp",
+      "bytes": 6348,
+      "sha256": "70a3ca03c2e6463b245fc038c0c83e8398a3c6736454de88269c1fc0a8520b91",
+      "dimensions": [
+        320,
+        360
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "app-icon-512",
+      "batch": "P3",
+      "role": "app-icon",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\app-icon-512.png",
+      "target": "xiaoya/icons/icon-paper-v04-512.png",
+      "bytes": 116065,
+      "sha256": "e157c73b61a54f9b85dcd6d8f63dc4c9a6c2080d34f51a4b95b56b3e21580271",
+      "dimensions": [
+        512,
+        512
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "app-icon-192",
+      "batch": "P3",
+      "role": "app-icon",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\app-icon-192.png",
+      "target": "xiaoya/icons/icon-paper-v04-192.png",
+      "bytes": 18767,
+      "sha256": "0d1183ce4ec720bebd00cd57084c505a3c49be48a029c2e53c3d3cc490108dd7",
+      "dimensions": [
+        192,
+        192
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "app-icon-48",
+      "batch": "P3",
+      "role": "app-icon",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P3\\runtime\\app-icon-48.png",
+      "target": "xiaoya/icons/icon-paper-v04-48.png",
+      "bytes": 2186,
+      "sha256": "15ec5cc4bf35489618b0f83ddc963c502bd4bd8accac80dbf1d75a351f17e81e",
+      "dimensions": [
+        48,
+        48
+      ],
+      "review": "accepted",
+      "reviewEvidence": "P3 native-size-overview.png and pot-occlusion-diagnostic.png inspected in APP task; distinct companion portraits, transparent pot upper canvas and root alignment, consistent paper icons."
+    },
+    {
+      "assetId": "story-outside-cat-primary",
+      "eventId": "outside-cat",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\outside-cat-paper-v4.webp",
+      "target": "xiaoya/stories/outside-cat-paper-v4.webp",
+      "bytes": 107250,
+      "sha256": "df511eae3b8bc9b7959a8ddfda41ee58880fc2263c62bca312e8d65c32b1ce04",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "树后探出的普通小猫，小芽指向猫并向熊询问；躯体遮挡合理，无文字。"
+    },
+    {
+      "assetId": "story-outside-bird-primary",
+      "eventId": "outside-bird",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\outside-bird-paper-v4.webp",
+      "target": "xiaoya/stories/outside-bird-paper-v4.webp",
+      "bytes": 110388,
+      "sha256": "667b1ac7389adee0f8ecbff836d9fa7908c654a9163b07fbd009987ae1e9f033",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "单只小鸟在树枝上，两角色视线和小芽指向该鸟；四肢正确。"
+    },
+    {
+      "assetId": "story-outside-dog-primary",
+      "eventId": "outside-dog",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\outside-dog-paper-v4.webp",
+      "target": "xiaoya/stories/outside-dog-paper-v4.webp",
+      "bytes": 145108,
+      "sha256": "ebc875222dd65ea1e7a66f06903905a55b0df9b2af66ce2964f4232a2fd93c74",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "小芽一手靠耳倾听，篱笆后普通狗张嘴轻吠，熊转头寻找声音；声纹非文字。"
+    },
+    {
+      "assetId": "story-bed-book-primary",
+      "eventId": "bed-book",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\bed-book-paper-v4.webp",
+      "target": "xiaoya/stories/bed-book-paper-v4.webp",
+      "bytes": 114766,
+      "sha256": "6efae5128b6c65f166618f7947f37eb576fbbdbfd7130bf63da12df5ef45dfdd",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "床边小芽递出封闭绘本邀请熊阅读；绘本无文字，熊坐垫明确。"
+    },
+    {
+      "assetId": "story-bed-story-primary",
+      "eventId": "bed-story",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\bed-story-paper-v4.webp",
+      "target": "xiaoya/stories/bed-story-paper-v4.webp",
+      "bytes": 94868,
+      "sha256": "ff93c852eb9a8414bf60992d4584beafdb25d8b21c3e52b4da42a119697699ad",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "小芽清醒躺被窝伸手请求，熊床边持未打开绘本；未误画成已经入睡。"
+    },
+    {
+      "assetId": "story-food-full-primary",
+      "eventId": "food-full",
+      "batch": "P1-02",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-full-paper-v4.webp",
+      "target": "xiaoya/stories/food-full-paper-v4.webp",
+      "bytes": 84290,
+      "sha256": "417bfb4a85f2ce305aad73a97e1dc4660e61e6c9dc200071ce854bafc6d72525",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually inspected outside-cat, outside-bird, outside-dog, bed-book, bed-story full images and food-full contact; single scenes, supported bodies and readable focal props.",
+      "semanticReview": "空盘与抚腹/停止手势明确，熊暂停盛食；桌椅与四肢关系合理。"
+    },
+    {
+      "assetId": "story-hello-sorry-alternate-request",
+      "eventId": "hello-sorry",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-sorry-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-sorry-alternate-paper-v1.webp",
+      "bytes": 103622,
+      "sha256": "6a36e0ddb0c23293be6273ad044abda826991e0aad3d938ca4e90017fbd2a18e",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "野餐碰翻水杯后的道歉和倾听；水杯/水迹保留因果，不借主场景结局覆盖。 pass: 野餐翻杯水迹、小芽歉意熊倾听，未先擦干；两叶、两臂、无多余手。"
+    },
+    {
+      "assetId": "story-hello-sorry-alternate-resolved",
+      "eventId": "hello-sorry",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-sorry-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-sorry-alternate-paper-v1.webp",
+      "bytes": 103622,
+      "sha256": "6a36e0ddb0c23293be6273ad044abda826991e0aad3d938ca4e90017fbd2a18e",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "野餐碰翻水杯后的道歉和倾听；水杯/水迹保留因果，不借主场景结局覆盖。 pass: 野餐翻杯水迹、小芽歉意熊倾听，未先擦干；两叶、两臂、无多余手。"
+    },
+    {
+      "assetId": "story-hello-okay-alternate-request",
+      "eventId": "hello-okay",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-okay-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-okay-alternate-paper-v1.webp",
+      "bytes": 97010,
+      "sha256": "8031b9c7003951aeb8ea9538a522175117f0b080c0ae213880490856c9374df0",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "熊弄皱小芽的画并道歉，小芽空手开掌宽容回应；不画成谢谢递物。 pass: 熊低头道歉，小芽空手开掌宽容；桌上皱画明确，肢体与双叶正确。"
+    },
+    {
+      "assetId": "story-hello-okay-alternate-resolved",
+      "eventId": "hello-okay",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-okay-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-okay-alternate-paper-v1.webp",
+      "bytes": 97010,
+      "sha256": "8031b9c7003951aeb8ea9538a522175117f0b080c0ae213880490856c9374df0",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "熊弄皱小芽的画并道歉，小芽空手开掌宽容回应；不画成谢谢递物。 pass: 熊低头道歉，小芽空手开掌宽容；桌上皱画明确，肢体与双叶正确。"
+    },
+    {
+      "assetId": "story-food-hungry-alternate-request",
+      "eventId": "food-hungry",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\food-hungry-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-hungry-alternate-paper-v1.webp",
+      "bytes": 80230,
+      "sha256": "2223307d7c333ceedfa4d9928a7b5c36b3bf34d7195df6b97f88b16d681394aa",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "公园小芽摸肚子、熊打开野餐篮；饥饿表达在 request/resolved 均有效，不假造已吃饱。 pass-after-repair: 双手已降至躯干腹部，打开野餐篮面包+期待表情支持饥饿；双叶两臂正常。"
+    },
+    {
+      "assetId": "story-food-hungry-alternate-resolved",
+      "eventId": "food-hungry",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\food-hungry-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-hungry-alternate-paper-v1.webp",
+      "bytes": 80230,
+      "sha256": "2223307d7c333ceedfa4d9928a7b5c36b3bf34d7195df6b97f88b16d681394aa",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "公园小芽摸肚子、熊打开野餐篮；饥饿表达在 request/resolved 均有效，不假造已吃饱。 pass-after-repair: 双手已降至躯干腹部，打开野餐篮面包+期待表情支持饥饿；双叶两臂正常。"
+    },
+    {
+      "assetId": "story-play-turn-alternate-request",
+      "eventId": "play-turn",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-turn-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-turn-alternate-paper-v1.webp",
+      "bytes": 80216,
+      "sha256": "78c15f58cc659e3eb1f7b394a5b462f0342ebd49ad6c6ef99eb43f3c79b9e244",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "熊把下一块积木递给小芽，小芽表明轮到自己；轮次交接静帧适合两状态。 pass: 熊持下一块积木向小芽递出，小芽一手迎接一手指自己；轮次明确、两叶两臂正常。"
+    },
+    {
+      "assetId": "story-play-turn-alternate-resolved",
+      "eventId": "play-turn",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-turn-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-turn-alternate-paper-v1.webp",
+      "bytes": 80216,
+      "sha256": "78c15f58cc659e3eb1f7b394a5b462f0342ebd49ad6c6ef99eb43f3c79b9e244",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "熊把下一块积木递给小芽，小芽表明轮到自己；轮次交接静帧适合两状态。 pass: 熊持下一块积木向小芽递出，小芽一手迎接一手指自己；轮次明确、两叶两臂正常。"
+    },
+    {
+      "assetId": "story-play-again-alternate-request",
+      "eventId": "play-again",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-again-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-again-request-alternate-paper-v1.webp",
+      "bytes": 63152,
+      "sha256": "778c8aca569afdd7ed10d65ba59ea673402ecc20fd2e319d68086d4ffa26014e",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "球明确停在球门外侧，呈现失败前因与再试邀请。 pass: 唯一小球停在右门柱外侧，门内空；角色邀请再试，肢体/双叶正常。"
+    },
+    {
+      "assetId": "story-play-again-alternate-resolved",
+      "eventId": "play-again",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-again-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-again-resolved-alternate-paper-v1.webp",
+      "bytes": 59864,
+      "sha256": "ae4260173418a2169c5a0abfccdeb592bd5b938d1c4f70939765b2c7f60f384b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "球进入门内，与 request 门外停球构成真正前后变化。 pass: 同构图唯一球已到门内、原门外位置为空；与request构成明确前后，不添第二球。"
+    },
+    {
+      "assetId": "story-play-did-it-alternate-request",
+      "eventId": "play-did-it",
+      "batch": "P2-core-02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-did-it-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-did-it-alternate-paper-v1.webp",
+      "bytes": 107516,
+      "sha256": "ebc2b61c9781df7a06bd773113c301ca3c270963b36d608682f53f0dcc1a9aa4",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "小芽自己完成拉链，熊只见证不动手；完成语义可共用。 pass: 外套拉链完全合拢拉头在上，小芽自己手触拉头并得意，熊没有帮忙；双叶和四肢正常。"
+    },
+    {
+      "assetId": "story-play-did-it-alternate-resolved",
+      "eventId": "play-did-it",
+      "batch": "P2-core-02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-did-it-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-did-it-alternate-paper-v1.webp",
+      "bytes": 107516,
+      "sha256": "ebc2b61c9781df7a06bd773113c301ca3c270963b36d608682f53f0dcc1a9aa4",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task reviewed core-contact.jpg through play-did-it: apology/reassurance direction, hunger, turn-taking, ball outside-to-inside goal and independently closed zipper.",
+      "semanticReview": "小芽自己完成拉链，熊只见证不动手；完成语义可共用。 pass: 外套拉链完全合拢拉头在上，小芽自己手触拉头并得意，熊没有帮忙；双叶和四肢正常。"
+    },
+    {
+      "assetId": "story-care-hands-primary",
+      "eventId": "care-hands",
+      "batch": "P1-batch03",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch03.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-hands-paper-v4.webp",
+      "target": "xiaoya/stories/care-hands-paper-v4.webp",
+      "bytes": 82256,
+      "sha256": "35fe8d9073535a78d34232c17d5bf0166e1d2ca9e0695aaee8a4d29822935403",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected each full-size runtime image: care-hands, care-zip corrected single pull, food-apple, food-hot, food-milk. Gesture, anatomy and sentence meaning checked.",
+      "semanticReview": "Beside a child-height wash basin, the bear gently indicates washing hands. Xiaoya rubs two muddy hands together beneath a short clean running faucet stream flowing into the sink. Soap and a towel nearby. Exactly two arms each, water physically connected faucet to hands to basin."
+    },
+    {
+      "assetId": "story-care-zip-primary",
+      "eventId": "care-zip",
+      "batch": "P1-batch03",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch03.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-zip-paper-v4.webp",
+      "target": "xiaoya/stories/care-zip-paper-v4.webp",
+      "bytes": 91986,
+      "sha256": "e72d2faee659cb0a67bbce4efd012f4db8743f17ded06ef4ab190c6907ed594c",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected each full-size runtime image: care-hands, care-zip corrected single pull, food-apple, food-hot, food-milk. Gesture, anatomy and sentence meaning checked.",
+      "semanticReview": "At an open doorway, Xiaoya wears a simple clay-colored jacket with a clearly visible central zipper stuck midway. Xiaoya looks at the bear for help and holds the lower jacket edge; bear's paw gently reaches for the visible zipper pull. Preserve sprout leaves and green face, no extra hand."
+    },
+    {
+      "assetId": "story-food-apple-primary",
+      "eventId": "food-apple",
+      "batch": "P1-batch03",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch03.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-apple-paper-v4.webp",
+      "target": "xiaoya/stories/food-apple-paper-v4.webp",
+      "bytes": 75878,
+      "sha256": "3e3b6d0990945c6e8f3973152dd892adf5baee9ca38f71952fc12377ba21e5ca",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected each full-size runtime image: care-hands, care-zip corrected single pull, food-apple, food-hot, food-milk. Gesture, anatomy and sentence meaning checked.",
+      "semanticReview": "At a low table a fruit plate contains one banana and one apple. Xiaoya happily holds another red apple near its chest, showing its preference to the smiling bear. Apple is unmistakable with stem and leaf. Simple joyful focus."
+    },
+    {
+      "assetId": "story-food-hot-primary",
+      "eventId": "food-hot",
+      "batch": "P1-batch03",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch03.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-hot-paper-v4.webp",
+      "target": "xiaoya/stories/food-hot-paper-v4.webp",
+      "bytes": 88818,
+      "sha256": "a123c376dc8f42a7d681d41f6cb71cfb677fb3dd2141775194eaaa0b2a677de9",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected each full-size runtime image: care-hands, care-zip corrected single pull, food-apple, food-hot, food-milk. Gesture, anatomy and sentence meaning checked.",
+      "semanticReview": "A bowl of soup on a low table emits three visible soft steam wisps. Xiaoya has leaned near then stopped, body gently drawn back, hands kept safely away from hot bowl; concerned but calm expression. Bear keeps bowl stable and gestures to wait. No touching hot soup."
+    },
+    {
+      "assetId": "story-food-milk-primary",
+      "eventId": "food-milk",
+      "batch": "P1-batch03",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch03.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-milk-paper-v4.webp",
+      "target": "xiaoya/stories/food-milk-paper-v4.webp",
+      "bytes": 80080,
+      "sha256": "2e16a8530c62178b0877284be72efd93493be964a546d53d3a2d8a8c2b1403a2",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected each full-size runtime image: care-hands, care-zip corrected single pull, food-apple, food-hot, food-milk. Gesture, anatomy and sentence meaning checked.",
+      "semanticReview": "Breakfast: Xiaoya extends an EMPTY cup toward the bear, asking politely. Bear holds an upright small milk jug with opaque white milk visible, ready to pour. A bread slice on table implies breakfast. White milk distinguishable from water, no labels."
+    },
+    {
+      "assetId": "story-food-full-alternate-request",
+      "eventId": "food-full",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-full-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-full-alternate-shared.webp",
+      "bytes": 129668,
+      "sha256": "70a29abdfcf46b848ebe53be89bdf666cd2d355bf7c912ca25f945f86f352f0a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Fullness and politely declining more bread remain true before and after speech."
+    },
+    {
+      "assetId": "story-food-full-alternate-resolved",
+      "eventId": "food-full",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-full-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-full-alternate-shared.webp",
+      "bytes": 129668,
+      "sha256": "70a29abdfcf46b848ebe53be89bdf666cd2d355bf7c912ca25f945f86f352f0a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Fullness and politely declining more bread remain true before and after speech."
+    },
+    {
+      "assetId": "story-food-spoon-alternate-request",
+      "eventId": "food-spoon",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-spoon-alternate-request.webp",
+      "target": "xiaoya/stories/story-food-spoon-alternate-request.webp",
+      "bytes": 120940,
+      "sha256": "683a9f4a7a5083e28073cab778add6e6dd7bb640149e22837fe0c884bae1d404",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Distinct request and resolved states reviewed."
+    },
+    {
+      "assetId": "story-food-spoon-alternate-resolved",
+      "eventId": "food-spoon",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-spoon-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-food-spoon-alternate-resolved.webp",
+      "bytes": 116058,
+      "sha256": "9b539de5e240a84eba866c269d31e02ff3e51c92f0a5e3340016e87316caef2a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Distinct request and resolved states reviewed."
+    },
+    {
+      "assetId": "story-food-apple-alternate-request",
+      "eventId": "food-apple",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-apple-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-apple-alternate-shared.webp",
+      "bytes": 117264,
+      "sha256": "8f8ea5a44d9d121515c02180a36653cd0a24ceccd5f516ea42f108473bae309b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Enjoying and pointing to orchard apples remain true before and after saying preference."
+    },
+    {
+      "assetId": "story-food-apple-alternate-resolved",
+      "eventId": "food-apple",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-apple-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-apple-alternate-shared.webp",
+      "bytes": 117264,
+      "sha256": "8f8ea5a44d9d121515c02180a36653cd0a24ceccd5f516ea42f108473bae309b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Enjoying and pointing to orchard apples remain true before and after saying preference."
+    },
+    {
+      "assetId": "story-food-hot-alternate-request",
+      "eventId": "food-hot",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-hot-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-hot-alternate-shared.webp",
+      "bytes": 105664,
+      "sha256": "dd9d8f5403a5e1d589d68ca0327c4189a409349c13d2643f05d02cd8bf7d7c70",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Bread still emits steam while hands stay safely withdrawn during and after warning."
+    },
+    {
+      "assetId": "story-food-hot-alternate-resolved",
+      "eventId": "food-hot",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-hot-alternate-shared.webp",
+      "target": "xiaoya/stories/story-food-hot-alternate-shared.webp",
+      "bytes": 105664,
+      "sha256": "dd9d8f5403a5e1d589d68ca0327c4189a409349c13d2643f05d02cd8bf7d7c70",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Bread still emits steam while hands stay safely withdrawn during and after warning."
+    },
+    {
+      "assetId": "story-food-milk-alternate-request",
+      "eventId": "food-milk",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-milk-alternate-request.webp",
+      "target": "xiaoya/stories/story-food-milk-alternate-request.webp",
+      "bytes": 108768,
+      "sha256": "0687669b81d32fa9b0dc72e562063801dc9a7e2c14ede71b2f8f6180ff8182db",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Distinct request and resolved states reviewed."
+    },
+    {
+      "assetId": "story-food-milk-alternate-resolved",
+      "eventId": "food-milk",
+      "batch": "P2-extension-b-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-food-milk-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-food-milk-alternate-resolved.webp",
+      "bytes": 94310,
+      "sha256": "3bc8f009f997c95ed55750c96baf25661d4f05b5fdf54f9ea5702f821705b54a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected P2-extension-b/checks/batch-01.png. Full, apple and hot shared states remain valid; spoon and milk clearly change possession/filling.",
+      "semanticReview": "Distinct request and resolved states reviewed."
+    },
+    {
+      "assetId": "story-care-teeth-alternate-request",
+      "eventId": "care-teeth",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-teeth-alternate-request.webp",
+      "target": "xiaoya/stories/story-care-teeth-alternate-request.webp",
+      "bytes": 95416,
+      "sha256": "b2377d7fef082f40a6b228389bc0f96d1ec88c6ef10975912546934d4dabbddd",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-teeth-alternate-resolved",
+      "eventId": "care-teeth",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-teeth-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-care-teeth-alternate-resolved.webp",
+      "bytes": 114556,
+      "sha256": "181f695ac2d08bca753e7a50a3cb56945d8a5d51df7194552773bd7d6cce19bb",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-face-alternate-request",
+      "eventId": "care-face",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-face-alternate-request.webp",
+      "target": "xiaoya/stories/story-care-face-alternate-request.webp",
+      "bytes": 104742,
+      "sha256": "06afc03512838b17da04eebbcf4a7a1955477342462ab650f1b92f74e2064f94",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-face-alternate-resolved",
+      "eventId": "care-face",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-face-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-care-face-alternate-resolved.webp",
+      "bytes": 85802,
+      "sha256": "c9ccfa81718e812dd5bdf90cc88fbc312bab644fd9e067d923c360f180b3681f",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-tissue-alternate-request",
+      "eventId": "care-tissue",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-tissue-alternate-request.webp",
+      "target": "xiaoya/stories/story-care-tissue-alternate-request.webp",
+      "bytes": 122960,
+      "sha256": "8c2173262c865b5ce0751a5fae77171c15584c6be3e81d8ad38b1d5f95f30b32",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-tissue-alternate-resolved",
+      "eventId": "care-tissue",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-tissue-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-care-tissue-alternate-resolved.webp",
+      "bytes": 115886,
+      "sha256": "b8dbe958ae0775d24809352e849b186ad520c0ba6543ae92974736626f232929",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-dry-alternate-request",
+      "eventId": "care-dry",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-dry-alternate-request.webp",
+      "target": "xiaoya/stories/story-care-dry-alternate-request.webp",
+      "bytes": 120578,
+      "sha256": "bc82b1be7b4ff3ec98530d7c0633cca42313fa5b7e3df6f528ad50447c87f3f1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-dry-alternate-resolved",
+      "eventId": "care-dry",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-dry-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-care-dry-alternate-resolved.webp",
+      "bytes": 109944,
+      "sha256": "bcb9a9699f241f3aa39f234ddce9337c68ad6c93f15557063b679569473d67cd",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-shoes-alternate-request",
+      "eventId": "care-shoes",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-shoes-alternate-request.webp",
+      "target": "xiaoya/stories/story-care-shoes-alternate-request.webp",
+      "bytes": 108252,
+      "sha256": "60d8e581cf7fd20618248ba0099f8c62e87e9f95af20dce3c92b0c8e29fe6dd8",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-care-shoes-alternate-resolved",
+      "eventId": "care-shoes",
+      "batch": "P2-extension-b-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v04-completion/P2-extension-b/manifest-batch02.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-care-shoes-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-care-shoes-alternate-resolved.webp",
+      "bytes": 105076,
+      "sha256": "26c17b41385e4f0dad0af5876b341fc302c57e3c0a4e299db36f15b5ed41fc0a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP reviewer inspected P2-extension-b/checks/batch-02.png and batch-03.png and compared content.js context: brushing/washing/tissue/drying/shoes clearly separate before and after states; characters and limb placement consistent."
+    },
+    {
+      "assetId": "story-food-spoon-primary",
+      "eventId": "food-spoon",
+      "batch": "P1-batch04",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch04.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\food-spoon-paper-v4.webp",
+      "target": "xiaoya/stories/food-spoon-paper-v4.webp",
+      "bytes": 81328,
+      "sha256": "9c6a1c1ca4ce2c9b1e4c896c50989471325897958a194e4d0ace51713004bdfa",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/food-spoon-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object direction, no writing, and xiaoya/content.js scene meaning. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch04.json.",
+      "semanticReview": "小芽面前有饭碗而手中无勺，空手伸向熊；熊从画面右侧递出唯一木勺，勺柄朝左侧小芽、勺头靠熊，接递方向正确。两角色各两臂、手部接触关系自然，无反掌或多余肢体。"
+    },
+    {
+      "assetId": "story-care-face-primary",
+      "eventId": "care-face",
+      "batch": "P1-batch04",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch04.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-face-paper-v4.webp",
+      "target": "xiaoya/stories/care-face-paper-v4.webp",
+      "bytes": 84884,
+      "sha256": "1af0dd94b9575c8c88c8dc050712abba9b1a213332227489ad14d542a4fbba39",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/care-face-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object direction, no writing, and xiaoya/content.js scene meaning. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch04.json.",
+      "semanticReview": "双叶小芽与熊脸颊有红蓝颜料，地面调色盘交代来源；小芽朝中央水盆招手，熊拿毛巾并触脸，能支持一起洗脸的邀请而非洗手。双臂双腿可辨，脚落地，无文字。"
+    },
+    {
+      "assetId": "story-care-tissue-primary",
+      "eventId": "care-tissue",
+      "batch": "P1-batch04",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch04.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-tissue-paper-v4.webp",
+      "target": "xiaoya/stories/care-tissue-paper-v4.webp",
+      "bytes": 79680,
+      "sha256": "c5c4d789313f18545072c1b7fe48d921925c2e6dfa8e4073d1cac329c18a52b7",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/care-tissue-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object direction, no writing, and xiaoya/content.js scene meaning. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch04.json.",
+      "semanticReview": "鼻下小水滴与熊递来的单张白纸巾构成使用纸巾的提示；纸巾盒在熊手边，废纸篓在旁，递向小芽的方向清楚。小芽双手伸向纸巾、熊两臂正常，水滴不在眼角，无哭泣误读。"
+    },
+    {
+      "assetId": "story-care-dry-primary",
+      "eventId": "care-dry",
+      "batch": "P1-batch04",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch04.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-dry-paper-v4.webp",
+      "target": "xiaoya/stories/care-dry-paper-v4.webp",
+      "bytes": 99828,
+      "sha256": "84788c08be4452c5569f1cb9ec4e66e24aaf498bd235dcaa72454bdd5f034966",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/care-dry-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object direction, no writing, and xiaoya/content.js scene meaning. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch04.json.",
+      "semanticReview": "两角色各用一条浅色毛巾包持自己的双手，手边仍有水滴；后方洗手盆水龙头已关闭，动作焦点是共同擦手。四只手、两条毛巾和双脚关系可辨，无多余肢体或反掌。"
+    },
+    {
+      "assetId": "story-care-shoes-primary",
+      "eventId": "care-shoes",
+      "batch": "P1-batch04",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch04.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-shoes-paper-v4.webp",
+      "target": "xiaoya/stories/care-shoes-paper-v4.webp",
+      "bytes": 127874,
+      "sha256": "b31815d22e3c940ee5e92f38de6b43684e8d4f45d90c5db463aac11440fcb197",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/care-shoes-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object direction, no writing, and xiaoya/content.js scene meaning. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch04.json.",
+      "semanticReview": "开着的门交代出门，小芽坐凳穿两只袜子，两只未穿的鞋摆在脚前；小芽伸手拿鞋，熊指向鞋提醒。双腿、双袜和两只鞋分开可辨，鞋口方向正确，无额外脚或手。"
+    },
+    {
+      "assetId": "story-hello-everyone-alternate-request",
+      "eventId": "hello-everyone",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-everyone-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-everyone-alternate-paper-v1.webp",
+      "bytes": 100840,
+      "sha256": "fa3d9405a65a3f5cd5eeb45639c4c282ef1a36f0ba56500310f43e9382a2949b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "小芽从门口向地毯上的熊和狐招呼，恰好两个朋友回应；两片叶子、各角色两臂和坐姿明确，掌垫朝观者与挥手姿势一致。双方招呼正在发生，request/resolved 可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-hello-everyone-alternate-resolved",
+      "eventId": "hello-everyone",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-everyone-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-everyone-alternate-paper-v1.webp",
+      "bytes": 100840,
+      "sha256": "fa3d9405a65a3f5cd5eeb45639c4c282ef1a36f0ba56500310f43e9382a2949b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "小芽从门口向地毯上的熊和狐招呼，恰好两个朋友回应；两片叶子、各角色两臂和坐姿明确，掌垫朝观者与挥手姿势一致。双方招呼正在发生，request/resolved 可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:hello-everyone"
+    },
+    {
+      "assetId": "story-family-love-alternate-request",
+      "eventId": "family-love",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-love-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-love-alternate-paper-v1.webp",
+      "bytes": 91564,
+      "sha256": "fbce9442f893e24708d2664e445db875b081bf3e5dc4db9f17f0b47abc08e77d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "夜晚窗景和床边拥抱明确，小芽和熊贴近且同时微笑；熊一臂绕背，另一臂放在身前，接触处没有多手或反掌。亲昵表达本身是持续互动，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-family-love-alternate-resolved",
+      "eventId": "family-love",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-love-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-love-alternate-paper-v1.webp",
+      "bytes": 91564,
+      "sha256": "fbce9442f893e24708d2664e445db875b081bf3e5dc4db9f17f0b47abc08e77d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "夜晚窗景和床边拥抱明确，小芽和熊贴近且同时微笑；熊一臂绕背，另一臂放在身前，接触处没有多手或反掌。亲昵表达本身是持续互动，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:family-love"
+    },
+    {
+      "assetId": "story-hello-youre-welcome-alternate-request",
+      "eventId": "hello-youre-welcome",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-youre-welcome-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-youre-welcome-alternate-paper-v1.webp",
+      "bytes": 87024,
+      "sha256": "68eb8fa8e0f99fea2e06b3ab80562aab129197d38be1330e9a30b9ab417b3339",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "熊独持借到的红蜡笔，小芽空手抬臂回应；借用者和回应者方向正确，不是双方同时握物的递交图。两个状态可保留正在回应的同一静帧。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-hello-youre-welcome-alternate-resolved",
+      "eventId": "hello-youre-welcome",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-youre-welcome-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-youre-welcome-alternate-paper-v1.webp",
+      "bytes": 87024,
+      "sha256": "68eb8fa8e0f99fea2e06b3ab80562aab129197d38be1330e9a30b9ab417b3339",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "熊独持借到的红蜡笔，小芽空手抬臂回应；借用者和回应者方向正确，不是双方同时握物的递交图。两个状态可保留正在回应的同一静帧。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:hello-youre-welcome"
+    },
+    {
+      "assetId": "story-hello-excuse-alternate-request",
+      "eventId": "hello-excuse",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-excuse-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-excuse-alternate-paper-v1.webp",
+      "bytes": 86750,
+      "sha256": "d75e96ac32b2d9d8b4b9e9f84b99cb4a4c548aa19d870b5858e0661eebbdeebc",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "花园、画架、熊手持画笔构成被打扰的活动，小芽站在旁边礼貌示意，熊转头回应；原图复核两条胳膊与握笔连接合理、脚和树墩有支撑。对话正在发生，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-hello-excuse-alternate-resolved",
+      "eventId": "hello-excuse",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\hello-excuse-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/hello-excuse-alternate-paper-v1.webp",
+      "bytes": 86750,
+      "sha256": "d75e96ac32b2d9d8b4b9e9f84b99cb4a4c548aa19d870b5858e0661eebbdeebc",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "花园、画架、熊手持画笔构成被打扰的活动，小芽站在旁边礼貌示意，熊转头回应；原图复核两条胳膊与握笔连接合理、脚和树墩有支撑。对话正在发生，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:hello-excuse"
+    },
+    {
+      "assetId": "story-outside-go-home-alternate-request",
+      "eventId": "outside-go-home",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\outside-go-home-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-go-home-alternate-paper-v1.webp",
+      "bytes": 105432,
+      "sha256": "3dc795cffa14be5197202c2ddc4313355071b3f04f7c996e599d4270e5894311",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "野餐垫卷好且固定在篮上，小芽背包并朝右侧唯一住宅示意，小路连向住宅；人物双脚落地、提篮握持合理。准备回家的交流与出发状态成立，可共用，不表示已经到家。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-go-home-alternate-resolved",
+      "eventId": "outside-go-home",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\outside-go-home-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-go-home-alternate-paper-v1.webp",
+      "bytes": 105432,
+      "sha256": "3dc795cffa14be5197202c2ddc4313355071b3f04f7c996e599d4270e5894311",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "野餐垫卷好且固定在篮上，小芽背包并朝右侧唯一住宅示意，小路连向住宅；人物双脚落地、提篮握持合理。准备回家的交流与出发状态成立，可共用，不表示已经到家。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:outside-go-home"
+    },
+    {
+      "assetId": "story-outside-ready-alternate-request",
+      "eventId": "outside-ready",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\outside-go-home-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-go-home-alternate-paper-v1.webp",
+      "bytes": 105432,
+      "sha256": "3dc795cffa14be5197202c2ddc4313355071b3f04f7c996e599d4270e5894311",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "复用野餐收拾完成图：垫已卷起、篮已收好、小芽背好包，伙伴站旁等候，符合准备离开；住宅是去向背景，不与准备好矛盾。该图不能独自区分准备好了和回家吧，具体目标仍由既定中文情境引导给出。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:outside-go-home"
+    },
+    {
+      "assetId": "story-outside-ready-alternate-resolved",
+      "eventId": "outside-ready",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\outside-go-home-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-go-home-alternate-paper-v1.webp",
+      "bytes": 105432,
+      "sha256": "3dc795cffa14be5197202c2ddc4313355071b3f04f7c996e599d4270e5894311",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "复用野餐收拾完成图：垫已卷起、篮已收好、小芽背好包，伙伴站旁等候，符合准备离开；住宅是去向背景，不与准备好矛盾。该图不能独自区分准备好了和回家吧，具体目标仍由既定中文情境引导给出。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:outside-go-home"
+    },
+    {
+      "assetId": "story-family-come-alternate-request",
+      "eventId": "family-come",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-come-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-come-alternate-paper-v1.webp",
+      "bytes": 71906,
+      "sha256": "c26c8b09c26cb5483f6dd64ad5e27867f7a9e333712cc92fc00f6537970089ba",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "小芽坐在屋内垫上招手，旁边空垫清楚，小熊从门口迈向小芽；脚步与两臂自然，没有误画成挥别。resolved 共用的是朋友正在响应、走近的互动瞬间，不是已经坐定。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-family-come-alternate-resolved",
+      "eventId": "family-come",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-come-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-come-alternate-paper-v1.webp",
+      "bytes": 71906,
+      "sha256": "c26c8b09c26cb5483f6dd64ad5e27867f7a9e333712cc92fc00f6537970089ba",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "小芽坐在屋内垫上招手，旁边空垫清楚，小熊从门口迈向小芽；脚步与两臂自然，没有误画成挥别。resolved 共用的是朋友正在响应、走近的互动瞬间，不是已经坐定。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:family-come"
+    },
+    {
+      "assetId": "story-feelings-happy-alternate-request",
+      "eventId": "feelings-happy",
+      "batch": "P2-core-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-love-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-love-alternate-paper-v1.webp",
+      "bytes": 91564,
+      "sha256": "fbce9442f893e24708d2664e445db875b081bf3e5dc4db9f17f0b47abc08e77d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "复用睡前陪伴图：夜晚、床边家人、小芽明确开心笑容与情境一致；白天经历属于中文引导提供的背景，图中无相反事件。图不能独自区别开心和我爱你，适合当前有明确情境引导的家长主动复测。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:family-love"
+    },
+    {
+      "assetId": "story-feelings-happy-alternate-resolved",
+      "eventId": "feelings-happy",
+      "batch": "P2-core-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\family-love-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/family-love-alternate-paper-v1.webp",
+      "bytes": 91564,
+      "sha256": "fbce9442f893e24708d2664e445db875b081bf3e5dc4db9f17f0b47abc08e77d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch02-contact.jpg plus all six 980x700 runtime images visually inspected by APP review agent; hello-excuse additionally checked at original 1483x1061. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "复用睡前陪伴图：夜晚、床边家人、小芽明确开心笑容与情境一致；白天经历属于中文引导提供的背景，图中无相反事件。图不能独自区别开心和我爱你，适合当前有明确情境引导的家长主动复测。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:family-love"
+    },
+    {
+      "assetId": "story-care-teeth-primary",
+      "eventId": "care-teeth",
+      "batch": "P1-batch05",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch05.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\care-teeth-paper-v4.webp",
+      "target": "xiaoya/stories/care-teeth-paper-v4.webp",
+      "bytes": 63736,
+      "sha256": "34cd87bad8819a6d5d772c48405fdaa113839a401242a1bea9010e5e9a5e95eb",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/care-teeth-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object motion/direction, no writing, and asset-audit.json request/meaning scene. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch05.json.",
+      "semanticReview": "小芽与熊各拿一支牙刷，刷毛进入自己的张嘴部位；口杯、牙膏、水龙头构成刷牙情境。小芽两脚踩独立低凳、熊双脚落地，不站在洗手台上；双方各两臂，无镜像重复角色或反掌。"
+    },
+    {
+      "assetId": "story-play-roll-primary",
+      "eventId": "play-roll",
+      "batch": "P1-batch05",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch05.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-roll-paper-v4.webp",
+      "target": "xiaoya/stories/play-roll-paper-v4.webp",
+      "bytes": 71222,
+      "sha256": "935271b6bbcbd58c637a464b2f5746f004766f96dcdf39928d4649527dd13019",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/play-roll-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object motion/direction, no writing, and asset-audit.json request/meaning scene. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch05.json.",
+      "semanticReview": "熊与小芽相向坐地，唯一软球贴地并带向小芽移动的短弧线；熊双手推出，小芽双手低位待接，明确是地面滚球。四臂四脚清楚，脚掌朝前与坐姿一致，无手背翻出掌垫。"
+    },
+    {
+      "assetId": "story-play-catch-primary",
+      "eventId": "play-catch",
+      "batch": "P1-batch05",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch05.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-catch-paper-v4.webp",
+      "target": "xiaoya/stories/play-catch-paper-v4.webp",
+      "bytes": 67086,
+      "sha256": "5c3c6821d782eb0d7ca5399708eb831ddffabdce203bd8473e75f8ea1f187cf7",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/play-catch-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object motion/direction, no writing, and asset-audit.json request/meaning scene. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch05.json.",
+      "semanticReview": "小芽抬臂投出唯一软球，球悬在两者之间并有弧线；熊双手在胸前张开待接，双方脚仍着地。空中接球与 play-roll 的贴地滚球明显不同，手部朝向和角色分工正确。"
+    },
+    {
+      "assetId": "story-play-tower-primary",
+      "eventId": "play-tower",
+      "batch": "P1-batch05",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch05.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-tower-paper-v4.webp",
+      "target": "xiaoya/stories/play-tower-paper-v4.webp",
+      "bytes": 87262,
+      "sha256": "f296e87c685a177b1e3aa0d7814c8d32d84091e3c41ab2b2df77c6aa60015977",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/play-tower-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object motion/direction, no writing, and asset-audit.json request/meaning scene. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch05.json.",
+      "semanticReview": "小芽一手持红积木、一手朝熊邀请，熊双手持绿积木；中央矮塔与周围散件说明共同搭建。两角色手和积木抓握关系明确，坐着的熊脚掌朝前合理，未出现多臂或文字。"
+    },
+    {
+      "assetId": "story-play-tidy-primary",
+      "eventId": "play-tidy",
+      "batch": "P1-batch05",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch05.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\play-tidy-paper-v4.webp",
+      "target": "xiaoya/stories/play-tidy-paper-v4.webp",
+      "bytes": 92816,
+      "sha256": "3204576753d4de5b7b919d6c948262231808f536d5474f3d90a381b4f3822b64",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/play-tidy-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, grounded feet, object motion/direction, no writing, and asset-audit.json request/meaning scene. Pillow decode, actual dimensions/bytes/SHA-256 verified against manifest-batch05.json.",
+      "semanticReview": "熊指向开启的玩具箱，小芽双手将唯一软球移入箱沿内侧；球仍可见且尚未收完，方向与 Put it in the box 相符。箱盖向后打开，球、手与箱沿遮挡自然，脚均落地。"
+    },
+    {
+      "assetId": "story-food-eat-alternate-request",
+      "eventId": "food-eat",
+      "batch": "P2-core-batch03",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\food-eat-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-eat-alternate-paper-v1.webp",
+      "bytes": 94464,
+      "sha256": "b4082d5514ca8210a8be686e968a1fa84a237c10deb5a77dd8b596fc8ba0cb95",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "野餐垫、篮子和完整食物构成准备吃饭的情境，小芽空手朝食物开掌邀请，熊期待响应；没有已吃完的空盘或错误递物方向。双方两臂、坐姿和手掌正常。request/resolved 共用开始前的邀请互动，不声称已经吃完；洗手属于既定语音交代的前情。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-eat-alternate-resolved",
+      "eventId": "food-eat",
+      "batch": "P2-core-batch03",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\food-eat-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-eat-alternate-paper-v1.webp",
+      "bytes": 94464,
+      "sha256": "b4082d5514ca8210a8be686e968a1fa84a237c10deb5a77dd8b596fc8ba0cb95",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "野餐垫、篮子和完整食物构成准备吃饭的情境，小芽空手朝食物开掌邀请，熊期待响应；没有已吃完的空盘或错误递物方向。双方两臂、坐姿和手掌正常。request/resolved 共用开始前的邀请互动，不声称已经吃完；洗手属于既定语音交代的前情。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:food-eat"
+    },
+    {
+      "assetId": "story-feelings-tired-alternate-request",
+      "eventId": "feelings-tired",
+      "batch": "P2-core-batch03",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\feelings-tired-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/feelings-tired-alternate-paper-v1.webp",
+      "bytes": 118104,
+      "sha256": "048d85e8f44cb9190bc45bf8a69d79bd02e94f7e746c505459b633201d8148cf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "门边小椅上的小芽打哈欠，一手遮嘴、一手放腹，熊拿着外出小包；散步后坐下休息的情境成立。双臂和双脚连接合理，坐姿由椅子支撑，没有额外肢体或生病暗示。疲倦状态持续，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-feelings-tired-alternate-resolved",
+      "eventId": "feelings-tired",
+      "batch": "P2-core-batch03",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\feelings-tired-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/feelings-tired-alternate-paper-v1.webp",
+      "bytes": 118104,
+      "sha256": "048d85e8f44cb9190bc45bf8a69d79bd02e94f7e746c505459b633201d8148cf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "门边小椅上的小芽打哈欠，一手遮嘴、一手放腹，熊拿着外出小包；散步后坐下休息的情境成立。双臂和双脚连接合理，坐姿由椅子支撑，没有额外肢体或生病暗示。疲倦状态持续，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:feelings-tired"
+    },
+    {
+      "assetId": "story-play-your-turn-alternate-request",
+      "eventId": "play-your-turn",
+      "batch": "P2-core-batch03",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-your-turn-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-your-turn-alternate-paper-v1.webp",
+      "bytes": 75266,
+      "sha256": "734184a5c9b0571432fff7fd748d3106a8a04d3b4caf68ff92469fafc8b3a54a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "唯一的球接触草地，位于熊脚前；熊双手伸向球准备继续滚，小芽空手开掌示意。下一轮明确交给朋友，与让自己玩方向相反；双方肢体和落地关系正常。让出轮次与朋友响应可以保留同一静帧。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-play-your-turn-alternate-resolved",
+      "eventId": "play-your-turn",
+      "batch": "P2-core-batch03",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-your-turn-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-your-turn-alternate-paper-v1.webp",
+      "bytes": 75266,
+      "sha256": "734184a5c9b0571432fff7fd748d3106a8a04d3b4caf68ff92469fafc8b3a54a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "唯一的球接触草地，位于熊脚前；熊双手伸向球准备继续滚，小芽空手开掌示意。下一轮明确交给朋友，与让自己玩方向相反；双方肢体和落地关系正常。让出轮次与朋友响应可以保留同一静帧。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:play-your-turn"
+    },
+    {
+      "assetId": "story-play-can-do-alternate-request",
+      "eventId": "play-can-do",
+      "batch": "P2-core-batch03",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-can-do-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-can-do-alternate-paper-v1.webp",
+      "bytes": 111758,
+      "sha256": "ccfb8b11227af2d1d86aa17a34ff8c00722403a4e340f71cadabe8073c7155e1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "门边小芽独坐凳子，双手把松开鞋带的鞋拿在膝上；另一只鞋在地面，两只未穿鞋的脚清楚分开并落地。熊站在旁边且双手未介入，独立尝试的语义明确；修复后的鞋、手、腿不再混连。两个状态是自信声明与尝试，并非已经穿好。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-play-can-do-alternate-resolved",
+      "eventId": "play-can-do",
+      "batch": "P2-core-batch03",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-can-do-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-can-do-alternate-paper-v1.webp",
+      "bytes": 111758,
+      "sha256": "ccfb8b11227af2d1d86aa17a34ff8c00722403a4e340f71cadabe8073c7155e1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "门边小芽独坐凳子，双手把松开鞋带的鞋拿在膝上；另一只鞋在地面，两只未穿鞋的脚清楚分开并落地。熊站在旁边且双手未介入，独立尝试的语义明确；修复后的鞋、手、腿不再混连。两个状态是自信声明与尝试，并非已经穿好。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:play-can-do"
+    },
+    {
+      "assetId": "story-play-good-job-alternate-request",
+      "eventId": "play-good-job",
+      "batch": "P2-core-batch03",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-good-job-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-good-job-alternate-paper-v1.webp",
+      "bytes": 102830,
+      "sha256": "9cf892859a838fbef7dcee84f5dcbeb3923d106847281a945946cf698ae14dc7",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "熊双手举起完成的太阳和花朵图画，小芽面向作品双手近胸鼓掌；作品只有图形，没有字母或伪文字。双方双臂、手指和脚落地连接合理；称赞和收到称赞属于同一互动，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-play-good-job-alternate-resolved",
+      "eventId": "play-good-job",
+      "batch": "P2-core-batch03",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\manifest-batch03.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2\\runtime\\play-good-job-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-good-job-alternate-paper-v1.webp",
+      "bytes": 102830,
+      "sha256": "9cf892859a838fbef7dcee84f5dcbeb3923d106847281a945946cf698ae14dc7",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2/checks/core-batch03-contact.jpg and all five 980x700 runtime images independently visually inspected by APP review agent. File byte counts and SHA-256 match P2/image-manifest.json.",
+      "semanticReview": "熊双手举起完成的太阳和花朵图画，小芽面向作品双手近胸鼓掌；作品只有图形，没有字母或伪文字。双方双臂、手指和脚落地连接合理；称赞和收到称赞属于同一互动，两个状态可共用。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-core:play-good-job"
+    },
+    {
+      "assetId": "story-play-catch-alternate-request",
+      "eventId": "play-catch",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-catch-alternate-request.webp",
+      "target": "xiaoya/stories/story-play-catch-alternate-request.webp",
+      "bytes": 96190,
+      "sha256": "b6e33a4e2d8cedc04408bcea83f02730322499c89524cec12d37af18e5b25e14",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-play-catch-alternate-resolved",
+      "eventId": "play-catch",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-catch-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-play-catch-alternate-resolved.webp",
+      "bytes": 75898,
+      "sha256": "5c535f6ba76af33dde5ce202ff1f1b9b8e221f89964d7f7b35a0b0a2aab419a8",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-play-tower-alternate-request",
+      "eventId": "play-tower",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-tower-alternate-request.webp",
+      "target": "xiaoya/stories/story-play-tower-alternate-request.webp",
+      "bytes": 86100,
+      "sha256": "5fd1292a14593366533388808ed47a6c9400a61a6b0af5367538c468cdb714e2",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-play-tower-alternate-resolved",
+      "eventId": "play-tower",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-tower-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-play-tower-alternate-resolved.webp",
+      "bytes": 98602,
+      "sha256": "d163c1793ed3945a9b920df8b38573b88df172efd6636ccf9a6f7fd4a94f26e0",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-play-tidy-alternate-request",
+      "eventId": "play-tidy",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-tidy-alternate-request.webp",
+      "target": "xiaoya/stories/story-play-tidy-alternate-request.webp",
+      "bytes": 105272,
+      "sha256": "45c203d5d0c03f6fa1020f5b1e9428098e9c9fb5ee8b1cba6fa73f5a182b05eb",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-play-tidy-alternate-resolved",
+      "eventId": "play-tidy",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-tidy-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-play-tidy-alternate-resolved.webp",
+      "bytes": 103456,
+      "sha256": "11bb8c931b2b72756982ac5e119257d1ed699496bd6049a76dbc912d7151f479",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-outside-hand-alternate-request",
+      "eventId": "outside-hand",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-outside-hand-alternate-request.webp",
+      "target": "xiaoya/stories/story-outside-hand-alternate-request.webp",
+      "bytes": 104134,
+      "sha256": "076c4fda508754fc2172e7a4a378716da50ac89786f2201de8446d89a89b50bf",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-outside-hand-alternate-resolved",
+      "eventId": "outside-hand",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-outside-hand-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-outside-hand-alternate-resolved.webp",
+      "bytes": 108624,
+      "sha256": "297e3de14152902d4c8cab5f967c96c512121f27babcadd337c40a2bcdd862b5",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-outside-rain-alternate-request",
+      "eventId": "outside-rain",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-outside-rain-alternate-shared.webp",
+      "target": "xiaoya/stories/story-outside-rain-alternate-shared.webp",
+      "bytes": 132712,
+      "sha256": "cd1e6cc40f88b55cfc3ae6204606aa626213c35b177cb7dd0165c266cf884795",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-outside-rain-alternate-resolved",
+      "eventId": "outside-rain",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-outside-rain-alternate-shared.webp",
+      "target": "xiaoya/stories/story-outside-rain-alternate-shared.webp",
+      "bytes": 132712,
+      "sha256": "cd1e6cc40f88b55cfc3ae6204606aa626213c35b177cb7dd0165c266cf884795",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-bed-hug-alternate-request",
+      "eventId": "bed-hug",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-bed-hug-alternate-request.webp",
+      "target": "xiaoya/stories/story-bed-hug-alternate-request.webp",
+      "bytes": 89704,
+      "sha256": "17ac9ca4919df1fb7da9948d67a623a6b46bea85897ed873efbdcfa11bd2e95d",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-bed-hug-alternate-resolved",
+      "eventId": "bed-hug",
+      "batch": "P2-extension-b-batch03-reviewed",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-bed-hug-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-bed-hug-alternate-resolved.webp",
+      "bytes": 107572,
+      "sha256": "128ab9fa070556225f11f894272bf46a0bd40362e760cbc9101258cfed3f1a83",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task visually reviewed checks/batch-03.png, batch-04.png and batch-05.png; clear catch, sandcastle, tidy crayons, hold hands, rain shelter and hug contexts; correct limbs and contact. play-roll held separately for ball continuity repair."
+    },
+    {
+      "assetId": "story-food-water-alternate-request",
+      "eventId": "food-water",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-water-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-water-request-alternate-paper-v1.webp",
+      "bytes": 92976,
+      "sha256": "c88f1efa7de7bc1f8a75500b18ce87f3a8a765de99f8332b165a817353bc405b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "睡前床边，小芽双手持杯，熊持单一水壶。request 杯中为空，resolved 杯中出现半杯蓝色水；杯与壶分离，物件传递方向正确。两角各两臂、手掌与坐姿自然，没有多手或壶体重复。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-water-alternate-resolved",
+      "eventId": "food-water",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-water-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-water-resolved-alternate-paper-v1.webp",
+      "bytes": 85498,
+      "sha256": "30abaea5fee10a07fbb7dbc025b74a51b056c07e447dd552312e133fbebaf90a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "睡前床边，小芽双手持杯，熊持单一水壶。request 杯中为空，resolved 杯中出现半杯蓝色水；杯与壶分离，物件传递方向正确。两角各两臂、手掌与坐姿自然，没有多手或壶体重复。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-more-alternate-request",
+      "eventId": "food-more",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-more-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-more-request-alternate-paper-v1.webp",
+      "bytes": 82026,
+      "sha256": "c9ce14be9e5245eac08f141fa537bad8b54cf988c8a7b188e2f476d40f5cf8e4",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "手工桌旁，小芽指向空碗，熊持多张色纸；resolved 碗内新增色纸且小芽手持纸片，补充材料的结果可见。画面没有把色纸误画成食物，两臂数量与持物关系正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-more-alternate-resolved",
+      "eventId": "food-more",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-more-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-more-resolved-alternate-paper-v1.webp",
+      "bytes": 79626,
+      "sha256": "a60aa02a6999b64baa8cce1f7795a7bf9545fb8540f5e3c428601c4a33245b84",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "手工桌旁，小芽指向空碗，熊持多张色纸；resolved 碗内新增色纸且小芽手持纸片，补充材料的结果可见。画面没有把色纸误画成食物，两臂数量与持物关系正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-no-thanks-alternate-request",
+      "eventId": "food-no-thanks",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-no-thanks-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-no-thanks-alternate-paper-v1.webp",
+      "bytes": 108482,
+      "sha256": "67e9529280469bb87cc915de15e667144f8b30bbf2f60149da850b55cd5e41a4",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "公园长椅旁，熊仍持果汁，小芽另一手放胸前、面向熊开掌婉拒；没有拿到果汁后又要求拒绝的矛盾。共用持续拒绝互动静帧，不虚构道具转移；两角坐姿、双臂和手掌方向正常。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-food-no-thanks-alternate-resolved",
+      "eventId": "food-no-thanks",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\food-no-thanks-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/food-no-thanks-alternate-paper-v1.webp",
+      "bytes": 108482,
+      "sha256": "67e9529280469bb87cc915de15e667144f8b30bbf2f60149da850b55cd5e41a4",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "公园长椅旁，熊仍持果汁，小芽另一手放胸前、面向熊开掌婉拒；没有拿到果汁后又要求拒绝的矛盾。共用持续拒绝互动静帧，不虚构道具转移；两角坐姿、双臂和手掌方向正常。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:food-no-thanks"
+    },
+    {
+      "assetId": "story-play-ball-alternate-request",
+      "eventId": "play-ball",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-ball-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-ball-alternate-paper-v1.webp",
+      "bytes": 64298,
+      "sha256": "256892f8828e1ec5823491d577cc8e377497c5b3d8ea885be7b12f7d96f8e83c",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "地毯积木场景，小芽持积木并朝伙伴开掌邀请，熊参与搭建；表达一起玩积木的邀请和共同互动。request/resolved 共用参与中的互动静帧，没有声称搭建从无到有；两角各两臂，积木与手接触合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-play-ball-alternate-resolved",
+      "eventId": "play-ball",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-ball-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-ball-alternate-paper-v1.webp",
+      "bytes": 64298,
+      "sha256": "256892f8828e1ec5823491d577cc8e377497c5b3d8ea885be7b12f7d96f8e83c",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "地毯积木场景，小芽持积木并朝伙伴开掌邀请，熊参与搭建；表达一起玩积木的邀请和共同互动。request/resolved 共用参与中的互动静帧，没有声称搭建从无到有；两角各两臂，积木与手接触合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:play-ball"
+    },
+    {
+      "assetId": "story-play-bridge-alternate-request",
+      "eventId": "play-bridge",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-bridge-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-bridge-request-alternate-paper-v1.webp",
+      "bytes": 72824,
+      "sha256": "21586df4783b78f1b7168809fa20ed6aea7e6fcd6f83728189fcd2feeca63368",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "request 小芽独自用力抓筐，筐落在地毯上，熊双手靠胸尚未帮助；resolved 熊抓住另一侧把手、筐底出现离地间隙与地面阴影，小芽表情放松。明确从独自抬不动到两人合作，双臂及抓握方向正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-play-bridge-alternate-resolved",
+      "eventId": "play-bridge",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-bridge-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-bridge-alternate-paper-v1.webp",
+      "bytes": 75984,
+      "sha256": "88f3b7702986fdede8d1cc461e24b1a2ec6868026cf08269af0443675699665b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "request 小芽独自用力抓筐，筐落在地毯上，熊双手靠胸尚未帮助；resolved 熊抓住另一侧把手、筐底出现离地间隙与地面阴影，小芽表情放松。明确从独自抬不动到两人合作，双臂及抓握方向正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-cat-alternate-request",
+      "eventId": "outside-cat",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-cat-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-cat-alternate-paper-v1.webp",
+      "bytes": 101128,
+      "sha256": "d30b8afbf2e40eb44f4c016e6b88549aa102bfc6e5f977b1592270522baa13fe",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "窗台蜗牛与小芽指物手势清晰，熊朝蜗牛观察；问的是陌生小动物，符合更换对象的提问情境。两角双臂及蜗牛双眼触角自然，画面没有字母或多肢；共用提问互动静帧，不要求物态变化。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-cat-alternate-resolved",
+      "eventId": "outside-cat",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-cat-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-cat-alternate-paper-v1.webp",
+      "bytes": 101128,
+      "sha256": "d30b8afbf2e40eb44f4c016e6b88549aa102bfc6e5f977b1592270522baa13fe",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "窗台蜗牛与小芽指物手势清晰，熊朝蜗牛观察；问的是陌生小动物，符合更换对象的提问情境。两角双臂及蜗牛双眼触角自然，画面没有字母或多肢；共用提问互动静帧，不要求物态变化。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:outside-cat"
+    },
+    {
+      "assetId": "story-outside-dog-alternate-request",
+      "eventId": "outside-dog",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-dog-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-dog-alternate-paper-v1.webp",
+      "bytes": 129128,
+      "sha256": "439f5573a616fc4ce4ec85f1633b1f90b717d336d06e93527f44e9df0f5d3c56",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "室内窗边小芽一手贴耳倾听，另一手放侧身，熊持书抬头；符合未看见狗、听见窗外声音的情境。狗叫的具体声源由既定中文 setup 交代，静图不单独证明声音种类；两角手臂与持书关系正常。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-dog-alternate-resolved",
+      "eventId": "outside-dog",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-dog-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-dog-alternate-paper-v1.webp",
+      "bytes": 129128,
+      "sha256": "439f5573a616fc4ce4ec85f1633b1f90b717d336d06e93527f44e9df0f5d3c56",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "室内窗边小芽一手贴耳倾听，另一手放侧身，熊持书抬头；符合未看见狗、听见窗外声音的情境。狗叫的具体声源由既定中文 setup 交代，静图不单独证明声音种类；两角手臂与持书关系正常。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:outside-dog"
+    },
+    {
+      "assetId": "story-bed-book-alternate-request",
+      "eventId": "bed-book",
+      "batch": "P2-root-batch01",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\bed-book-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-book-alternate-paper-v1.webp",
+      "bytes": 71686,
+      "sha256": "09d1f998782940536c453ecf1822ee667a3d0dbcd7888046978ab631d0111eb0",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "花园长椅上两角共看图画书，小芽指向叶片图、熊扶书；书页仅图案，无英文字母。共用邀请共读及持续参与静帧，不声称出现入座前后变化；两角手掌、双臂和坐姿合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-bed-book-alternate-resolved",
+      "eventId": "bed-book",
+      "batch": "P2-root-batch01",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch01.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\bed-book-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-book-alternate-paper-v1.webp",
+      "bytes": 71686,
+      "sha256": "09d1f998782940536c453ecf1822ee667a3d0dbcd7888046978ab631d0111eb0",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch01-contact.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all eight events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "花园长椅上两角共看图画书，小芽指向叶片图、熊扶书；书页仅图案，无英文字母。共用邀请共读及持续参与静帧，不声称出现入座前后变化；两角手掌、双臂和坐姿合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:bed-book"
+    },
+    {
+      "assetId": "story-outside-hand-primary",
+      "eventId": "outside-hand",
+      "batch": "P1-batch06",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch06.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\outside-hand-paper-v4.webp",
+      "target": "xiaoya/stories/outside-hand-paper-v4.webp",
+      "bytes": 119192,
+      "sha256": "0c1fb954ffe6dd57213f6ddd06c281035e8ba1768c13cdeaafbbb8e2badc4160",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/outside-hand-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, foot support, spatial context, no writing, and asset-audit.json meaning/request stage. Pillow decode, actual dimensions/bytes/SHA-256 verified against frozen manifest-batch06.json and manifest-final.json.",
+      "semanticReview": "小芽与熊并排站在有护栏的木桥上，相邻两臂连续自然地伸出并牵手，另外两臂分别可见；四只脚均有桥面承托。桥下溪流交代牵手一起走的情境，握手位置与双方手臂朝向自然，无反掌、断臂或多余肢体。"
+    },
+    {
+      "assetId": "story-outside-rain-primary",
+      "eventId": "outside-rain",
+      "batch": "P1-batch06",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch06.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\outside-rain-paper-v4.webp",
+      "target": "xiaoya/stories/outside-rain-paper-v4.webp",
+      "bytes": 178272,
+      "sha256": "09cd4cc1efec08038d927b8109c8c490478cec4f78b47e03e995a2e98ca4c8f8",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/outside-rain-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, foot support, spatial context, no writing, and asset-audit.json meaning/request stage. Pillow decode, actual dimensions/bytes/SHA-256 verified against frozen manifest-batch06.json and manifest-final.json.",
+      "semanticReview": "小芽指向窗外的雨滴、湿树叶和水洼，熊在旁看同一方向；窗框将干燥室内与下雨室外明确分开，门边闭伞作辅助。两角色双臂双脚关系正常，脚落室内地毯，雨滴未错误落到室内，无文字。"
+    },
+    {
+      "assetId": "story-bed-hug-primary",
+      "eventId": "bed-hug",
+      "batch": "P1-batch06",
+      "role": "primary",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\manifest-batch06.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P1\\runtime\\bed-hug-paper-v4.webp",
+      "target": "xiaoya/stories/bed-hug-paper-v4.webp",
+      "bytes": 80476,
+      "sha256": "a0eb1ddce80d4523998822c2e3d13ff08abbe4662ff2846105249ef4611c2612",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "Independent direct 980x700 pixel inspection of P1/runtime/bed-hug-paper-v4.webp; checked speaker/recipient, hand orientation, limb count, foot support, spatial context, no writing, and asset-audit.json meaning/request stage. Pillow decode, actual dimensions/bytes/SHA-256 verified against frozen manifest-batch06.json and manifest-final.json.",
+      "semanticReview": "气球带着松开的绳子飘向右上，交代小芽失落原因；小芽皱嘴并主动伸开双臂向熊走，熊屈身双臂张开等待。双方尚未抱住，保留 I need a hug 的请求阶段，四条手臂与手掌朝向自然，没有挤压式抱法或多余肢体。"
+    },
+    {
+      "assetId": "story-play-roll-alternate-request",
+      "eventId": "play-roll",
+      "batch": "v04-P2-extension-b-batch03-20261019-r2",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest-batch03-r2.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-roll-alternate-request.webp",
+      "target": "xiaoya/stories/story-play-roll-alternate-request.webp",
+      "bytes": 71854,
+      "sha256": "256d59673fa93e34da2a70ea4ffed349d4aef6e92747b8cc65eded8fe107f71a",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected both native 980x700 images after r2 repair: same green-white striped ball rolls along floor into block goal; readable request/result, natural limbs, no text. Previous mismatched spotted ball was rejected."
+    },
+    {
+      "assetId": "story-play-roll-alternate-resolved",
+      "eventId": "play-roll",
+      "batch": "v04-P2-extension-b-batch03-20261019-r2",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\manifest-batch03-r2.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-extension-b\\runtime\\story-play-roll-alternate-resolved.webp",
+      "target": "xiaoya/stories/story-play-roll-alternate-resolved.webp",
+      "bytes": 93178,
+      "sha256": "a7800fe18acb2b97b4ff71b80460069f2f5f8de5b27e0e2d78f58798f2f8e1c9",
+      "dimensions": [
+        980,
+        700
+      ],
+      "review": "accepted",
+      "reviewEvidence": "APP task inspected both native 980x700 images after r2 repair: same green-white striped ball rolls along floor into block goal; readable request/result, natural limbs, no text. Previous mismatched spotted ball was rejected."
+    },
+    {
+      "assetId": "story-play-box-alternate-request",
+      "eventId": "play-box",
+      "batch": "P2-root-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-box-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-box-request-alternate-paper-v1.webp",
+      "bytes": 91986,
+      "sha256": "e72d2faee659cb0a67bbce4efd012f4db8743f17ded06ef4ab190c6907ed594c",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "门口小芽穿橙色外套，request 拉链头在胸腹之间，小芽持住两边、熊伸手协助；resolved 拉链头已到领口，衣襟完全合拢，小芽放下双臂。实际是替代情境的拉外套，不误画玩具盒。两角双臂、抓握方向和跪立姿态正常。",
+      "statePolicy": "two-state",
+      "reuseOf": "P1:story-care-zip-primary"
+    },
+    {
+      "assetId": "story-play-box-alternate-resolved",
+      "eventId": "play-box",
+      "batch": "P2-root-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\play-box-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/play-box-resolved-alternate-paper-v1.webp",
+      "bytes": 82784,
+      "sha256": "cea481a3f74a230a1606225fbbef6d9639aff59b5fba1cbf0dc86a0ab07fb955",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "门口小芽穿橙色外套，request 拉链头在胸腹之间，小芽持住两边、熊伸手协助；resolved 拉链头已到领口，衣襟完全合拢，小芽放下双臂。实际是替代情境的拉外套，不误画玩具盒。两角双臂、抓握方向和跪立姿态正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-care-hands-alternate-request",
+      "eventId": "care-hands",
+      "batch": "P2-root-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-hands-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/care-hands-request-alternate-paper-v1.webp",
+      "bytes": 90882,
+      "sha256": "67119e66c3dd8d4c11806d206c42c32bb9e0e3d41ae5b928c7f09a18e67f997f",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "野餐桌边有画笔、颜料和清水盆，request 小芽双手有明显橙色颜料，熊指向水盆并持毛巾；resolved 两只手掌均干净、熊双手展开毛巾。污渍消失清晰，手掌朝向及双方肢体合理。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-care-hands-alternate-resolved",
+      "eventId": "care-hands",
+      "batch": "P2-root-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-hands-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/care-hands-resolved-alternate-paper-v1.webp",
+      "bytes": 82008,
+      "sha256": "2658d57cbb2e3416c1aead7af1a689b7baab03db1a6bf68c33b9c3833c167524",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "野餐桌边有画笔、颜料和清水盆，request 小芽双手有明显橙色颜料，熊指向水盆并持毛巾；resolved 两只手掌均干净、熊双手展开毛巾。污渍消失清晰，手掌朝向及双方肢体合理。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-bird-alternate-request",
+      "eventId": "outside-bird",
+      "batch": "P2-root-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-bird-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-bird-request-alternate-paper-v1.webp",
+      "bytes": 74392,
+      "sha256": "af79a48c984a0d5b2fc0d6933cf558998303dd3564582d637a49c80717d522d5",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "窗台始终只有同一只小鸟。request 熊面朝右背离窗，小芽一手触熊提醒、另一手指鸟；resolved 熊转向左上与小芽一起看鸟，小芽仍指向鸟。动作与注意力变化明确，双臂数量、手掌方向、站坐姿正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-outside-bird-alternate-resolved",
+      "eventId": "outside-bird",
+      "batch": "P2-root-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\outside-bird-resolved-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/outside-bird-resolved-alternate-paper-v1.webp",
+      "bytes": 69908,
+      "sha256": "6b30af06587f8e3238d453bfd119a3a3003257b328197720d5296b5a7a85c84f",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "窗台始终只有同一只小鸟。request 熊面朝右背离窗，小芽一手触熊提醒、另一手指鸟；resolved 熊转向左上与小芽一起看鸟，小芽仍指向鸟。动作与注意力变化明确，双臂数量、手掌方向、站坐姿正常。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-bed-story-alternate-request",
+      "eventId": "bed-story",
+      "batch": "P2-root-batch02",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\bed-story-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-story-alternate-paper-v1.webp",
+      "bytes": 117570,
+      "sha256": "16551f1345f770b61816ee1abae793de2e58180de779347dd29076bb6faa0b3b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "雨滴窗边两张小椅子，小芽期待地看熊，熊一手持合上的无字书、一手张开讲述；符合雨天请求讲故事，不是夜间床铺。共用连续口述互动静帧，不声称有道具变换。坐姿、四只手臂和手掌方向合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-bed-story-alternate-resolved",
+      "eventId": "bed-story",
+      "batch": "P2-root-batch02",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\bed-story-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/bed-story-alternate-paper-v1.webp",
+      "bytes": 117570,
+      "sha256": "16551f1345f770b61816ee1abae793de2e58180de779347dd29076bb6faa0b3b",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "P2-root-extension/checks/batch02-pairs.jpg and all 11 runtime images independently inspected at 980x700. Exact content.js context match checked for all six events. Actual decoded dimensions, byte counts and SHA-256 match both batch and image manifests.",
+      "semanticReview": "雨滴窗边两张小椅子，小芽期待地看熊，熊一手持合上的无字书、一手张开讲述；符合雨天请求讲故事，不是夜间床铺。共用连续口述互动静帧，不声称有道具变换。坐姿、四只手臂和手掌方向合理。",
+      "statePolicy": "shared-interaction-still",
+      "reuseOf": "P2-root-extension:bed-story"
+    },
+    {
+      "assetId": "story-care-socks-alternate-request",
+      "eventId": "care-socks",
+      "batch": "P2-root-batch02-r2",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02-r2.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-socks-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/care-socks-request-alternate-paper-v1.webp",
+      "bytes": 69040,
+      "sha256": "4a0e815693119c4154201553b20a5db40ef2cfc644a4ff0d96d27c99ef927de1",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "All four runtime images independently viewed at 980x700 and compared as request/resolved pairs. Exact content.js context match verified. Pillow decode, byte count and SHA-256 match both r2 batch manifest and image-manifest.json. Prior held continuity issues specifically rechecked.",
+      "semanticReview": "request 小芽穿全橙色湿袜、脚下有水，熊持奶油色袜口干袜；r2 resolved 小芽已穿奶油色袜口干袜，盆内为全橙色旧袜，杯子直立且地面已清理。新旧袜子的身份、颜色和位置连续，双臂、手掌及双脚形态自然，无多肢、反掌或文字。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-care-socks-alternate-resolved",
+      "eventId": "care-socks",
+      "batch": "P2-root-batch02-r2",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02-r2.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-socks-resolved-alternate-paper-r2.webp",
+      "target": "xiaoya/stories/care-socks-resolved-alternate-paper-r2.webp",
+      "bytes": 57818,
+      "sha256": "8146f3da53373fbf351837afed9764f0684f5685d1a1585ebb439db0301f3aa8",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "All four runtime images independently viewed at 980x700 and compared as request/resolved pairs. Exact content.js context match verified. Pillow decode, byte count and SHA-256 match both r2 batch manifest and image-manifest.json. Prior held continuity issues specifically rechecked.",
+      "semanticReview": "request 小芽穿全橙色湿袜、脚下有水，熊持奶油色袜口干袜；r2 resolved 小芽已穿奶油色袜口干袜，盆内为全橙色旧袜，杯子直立且地面已清理。新旧袜子的身份、颜色和位置连续，双臂、手掌及双脚形态自然，无多肢、反掌或文字。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-care-zip-alternate-request",
+      "eventId": "care-zip",
+      "batch": "P2-root-batch02-r2",
+      "role": "alternate-request",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02-r2.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-zip-request-alternate-paper-v1.webp",
+      "target": "xiaoya/stories/care-zip-request-alternate-paper-v1.webp",
+      "bytes": 104158,
+      "sha256": "84fc1bcb1aad55c3737fbc6ba47c577354644ec6842527d193fc9eb875f90a44",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "All four runtime images independently viewed at 980x700 and compared as request/resolved pairs. Exact content.js context match verified. Pillow decode, byte count and SHA-256 match both r2 batch manifest and image-manifest.json. Prior held continuity issues specifically rechecked.",
+      "semanticReview": "request 同一绿色背包橙色水平插扣闭合；r2 resolved 仍为相同方向和连接位置的水平插扣，两半左右分开且相向，包盖保持放下，没有变成纵向新扣或另一只背包。小芽由担心到开心，熊姿态连续，肢体与手掌正常，无文字。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    },
+    {
+      "assetId": "story-care-zip-alternate-resolved",
+      "eventId": "care-zip",
+      "batch": "P2-root-batch02-r2",
+      "role": "alternate-resolved",
+      "sourceManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\manifest-batch02-r2.json",
+      "metadataManifest": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\image-manifest.json",
+      "source": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v04-completion\\P2-root-extension\\runtime\\care-zip-resolved-alternate-paper-r2.webp",
+      "target": "xiaoya/stories/care-zip-resolved-alternate-paper-r2.webp",
+      "bytes": 97956,
+      "sha256": "570ec588878846e64f115d66d9b2e411e0f0cfe7943eb46b6b078503cdc3e1e8",
+      "dimensions": [
+        980,
+        700
+      ],
+      "alpha": false,
+      "review": "accepted",
+      "reviewEvidence": "All four runtime images independently viewed at 980x700 and compared as request/resolved pairs. Exact content.js context match verified. Pillow decode, byte count and SHA-256 match both r2 batch manifest and image-manifest.json. Prior held continuity issues specifically rechecked.",
+      "semanticReview": "request 同一绿色背包橙色水平插扣闭合；r2 resolved 仍为相同方向和连接位置的水平插扣，两半左右分开且相向，包盖保持放下，没有变成纵向新扣或另一只背包。小芽由担心到开心，熊姿态连续，肢体与手掌正常，无文字。",
+      "statePolicy": "two-state",
+      "reuseOf": null
+    }
+  ]
+}

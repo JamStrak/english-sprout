@@ -24,5 +24,8 @@ export function plantArt(flower,stage=2){
   // the pot lip, so its existing front covers the mound without hiding seed.
   else if(stage===0)top=paperPlantLayer('seed-in-soil',top,{rootY:117,width:160,height:210,anchorY:396/512});
   else if(stage>0)top=paperPlantLayer('sprout',top,{rootY:117,width:160,height:210,anchorY:396/512});
-  return svg(`<ellipse cx="80" cy="167" rx="43" ry="7" fill="#c0b18b" opacity=".2"/>${top}<path d="M44 120h72l-9 39q-28 13-54 0Z" fill="#d8a181" stroke="#b67c5d" stroke-width="3"/><rect x="39" y="117" width="82" height="13" rx="6" fill="#e6b99a" stroke="#b67c5d" stroke-width="3"/><path d="M59 139h13" stroke="#f4d5b4" stroke-width="6" stroke-linecap="round"/>`);
+  const front=paperLayer('pot-front','<path d="M44 120h72l-9 39q-28 13-54 0Z" fill="#d8a181" stroke="#b67c5d" stroke-width="3"/><rect x="39" y="117" width="82" height="13" rx="6" fill="#e6b99a" stroke="#b67c5d" stroke-width="3"/><path d="M59 139h13" stroke="#f4d5b4" stroke-width="6" stroke-linecap="round"/>');
+  // The 320×360 transparent front keeps its lip at logical (80,117). Render
+  // it after the plant so both the painted and fallback pot cover the soil.
+  return svg(`<ellipse cx="80" cy="167" rx="43" ry="7" fill="#c0b18b" opacity=".2"/>${top}${front}`);
 }

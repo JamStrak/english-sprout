@@ -6,6 +6,7 @@ import * as content from '../xiaoya/content.js';
 import * as learning from '../xiaoya/learning.js';
 import * as stories from '../xiaoya/stories.js';
 import * as storyArt from '../xiaoya/story-art.js';
+import * as storyPictures from '../xiaoya/story-pictures.js';
 import * as meadow from '../xiaoya/garden-meadow.js';
 import * as meadowArt from '../xiaoya/meadow-art.js';
 import * as meadowUI from '../xiaoya/meadow-ui.js';
@@ -63,13 +64,14 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
     location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
+  Object.assign(sandbox,storyPictures,{createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
     setPage(value){page=value;session=null;modal=null;render();},
     setGarden(value){garden=value;page='garden';session=null;modal=null;render();},
     setMeadowReward(value){gardenVariant='b';meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
-    setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};loadedPictures.set(imageUrl(story),Promise.resolve());render();return session;}};`,sandbox);
+    setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
   return {...sandbox.ui,document,documentListeners,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
     primaryWraps:()=>primaryWraps,
     hinted:()=>primaryWraps.filter(wrap=>wrap.classList.contains('is-idle-hint')).map(wrap=>wrap.querySelector('[data-primary]').dataset.action),
@@ -432,9 +434,9 @@ test('direct review recovers failed pictures without a render or request loop',a
     const story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});
     assert.match(f.html(),/data-picture-id="food-water"/);
     f.render();f.render();assert.equal(f.images.length,1);
-    f.images[0].onerror();await flush();
-    assert.match(f.html(),/vector-picture/);assert.doesNotMatch(f.html(),/data-picture-id="food-water"/);
-    f.render();assert.equal(f.images.length,1);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
+    const renders=f.renders();f.images[0].onerror();await flush();assert.equal(f.renders(),renders,'Image failure never rebuilds active controls');
+    f.render();assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-picture-status="failed"/);
+    assert.equal(f.images.length,1);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
 });
 
 test('late picture failures cannot redraw a different page or interrupt its activity',async()=>{
@@ -456,9 +458,9 @@ test('try again teaches a fallen tower before rebuilding, without repeating its 
   assert.deepEqual(story.teachingFrames,[0,1]);
   const s=f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'}),playing=f.playStory();
   assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="fallen-blocks"/);
-  assert.doesNotMatch(f.html(),/data-picture-id="play-again"/);
-  assert.equal(f.images.length,1);f.images[0].onload();await f.nextDelay();
-  assert.match(f.html(),/data-picture-id="play-again" data-story-frame="1"/);
+  assert.match(f.html(),/data-story-frame="0".*data-picture-id="play-again"/);
+  assert.equal(f.images.length,2);f.images[0].onload();f.images[1].onload();await f.nextDelay();
+  assert.match(f.html(),/data-story-frame="1".*data-picture-id="play-again"/);
   assert.doesNotMatch(f.html(),/data-cue="fallen-blocks"/);
   await f.nextDelay();assert.equal(f.sounds.length,1);f.sounds[0].resolve(true);await playing;
   assert.equal(s.storyReady,true);assert.equal(f.writes.length,0);
@@ -468,19 +470,21 @@ test('try again image failure preserves different visible actions for both teach
   const f=fixture(),story=stories.storyFor('play-again');
   f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'});
   const playing=f.playStory(),intro=storyArt.storyFrame(story,0);
-  f.images[0].onerror();await f.nextDelay();
+  f.images[0].onerror();f.images[1].onerror();await f.nextDelay();
   assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="retry-picking-up-block"/);
   const drawing=svg=>svg.replace(/\sdata-[\w-]+="[^"]*"/g,'');
   assert.notEqual(drawing(intro),drawing(storyArt.storyFrame(story,1)));
   await f.nextDelay();f.sounds[0].resolve(true);await playing;
-  assert.equal(f.getSession().storyReady,true);assert.equal(f.images.length,1);
+  assert.equal(f.getSession().storyReady,true);assert.equal(f.images.length,2);
 });
 
 test('familiar try again review starts at the final picture without playing the answer',()=>{
   const f=fixture(),story=stories.storyFor('play-again');
   f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true,frame:0});
-  assert.match(f.html(),/data-picture-id="play-again" data-story-frame="1"/);
-  assert.doesNotMatch(f.html(),/data-cue="fallen-blocks"|story-progress/);
+  assert.match(f.html(),/data-story-frame="1".*data-picture-id="play-again"/);
+  assert.match(f.html(),/data-cue="retry-picking-up-block"/);
+  assert.doesNotMatch(f.html(),/data-story-frame="0"|story-progress/);
+  assert.equal(f.images.length,1,'Familiar review only requests the main image');
   assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
 });
 

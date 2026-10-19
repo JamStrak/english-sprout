@@ -6,7 +6,11 @@ import {MEADOW_HIT_SHAPES} from '../xiaoya/meadow-hit-shapes.js';
 import {PAPER_ASSETS,paperLayer,paperPlantLayer,installPaperArt} from '../xiaoya/paper-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt,plantArt} from '../xiaoya/garden-art.js';
 import {meadowPlantArt} from '../xiaoya/meadow-art.js';
-import {FLOWERS} from '../xiaoya/garden-meadow.js';
+import {FLOWERS,SPECIAL_FLOWERS,ALL_FLOWERS} from '../xiaoya/garden-meadow.js';
+import {voicePortrait} from '../xiaoya/art.js';
+import {flagArt,challengeFlag,challengeBoard,challengePrize} from '../xiaoya/challenge-ui.js';
+
+const shippedSpecialFlowers=SPECIAL_FLOWERS.filter(f=>fs.existsSync(new URL(`../public/${PAPER_ASSETS[`flower-${f.id}`]}`,import.meta.url)));
 
 class Node extends EventTarget {
   constructor(tag='g',attributes={}){super();this.tag=tag;this.attributes={...attributes};this.children=[];this.parentElement=null;}
@@ -40,7 +44,7 @@ function fixture({cached=false,failCache=false,observer=true,build='012345abcdef
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 
 test('plant hit outlines match the currently shipped art assets',()=>{
-  const keys=['seed-in-soil','sprout','bud',...FLOWERS.map(f=>`flower-${f.id}`)];
+  const keys=['seed-in-soil','sprout','bud',...[...FLOWERS,...shippedSpecialFlowers].map(f=>`flower-${f.id}`)];
   assert.deepEqual(Object.keys(MEADOW_HIT_SHAPES).sort(),keys.sort());
   for(const key of keys){
     const hash=createHash('sha256').update(fs.readFileSync(new URL(`../public/${PAPER_ASSETS[key]}`,import.meta.url))).digest('hex');
@@ -48,12 +52,14 @@ test('plant hit outlines match the currently shipped art assets',()=>{
   }
 });
 
-test('paper map covers tools, three shared growth stages and twelve stable flowers with nested-host relative paths',()=>{
-  assert.equal(Object.keys(PAPER_ASSETS).length,21);
+test('paper map preserves the v1 art and adds exactly seven optional v2 assets with nested-host relative paths',()=>{
+  assert.equal(Object.keys(PAPER_ASSETS).length,28);
   assert.ok(Object.isFrozen(PAPER_ASSETS));
   for(const stage of ['seed-in-soil','sprout','bud'])assert.equal(PAPER_ASSETS[stage],`xiaoya/paper/v1/${stage}.webp`);
   for(const flower of FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v1/flowers/${flower.id}.webp`);
-  for(const path of Object.values(PAPER_ASSETS))assert.match(path,/^xiaoya\/paper\/v1\/(?:flowers\/)?[a-z-]+\.webp$/);
+  for(const flower of SPECIAL_FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v2/flowers/${flower.id}.webp`);
+  for(const key of ['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'])assert.equal(PAPER_ASSETS[key],`xiaoya/paper/v2/${key}.webp`);
+  for(const path of Object.values(PAPER_ASSETS))assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);
 });
 
 test('optional layer keeps complete visible fallback and fixed transparent image bounds before load',()=>{
@@ -83,7 +89,7 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
   for(const [draw,key] of [[shellArt,'shell'],[dropArt,'water-drop'],[canArt,'watering-can'],[packArt,'seed-pack'],[seedArt,'seed']]) {
     const art=draw();assert.match(art,/^<svg viewBox="0 0 160 180"/);assert.match(art,new RegExp(`data-paper-art="${key}"`));assert.match(art,/<g data-paper-fallback>/);
   }
-  for(const flower of FLOWERS) {
+  for(const flower of ALL_FLOWERS) {
     const mature=meadowPlantArt(flower,flower.waterNeeded);
     assert.match(mature,new RegExp(`data-paper-art="flower-${flower.id}"`));
     assert.match(mature,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body><g data-paper-art=/);
@@ -99,7 +105,11 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
     const art=plantArt(FLOWERS[0],stage);
     assert.match(art,new RegExp(`data-paper-art="${key}"`));
     assert.match(art,/<g data-paper-fallback><path/);
-    assert.match(art,/<\/g><path d="M44 120h72/); // Front pot covers the image's soil edge.
+    // Both the optional painted pot and its SVG fallback cover the soil edge.
+    assert.match(art,/<\/g><g data-paper-art="pot-front"[^>]*><g data-paper-fallback><path d="M44 120h72/);
+    const front=art.slice(art.indexOf('<g data-paper-art="pot-front"'));
+    assert.match(front,/<image[^>]+ x="0" y="0" width="160" height="180"/);
+    assert.match(front,/<rect x="39" y="117" width="82" height="13"/);
     const [,y,height]=art.match(/<image[^>]+ y="([^"]+)"[^>]+ height="([^"]+)"/);
     const anchor=stage===2?.88:396/512;
     assert.ok(Math.abs(Number(y)+Number(height)*anchor-117)<1e-8);
@@ -113,7 +123,7 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
 });
 
 test('successful meadow bitmaps also grow on every pour while staying anchored at soil',()=>{
-  for(const flower of FLOWERS) {
+  for(const flower of [...FLOWERS,...shippedSpecialFlowers]) {
     let previousVisibleHeight=0;
     const stages=new Set();
     for(let count=0;count<=flower.waterNeeded;count++) {
@@ -125,6 +135,7 @@ test('successful meadow bitmaps also grow on every pour while staying anchored a
       const key=art.match(/data-paper-art="([^"]+)"/)[1];
       // The source alpha outline is independently tied to the asset hash above.
       // Transparent canvas growth must not pass as actual plant growth.
+      assert.ok(MEADOW_HIT_SHAPES[key],`${key}: generate its hit outline before shipping the image`);
       const top=Math.min(...[...MEADOW_HIT_SHAPES[key].path.matchAll(/[ML]([\d.]+),([\d.]+)/g)].map(m=>Number(m[2])));
       const visibleHeight=paintedHeight*(512*.88-top)/512;
       assert.ok(visibleHeight-previousVisibleHeight>=7.9,`${flower.id} pour ${count}: visible height ${previousVisibleHeight} -> ${visibleHeight}`);
@@ -134,6 +145,71 @@ test('successful meadow bitmaps also grow on every pour while staying anchored a
     }
     assert.deepEqual([...stages],['seed-in-soil','sprout','bud',`flower-${flower.id}`]);
   }
+});
+
+test('milestone flowers retain distinct complete vectors and a root-fixed image while optional art is loading',()=>{
+  for(const flower of SPECIAL_FLOWERS) {
+    const art=meadowPlantArt(flower,flower.waterNeeded);
+    const kind=flower.id==='bow-rainbow'?'rainbow':'starlight';
+    assert.match(art,new RegExp(`data-special-blossom="${kind}"`));
+    assert.match(art,new RegExp(`data-paper-art="flower-${flower.id}" data-paper-state="loading"`));
+    assert.match(art,/<g data-plant-hit="vector" opacity="0">/);
+    assert.match(art,/<image[^>]+opacity="0" pointer-events="none"/);
+    const [,x,y,width,height]=art.match(/<image[^>]+ x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/);
+    assert.equal(Number(x)+Number(width)/2,80);
+    assert.ok(Math.abs(Number(y)+Number(height)*.88-164)<1e-8);
+  }
+});
+
+test('voice portraits keep bear, fox and cat identities and existing viewport and click geometry',()=>{
+  const bear=voicePortrait('aiden'),fox=voicePortrait('ryan'),cat=voicePortrait('pip');
+  for(const [id,art] of [['aiden',bear],['ryan',fox],['pip',cat]]) {
+    assert.match(art,/^<svg[^>]+viewBox="0 0 80 82"/);
+    assert.match(art,new RegExp(`data-paper-art="voice-${id}"`));
+    assert.match(art,/<image[^>]+ x="0" y="0" width="80" height="82" preserveAspectRatio="xMidYMid meet" opacity="0" pointer-events="none"/);
+    assert.doesNotMatch(art,/<(?:button|a|script|text)\b|tabindex=|data-action=/);
+  }
+  assert.match(bear,/<circle cx="19" cy="23" r="12"/);
+  assert.match(fox,/d="M14 41L38 49L66 41/);
+  assert.match(cat,/d="M15 49l-9-2m9 7l-9 2/);
+  assert.equal(voicePortrait('unmapped'),bear);
+  assert.equal(voicePortrait('pip" onload="bad'),bear);
+});
+
+test('painted challenge flag retains the original entry, guide and prize actions',()=>{
+  const art=flagArt();
+  assert.match(art,/^<svg viewBox="0 0 64 64"/);
+  assert.match(art,/<g data-paper-art="challenge-flag"[^>]*><g data-paper-fallback><path d="M20 55V10"/);
+  assert.match(art,/<image[^>]+ x="0" y="0" width="64" height="64"[^>]+pointer-events="none"/);
+  const unit={id:'challenge-1',available:true,completed:false,completedCount:0,items:Array.from({length:4},()=>({passed:false}))};
+  const summary={units:[unit],completedCount:0};
+  assert.equal(challengeFlag({units:[{available:false}]}),'');
+  assert.match(challengeFlag(summary,{invite:true}),/class="challenge-flag is-invited" data-action="challenges"/);
+  const board=challengeBoard({summary,header:'',balance:'',seedPending:true});
+  for(const action of ['challenge-guide','challenge-seed','garden'])assert.match(board,new RegExp(`data-action="${action}"`));
+  assert.match(board,/data-challenge-unit="challenge-1"/);
+  const prize=challengePrize({header:'',unit,hasSeed:true,primary:(action)=>`<button data-action="${action}"></button>`});
+  for(const action of ['shell-purpose','water-purpose','garden'])assert.match(prize,new RegExp(`data-action="${action}"`));
+});
+
+test('each optional v2 image keeps its fallback on errors and reveals only after a successful load',()=>{
+  const {root,add}=fixture();const dispose=installPaperArt(root);
+  for(const [key,path] of Object.entries(PAPER_ASSETS).filter(([,path])=>path.includes('/v2/'))) {
+    const item=add(key);
+    assert.equal(item.image.getAttribute('href'),path);
+    assert.equal(item.image.getAttribute('opacity'),'0');
+    assert.notEqual(item.fallback.getAttribute('visibility'),'hidden');
+    item.image.dispatchEvent(new Event('error'));
+    assert.equal(item.fallback.getAttribute('visibility'),'visible');
+    assert.equal(item.image.getAttribute('opacity'),'0');
+    item.image.dispatchEvent(new Event('load'));
+    assert.equal(item.fallback.getAttribute('visibility'),'hidden');
+    assert.equal(item.image.getAttribute('opacity'),'1');
+    item.image.dispatchEvent(new Event('error'));
+    assert.equal(item.fallback.getAttribute('visibility'),'visible');
+    assert.equal(item.image.getAttribute('opacity'),'0');
+  }
+  dispose();
 });
 
 test('one installation handles existing and subsequently rendered native image loads without changing dimensions',()=>{
