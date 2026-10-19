@@ -25,8 +25,13 @@ async function fixture(t) {
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
+  await fs.writeFile(path.join(root, 'xiaoya', 'audio-pack.js'), '/* audio preparation */');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
-  await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), 'replacement voice bytes');
+  await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), new Uint8Array([1,2,3,4,5,6]));
+  for (const directory of ['', 'ryan', 'characters/pip']) {
+    await fs.mkdir(path.join(root, 'public/audio', directory), {recursive:true});
+    await fs.writeFile(path.join(root, 'public/audio', directory, 'hello-01.mp3'), new Uint8Array([1,2,3,4,5,6]));
+  }
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
   await fs.mkdir(path.join(root, 'public/xiaoya/icons'), {recursive:true});
   for (const name of ['icon.svg','icon-192.png','icon-512.png']) await fs.copyFile(path.join(project, 'public/xiaoya/icons', name), path.join(root, 'public/xiaoya/icons', name));
@@ -41,12 +46,12 @@ async function worker(fixture, {corrupt = false} = {}) {
   const scope = 'https://example.test/hosted/course/xiaoya/';
   const listeners = new Map(), stores = new Map(), fetched = [];
   const key = request => typeof request === 'string' ? request : request.url;
-  let online = true, claimed = 0, skipped = 0;
+  let online = true, claimed = 0, skipped = 0, badVoice = false;
   const network = async request => {
     const url = new URL(key(request));
     fetched.push(url.href);
     if (!online) throw new Error('offline');
-    if (url.pathname.endsWith('.mp3')) return new Response(new Uint8Array([1,2,3,4,5,6]), {headers:{'Content-Type':'audio/mpeg'}});
+    if (url.pathname.endsWith('.mp3')) return new Response(badVoice && url.pathname.endsWith('guide-hello.mp3') ? 'broken MP3' : new Uint8Array([1,2,3,4,5,6]), {headers:{'Content-Type':'audio/mpeg'}});
     let relative = url.pathname.slice(new URL(scope).pathname.length);
     if (!relative) relative = 'index.html';
     const bytes = await fs.readFile(path.join(fixture.output, relative));
@@ -84,7 +89,7 @@ async function worker(fixture, {corrupt = false} = {}) {
     await lifetime;
     return response;
   };
-  return {scope, stores, fetched, caches, lifecycle, fetchRequest, setOnline:value => { online = value; }, claimed:() => claimed, skipped:() => skipped};
+  return {scope, stores, fetched, caches, lifecycle, fetchRequest, setBadVoice:value => { badVoice = value; }, setOnline:value => { online = value; }, claimed:() => claimed, skipped:() => skipped};
 }
 
 test('build isolates product, fingerprints every module, rewrites shared imports, and supports nested hosting', async t => {
@@ -109,7 +114,7 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   }
   await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/shared/speech-local.js`)), {code:'ENOENT'});
   assert.ok(built.core.every(file => !/model-en-us|vosk-0\.0\.8|whisper-tiny-en-v1|\.(mp3|webp|onnx|wasm)$/.test(file)));
-  assert.equal(await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'), 'utf8'), 'replacement voice bytes');
+  assert.deepEqual([...await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'))], [1,2,3,4,5,6]);
   await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'private.log')), {code:'ENOENT'});
   const again = await buildXiaoya({root:built.root});
@@ -118,7 +123,7 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.notEqual((await buildXiaoya({root:built.root})).build, built.build);
 });
 
-test('worker verifies lightweight core and leaves existing product caches intact', async t => {
+test('worker verifies core and the full voice pack, leaving existing product caches intact', async t => {
   const built = await fixture(t), sw = await worker(built);
   await (await sw.caches.open('english-sprout-core-old')).put('https://example.test/hosted/course/index.html', new Response('old-product'));
   await sw.lifecycle('install');
@@ -126,14 +131,65 @@ test('worker verifies lightweight core and leaves existing product caches intact
   assert.equal(sw.skipped(), 1);
   assert.equal(sw.claimed(), 1);
   assert.ok(sw.stores.has('english-sprout-core-old'));
-  assert.ok(sw.fetched.every(url => url.startsWith(sw.scope)));
-  assert.ok(!sw.fetched.some(url => /\.mp3$|model-en-us|vosk-0|whisper-tiny-en-v1/.test(url)));
+  assert.ok(sw.fetched.every(url => url.startsWith(new URL('../', sw.scope).href)));
+  assert.equal(sw.fetched.filter(url => url.endsWith('.mp3')).length, 4);
+  assert.ok(!sw.fetched.some(url => /model-en-us|vosk-0|whisper-tiny-en-v1/.test(url)));
   sw.setOnline(false);
   for (const file of ['speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'shared/speech-match.js', 'shared/speech-download.js']) {
     const response = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/${file}`, sw.scope)));
     assert.equal(response.status, 200);
     assert.equal(await response.text(), await fs.readFile(path.join(built.output, `releases/${built.build}/${file}`), 'utf8'));
   }
+});
+
+test('every built-in voice works offline without ever being played first', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  await sw.lifecycle('install');
+  sw.setOnline(false);
+  const requests = sw.fetched.length;
+  for (const file of ['./audio/v3/guide-hello.mp3', '../audio/hello-01.mp3', '../audio/ryan/hello-01.mp3', '../audio/characters/pip/hello-01.mp3']) {
+    const response = await sw.fetchRequest(new Request(new URL(file, sw.scope), {headers:{Range:'bytes=1-3'}}));
+    assert.equal(response.status, 206, `${file} must be ready before the first listen`);
+    assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [2,3,4]);
+  }
+  assert.equal(sw.fetched.length, requests, 'Offline first listens must never attempt network');
+});
+
+test('audio bytes fingerprint the release and the published voice pack', async t => {
+  const built = await fixture(t);
+  const manifest = JSON.parse(await fs.readFile(path.join(built.output, `releases/${built.build}/audio-pack.json`), 'utf8'));
+  assert.equal(manifest.length, 4);
+  assert.ok(manifest.every(entry => entry.bytes === 6 && /^[a-f0-9]{64}$/.test(entry.sha256)));
+  await fs.writeFile(path.join(built.root, 'public/xiaoya/audio/guide-hello.mp3'), 'new voice');
+  assert.notEqual((await buildXiaoya({root:built.root})).build, built.build);
+});
+
+test('corrupt voices block activation and retry resumes from the verified partial pack', async t => {
+  const sw = await worker(await fixture(t));
+  sw.setBadVoice(true);
+  await assert.rejects(sw.lifecycle('install'), /声音文件不完整/);
+  assert.equal(sw.skipped(), 0, 'A partial pack must never be called ready');
+  const ready = sw.stores.get('xiaoya-audio-v3');
+  assert.equal(ready.size, 3, 'Other completed voices remain available for resuming');
+  const requests = sw.fetched.filter(url => url.endsWith('.mp3')).length;
+  sw.setBadVoice(false);
+  await sw.lifecycle('install');
+  assert.equal(sw.skipped(), 1);
+  assert.equal(sw.fetched.filter(url => url.endsWith('.mp3')).length - requests, 1, 'Only the missing voice is downloaded again');
+});
+
+test('damaged existing audio is repaired before playback instead of being trusted as a 200 response', async t => {
+  const sw = await worker(await fixture(t));
+  await sw.lifecycle('install');
+  const url = new URL('./audio/v3/guide-hello.mp3', sw.scope).href;
+  const cache = await sw.caches.open('xiaoya-audio-v3');
+  await cache.put(url, new Response('truncated'));
+  const requests = sw.fetched.length;
+  const response = await sw.fetchRequest(new Request(url, {headers:{Range:'bytes=1-3'}}));
+  assert.equal(response.status, 206);
+  assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [2,3,4]);
+  assert.equal(sw.fetched.length, requests + 1);
+  assert.deepEqual([...new Uint8Array(await (await cache.match(url)).arrayBuffer())], [1,2,3,4,5,6]);
 });
 
 test('worker refuses activation when one core response is from another build', async t => {

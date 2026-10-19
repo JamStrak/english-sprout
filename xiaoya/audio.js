@@ -17,6 +17,9 @@ const absolute = file => new URL(file, document.baseURI).href;
 const AUDIO_CACHE = 'xiaoya-audio-v3';
 const caching = new Set();
 function cachePublicSound(file) {
+  // The worker serves and saves the same request. A second page fetch races
+  // native playback and doubles cold requests without improving readiness.
+  if (navigator.serviceWorker?.controller) return;
   const url = new URL(file, document.baseURI);
   if (url.origin !== location.origin || !url.pathname.endsWith('.mp3') || !('caches' in window) || caching.has(url.href)) return;
   caching.add(url.href);
@@ -34,24 +37,31 @@ export function stopSound() {
 
 export function playSound(file, onState = () => {}) {
   stopSound();
-  cachePublicSound(file);
   return new Promise((resolve, reject) => {
     const audio = new Audio(absolute(file));
     audio.preload = 'auto';
-    let timer;
+    let timer, finished = false, lastProgress = 0;
     const current = {audio, finish(ok, error) {
-      clearTimeout(timer); audio.onended = audio.onerror = audio.onplaying = null;
+      if (finished) return; finished = true;
+      clearTimeout(timer); audio.onended = audio.onerror = audio.onplaying = audio.ontimeupdate = null;
       audio.pause(); audio.removeAttribute('src'); audio.load();
       if (playback === current) playback = null;
       onState(error ? 'error' : 'idle'); error ? reject(error) : resolve(ok);
     }};
     playback = current;
     onState('loading');
-    audio.onplaying = () => { clearTimeout(timer); onState('playing'); };
-    audio.onended = () => current.finish(true);
-    audio.onerror = () => current.finish(false, new Error('这段声音还没准备好，请联网后重试。'));
-    timer = setTimeout(() => current.finish(false, new Error('声音加载较慢，请再点一次。')), 15000);
-    audio.play().catch(error => { if (playback === current) current.finish(false, error); });
+    const watchProgress = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => current.finish(false, new Error('本地声音读取超时，请家长双击「启动小芽英语」，在家长区检查声音准备状态。')), 15000);
+    };
+    audio.onplaying = () => { watchProgress(); onState('playing'); };
+    audio.ontimeupdate = () => {
+      if (audio.currentTime > lastProgress) { lastProgress = audio.currentTime; watchProgress(); }
+    };
+    audio.onended = () => { cachePublicSound(file); current.finish(true); };
+    audio.onerror = () => current.finish(false, new Error('这段内置声音暂时无法读取，请家长双击「启动小芽英语」，在家长区检查声音准备状态。'));
+    watchProgress();
+    audio.play().catch(error => { if (playback === current) current.finish(false, error.name === 'NotAllowedError' ? new Error('浏览器还没有允许播放声音，请点一下示范按钮。') : error); });
   });
 }
 

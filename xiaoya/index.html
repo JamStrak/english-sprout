@@ -23,14 +23,5 @@
   <div id="app"></div>
   <noscript>请开启浏览器的脚本功能，再来和小芽一起玩。</noscript>
   <script type="module" src="xiaoya/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register(new URL('xiaoya/sw.js', document.baseURI), {scope:new URL('xiaoya/', document.baseURI).pathname, updateViaCache:'none'})
-          .then(registration => { window.xiaoyaWorker = registration; registration.update().catch(() => {}); })
-          .catch(() => {});
-      });
-    }
-  </script>
 </body>
 </html>

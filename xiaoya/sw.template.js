@@ -4,9 +4,68 @@ const AUDIO = 'xiaoya-audio-v3';
 const SPEECH = 'english-sprout-speech-v1';
 const CORE = __XIAOYA_CORE__;
 const INTEGRITY = /*__XIAOYA_INTEGRITY__*/{};
+const VOICES = /*__XIAOYA_AUDIO__*/[];
+const BUILD = '__XIAOYA_BUILD__';
 const SCOPE = self.registration.scope;
 const BASE = new URL('../', SCOPE);
 const absolute = file => new URL(file, SCOPE).href;
+const voiceByUrl = new Map(VOICES.map(file => [absolute(file.url), file]));
+let preparingVoices = null;
+let voiceStatus = {type:'xiaoya-audio-pack', build:BUILD, state:'preparing', done:0, total:VOICES.length};
+const checksum = async bytes => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), byte => byte.toString(16).padStart(2, '0')).join('');
+async function validVoice(response, file) {
+  if (response?.status !== 200) return false;
+  try {
+    const bytes = await response.clone().arrayBuffer();
+    return bytes.byteLength === file.bytes && await checksum(bytes) === file.sha256;
+  } catch { return false; }
+}
+async function announceVoices() {
+  const clients = await self.clients.matchAll?.({type:'window', includeUncontrolled:true}) || [];
+  for (const client of clients) client.postMessage(voiceStatus);
+}
+function prepareVoices() {
+  if (preparingVoices) return preparingVoices;
+  preparingVoices = (async () => {
+    const cache = await caches.open(AUDIO);
+    voiceStatus = {...voiceStatus, state:'preparing', done:0};
+    await announceVoices();
+    let cursor = 0;
+    const results = await Promise.allSettled(Array.from({length:Math.min(6, VOICES.length)}, async () => {
+      while (cursor < VOICES.length) {
+        const file = VOICES[cursor++], url = absolute(file.url);
+        let response = await cache.match(url, {ignoreVary:true});
+        if (!await validVoice(response, file)) {
+          // Reload bypasses HTTP caches. Worker fetches do not pass through an
+          // older service worker, which may still control the open page.
+          response = await fetch(new Request(url, {cache:'reload'}));
+          if (!await validVoice(response, file)) throw new Error('内置声音文件不完整');
+          await cache.put(url, response);
+        }
+        voiceStatus.done++;
+        if (voiceStatus.done % 12 === 0) await announceVoices();
+      }
+    }));
+    const failure = results.find(result => result.status === 'rejected');
+    if (failure) throw failure.reason;
+    voiceStatus = {...voiceStatus, state:'ready'};
+    await announceVoices();
+  })().catch(async error => {
+    voiceStatus = {...voiceStatus, state:'error'};
+    await announceVoices();
+    throw error;
+  }).finally(() => { preparingVoices = null; });
+  return preparingVoices;
+}
+
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'xiaoya-prepare-audio') return;
+  if (event.data.build !== BUILD) {
+    event.source?.postMessage({type:'xiaoya-audio-update', requestedBuild:event.data.build, build:BUILD});
+    return;
+  }
+  event.waitUntil(prepareVoices().catch(() => {}));
+});
 
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);
@@ -18,6 +77,9 @@ self.addEventListener('install', event => event.waitUntil((async () => {
     const actual = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
     if (actual !== expected) throw new Error('小芽英语资源版本不一致');
   }
+  // A release is offline-ready only after its entire built-in voice pack is
+  // present and verified. Interrupted attempts reuse already verified files.
+  await prepareVoices();
   await self.skipWaiting();
 })()));
 
@@ -32,7 +94,7 @@ async function cachedAudio(request) {
   for (const name of original ? [AUDIO, 'english-sprout-audio-v5'] : [AUDIO]) {
     try {
       const found = await (await caches.open(name)).match(request, {ignoreSearch:original, ignoreVary:true});
-      if (found?.status === 200) return found;
+      if (found?.status === 200 && (!voiceByUrl.has(request.url) || await validVoice(found, voiceByUrl.get(request.url)))) return found;
     } catch {}
   }
   return null;
@@ -83,8 +145,10 @@ self.addEventListener('fetch', event => {
       // Save the complete short clip even when the media element requests a range.
       const headers = new Headers(request.headers);
       if (isAudio) headers.delete('range');
-      const response = await fetch(isAudio ? new Request(request, {headers}) : request);
-      if (cache && response.status === 200) write = cache.put(request, response.clone()).catch(() => {});
+      const response = await fetch(isAudio ? new Request(request, {headers, cache:'reload'}) : request);
+      const voice = isAudio && voiceByUrl.get(url.href);
+      if (voice && !await validVoice(response, voice)) return Response.error();
+      if (cache && response.status === 200) write = cache.put(isAudio ? url.href : request, response.clone()).catch(() => {});
       return isAudio ? withAudioRange(response, request) : response;
     } catch {
       if (request.mode === 'navigate' && url.href.startsWith(SCOPE)) return (await cache?.match(absolute('./index.html'))) || Response.error();
