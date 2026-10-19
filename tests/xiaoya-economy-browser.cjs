@@ -69,15 +69,23 @@ async function completeStory(p,id,{finish=true}={}){
   await click(p,'watch');await p.locator('[data-phase="resolved"]').waitFor();
   if(finish){await click(p,'finish');await p.locator('.reward-view').waitFor();}
 }
-async function previewReward(p,choice){
+async function previewReward(p,choice,{legacy=false}={}){
   const before=await state(p),played=await p.evaluate(()=>qaEconomy.plays.length);
-  await p.locator(`[data-reward-choice="${choice}"]`).tap();
+  const target=p.locator(`[data-reward-choice="${choice}"]`);
+  await target.waitFor({state:'visible'});assert(await target.isEnabled());
+  // Breathing buttons intentionally never become geometrically stable. A real
+  // touch should hit their visible centre without disabling motion or forcing DOM clicks.
+  const point=await target.evaluate(e=>{const b=e.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+b.height/2;return{x,y,hit:e.contains(document.elementFromPoint(x,y))};});
+  assert(point.hit,'The visible choice centre must receive the touch');
+  await p.touchscreen.tap(point.x,point.y);
   await p.locator(`[data-reward-choice="${choice}"][aria-pressed="true"]`).waitFor();
   await p.locator('[data-action="confirm-reward"]:enabled').waitFor();
-  await p.waitForFunction(({choice,played})=>qaEconomy.plays.slice(played).some(x=>x.endsWith(`/flow-${choice}.mp3`)),{choice,played});
+  const voice=choice==='water'&&!legacy?'flow-water-choice-v13':`flow-${choice}`;
+  await p.waitForFunction(({voice,played})=>qaEconomy.plays.slice(played).some(x=>x.endsWith(`/${voice}.mp3`)),{voice,played});
+  assert.equal(await p.locator(`[data-reward-choice="${choice}"] .reward-choice-resource b`).textContent(),`+${choice==='water'&&legacy?5:2}`,'The displayed choice must match its own reward version');
   assert.deepEqual(await state(p),before,'Hearing what a resource does must not grant or spend it');
 }
-async function choose(p,choice){await previewReward(p,choice);await click(p,'confirm-reward');await p.locator('.reward-view[data-choice="false"]').waitFor();}
+async function choose(p,choice,options){await previewReward(p,choice,options);await click(p,'confirm-reward');await p.locator('.reward-view[data-choice="false"]').waitFor();}
 async function receiptPurpose(p,resource){
   const before=await state(p),played=await p.evaluate(()=>qaEconomy.plays.length);
   await click(p,`${resource}-purpose`);
@@ -124,11 +132,12 @@ async function test(name,fn,options){
 
 async function cases(){
   await test('Real first story gives the starter pair, first mystery is daisy, later stories offer one resource',async({p})=>{
-    await completeStory(p,'hello-everyone');let s=await state(p);assert.deepEqual(balance(s),[2,5]);assert.equal(s.rounds[0].reward,'starter');assert.equal(s.rounds[0].starter,true);assert.equal(await p.locator('[data-reward-choice]').count(),0);
+    await completeStory(p,'hello-everyone');let s=await state(p);assert.deepEqual(balance(s),[2,3]);assert.equal(s.rounds[0].reward,'starter');assert.equal(s.rounds[0].starter,true);assert.equal(await p.locator('[data-reward-choice]').count(),0);
+    assert.equal(await p.locator('[data-action="water-purpose"] b').textContent(),'+3');await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-starter-v13.mp3')));
     await receiptPurpose(p,'shell');await receiptPurpose(p,'water');
-    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();s=await state(p);assert.deepEqual(balance(s),[0,5]);assert.equal(s.pendingSeed.flowerId,'daisy','The first mystery seed is the familiar starter daisy');
-    await plantPending(p);await completeStory(p,'hello-morning');s=await state(p);assert.deepEqual(balance(s),[0,5]);assert.equal(pending(s).length,1);await choose(p,'shells');assert.deepEqual(balance(await state(p)),[2,5]);
-    await completeStory(p,'family-love');assert.deepEqual(balance(await state(p)),[2,5]);await reload(p);await click(p,'garden');await p.locator('[data-reward-choice="water"]').waitFor();await choose(p,'water');s=await state(p);assert.deepEqual(balance(s),[2,10]);assert.equal(pending(s).length,0);assert.deepEqual(s.rounds.map(r=>r.reward),['starter','shells','water']);
+    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();s=await state(p);assert.deepEqual(balance(s),[0,3]);assert.equal(s.pendingSeed.flowerId,'daisy','The first mystery seed is the familiar starter daisy');
+    await plantPending(p);await completeStory(p,'hello-morning');s=await state(p);assert.deepEqual(balance(s),[0,3]);assert.equal(pending(s).length,1);await choose(p,'shells');assert.deepEqual(balance(await state(p)),[2,3]);
+    await completeStory(p,'family-love');assert.deepEqual(balance(await state(p)),[2,3]);await reload(p);await click(p,'garden');await p.locator('[data-reward-choice="water"]').waitFor();await choose(p,'water');s=await state(p);assert.deepEqual(balance(s),[2,5]);assert.equal(pending(s).length,0);assert.deepEqual(s.rounds.map(r=>r.reward),['starter','shells','water']);
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),STATE),null,'Participation rewards never invent speech mastery');
   });
   await test('A rapid duplicate claim only settles one pending round and survives reload',async({p})=>{
@@ -137,7 +146,7 @@ async function cases(){
     let s=await state(p);assert.deepEqual(balance(s),[before.shells+2,before.water]);assert.equal(s.rounds.filter(r=>r.reward==='shells').length,1);
     assert.equal(await p.locator('[data-reward-choice][aria-pressed="true"]').count(),0,'A new pending round never inherits the previous resource preview');
     assert.equal(await p.locator('[data-action="confirm-reward"]:enabled').count(),0,'The next pending round needs its own explicit choice');
-    await reload(p);await click(p,'garden');await choose(p,'water');s=await state(p);assert.deepEqual(balance(s),[before.shells+2,before.water+5]);assert.equal(pending(s).length,0);
+    await reload(p);await click(p,'garden');await choose(p,'water');s=await state(p);assert.deepEqual(balance(s),[before.shells+2,before.water+2]);assert.equal(pending(s).length,0);
     await reload(p);assert.deepEqual(await state(p),s,'Refresh never pays a claimed round twice');
   });
   await test('Resource cards explain purposes, permit changing the choice, and grant only the confirmed resource',async({p})=>{
@@ -145,7 +154,7 @@ async function cases(){
     assert.equal(await p.locator('[data-action="confirm-reward"]:enabled').count(),0,'There is no default resource to claim accidentally');
     await previewReward(p,'shells');await previewReward(p,'water');assert.equal(await p.locator('[data-reward-choice="shells"]').getAttribute('aria-pressed'),'false');
     await click(p,'confirm-reward');await p.locator('.reward-view[data-choice="false"]').waitFor();const paid=await state(p);
-    assert.deepEqual(balance(paid),[before.shells,before.water+5]);assert.equal(pending(paid).length,0);assert.equal(paid.rounds.at(-1).reward,'water');
+    assert.deepEqual(balance(paid),[before.shells,before.water+2]);assert.equal(pending(paid).length,0);assert.equal(paid.rounds.at(-1).reward,'water');
     await receiptPurpose(p,'water');assert.deepEqual(await state(p),paid,'Receipt explanation cannot claim again');
   });
   await test('Leaving or reloading a resource preview preserves the pending gift and clears unconfirmed selection',async({p})=>{
@@ -163,7 +172,7 @@ async function cases(){
     const before=await seed(p,{shellRounds:0,waterRounds:0});
     await p.evaluate(async({key,day})=>{const m=await import(new URL('practice-plan.js',document.querySelector('script[type="module"][src]').src));const plan=m.recordPractice(m.createPracticePlan(),{roundId:'qa-recover-economy',eventId:'hello-thanks',date:day,mode:'new',rewardVariant:'b'});localStorage.setItem(key,JSON.stringify(plan));},{key:PLAN,day:DAY});
     await reload(p);await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).rounds.some(r=>r.roundId==='qa-recover-economy'),B);assert.deepEqual(balance(await state(p)),balance(before));
-    await click(p,'garden');await choose(p,'water');const paid=await state(p);assert.deepEqual(balance(paid),[before.shells,before.water+5]);await reload(p);assert.deepEqual(await state(p),paid);
+    await click(p,'garden');await choose(p,'water');const paid=await state(p);assert.deepEqual(balance(paid),[before.shells,before.water+2]);await reload(p);assert.deepEqual(await state(p),paid);
   });
   await test('Insufficient shells leave a known offer unchanged and point back to learning',async({p})=>{
     await seed(p,{shellRounds:0,waterRounds:0,shop:true});await shop(p);const before=await state(p);assert(before.shop.offer.price>=3);
@@ -200,7 +209,7 @@ async function cases(){
         // child-flow cases above exercise real touchscreen confirmation.
         await f.p.locator('[data-action="confirm-reward"]').evaluate(b=>b.click());await f.p.waitForFunction(({key,winner})=>JSON.parse(localStorage.getItem(key)).rounds.find(r=>r.roundId==='qa-pending-0')?.reward===winner,{key:B,winner});
         await other.locator('[data-action="confirm-reward"]').evaluate(b=>b.click());
-        const after=await state(f.p),paid=after.rounds.find(r=>r.roundId==='qa-pending-0');assert.equal(paid.reward,winner);assert.deepEqual(balance(after),winner==='shells'?[before.shells+2,before.water]:[before.shells,before.water+5]);assert.equal(pending(after).length,0);assert.deepEqual(await state(other),after);
+        const after=await state(f.p),paid=after.rounds.find(r=>r.roundId==='qa-pending-0');assert.equal(paid.reward,winner);assert.deepEqual(balance(after),winner==='shells'?[before.shells+2,before.water]:[before.shells,before.water+2]);assert.equal(pending(after).length,0);assert.deepEqual(await state(other),after);
         await other.locator('.reward-view[data-choice="false"]').waitFor();assert.equal(await other.locator(`[data-action="${winner==='shells'?'shell':'water'}-purpose"]`).count(),1,'The losing tab shows the resource actually committed for this round');assert.equal(await other.locator(`[data-action="${loser==='shells'?'shell':'water'}-purpose"]`).count(),0,'A stale preview cannot become a misleading receipt');
         await receiptPurpose(other,winner==='shells'?'shell':'water');assert.deepEqual(await other.evaluate(()=>qaEconomy.errors),[]);
       }catch(error){fs.writeFileSync(path.join(out,`race-${winner}-other.json`),JSON.stringify(await diagnostic(other),null,2));await other.screenshot({path:path.join(out,`race-${winner}-other.png`),animations:'disabled',fullPage:true}).catch(()=>{});throw error;}
@@ -210,11 +219,11 @@ async function cases(){
   await test('A stale confirmed preview from another tab cannot settle the next pending gift',async f=>{
     const before=await seed(f.p,{pendingRounds:2});await click(f.p,'garden');await f.p.locator('[data-reward-choice]').first().waitFor();
     await lockPair(f,async p=>{await click(p,'garden');await p.locator('[data-reward-choice]').first().waitFor();},async(p,i)=>{await previewReward(p,i?'water':'shells');await click(p,'confirm-reward');});
-    const after=await state(f.p),paid=after.rounds.find(r=>r.roundId==='qa-pending-0');assert(['shells','water'].includes(paid.reward));assert.deepEqual(balance(after),paid.reward==='shells'?[before.shells+2,before.water]:[before.shells,before.water+5]);assert.deepEqual(pending(after).map(r=>r.roundId),['qa-pending-1'],'A confirmation belongs only to the gift that was previewed');
+    const after=await state(f.p),paid=after.rounds.find(r=>r.roundId==='qa-pending-0');assert(['shells','water'].includes(paid.reward));assert.deepEqual(balance(after),paid.reward==='shells'?[before.shells+2,before.water]:[before.shells,before.water+2]);assert.deepEqual(pending(after).map(r=>r.roundId),['qa-pending-1'],'A confirmation belongs only to the gift that was previewed');
   });
   await test('A confirmed reward finishes once silently when its storage lock completes in the background',async({p})=>{
     const before=await seed(p,{pendingRounds:1});await click(p,'garden');await previewReward(p,'water');await holdEconomy(p);await click(p,'confirm-reward');await queuedEconomy(p);const silence=await background(p);await releaseEconomy(p);await staysSilent(p,silence);
-    const paid=await state(p);assert.deepEqual(balance(paid),[before.shells,before.water+5]);assert.equal(pending(paid).length,0);await foreground(p);await p.locator('.reward-view[data-choice="false"]').waitFor();assert.deepEqual(await state(p),paid);await reload(p);assert.deepEqual(await state(p),paid);
+    const paid=await state(p);assert.deepEqual(balance(paid),[before.shells,before.water+2]);assert.equal(pending(paid).length,0);await foreground(p);await p.locator('.reward-view[data-choice="false"]').waitFor();assert.deepEqual(await state(p),paid);await reload(p);assert.deepEqual(await state(p),paid);
   });
   await test('Two tabs buying the same known offer create one seed and one deduction',async f=>{
     await seed(f.p,{shop:true});await shop(f.p);const before=await state(f.p);await lockPair(f,shop,p=>p.locator('[data-buy-offer][data-source="shop"]').tap());
@@ -246,11 +255,11 @@ async function cases(){
   await test('A delayed finish credits once silently in background and restores starter or pending choice on visibility',async({p})=>{
     for(const [i,id]of['hello-everyone','hello-morning'].entries()){
       await completeStory(p,id,{finish:false});const before=await state(p);await holdEconomy(p);await click(p,'finish');await queuedEconomy(p);const silence=await background(p);await releaseEconomy(p);await staysSilent(p,silence);
-      const credited=await state(p),round=credited.rounds[credited.rounds.length-1];assert.equal(credited.rounds.length,i+1);assert.equal(round.eventId,id);assert.equal(round.reward,i?'pending':'starter');assert.equal(round.starter,!i);assert.deepEqual(balance(credited),i?balance(before):[2,5]);
+      const credited=await state(p),round=credited.rounds[credited.rounds.length-1];assert.equal(credited.rounds.length,i+1);assert.equal(round.eventId,id);assert.equal(round.reward,i?'pending':'starter');assert.equal(round.starter,!i);assert.deepEqual(balance(credited),i?balance(before):[2,3]);
       assert.equal(await p.evaluate(({key,id})=>JSON.parse(localStorage.getItem(key)).entries.filter(r=>r.roundId===id).length,{key:PLAN,id:round.roundId}),1,'The completed practice identity is also persisted once');
       await foreground(p);await p.locator(`.reward-view[data-choice="${i?'true':'false'}"]`).waitFor();assert.deepEqual(await state(p),credited);assert.equal(await p.locator('[data-reward-choice]').count(),i?2:0);await p.screenshot({path:path.join(out,`foreground-finish-${i?'pending':'starter'}.png`),animations:'disabled',fullPage:true});
       await foreground(p);await p.waitForTimeout(400);assert.deepEqual(await state(p),credited,'Repeated foreground events never repeat the reward');await reload(p);assert.deepEqual(await state(p),credited,'Reload never repeats a background completion');
-      if(i){await click(p,'garden');await choose(p,'water');const paid=await state(p);assert.deepEqual(balance(paid),[2,10]);assert.equal(pending(paid).length,0);await reload(p);assert.deepEqual(await state(p),paid);}
+      if(i){await click(p,'garden');await choose(p,'water');const paid=await state(p);assert.deepEqual(balance(paid),[2,5]);assert.equal(pending(paid).length,0);await reload(p);assert.deepEqual(await state(p),paid);}
     }
   });
   await test('A delayed purchase stays silent in background and restores the purchased seed instead of stale shop',async({p})=>{
@@ -262,19 +271,34 @@ async function cases(){
   await test('A failed claim save leaves the reward pending and a retry pays once',async({p})=>{
     const before=await seed(p,{pendingRounds:1});await click(p,'garden');await p.locator('[data-reward-choice]').first().waitFor();
     await p.evaluate(key=>{const old=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===key)throw new DOMException('QA quota','QuotaExceededError');return old.call(this,k,v);};qaEconomy.restoreStorage=()=>Storage.prototype.setItem=old;},B);
-    await previewReward(p,'water');await click(p,'confirm-reward');await p.locator('.modal-card').waitFor();assert.deepEqual(await state(p),before);await p.evaluate(()=>qaEconomy.restoreStorage());await click(p,'close');await choose(p,'water');const after=await state(p);assert.deepEqual(balance(after),[before.shells,before.water+5]);await reload(p);assert.deepEqual(await state(p),after);
+    await previewReward(p,'water');await click(p,'confirm-reward');await p.locator('.modal-card').waitFor();assert.deepEqual(await state(p),before);await p.evaluate(()=>qaEconomy.restoreStorage());await click(p,'close');await choose(p,'water');const after=await state(p);assert.deepEqual(balance(after),[before.shells,before.water+2]);await reload(p);assert.deepEqual(await state(p),after);
+  });
+  await test('An existing schema2 pending gift retains five water, original voice and receipt after the upgrade',async({p})=>{
+    const old={schemaVersion:2,product:'xiaoya-english-meadow',shells:2,water:5,
+      rounds:[{roundId:'qa-v2-starter',eventId:'hello-everyone',date:'2026-10-17',starter:true,reward:'starter'},
+        {roundId:'qa-v2-pending',eventId:'hello-morning',date:'2026-10-17',starter:false,reward:'pending'}],
+      seedPacksOpened:0,pendingSeed:null,plants:[],purchases:[],legacy:null,
+      shop:{date:null,offer:null,reserved:null,offers:[]}};
+    await p.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key:B,value:old});await reload(p);await click(p,'garden');
+    await p.locator('[data-reward-choice="water"]').waitFor();assert.match(await p.locator('[data-reward-choice="water"]').getAttribute('aria-label'),/^5滴水/);
+    const played=await p.evaluate(()=>qaEconomy.plays.length);await choose(p,'water',{legacy:true});
+    const paid=await state(p);assert.equal(paid.schemaVersion,3);assert.deepEqual(balance(paid),[2,10]);assert.equal(paid.rounds[1].reward,'water');assert.equal(paid.rounds[1].rewardVersion,2);assert.deepEqual(paid.rounds[1].amounts,{shells:2,water:5});
+    assert.equal(await p.locator('[data-action="water-purpose"] b').textContent(),'+5');assert.match(await p.locator('[data-action="water-purpose"]').getAttribute('aria-label'),/^5滴水/);
+    await p.waitForFunction(n=>qaEconomy.plays.slice(n).some(x=>x.endsWith('/economy-water.mp3')),played);assert(!await p.evaluate(n=>qaEconomy.plays.slice(n).some(x=>/\/(?:economy-water-v13|flow-water-choice-v13)\.mp3$/.test(x)),played),'An old gift must keep its original five-water narration');
+    await receiptPurpose(p,'water');await reload(p);assert.deepEqual(await state(p),paid,'The migrated old gift is paid once');
+    await completeStory(p,'family-love');await choose(p,'water');const current=await state(p);assert.deepEqual(balance(current),[2,12]);assert.equal(current.rounds.at(-1).rewardVersion,3);assert.equal(await p.locator('[data-action="water-purpose"] b').textContent(),'+2');await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-water-v13.mp3')));
   });
   await test('Legacy schema1 migrates in place, preserving old rewards, A data and plant IDs',async({p})=>{
     const legacy={schemaVersion:1,product:'xiaoya-english-meadow',shells:3,water:9,rounds:[0,1,2].map(i=>({roundId:`qa-legacy-${i}`,eventId:'food-water',date:'2026-10-17'})),seedPacksOpened:2,bag:['giant-daisy','bow-blue','tulip','bow-yellow','sunflower','bow-purple','bellflower','giant-sunflower','poppy','violet'],pendingSeed:null,plants:[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:5,x:.2,y:.7},{id:'plant-2',seedId:'seed-2',flowerId:'bow-pink',waterings:1,x:.7,y:.7}]};
     const aRaw=await p.evaluate(async({a,b,legacy})=>{const m=await import(new URL('garden.js',document.querySelector('script[type="module"][src]').src));const aRaw=JSON.stringify(m.rewardRound(m.createGarden(),{roundId:'qa-a-original',eventId:'food-water',date:'2026-10-17'}));localStorage.setItem(a,aRaw);localStorage.setItem(b,JSON.stringify(legacy));return aRaw;},{a:A,b:B,legacy});
     await reload(p);await garden(p);assert.equal(await p.locator('[data-meadow-plant]').count(),2);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-2"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[1].waterings===2,B);
-    const migrated=await state(p);assert.equal(migrated.schemaVersion,2);assert.deepEqual(balance(migrated),[3,8]);assert.deepEqual(migrated.plants[0],legacy.plants[0]);assert.deepEqual(migrated.rounds.map(r=>r.roundId),legacy.rounds.map(r=>r.roundId));assert(migrated.rounds.every(r=>r.reward==='legacy'));assert.equal(pending(migrated).length,0);assert.equal(await p.evaluate(key=>localStorage.getItem(key),A),aRaw);
+    const migrated=await state(p);assert.equal(migrated.schemaVersion,3);assert.deepEqual(balance(migrated),[3,8]);assert.deepEqual(migrated.plants[0],legacy.plants[0]);assert.deepEqual(migrated.rounds.map(r=>r.roundId),legacy.rounds.map(r=>r.roundId));assert(migrated.rounds.every(r=>r.reward==='legacy'));assert.equal(pending(migrated).length,0);assert.equal(await p.evaluate(key=>localStorage.getItem(key),A),aRaw);
     await completeStory(p,'hello-everyone');const next=await state(p);assert.deepEqual(balance(next),balance(migrated));assert.equal(pending(next).length,1);assert.equal(next.rounds[next.rounds.length-1].starter,false,'Migrated users do not receive a second starter award');
   });
   await test('An empty schema1 save receives its first starter reward and complete daisy planting loop',async({p})=>{
     const empty={schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],seedPacksOpened:0,bag:['daisy','bow-pink','giant-daisy','bow-blue','tulip','bow-yellow','sunflower','bow-purple','bellflower','giant-sunflower','poppy','violet'],pendingSeed:null,plants:[]};
-    await p.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key:B,value:empty});await reload(p);await completeStory(p,'hello-everyone');const first=await state(p);assert.equal(first.schemaVersion,2);assert.deepEqual(balance(first),[2,5]);assert.equal(first.rounds[0].reward,'starter');assert.equal(first.rounds[0].starter,true);assert.equal(pending(first).length,0);
-    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();assert.equal((await state(p)).pendingSeed.flowerId,'daisy');await plantPending(p);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B);assert.deepEqual(balance(await state(p)),[0,4]);
+    await p.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key:B,value:empty});await reload(p);await completeStory(p,'hello-everyone');const first=await state(p);assert.equal(first.schemaVersion,3);assert.deepEqual(balance(first),[2,3]);assert.equal(first.rounds[0].reward,'starter');assert.equal(first.rounds[0].starter,true);assert.equal(pending(first).length,0);
+    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();assert.equal((await state(p)).pendingSeed.flowerId,'daisy');await plantPending(p);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B);assert.deepEqual(balance(await state(p)),[0,2]);
   });
   for(const [width,height,motion]of[[320,568,'no-preference'],[320,568,'reduce'],[390,844,'reduce'],[768,1024,'no-preference']])await test(`Shop and resource choice touch layout ${width}x${height} ${motion}`,async({p})=>{
     await seed(p,{reserved:true});await shop(p);assert.equal(await p.locator('.seed-offer').count(),3);await layout(p);await p.screenshot({path:path.join(out,`shop-${width}-${motion}.png`),animations:'disabled',fullPage:true});

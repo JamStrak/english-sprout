@@ -30,7 +30,7 @@ test('economy guides contain exactly the thirteen static prompts and MP3 files',
   assert.match(manifest.source, /no runtime TTS connection/);
   assert.equal(new Set(manifest.clips.map(clip => clip.id)).size, manifest.clips.length);
   assert.deepEqual(manifest.clips.map(clip => clip.id).sort(), ids);
-  assert.deepEqual(fs.readdirSync(base).filter(file => /^economy-.*\.mp3$/.test(file)).sort(), ids.map(id => `${id}.mp3`).sort());
+  assert.deepEqual(fs.readdirSync(base).filter(file => /^economy-.*\.mp3$/.test(file) && !/-v13\.mp3$/.test(file)).sort(), ids.map(id => `${id}.mp3`).sort());
 });
 
 for (const [id, text] of Object.entries(prompts)) {

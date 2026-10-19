@@ -1,5 +1,5 @@
 // Small decorative feedback only: no media downloads, input listeners or microphone access.
-const KINDS = new Set(['tap', 'reward', 'seed', 'plant', 'water', 'bloom', 'ready', 'three-stars']);
+const KINDS = new Set(['tap', 'reward', 'seed', 'plant', 'water', 'bloom', 'ready', 'three-stars', 'challenge-clear']);
 const ICONS = {
   shell: '<path d="M12 21C3 18 1 11 5 5c2-3 5-2 7 0 2-2 5-3 7 0 4 6 2 13-7 16Z" fill="#ffe19a" stroke="#d39842" stroke-width="1.6"/><path d="m12 19-5-10m5 10V7m0 12 5-10" fill="none" stroke="#d39842" stroke-width="1.1"/>',
   drop: '<path d="M12 2C9 8 5 11 5 15a7 7 0 0 0 14 0c0-4-4-7-7-13Z" fill="#6ecbd8" stroke="#3da8bb" stroke-width="1.2"/><path d="M8 14c-1 2 0 4 2 4" fill="none" stroke="#efffff" stroke-width="1.6" stroke-linecap="round"/>',
@@ -15,6 +15,7 @@ const NOTES = {
   water: [[640, 0, .065], [500, .075, .09]],
   bloom: [[520, 0, .09], [780, .1, .09], [1040, .2, .12]],
   'three-stars': [[784, 0, .09], [988, .12, .10], [1319, .24, .22]],
+  'challenge-clear': [[660, 0, .09], [784, .11, .09], [988, .22, .09], [1319, .34, .13], [1568, .49, .24]],
 };
 const finite = value => typeof value === 'number' && Number.isFinite(value);
 
@@ -137,7 +138,7 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
             const at = start + offset;
             oscillator.frequency.setValueAtTime(frequency, at);
             gain.gain.setValueAtTime(0, at);
-            gain.gain.linearRampToValueAtTime(kind === 'tap' ? .012 : kind === 'three-stars' ? .032 : .022, at + .008);
+            gain.gain.linearRampToValueAtTime(kind === 'tap' ? .012 : ['three-stars','challenge-clear'].includes(kind) ? .032 : .022, at + .008);
             gain.gain.exponentialRampToValueAtTime(.0001, at + duration - .006);
             gain.gain.linearRampToValueAtTime(0, at + duration);
           }
@@ -208,6 +209,12 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
         const destination = options[icon === 'shell' ? 'shellTo' : 'waterTo'] || options.to;
         const end = destination ? point(destination, center) : {x:center.x + (i - 2) * 24, y:center.y - 48 + Math.abs(i - 2) * 10};
         particle(icon, center, {dx:end.x-center.x, dy:end.y-center.y, duration:620, delay:i*36, travel:true, size:26, turn:(i-2)*15});
+      }
+      bump(options.target);
+    } else if (kind === 'challenge-clear') {
+      for (let i = 0; i < 12; i++) {
+        const angle = i * Math.PI / 6;
+        particle(i % 3 === 0 ? 'shell' : i % 3 === 1 ? 'drop' : 'star', center, {dx:Math.cos(angle)*100, dy:Math.sin(angle)*70-20, size:25, duration:800, delay:i*22, turn:i*24});
       }
       bump(options.target);
     } else if (kind === 'three-stars') {

@@ -26,7 +26,7 @@ function addPlant(state,index,point={x:.5,y:.5},random=0) {
 test('B meadow keeps its storage key, immutable varieties and independent A economy',()=>{
   assert.equal(MEADOW_KEY,'xiaoya-english:meadow:v1');
   assert.notEqual(MEADOW_KEY,GARDEN_KEY);
-  assert.deepEqual(ECONOMY,{shellReward:2,waterReward:5,packPrice:2});
+  assert.deepEqual(ECONOMY,{shellReward:2,waterReward:2,starterWaterReward:3,packPrice:2});
   assert.ok(Object.isFrozen(ECONOMY));
   assert.equal(FLOWERS.length,12);
   assert.equal(new Set(FLOWERS.map((flower)=>flower.id)).size,12);
@@ -55,15 +55,16 @@ test('each content event records participation once and each later reward needs 
     const before=state;
     state=rewardRound(state,payload);
     assert.equal(before.rounds.length,index);
-    assert.deepEqual(state.rounds[index],{...payload,starter:index===0,reward:index===0?'starter':'pending'});
+    assert.deepEqual(state.rounds[index],{...payload,starter:index===0,reward:index===0?'starter':'pending',
+      rewardVersion:3,amounts:{shells:2,water:index===0?3:2}});
     assert.strictEqual(rewardRound(state,payload),state);
-    if(index===0) {shells+=2;water+=5;}
+    if(index===0) {shells+=2;water+=3;}
     else {
       assert.deepEqual([state.shells,state.water],[shells,water]);
       assert.equal(pendingRewards(state).length,1);
       const choice=index%2?'water':'shells';
       state=claimReward(state,payload.roundId,choice);
-      shells+=choice==='shells'?2:0;water+=choice==='water'?5:0;
+      shells+=choice==='shells'?2:0;water+=choice==='water'?2:0;
       assert.strictEqual(claimReward(state,payload.roundId,choice==='shells'?'water':'shells'),state);
     }
     assert.deepEqual([state.shells,state.water],[shells,water]);
@@ -79,7 +80,7 @@ test('each content event records participation once and each later reward needs 
 test('a bought mystery is stable through reload and duplicate clicks until planted',()=>{
   const before=freeze(reward(rewarded(),'second'));
   const purchased=openSeedPack(before,0);
-  assert.deepEqual([purchased.shells,purchased.water,purchased.seedPacksOpened],[2,5,1]);
+  assert.deepEqual([purchased.shells,purchased.water,purchased.seedPacksOpened],[2,3,1]);
   assert.deepEqual(purchased.pendingSeed,{id:'seed-1',flowerId:'daisy'});
   assert.equal(before.shells,4);assert.equal(before.pendingSeed,null);
   assert.strictEqual(openSeedPack(purchased,.99),purchased);
@@ -90,7 +91,7 @@ test('a bought mystery is stable through reload and duplicate clicks until plant
   const plantedState=plantSeed(restored,point);
   assert.deepEqual(plantedState.plants,[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:0,...point}]);
   assert.equal(plantedState.pendingSeed,null);
-  assert.deepEqual([plantedState.shells,plantedState.water],[2,5]);
+  assert.deepEqual([plantedState.shells,plantedState.water],[2,3]);
   assert.strictEqual(plantSeed(plantedState,point),plantedState);
   assert.deepEqual(restored.pendingSeed,{id:'seed-1',flowerId:'daisy'});
 });
@@ -124,9 +125,13 @@ test('invalid coordinates reject planting without changing a saved seed',()=>{
 test('ordinary flowers need five one-unit pours and mature plants spend no water',()=>{
   let state=freeze(planted());
   for(let pours=1;pours<=5;pours++) {
+    if(pours===4) {
+      assert.strictEqual(waterPlant(state,'plant-1'),state,'starter water grows a seedling, not a full flower');
+      state=reward(state,'refill-first-flower','water');
+    }
     const previous=state;state=waterPlant(previous,'plant-1');
     assert.equal(previous.plants[0].waterings,pours-1);assert.equal(state.plants[0].waterings,pours);
-    assert.equal(state.water,5-pours);assert.equal(nextAction(state),pours<5?'water':'learn');
+    assert.equal(state.water,(pours<=3?3:5)-pours);assert.equal(nextAction(state),pours===3 || pours===5?'learn':'water');
     state=freeze(clone(state));
   }
   assert.strictEqual(waterPlant(state,'plant-1'),state);
@@ -136,16 +141,16 @@ test('ordinary flowers need five one-unit pours and mature plants spend no water
 });
 
 test('a giant needs ten pours and water-only rewards refill without forcing another seed',()=>{
-  let state=planted();
+  let state=reward(planted(),'finish-first-flower','water');
   for(let n=0;n<5;n++)state=waterPlant(state,'plant-1');
   state=addPlant(state,2,{x:.4,y:.6},10.5/12);
   assert.equal(state.plants[1].flowerId,'giant-daisy');assert.equal(state.water,0);
   assert.strictEqual(waterPlant(state,'plant-2'),state);
-  for(let batch=0;batch<2;batch++) {
+  for(let batch=0;batch<5;batch++) {
     state=reward(freeze(state),`refill-${batch}`,'water');
-    for(let n=0;n<5;n++)state=waterPlant(freeze(state),'plant-2');
+    for(let n=0;n<2;n++)state=waterPlant(freeze(state),'plant-2');
     assert.equal(state.water,0);
-    assert.equal(state.plants[1].waterings,(batch+1)*5);
+    assert.equal(state.plants[1].waterings,(batch+1)*2);
   }
   assert.equal(state.shells,0);assert.equal(state.seedPacksOpened,2);
   assert.strictEqual(waterPlant(state,'plant-2'),state);
@@ -160,7 +165,7 @@ test('the meadow has no slot cap that traps a purchased seed',()=>{
   assert.equal(expanded.plants.length,181);assert.equal(expanded.pendingSeed,null);
   assert.equal(expanded.shells,0);assert.equal(previous.plants.length,180);
   const watered=waterPlant(freeze(expanded),'plant-181');
-  assert.equal(watered.plants[180].waterings,1);assert.equal(watered.water,4);
+  assert.equal(watered.plants[180].waterings,1);assert.equal(watered.water,2);
 });
 
 test('next action prioritizes unclaimed rewards, pending seed, thirsty plant then buying',()=>{
@@ -179,7 +184,7 @@ test('next action prioritizes unclaimed rewards, pending seed, thirsty plant the
 test('validation rejects forged balances, purchases, plants and learning evidence everywhere',()=>{
   const valid=reward(planted(),'second');
   const mutations=[
-    (s)=>{s.schemaVersion=3;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
+    (s)=>{s.schemaVersion=4;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
     (s)=>{s.mastery=100;},(s)=>{s.shells++;},(s)=>{s.water++;},(s)=>{s.shells=-1;},
     (s)=>{s.water=Infinity;},(s)=>{s.seedPacksOpened=.5;},
     (s)=>{s.rounds.push({...s.rounds[0]});s.shells+=2;s.water+=5;},

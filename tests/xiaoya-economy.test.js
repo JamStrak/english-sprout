@@ -27,7 +27,7 @@ function legacy() {
 test('schema1 migration preserves balances, planted positions, pending seed and consumed round IDs',()=>{
   const source=freeze(legacy()),before=clone(source);
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,2);
+  assert.equal(migrated.schemaVersion,3);
   assert.deepEqual([migrated.shells,migrated.water],[3,11]);
   assert.deepEqual(migrated.plants,source.plants);assert.deepEqual(migrated.pendingSeed,source.pendingSeed);
   assert.deepEqual(migrated.legacy,source);assert.notStrictEqual(migrated.legacy,source);
@@ -54,7 +54,7 @@ test('all model actions accept legacy state and return a migrated value without 
   const source=freeze(legacy());
   for(const next of [rewardRound(source,round('old-1')),claimReward(source,'old-1','water'),openSeedPack(source),
     plantSeed(source,{x:.3,y:.5}),waterPlant(source,'plant-1'),ensureShop(source,'2026-10-18',0),
-    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,2);
+    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,3);
   assert.deepEqual(source,legacy());
 });
 
@@ -62,9 +62,9 @@ test('an empty schema1 save still gets the complete first-participation daisy lo
   const empty=freeze({schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],
     seedPacksOpened:0,bag:[...oldCycle],pendingSeed:null,plants:[]});
   let state=validateMeadow(empty);
-  assert.equal(state.schemaVersion,2);assert.deepEqual(state.legacy,empty);
+  assert.equal(state.schemaVersion,3);assert.deepEqual(state.legacy,empty);
   state=rewardRound(freeze(state),round('first-real-participation'));
-  assert.deepEqual([state.shells,state.water],[2,5]);
+  assert.deepEqual([state.shells,state.water],[2,3]);
   assert.equal(state.rounds[0].starter,true);assert.equal(state.rounds[0].reward,'starter');
   assert.equal(pendingRewards(state).length,0);
   state=openSeedPack(freeze(clone(state)),.99999);
@@ -72,13 +72,16 @@ test('an empty schema1 save still gets the complete first-participation daisy lo
   const forged=clone(state);forged.purchases[0].flowerId='giant-daisy';forged.pendingSeed.flowerId='giant-daisy';
   assert.throws(()=>validateMeadow(forged),/首次盲盒/);
   state=plantSeed(state,{x:.56,y:.32});
-  for(let index=0;index<5;index++)state=waterPlant(freeze(state),'plant-1');
-  assert.equal(state.plants[0].waterings,5);assert.deepEqual([state.shells,state.water],[0,0]);
+  for(let index=0;index<3;index++)state=waterPlant(freeze(state),'plant-1');
+  assert.equal(state.plants[0].waterings,3);assert.deepEqual([state.shells,state.water],[0,0]);
   assert.equal(nextAction(state),'learn');
   state=rewardRound(freeze(clone(state)),round('second-real-participation'));
   assert.equal(state.rounds[1].starter,false);assert.equal(state.rounds[1].reward,'pending');
   assert.deepEqual([state.shells,state.water],[0,0]);
   assert.strictEqual(claimReward(state,'first-real-participation','shells'),state);
+  state=claimReward(state,'second-real-participation','water');
+  for(let index=0;index<2;index++)state=waterPlant(freeze(state),'plant-1');
+  assert.equal(state.plants[0].waterings,5);assert.deepEqual([state.shells,state.water],[0,0]);
 });
 
 test('legacy corruption is rejected before migration and cannot mint opening balances',()=>{
@@ -106,18 +109,18 @@ test('legacy corruption is rejected before migration and cannot mint opening bal
 test('multiple unclaimed rounds survive reload and each can be claimed once in any order',()=>{
   let state=rewardRound(createMeadow(),round('starter'));
   for(const id of ['one','two','three']) state=rewardRound(state,round(id));
-  assert.deepEqual([state.shells,state.water],[2,5]);
+  assert.deepEqual([state.shells,state.water],[2,3]);
   assert.deepEqual(pendingRewards(state).map((entry)=>entry.roundId),['one','two','three']);
   state=freeze(clone(state));
   state=claimReward(state,'two','water');state=claimReward(state,'one','shells');
-  assert.deepEqual([state.shells,state.water],[4,10]);
+  assert.deepEqual([state.shells,state.water],[4,5]);
   assert.deepEqual(pendingRewards(state).map((entry)=>entry.roundId),['three']);
   const settled=claimReward(state,'three','shells');
   for(const id of ['starter','one','two','three','missing']) {
     assert.strictEqual(claimReward(settled,id,'water'),settled);
     assert.strictEqual(claimReward(settled,id,'shells'),settled);
   }
-  assert.deepEqual([settled.shells,settled.water],[6,10]);
+  assert.deepEqual([settled.shells,settled.water],[6,5]);
 });
 
 test('daily shop stays stable through reload and backwards clocks, then changes variety',()=>{

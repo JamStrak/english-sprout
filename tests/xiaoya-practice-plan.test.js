@@ -491,3 +491,84 @@ test('B resource choices and pending gifts cannot change review scheduling or co
   for(const invalid of [{...base,stars:3},{...base,reward:'mastered'},{...base,starter:true}])
     assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[invalid],date:day}));
 });
+
+test('versioned garden receipts preserve legacy amounts and accept the new starter and normal rewards',()=>{
+  const expected=getPracticePlan(createPracticePlan(),{rounds:[round('gift')],date:day});
+  const variants=[
+    {rewardVersion:1,reward:'legacy',starter:false,amounts:{shells:3,water:5}},
+    ...[2,3].flatMap(rewardVersion=>['starter','pending','shells','water'].map(reward=>({
+      rewardVersion,reward,starter:reward==='starter',
+      amounts:{shells:2,water:rewardVersion===2?5:reward==='starter'?3:2},
+    }))),
+  ];
+  for(const variant of variants) {
+    const input=freeze([{...round('gift'),...variant}]);
+    const before=JSON.stringify(input);
+    assert.deepEqual(getPracticePlan(createPracticePlan(),{rounds:input,date:day}),expected);
+    assert.equal(JSON.stringify(input),before);
+  }
+  let meadow=rewardMeadowRound(createMeadow(),round('starter'));
+  meadow=rewardMeadowRound(meadow,round('later',eventId,'2026-10-02'));
+  assert.deepEqual(meadow.rounds.map(({rewardVersion,amounts})=>({rewardVersion,amounts})),[
+    {rewardVersion:3,amounts:{shells:2,water:3}},
+    {rewardVersion:3,amounts:{shells:2,water:2}},
+  ]);
+  assert.deepEqual(
+    getPracticePlan(createPracticePlan(),{rounds:freeze(meadow.rounds),date:'2026-10-02'}),
+    getPracticePlan(createPracticePlan(),{rounds:[round('starter'),round('later',eventId,'2026-10-02')],date:'2026-10-02'}),
+  );
+});
+
+test('partial, unknown or inconsistent reward metadata cannot enter scheduling history',()=>{
+  const base={...round('gift'),starter:false,reward:'pending',rewardVersion:3,amounts:{shells:2,water:2}};
+  const mutations=[
+    value=>delete value.rewardVersion, value=>delete value.amounts,
+    value=>delete value.reward, value=>delete value.starter,
+    value=>value.rewardVersion=0, value=>value.rewardVersion=4, value=>value.rewardVersion='3',
+    value=>value.amounts=null, value=>value.amounts=[], value=>value.amounts={shells:2},
+    value=>value.amounts.shells=3, value=>value.amounts.water=5, value=>value.amounts.water='2',
+    value=>value.amounts.mastered=true, value=>value.mastered=true,
+    value=>value.starter=true, value=>value.reward='starter', value=>value.reward='legacy',
+    value=>{value.rewardVersion=1;value.amounts={shells:3,water:5};},
+    value=>{value.rewardVersion=2;value.reward='legacy';value.amounts={shells:2,water:5};},
+    value=>{value.rewardVersion=2;value.amounts={shells:2,water:2};},
+    value=>{value.starter=true;value.reward='starter';},
+    value=>value.date='2026-02-30', value=>value.eventId='unknown',
+  ];
+  for(const mutate of mutations) {
+    const invalid=clone(base);mutate(invalid);freeze(invalid);
+    const before=JSON.stringify(invalid);
+    assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[invalid],date:day}),/小芽/);
+    assert.equal(JSON.stringify(invalid),before);
+  }
+  for(const value of [null,{}, {...round('bare'),rewardVersion:3,amounts:{shells:2,water:2}}])
+    assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[value],date:day}),/小芽/);
+});
+
+test('reward versions and currency choices cannot alter evidence, mastery or review intervals',()=>{
+  const dates=[day,'2026-10-02'];
+  const plain=dates.map((date,index)=>round(`same-${index}`,eventId,date));
+  for(const details of [null,{source:'machine'},{source:'parent',result:'supported',helped:true}]) {
+    let state=createState();
+    if(details) for(const [index,date] of dates.entries())
+      state=recordEvidence(state,attempt(`speech-${index}`,date,details));
+    freeze(state);
+    const before=JSON.stringify(state);
+    const expected=getPracticePlan(createPracticePlan(),{rounds:plain,learningState:state,date:dates[1]});
+    for(const rewardVersion of [1,2,3]) for(const choice of ['pending','shells','water']) {
+      const rounds=plain.map((value,index)=>({
+        ...value,rewardVersion,starter:rewardVersion!==1 && index===0,
+        reward:rewardVersion===1?'legacy':index===0?'starter':choice,
+        amounts:{shells:rewardVersion===1?3:2,water:rewardVersion===3?(index===0?3:2):5},
+      }));
+      assert.deepEqual(getPracticePlan(createPracticePlan(),{rounds:freeze(rounds),learningState:state,date:dates[1]}),expected);
+    }
+    assert.equal(JSON.stringify(state),before);
+    const status=goalStatus(state,EVENTS.find(event=>event.id===eventId).goalId);
+    assert.equal(status.passed,false);
+    assert.equal(status.independent,false);
+    assert.equal(status.retained,false);
+    assert.equal(card(expected).lastOutcome,details?details.result==='supported'?'supported':'machine-candidate':'not-attempted');
+    assert.equal(card(expected).stage,details?.source==='machine'?1:0);
+  }
+});

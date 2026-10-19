@@ -16,6 +16,8 @@ import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as curriculum from '../xiaoya/curriculum.js';
+import * as challenge from '../xiaoya/challenges.js';
+import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
@@ -23,7 +25,7 @@ import { installPaperArt } from '../xiaoya/paper-art.js';
 const source=fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
 const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});return {promise,resolve};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-function fixture({storyId='',recognized=null}={}){
+function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false}={}){
   let nodes=[],primaryWraps=[],html='',timerId=0,renders=0,now=0;
   const images=[];
   const documentListeners=new Map();
@@ -44,25 +46,31 @@ function fixture({storyId='',recognized=null}={}){
       const action=selector.match(/^\[data-action="([^"]+)"\]$/)?.[1];return action?nodes.find(node=>node.dataset.action===action):null;},
     querySelectorAll(selector){return selector==='.primary-wrap'?primaryWraps:selector==='[data-action]'?nodes.filter(node=>node.dataset.action):[];},
     addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},body:{append(){}},createElement(){return {remove(){}};}};
-  const localStorage={getItem(){return null;},setItem(key,value){writes.push({key,value});}};
+  const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');writes.push({key,value});stored?.set(key,value);}};
   const audio={playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
     cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return recognized!==null;},recognize(){return Promise.resolve(recognized);},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},...practicePlan,...curriculum,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
-    // Evidence validation intentionally accepts plain objects from its own realm.
+  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
+    // The VM runs the controller while imported validators use this realm.
+    // Keep parsed storage and controller-created records in that same realm.
     recordEvidence:(state,input)=>learning.recordEvidence(state,JSON.parse(JSON.stringify(input))),
-    location:{search:storyId?`?story=${storyId}`:''},URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:{},window:{addEventListener(){},scrollTo(){}},
+    recordPractice:(state,input)=>practicePlan.recordPractice(state,JSON.parse(JSON.stringify(input))),
+    meadow:{...meadow,rewardChallenge:(state,input)=>meadow.rewardChallenge(state,JSON.parse(JSON.stringify(input)))},
+    challenge:{...challenge,
+      recordChallengeAttempt:(state,input)=>challenge.recordChallengeAttempt(state,JSON.parse(JSON.stringify(input))),
+      recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
+    location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
-    getSession:()=>session,getState:()=>state,
+    getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
     setPage(value){page=value;session=null;modal=null;render();},
     setGarden(value){garden=value;page='garden';session=null;modal=null;render();},
     setMeadowReward(value){gardenVariant='b';meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
     setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};loadedPictures.set(imageUrl(story),Promise.resolve());render();return session;}};`,sandbox);
-  return {...sandbox.ui,document,documentListeners,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,
+  return {...sandbox.ui,document,documentListeners,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
     primaryWraps:()=>primaryWraps,
     hinted:()=>primaryWraps.filter(wrap=>wrap.classList.contains('is-idle-hint')).map(wrap=>wrap.querySelector('[data-primary]').dataset.action),
     dispatch(type,extra={}){for(const {callback} of documentListeners.get(type)||[])callback({type,...extra});},
@@ -72,6 +80,141 @@ function fixture({storyId='',recognized=null}={}){
     guided:()=>nodes.filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action).sort(),
     async nextDelay(){await flush();const timer=[...timers].find(([,value])=>value.delay<2000);assert.ok(timer,'Expected a story frame delay');timers.delete(timer[0]);timer[1].fn();await flush();}};
 }
+
+function challengeFixture(options={}){
+  const stored=options.stored??new Map();
+  if(!stored.has(practicePlan.PRACTICE_KEY)){
+    let plan=practicePlan.createPracticePlan();
+    for(const eventId of challenge.CHALLENGE_UNITS[0].eventIds)plan=practicePlan.recordPractice(plan,{roundId:`study:${eventId}`,eventId,date:options.studyDate||learning.localDay(),attemptId:null,mode:'new',rewardVariant:null});
+    stored.set(practicePlan.PRACTICE_KEY,JSON.stringify(plan));
+    stored.set('xiaoya-english:garden-variant:v1','b');
+  }
+  return {...fixture({...options,stored}),stored};
+}
+
+test('challenge prompts preview the first-clear prize and never promise daily or repeat rewards',async()=>{
+  const f=challengeFixture({recognized:{matched:true,stars:3,heard:'hello'}});
+  for(const eventId of challenge.CHALLENGE_UNITS[0].eventIds){
+    f.startChallenge('challenge-1');const s=f.getSession();assert.equal(s.event.id,eventId);
+    assert.match(f.html(),/class="round-goal" role="img" aria-label="整组首次完成可获得四枚贝壳和六滴水"/);
+    assert.match(f.html().split('class="round-goal"')[1],/<span>4<\/span><span>＋<\/span>[\s\S]*<span>6<\/span>/);
+    await f.assessClip(s,'blob:prize',s.speechGeneration);
+  }
+  f.startChallenge('challenge-1');
+  assert.match(f.html(),/<div class="round-goal" aria-hidden="true"><\/div>/);
+});
+
+test('a confirmed challenge result keeps its attempt identity while a storage lock waits through suspension',async()=>{
+  const queued=[],locks={request(key,commit){return key===challenge.CHALLENGE_KEY?new Promise(resolve=>queued.push(()=>resolve(commit()))):Promise.resolve(commit());}};
+  const f=challengeFixture({locks,recognized:{matched:true,stars:3,heard:'hello'}});
+  f.startChallenge('challenge-1');const s=f.getSession(),pending=f.assessClip(s,'blob:challenge',s.speechGeneration);
+  await flush();assert.equal(queued.length,1);const attemptId=s.attemptId;
+  assert.ok(attemptId);assert.equal(f.getState().evidence.length,1);
+  f.suspend();assert.equal(s.attemptId,null,'Suspension releases the live recording identity');
+  const voices=f.sounds.length;queued.shift()();await pending;
+  assert.equal(f.getChallenges().attempts.length,1);assert.equal(f.getChallenges().attempts[0].attemptId,attemptId);
+  assert.equal(f.getPractice().entries.at(-1).attemptId,attemptId);
+  assert.equal(f.getPractice().entries.at(-1).roundId,`challenge:${attemptId}`);
+  assert.equal(f.getModal(),null);assert.equal(f.sounds.length,voices);
+  assert.equal(f.calls.effects?.length||0,0,'A stale screen cannot celebrate the saved result');
+});
+
+test('listening without recording persists help across challenge reentry and full reload',async()=>{
+  for(const reload of [false,true]){
+    let f=challengeFixture({recognized:{matched:true,stars:3,heard:'hello'}});
+    f.startChallenge('challenge-1');const pending=f.sample();await flush();
+    assert.equal(f.getChallenges().helps.length,1,'The help receipt precedes answer playback');
+    assert.equal(f.getChallenges().attempts.length,0);
+    f.sounds.at(-1).resolve(true);await pending;
+    if(reload)f=challengeFixture({stored:f.stored,recognized:{matched:true,stars:3,heard:'hello'}});
+    else f.openChallenges();
+    f.startChallenge('challenge-1');const s=f.getSession();assert.equal(s.priorChallengeHelp,true);
+    await f.assessClip(s,'blob:after-help',s.speechGeneration);
+    assert.equal(f.getState().evidence.at(-1).result,'supported');assert.equal(f.getState().evidence.at(-1).helped,true);
+    const step=f.challengeSummary().units[0].items[0];assert.equal(step.passed,true);assert.equal(step.passEvidence,'after-practice');
+  }
+});
+
+test('failed help persistence plays no answer and allows a clean retry',async()=>{
+  for(const action of ['sample','teach']){
+    let reject=true;
+    const f=challengeFixture({failWrite:key=>key===challenge.CHALLENGE_KEY&&reject});
+    f.startChallenge('challenge-1');const voices=f.sounds.length;await f[action]();
+    assert.equal(f.sounds.length,voices,action);assert.equal(f.getChallenges().helps.length,0);
+    assert.equal(f.getModal()?.type,'error');assert.equal(f.getSession().teaching,false);
+    reject=false;f.actions.close();const retry=f[action]();await flush();
+    assert.equal(f.getChallenges().helps.length,1);assert.equal(f.sounds.length,voices+1);
+    f.sounds.at(-1).resolve(true);await flush();
+    if(action==='teach')f.sounds.at(-1).resolve(true);
+    await retry;
+  }
+});
+
+test('queued help cannot play an answer after navigation, a modal, or suspension',async()=>{
+  for(const action of ['sample','teach'])for(const change of ['home','replacement','modal','suspend']){
+    const queued=[],locks={request(key,commit){return key===challenge.CHALLENGE_KEY?new Promise(resolve=>queued.push(()=>resolve(commit()))):Promise.resolve(commit());}};
+    const f=challengeFixture({locks});f.startChallenge('challenge-1');const old=f.getSession(),pending=f[action]();
+    assert.equal(queued.length,1);
+    if(change==='home')f.navigate('home');
+    if(change==='replacement')f.startChallenge('challenge-1');
+    if(change==='modal')f.openModal({type:'mic'});
+    if(change==='suspend')f.suspend();
+    const current=f.getSession(),voices=f.sounds.length,renders=f.renders();queued.shift()();await pending;
+    assert.equal(f.sounds.length,voices,`${action}/${change}`);assert.equal(f.renders(),renders);
+    assert.equal(f.getSession(),current);assert.equal(f.getChallenges().helps.length,1);
+    if(change==='replacement')assert.notEqual(current,old);
+  }
+});
+
+test('a durable challenge step restores its interrupted review record on retry or reload without an ordinary reward',async()=>{
+  for(const reload of [false,true]){
+    let reject=true;
+    const today=learning.localDay(),yesterday=practicePlan.addPracticeDays(today,-1);
+    let f=challengeFixture({studyDate:yesterday,recognized:{matched:true,stars:3,heard:'hello'},failWrite:key=>key===practicePlan.PRACTICE_KEY&&reject});
+    f.startChallenge('challenge-1');const s=f.getSession(),eventId=s.event.id;
+    await f.assessClip(s,'blob:practice-write-failure',s.speechGeneration);
+    const attemptId=f.getChallenges().attempts[0].attemptId;
+    assert.equal(f.getState().evidence.length,1);assert.equal(f.challengeSummary().units[0].completedCount,1);
+    assert.equal(f.getPractice().entries.length,4);assert.equal(f.practiceToday().cards.find(c=>c.eventId===eventId).lastDate,yesterday);
+    assert.equal(f.getModal()?.type,'error');assert.match(f.modalHtml(),/data-action="retry-rewards"/);
+    reject=false;
+    if(reload){f=challengeFixture({stored:f.stored});await flush();}
+    else await f.actions['retry-rewards']();
+    const restored=f.getPractice().entries.at(-1);
+    assert.deepEqual(restored,{roundId:`challenge:${attemptId}`,eventId,date:today,attemptId,mode:'review',rewardVariant:null});
+    assert.equal(f.getPractice().entries.length,5);assert.equal(f.getChallenges().attempts.length,1);
+    const card=f.practiceToday().cards.find(c=>c.eventId===eventId);
+    assert.equal(card.lastDate,today);assert.equal(card.practicedToday,true);assert.equal(card.due,false);
+    assert.equal(f.getMeadow().rounds.length,0);assert.deepEqual([f.getMeadow().shells,f.getMeadow().water],[0,0]);
+    const writes=f.writes.length;await f.restoreChallengeRewards();await f.restoreChallengeRewards();
+    assert.equal(f.writes.length,writes,'An already restored step does not keep writing the practice log');
+  }
+});
+
+test('a failed first-clear wallet write recovers once and repeated or reloaded recovery does not write storage',async()=>{
+  const today=learning.localDay(),stored=new Map();
+  const wallet=meadow.openSeedPack(meadow.rewardRound(meadow.createMeadow(),{roundId:'existing-starter',eventId:challenge.CHALLENGE_UNITS[0].eventIds[0],date:today}),0);
+  stored.set(meadow.MEADOW_KEY,JSON.stringify(wallet));
+  let reject=true;
+  const f=challengeFixture({stored,recognized:{matched:true,stars:3,heard:'hello'},failWrite:key=>key===meadow.MEADOW_KEY&&reject});
+  for(const eventId of challenge.CHALLENGE_UNITS[0].eventIds){
+    f.startChallenge('challenge-1');const s=f.getSession();assert.equal(s.event.id,eventId);
+    await f.assessClip(s,'blob:clear',s.speechGeneration);
+  }
+  assert.equal(f.challengeSummary().units[0].completed,true);assert.equal(f.getChallenges().attempts.length,4);
+  assert.equal(f.getPractice().entries.length,8);assert.ok(f.getPractice().entries.slice(-4).every(e=>e.rewardVariant===null));
+  assert.deepEqual(f.getMeadow(),wallet);assert.equal(f.getModal()?.type,'error');assert.match(f.modalHtml(),/data-action="retry-rewards"/);
+  reject=false;await f.actions['retry-rewards']();
+  assert.deepEqual([f.getMeadow().shells,f.getMeadow().water],[wallet.shells+4,wallet.water+6]);
+  assert.deepEqual(f.getMeadow().pendingSeed,wallet.pendingSeed);assert.equal(f.getMeadow().challengeRewards.length,1);
+  assert.equal(f.getMeadow().rounds.length,wallet.rounds.length);
+  assert.equal(f.writes.filter(w=>w.key===meadow.MEADOW_KEY).length,1);
+  const writes=f.writes.length;
+  assert.deepEqual(await Promise.all([f.restoreChallengeRewards(),f.restoreChallengeRewards(),f.restoreChallengeRewards()]),[true,true,true]);
+  assert.equal(f.writes.length,writes,'Repeated restore must not trigger other tabs with an unchanged wallet write');
+  const reloaded=challengeFixture({stored});await flush();await reloaded.restoreChallengeRewards();
+  assert.equal(reloaded.writes.length,0);assert.deepEqual(reloaded.getMeadow(),f.getMeadow());
+});
 
 test('three-star assessment celebrates once before spoken praise; repaint and replay do not celebrate again',async()=>{
   for(const assessmentMode of [false,true]){
@@ -345,7 +488,7 @@ test('familiar try again review starts at the final picture without playing the 
 test('review opens with a neutral spoken choice, one ear and no forced microphone hint',async()=>{
   const f=fixture();f.setMic(true);f.startEvent(stories.storyFor('food-water').event,true);
   const s=f.getSession();assert.equal(s.phase,'request');assert.equal(s.recallReady,true);assert.equal(s.helped,false);
-  assert.equal(f.sounds.length,1);assert.match(f.sounds[0].file,/flow-recall\.mp3$/);
+  assert.equal(f.sounds.length,1);assert.match(f.sounds[0].file,/flow-review-v13\.mp3$/);
   assert.match(f.html(),/data-recall-ready/);assert.equal(f.ears().length,1);
   assert.equal(f.button('record').hasAttribute('data-primary'),false);assert.doesNotMatch(f.html(),/tap-cue/);
   assert.deepEqual(f.guided(),['record','sample']);assert.equal(f.writes.length,0);

@@ -275,6 +275,24 @@ test('three stars respect mute and reduced motion and remain usable without Web 
   }
 });
 
+test('challenge celebration is distinct and bounded, and stops immediately for speech or departure', () => {
+  const f = fixture();
+  assert.equal(f.api.play('challenge-clear', {target:f.button}), true);
+  assert.ok(f.decorations().length > 3);
+  f.tick(0);
+  const oscillator=f.oscillators[0];
+  assert.ok(oscillator.frequency.calls.length > 3);
+  assert.ok(oscillator.stops[0]-oscillator.started < .8);
+  f.api.setSilent(true);
+  assert.equal(oscillator.disconnected,true);
+  f.api.cancel();f.tick(1200);
+  assert.equal(f.decorations().length,0);
+  const reduced=fixture({reduced:true,webAudio:false});
+  assert.equal(reduced.api.play('challenge-clear',{target:reduced.button}),true);
+  assert.equal(reduced.decorations().length,1);
+  reduced.tick(1200);assert.equal(reduced.decorations().length,0);
+});
+
 test('muted, silent, denied sound and ready never construct an audio context', () => {
   for (const mode of ['muted','silent','denied','per-call','ready']) {
     const f = fixture({canSound:() => mode !== 'denied'});

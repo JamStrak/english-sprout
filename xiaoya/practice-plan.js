@@ -28,6 +28,27 @@ function round(value) {
   localDay(value.date);
 }
 
+function gardenRound(value) {
+  const receipt = !!value && ['reward', 'starter', 'rewardVersion', 'amounts'].some(key => own(value, key));
+  const versioned = !!value && (own(value, 'rewardVersion') || own(value, 'amounts'));
+  fields(value, ['roundId', 'eventId', 'date', ...(receipt ? ['starter', 'reward'] : []),
+    ...(versioned ? ['rewardVersion', 'amounts'] : [])]);
+  round(value);
+  if (!receipt) return;
+  if (!['legacy', 'starter', 'pending', 'shells', 'water'].includes(value.reward) ||
+      value.starter !== (value.reward === 'starter')) fail('花园参与补给记录错误');
+  if (!versioned) return;
+  // Validate the persisted receipt contract without importing the garden: its
+  // challenge catalogue depends on this scheduler. Quantities never become
+  // learning evidence, and old receipts retain their original reward amounts.
+  if (![1, 2, 3].includes(value.rewardVersion) ||
+      (value.rewardVersion === 1) !== (value.reward === 'legacy')) fail('花园参与补给版本错误');
+  fields(value.amounts, ['shells', 'water']);
+  const shells = value.rewardVersion === 1 ? 3 : 2;
+  const water = value.rewardVersion === 3 ? (value.starter ? 3 : 2) : 5;
+  if (value.amounts.shells !== shells || value.amounts.water !== water) fail('花园参与补给金额错误');
+}
+
 function entry(value) {
   const hasReward = !!value && own(value, 'rewardVariant');
   fields(value, ['roundId', 'eventId', 'date', 'attemptId', 'mode', ...(hasReward ? ['rewardVariant'] : [])]);
@@ -110,9 +131,7 @@ function history(plan, rounds, learningState, date) {
   }
   const contacts = new Map();
   rounds.forEach((value, index) => {
-    const receipt = own(value, 'reward') || own(value, 'starter');
-    fields(value, receipt ? ['roundId', 'eventId', 'date', 'starter', 'reward'] : ['roundId', 'eventId', 'date']); round(value);
-    if (receipt && (!['legacy','starter','pending','shells','water'].includes(value.reward) || value.starter !== (value.reward === 'starter'))) fail('花园参与补给记录错误');
+    gardenRound(value);
     const previous = contacts.get(value.roundId);
     if (previous && (previous.eventId !== value.eventId || previous.date !== value.date)) fail('两座花园的互动编号冲突');
     if (!previous) contacts.set(value.roundId, {roundId:value.roundId,eventId:value.eventId,date:value.date, origin: 'legacy', order: index, mode: 'review'});

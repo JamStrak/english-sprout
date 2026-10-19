@@ -14,6 +14,9 @@ import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
+import * as curriculum from '../xiaoya/curriculum.js';
+import * as challenge from '../xiaoya/challenges.js';
+import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
@@ -58,7 +61,7 @@ function fixture(initial=gardening.createGarden()){
   const audio={playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
     stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){return Promise.resolve(true);},
     releaseAudioSession(){audio.stopSound();},speechReady(){return false;}};
-  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},...practicePlan,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,JSON,
+  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,JSON,
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search:''},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
