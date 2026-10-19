@@ -1,13 +1,13 @@
 # 英语小芽 · 当前状态
 
-## 小芽英语独立版入口（2026-10-18）
+## 小芽英语独立版入口（2026-10-19）
 
-当前试玩版本为 **小芽英语 v0.8.0**，保存在独立工作树 `C:\Users\Jam\.codex\worktrees\xiaoya-english-design\儿童英语练习`，分支 `codex/xiaoya-garden-ab`，提交 `a8ff520a276ef336b45b790410d3a84a682ffb15`，本地构建 `a61f7db3e599`。下方历史交付属于原版英语小芽；继续维护新产品时请切到上述工作树。
+当前新产品为 **小芽英语 v0.16.0 本机内测版**，实际工程位于 `C:\Users\Jam\.codex\worktrees\xiaoya-english-design\儿童英语练习`，分支 `codex/xiaoya-garden-ab`。功能基线 `51090a5`，本次跨 AI 接力文档提交 `2616b12c386ddb4db2aa9543f3e3a4dedad0c521`。本目录保留旧产品；新产品升级请先打开上述工程，不要从这里的旧 main 继续实现。
 
-- 启动：双击该工作树内的 `启动小芽英语.vbs`；B 花园试玩入口为 http://127.0.0.1:24756/xiaoya/?garden=b 。
-- 本轮完成单击录音及真实就绪反馈、每日新学与间隔复习、42 个故事与 40 个句子的可发现入口、按钮和花园动效音效，以及未到账奖励的刷新恢复。保留现有学习记录和 A/B 花园存档。
-- 当前版本通过 417 项单元测试与构建、30 项最终构建浏览器专项、5 种实际 WebAudio 输出检查；实体设备和孩子的体验仍待本轮试玩。录音识别准确率未因这些检查得到重新认证。
-- 具体使用方式、验证证据与限制见独立工作树内 `PROJECT_CONTEXT.md`、`docs/XIAOYA_USE.md`、`docs/XIAOYA_IMPLEMENTATION.md`。本轮仅本地交付。
+- 当前版本、实际构建、已完成内容及验证范围：[新产品交接入口](<C:/Users/Jam/.codex/worktrees/xiaoya-english-design/儿童英语练习/PROJECT_CONTEXT.md>)。
+- 更换 AI 工具、辅助分支、换设备与交回：[跨 AI 接力说明](<C:/Users/Jam/.codex/worktrees/xiaoya-english-design/儿童英语练习/docs/AI_HANDOFF.md>)；按任务查资料：[文档索引](<C:/Users/Jam/.codex/worktrees/xiaoya-english-design/儿童英语练习/docs/INDEX.md>)。
+- 启动：双击新产品工程内的 `启动小芽英语.vbs`；B 花园常用入口为 `http://127.0.0.1:24756/xiaoya/?garden=b`，开发版提供 GM 资源审核与免录音测试。
+- 本机路径只是定位信息，换设备按接力说明迁移完整分支。具体状态只在新产品入口维护；下方旧产品的版本、测试与部署记录不代表新产品。本轮仅本地文档提交，未部署、未推送 main。
 
 ## 原版历史状态
 
