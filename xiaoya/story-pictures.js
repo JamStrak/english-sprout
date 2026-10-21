@@ -1,5 +1,5 @@
-// Pictures are optional views. A missing picture never changes a teaching beat
-// or delays its sound; the existing authored SVG remains the fallback.
+// A missing picture is an explicit recoverable resource error, never a reason
+// to show a different illustration. Audio and the current teaching beat survive.
 export function pictureFor(story,{frame=story.cueFrame,alternate=false,phase='request'}={},baseUrl){
   const intro=!alternate&&story.introFrame!=null&&frame===story.introFrame;
   const image=alternate?story.alternateImages?.[phase==='resolved'?'resolved':'request']:intro?story.introImage:story.image;
@@ -23,15 +23,19 @@ export function pictureSequence(story,options={},baseUrl){
 export function createPictureLoader({createImage=()=>new Image(),timeoutMs=3000,setTimer=setTimeout,clearTimer=clearTimeout,onChange=()=>{},persist=()=>{}}={}){
   const entries=new Map();
   const status=url=>entries.get(url)?.status||'idle';
-  function load(url){
+  function load(url,{retry=false}={}){
     if(!url)return Promise.resolve('missing');
+    const previous=entries.get(url);
+    if(retry&&previous&&['failed','slow'].includes(previous.status)){
+      previous.cancel?.();entries.delete(url);
+    }
     if(entries.has(url))return entries.get(url).promise;
     const entry={status:'pending',promise:null};
     entries.set(url,entry);
     entry.promise=new Promise(resolve=>{
       let picture,timer,settled=false;
       const finish=next=>{
-        if(settled)return;
+        if(settled||entries.get(url)!==entry)return;
         settled=true;clearTimer(timer);
         if(picture){picture.onload=null;picture.onerror=null;}
         entry.status=next;resolve(next);onChange(url,next);
@@ -40,8 +44,9 @@ export function createPictureLoader({createImage=()=>new Image(),timeoutMs=3000,
         if(next==='ready')Promise.resolve().then(()=>persist(url)).catch(()=>{});
       };
       // A slow download is still useful. Release callers at the deadline but
-      // keep its native load handlers so it may replace the SVG when it arrives.
+      // keep native load handlers so it may replace the placeholder when ready.
       timer=setTimer(()=>{clearTimer(timer);entry.status='slow';resolve('slow');onChange(url,'slow');},timeoutMs);
+      entry.cancel=()=>{settled=true;clearTimer(timer);if(picture){picture.onload=null;picture.onerror=null;}resolve('cancelled');};
       try{picture=createImage();picture.onload=()=>finish('ready');picture.onerror=()=>finish('failed');picture.src=url;}
       catch{finish('failed');}
     });

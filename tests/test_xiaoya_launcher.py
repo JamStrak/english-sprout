@@ -18,7 +18,9 @@ spec.loader.exec_module(launcher)
 
 class XiaoyaLauncherTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
+        scratch = Path(__file__).resolve().parents[1] / "test-results" / "tmp"
+        scratch.mkdir(parents=True, exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=scratch)
         self.root = Path(self.temp.name)
         root_patch = patch.object(launcher, "ROOT", self.root)
         root_patch.start()
@@ -135,14 +137,25 @@ class XiaoyaLauncherTests(unittest.TestCase):
                 (output / "version.json").write_text(value, encoding="utf-8")
                 self.assertEqual(launcher.startup_path(self.root), "/xiaoya/")
 
-    def test_garden_preview_uses_actual_service_port_without_changing_saved_preferences(self):
+    def test_legacy_garden_shortcuts_only_launch_the_free_garden(self):
         for garden in ("a", "b"):
             with self.subTest(garden=garden), patch.object(launcher, "start_or_reuse", return_value=(24759, None, None)), patch.object(launcher.webbrowser, "open", return_value=True) as browser:
                 launcher.main(["--garden", garden])
-                browser.assert_called_once_with(f"http://127.0.0.1:24759/xiaoya/?garden={garden}")
+                browser.assert_called_once_with("http://127.0.0.1:24759/xiaoya/?garden=b")
         with patch.object(launcher, "start_or_reuse", return_value=(24759, None, None)), patch.object(launcher.webbrowser, "open") as browser:
             launcher.main(["--garden", "b", "--no-browser"])
             browser.assert_not_called()
+
+    def test_old_startup_bookmark_redirects_to_current_release_without_losing_query(self):
+        output = self.root / "dist/xiaoya"
+        build = "0123456789ab"
+        (output / "version.json").write_text(json.dumps({"build": build}), encoding="utf-8")
+        (output / f"start-{build}.html").write_text("current free garden", encoding="utf-8")
+        (output / "start-aaaaaaaaaaaa.html").write_text("retired page", encoding="utf-8")
+        port = self.start()
+        with self.read(port, "/xiaoya/start-aaaaaaaaaaaa.html?garden=b&story=hello-goodbye") as response:
+            self.assertEqual(response.read(), b"current free garden")
+            self.assertTrue(response.url.endswith(f"/xiaoya/start-{build}.html?garden=b&story=hello-goodbye"))
 
     def test_missing_build_uses_hidden_internal_builder(self):
         index = self.root / "dist/xiaoya/index.html"

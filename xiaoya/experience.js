@@ -3,19 +3,18 @@ import {EVENTS} from './content.js';
 import {STORAGE_KEY,createState,validateState,localDay,recordEvidence,correctEvidence,effectiveEvidence,phraseStatus,phraseCheckupContext} from './learning.js';
 import {STORIES,storyFor} from './stories.js';
 import {CORE_PHRASE_EVENT_IDS,canonicalEventId,phraseEvents} from './curriculum.js';
-import {storyFrame,assessmentFrame} from './story-art.js';
 import {pictureFor,pictureSequence,createPictureLoader} from './story-pictures.js';
 import * as meadow from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {meadowView,meadowCollection,bindMeadowInteractions,layoutMeadowWatering} from './meadow-ui.js';
 import {seedShopView,offerPicture} from './seed-shop.js';
-import {GARDEN_KEY,FLOWERS,createGarden,validateGarden,rewardRound,openSeedPack,plantSeed,waterPlant,gardenNextAction} from './garden.js';
+import {LEGACY_GARDEN_KEY,readGardenHistory} from './garden-history.js';
 import {VOICES,VOICE_KEY,readVoice,saveVoice,lessonAudio} from './voices.js';
 import {icon,buddy,sceneArt,voicePortrait} from './art.js';
 import {installPaperArt} from './paper-art.js';
-import {shellArt,dropArt,canArt,packArt,seedArt,plantArt} from './garden-art.js';
+import {shellArt,dropArt,canArt,packArt,plantArt} from './garden-art.js';
 import * as audio from './audio.js';
-import {startAudioPack,retryAudioPack,audioPackMessage,onAudioPackChange} from './audio-pack.js';
+import {startAudioPack,retryAudioPack,audioPackMessage,onAudioPackChange,retryArtPack,artPackMessage,onArtPackChange} from './audio-pack.js';
 import {PRACTICE_KEY,createPracticePlan,validatePracticePlan,recordPractice,getPracticePlan} from './practice-plan.js';
 import {createFeedback} from './feedback.js';
 import * as challenge from './challenges.js';
@@ -24,7 +23,7 @@ import {flagArt,challengeFlag,challengeSteps,challengeBoard,challengePrize} from
 const app=document.querySelector('#app'),PREFS='xiaoya-english:preferences:v1';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||`local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`,today=()=>localDay();
-let state=createState(),garden=createGarden(),prefs={mic:false},selectedVoice=readVoice(appStorage);
+let state=createState(),gardenHistory=readGardenHistory(null),prefs={mic:false},selectedVoice=readVoice(appStorage);
 let storageProblem=null,rawState=null,rawGarden=null,session=null,modal=null,parentUnlocked=false;
 let page='home',toastTimer,feedback=null,feedbackTimer,restoreFocus,gmWorkbenchOpen=false;
 let guideActions=[],guideGeneration=0;
@@ -38,21 +37,21 @@ let recoveringRewards=false,recoveryRequested=false;
 let rewardReceipt=null,rewardSelection=null,rewardBusy=false,shopBusy=false,uiGeneration=0;
 const effects=createFeedback({canSound:()=>!document.hidden&&!speaking&&!session?.waiting&&!session?.recording&&!['preparing','assessing'].includes(session?.assessment?.status)});
 const directStory=new URLSearchParams(location.search).get('story');
-const VARIANT_KEY='xiaoya-english:garden-variant:v1';
-let meadowState=meadow.createMeadow(),gardenVariant='a',meadowTool=null,meadowBusy=false;
-try{const saved=appStorage.getItem(meadow.MEADOW_KEY);if(saved)meadowState=meadow.validateMeadow(JSON.parse(saved));const preview=new URLSearchParams(location.search).get('garden');gardenVariant=['a','b'].includes(preview)?preview:appStorage.getItem(VARIANT_KEY)==='b'?'b':'a';}catch(error){storageProblem=error.message;}
-const activeGarden=()=>gardenVariant==='b'?meadowState:garden;
-const waterReward=()=>gardenVariant==='b'?(meadowState.rounds.length?2:3):2;
-const hasRewardChoice=()=>gardenVariant==='b'&&meadowState.rounds.length>0;
-function rewardPreview(){return `${shellArt()}<span>${gardenVariant==='b'?2:3}</span>${hasRewardChoice()?'<span class="resource-or">/</span>':''}${dropArt()}<span>${waterReward()}</span>`;}
-const activeNext=()=>gardenVariant==='b'?meadow.nextAction(meadowState):gardenNextAction(garden);
-const allRounds=()=>[...garden.rounds,...meadowState.rounds];
+// Old garden URL parameters and preferences cannot select a retired screen.
+let meadowState=meadow.createMeadow(),meadowTool=null,meadowBusy=false;
+try{const saved=appStorage.getItem(meadow.MEADOW_KEY);if(saved)meadowState=meadow.validateMeadow(JSON.parse(saved));}catch(error){storageProblem=error.message;}
+const activeGarden=()=>meadowState;
+const waterReward=()=>meadowState.rounds.length?2:3;
+const hasRewardChoice=()=>meadowState.rounds.length>0;
+function rewardPreview(){return `${shellArt()}<span>2</span>${hasRewardChoice()?'<span class="resource-or">/</span>':''}${dropArt()}<span>${waterReward()}</span>`;}
+const activeNext=()=>meadow.nextAction(meadowState);
+const allRounds=()=>[...gardenHistory.rounds,...meadowState.rounds];
 
-try{rawState=appStorage.getItem(STORAGE_KEY);if(rawState)state=validateState(JSON.parse(rawState));rawGarden=appStorage.getItem(GARDEN_KEY);if(rawGarden)garden=validateGarden(JSON.parse(rawGarden));}catch(error){storageProblem=error.message;}
+try{rawState=appStorage.getItem(STORAGE_KEY);if(rawState)state=validateState(JSON.parse(rawState));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);}catch(error){storageProblem=error.message;}
 try{prefs={...JSON.parse(appStorage.getItem(PREFS)||'{}'),mic:JSON.parse(appStorage.getItem(PREFS)||'{}').mic===true};}catch{}
 try{const raw=appStorage.getItem(PRACTICE_KEY);if(raw)practice=validatePracticePlan(JSON.parse(raw));}catch(error){storageProblem=error.message;}
 let planCache;
-function practiceToday(){const date=today();if(!planCache||planCache.practice!==practice||planCache.state!==state||planCache.garden!==garden||planCache.meadow!==meadowState||planCache.date!==date)planCache={practice,state,garden,meadow:meadowState,date,value:getPracticePlan(practice,{rounds:allRounds(),learningState:state,date})};return planCache.value;}
+function practiceToday(){const date=today();if(!planCache||planCache.practice!==practice||planCache.state!==state||planCache.gardenHistory!==gardenHistory||planCache.meadow!==meadowState||planCache.date!==date)planCache={practice,state,gardenHistory,meadow:meadowState,date,value:getPracticePlan(practice,{rounds:allRounds(),learningState:state,date})};return planCache.value;}
 async function savePractice(s){
   const commit=()=>{if(storageProblem)return showError('原记录需要处理，请先到家长区导出。'),false;try{const raw=appStorage.getItem(PRACTICE_KEY),latest=raw?validatePracticePlan(JSON.parse(raw)):createPracticePlan();const next=(s.practiceRecords||[s.practiceRecord]).reduce((value,entry)=>recordPractice(value,entry),latest);appStorage.setItem(PRACTICE_KEY,JSON.stringify(next));practice=next;return true;}catch{return showError('这次练习还没有保存，请检查浏览器存储后重试。'),false;}};
   return !GM_SANDBOX&&navigator.locks?.request?navigator.locks.request(PRACTICE_KEY,commit):commit();
@@ -62,25 +61,21 @@ async function restorePracticeRewards(){
   if(recoveringRewards){recoveryRequested=true;return;}
   recoveringRewards=true;
   try{
-    for(const variant of ['a','b']){
-      const current=variant==='b'?meadowState:garden;
-      const pending=practice.entries.filter(r=>r.rewardVariant===variant&&!current.rounds.some(done=>done.roundId===r.roundId));
-      if(!pending.length)continue;
-      const reward=variant==='b'?meadow.rewardRound:rewardRound;
-      const saved=await gardenChange(latest=>pending.reduce((value,r)=>reward(value,{roundId:r.roundId,eventId:r.eventId,date:r.date}),latest),variant);
-      const updated=variant==='b'?meadowState:garden;
-      if(!saved&&!pending.every(r=>updated.rounds.some(done=>done.roundId===r.roundId)))return;
+    const pending=practice.entries.filter(r=>r.rewardVariant==='b'&&!meadowState.rounds.some(done=>done.roundId===r.roundId));
+    if(pending.length){
+      const saved=await gardenChange(latest=>pending.reduce((value,r)=>meadow.rewardRound(value,{roundId:r.roundId,eventId:r.eventId,date:r.date}),latest));
+      if(!saved&&!pending.every(r=>meadowState.rounds.some(done=>done.roundId===r.roundId)))return;
     }
     if(!modal&&['home','garden','parent'].includes(page))render();
   }finally{recoveringRewards=false;if(recoveryRequested){recoveryRequested=false;restorePracticeRewards();}}
 }
 function save(next){if(storageProblem)return showError('原记录需要处理，请先到家长区导出。'),false;try{validateState(next);appStorage.setItem(STORAGE_KEY,JSON.stringify(next));state=next;return true;}catch{return showError('记录未保存，请检查浏览器存储空间后重试。'),false;}}
-async function gardenChange(change,variant=gardenVariant){
-  const isMeadow=variant==='b',key=isMeadow?meadow.MEADOW_KEY:GARDEN_KEY,validate=isMeadow?meadow.validateMeadow:validateGarden,create=isMeadow?meadow.createMeadow:createGarden;
+async function gardenChange(change){
+  const key=meadow.MEADOW_KEY,validate=meadow.validateMeadow,create=meadow.createMeadow;
   const commit=()=>{if(storageProblem)return showError('原记录需要处理，请先到家长区导出。'),false;try{
   // Re-read inside the cross-tab lock; no stale balance is used by an open tab.
   const raw=appStorage.getItem(key),latest=raw?validate(JSON.parse(raw)):create();
-  const next=change(latest);validate(next);if(next!==latest)appStorage.setItem(key,JSON.stringify(next));if(isMeadow)meadowState=next;else garden=next;return next!==latest;
+  const next=change(latest);validate(next);if(next!==latest)appStorage.setItem(key,JSON.stringify(next));meadowState=next;return next!==latest;
 }catch{return showError('花园没有保存，贝壳和水没有扣除。请检查存储后重试。'),false;}};
   return !GM_SANDBOX&&navigator.locks?.request?navigator.locks.request(key,commit):commit();
 }
@@ -102,7 +97,7 @@ async function restoreChallengeRewards(){
   if(!receipts.length)return true;
   // The challenge log is the durable intent. Reconcile after interruption and
   // under the same wallet lock as shop purchases, never overwrite a seed.
-  const changed=await gardenChange(latest=>receipts.reduce((s,r)=>meadow.rewardChallenge(s,{unitId:r.unitId,date:r.date}),latest),'b');
+  const changed=await gardenChange(latest=>receipts.reduce((s,r)=>meadow.rewardChallenge(s,{unitId:r.unitId,date:r.date}),latest));
   if(changed&&!modal&&['home','garden','parent','challenges'].includes(page))render();
   return receipts.every(r=>meadowState.challengeRewards.some(p=>p.unitId===r.unitId));
 }
@@ -124,9 +119,9 @@ async function saveChallengeHelp(s){
   if(saved)s.priorChallengeHelp=true;
   return saved;
 }
-function openChallenges(){if(gardenVariant!=='b')return;challengeReceipt=null;navigate('challenges');sound(voice('challenge-intro'),['challenge-guide']);}
+function openChallenges(){challengeReceipt=null;navigate('challenges');sound(voice('challenge-intro'),['challenge-guide']);}
 function startChallenge(unitId){
-  const unit=challengeSummary().units.find(u=>u.id===unitId);if(!unit||gardenVariant!=='b')return;
+  const unit=challengeSummary().units.find(u=>u.id===unitId);if(!unit)return;
   if(!unit.available){const item=unit.items.find(i=>!i.studied);startEvent(storyFor(item.eventId).event);return;}
   const eventId=unit.completed?unit.items[0].eventId:unit.nextEventId;
   const previous=challenges.attempts.filter(a=>a.unitId===unitId&&canonicalEventId(a.eventId)===canonicalEventId(eventId)).at(-1);
@@ -155,10 +150,10 @@ async function finishChallengeStep(){
   startEvent(storyFor(unit.nextEventId).event,false,{challengeUnitId:unit.id,challengeReplay:false,challengeReplayIndex:0});
 }
 async function takeChallengeSeed(){
-  if(gardenVariant!=='b'||challengeBusy)return;
+  if(challengeBusy)return;
   if(meadowState.pendingSeed)return enterGarden();
   challengeBusy=true;const generation=uiGeneration;
-  try{const changed=await gardenChange(meadow.redeemChallengeSeed,'b');if(!changed||generation!==uiGeneration||modal||document.hidden)return;enterGarden();meadowTool='seed';render();stopSpeech();effects.play('seed',{target:document.querySelector('[data-action="meadow-seed"]')});feedbackVoice(()=>{if(gardenIsActive()&&!modal)sound(voice('challenge-seed'),['meadow-seed']);});}finally{challengeBusy=false;}
+  try{const changed=await gardenChange(meadow.redeemChallengeSeed);if(!changed||generation!==uiGeneration||modal||document.hidden)return;enterGarden();meadowTool='seed';render();stopSpeech();effects.play('seed',{target:document.querySelector('[data-action="meadow-seed"]')});feedbackVoice(()=>{if(gardenIsActive()&&!modal)sound(voice('challenge-seed'),['meadow-seed']);});}finally{challengeBusy=false;}
 }
 async function inviteChallenge(){
   const unit=challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()});if(!unit)return false;
@@ -168,7 +163,7 @@ async function inviteChallenge(){
   return true;
 }
 function challengeParentPanel(){
-  if(gardenVariant!=='b')return '';
+
   const summary=challengeSummary();return `<section class="parent-card"><h2>花园挑战 · ${summary.completedCount} / ${summary.units.length} 组</h2><p>每组四句，完成的小步永久保留。孩子可以主动挑战；系统只会在至少隔天、且四句中三句已有独立表达候选时轻声邀请，每组一次，两次邀请至少间隔三天。</p>${summary.units.map(u=>`<div class="challenge-parent-row"><span>${esc(u.title)} · ${u.completedCount} / 4${u.items.some(i=>i.passEvidence==='after-practice')?' · 含练习后完成':''}</span><button data-challenge-unit="${u.id}">${u.available?'去挑战':'先学习'}</button></div>`).join('')}<p>挑战过关是游戏进度。当天听过示范再答出来记作练习后完成，不等于稳定掌握；复习仍会隔天检验。机器匹配不是发音评分，设备问题和没听清均不扣进度。</p></section>`;
 }
 function toast(message){clearTimeout(toastTimer);document.querySelector('.toast')?.remove();const el=document.createElement('div');el.className='toast';el.role='status';el.textContent=message;document.body.append(el);toastTimer=setTimeout(()=>el.remove(),5000);}
@@ -210,17 +205,16 @@ function stopSpeech(){soundGeneration++;audio.stopSound();speaking=false;effects
 function feedbackVoice(callback,delay=340){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},delay);}
 function clearGuide(){guideGeneration++;guideActions=[];applyGuide();}
 async function sound(file,targets=[]){const generation=++guideGeneration,playback=++soundGeneration;guideActions=targets;speaking=true;cancelIdleHint();effects.setSilent(true);applyGuide();try{return await audio.playSound(file);}catch(error){toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}}
-const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],'open-pack':['pack'],seed:['plant'],water:['water'],next:['next-event']};
+const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],next:['next-event']};
 const narrate=id=>sound(voice(`garden-${id}`),guideTargets[id]||[]);
 function button(action,label,glyph,extra=''){return `<button class="icon-button" data-action="${action}" aria-label="${esc(label)}" ${extra}>${icon(glyph)}</button>`;}
 function primary(action,label,body,extra=''){return `<div class="primary-wrap"><button class="primary-orb" data-primary data-action="${action}" aria-label="${esc(label)}" ${extra}>${body}</button><span class="tap-cue" aria-hidden="true">${icon('tap',36)}</span></div>`;}
 function header(){
   const localHelp=page==='event'&&['story','request'].includes(session?.phase);
   const controls=page==='parent'?'':`${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}`;
-  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语</span><div>${controls}</div></header>`;
+  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语<small class="edition-label">自由花园 v${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'0.17.0')}</small></span><div>${controls}</div></header>`;
 }
 function balance(){const garden=activeGarden();return `<div class="wallet" aria-label="${garden.shells} 枚贝壳，${garden.water} 滴水"><span>${shellArt()}<b data-shells>${garden.shells}</b></span><span>${dropArt()}<b data-water>${garden.water}</b></span></div>`;}
-function flowerFor(id){return FLOWERS.find(f=>f.id===id);}
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
 function nextStory(){return storyFor(nextPractice().eventId);}
 function stopSession(){cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
@@ -230,30 +224,46 @@ function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].i
 function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback();openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function homeView(){
   const progress=allRounds().length>0,task=activeNext(),resume=progress&&task!=='learn',choice=nextPractice(),story=storyFor(choice.eventId);
-  const shortcuts=`${gardenVariant==='b'?challengeFlag(challengeSummary()):''}${progress&&!resume?`<button class="garden-shortcut" data-action="garden" aria-label="打开我的小花园">${plantArt(FLOWERS[0],2)}${icon('house',24)}</button>`:''}`;
-  return `${header()}<main class="home-view home-welcome" data-next-event="${choice.eventId}" data-next-mode="${choice.mode}"><div class="home-glade" aria-hidden="true"><i class="home-leaf"></i><div class="home-companion">${buddy('happy')}</div><i class="home-leaf"></i></div>${primary(resume?'garden':'next-event',resume?'去花园照顾小种子':`${choice.mode==='review'?'再见老朋友':'出发'}：${story.event.title}`,resume?canArt():icon('play',48))}<div class="reward-preview" aria-label="${gardenVariant==='b'?hasRewardChoice()?'玩英语，选择两枚贝壳或两滴水':'第一份礼物，两枚贝壳和三滴水':'玩一个故事，获得三枚贝壳和两滴水'}">${rewardPreview()}</div>${shortcuts?`<div class="home-shortcuts">${shortcuts}</div>`:''}</main>`;
+  const shortcuts=`${challengeFlag(challengeSummary())}${progress&&!resume?`<button class="garden-shortcut" data-action="garden" aria-label="打开我的小花园">${plantArt(meadow.FLOWERS[0],2)}${icon('house',24)}</button>`:''}`;
+  return `${header()}<main class="home-view home-welcome" data-next-event="${choice.eventId}" data-next-mode="${choice.mode}"><div class="home-glade" aria-hidden="true"><i class="home-leaf"></i><div class="home-companion">${buddy('happy')}</div><i class="home-leaf"></i></div>${primary(resume?'garden':'next-event',resume?'去花园照顾小种子':`${choice.mode==='review'?'再见老朋友':'出发'}：${story.event.title}`,resume?canArt():icon('play',48))}<div class="reward-preview" aria-label="${hasRewardChoice()?'玩英语，选择两枚贝壳或两滴水':'第一份礼物，两枚贝壳和三滴水'}">${rewardPreview()}</div>${shortcuts?`<div class="home-shortcuts">${shortcuts}</div>`:''}</main>`;
 }
 
 const meadowPicture={id:"garden-background",image:"garden-paper-v1.webp"};
+function picturePlaceholder(status){return `<div data-picture-placeholder role="status"><span class="picture-loading-dot" aria-hidden="true"></span><p>${['failed','slow','missing'].includes(status)?'这幅插画还没准备好':'正在打开插画'}</p>${['failed','slow','missing'].includes(status)?'<button data-action="picture-retry">重试图片</button>':''}</div>`;}
+function showArtRecovery(){
+  if(document.querySelector('[data-art-recovery]'))return;
+  const notice=document.createElement('aside');notice.dataset.artRecovery='';notice.setAttribute('role','status');
+  notice.innerHTML='<span>部分图片还没准备好，请先启动本地服务。</span><button type="button">重新检查图片</button>';
+  notice.querySelector('button').addEventListener('click',retryPictures);document.body.append(notice);
+}
+function dismissArtRecovery(){if(!document.querySelector('[data-paper-state="error"],[data-picture-status="failed"],[data-picture-status="slow"]'))document.querySelector('[data-art-recovery]')?.remove();}
 const pictures=createPictureLoader({
-  persist:async url=>{const build=document.querySelector('meta[name="xiaoya-build"]')?.content;if('caches'in window&&/^\w{12}$/.test(build||'')){const cache=await caches.open(`xiaoya-core-${build}`);if(!await cache.match(url)){const response=await fetch(url,{cache:'force-cache'});if(response.ok)await cache.put(url,response);}}},
   onChange:(url,status)=>{
     // A picture becoming ready updates only its own canvas. Do not re-render
     // microphone controls, dismiss a parent dialog, or reset an idle hint.
     for(const element of document.querySelectorAll('[data-picture-url]'))if(element.dataset.pictureUrl===url){
       element.dataset.pictureStatus=status;
-      if(status==='ready'){element.classList.remove('vector-picture');element.classList.toggle('single-picture',element.dataset.pictureLayout==='single');element.style.setProperty('--picture',`url("${url}")`);element.replaceChildren();}
+      if(status==='ready'){element.classList.toggle('single-picture',element.dataset.pictureLayout==='single');element.style.setProperty('--picture',`url("${url}")`);element.replaceChildren();}
+      else element.innerHTML=picturePlaceholder(status);
     }
     if(url===pictureFor(meadowPicture,{},document.baseURI)?.url){const field=document.querySelector('[data-meadow-field]');if(field){field.classList.toggle('has-paper',status==='ready');if(status==='ready')field.style.setProperty('--meadow-picture',`url("${url}")`);else field.style.removeProperty('--meadow-picture');}}
+    if(['failed','slow'].includes(status))showArtRecovery();else dismissArtRecovery();
   }
 });
+function recoverVisiblePictures(){
+  for(const element of document.querySelectorAll('[data-picture-url]'))if(['failed','slow'].includes(pictures.status(element.dataset.pictureUrl))){
+    pictures.load(element.dataset.pictureUrl,{retry:true});element.dataset.pictureStatus='pending';element.innerHTML=picturePlaceholder('pending');
+  }
+  if(page==='garden'){const url=pictureFor(meadowPicture,{},document.baseURI)?.url;if(['failed','slow'].includes(pictures.status(url)))pictures.load(url,{retry:true});}
+  document.body.dispatchEvent(new Event('xiaoya-retry-art'));
+}
+function retryPictures(){recoverVisiblePictures();return retryArtPack();}
 function picture(story,frame,moving=false,{alternate=false,phase='request',context=story.event.contexts[0]}={}){
   const options={frame,alternate,phase},asset=pictureFor(story,options,document.baseURI);
   for(const next of pictureSequence(story,options,document.baseURI))pictures.load(next.url);
   const ready=asset&&pictures.status(asset.url)==='ready';
-  const fallback=alternate?assessmentFrame(story.event,context,phase):storyFrame(story,frame);
   const label=alternate?(phase==='resolved'?context.resolution:context.request)||context.prompt||story.frames[frame]:story.frames[frame];
-  return `<div class="story-picture ${ready?asset.layout==='single'?'single-picture':'':'vector-picture'} ${moving?'moving':''}" role="img" aria-label="${esc(label)}" data-story-frame="${frame}"${alternate?` data-alternate="true" data-picture-phase="${phase}"`:''}${asset?` data-picture-id="${story.id}" data-picture-url="${esc(asset.url)}" data-picture-layout="${asset.layout}" data-picture-status="${pictures.status(asset.url)}"`:''} style="${ready?`--picture:url('${esc(asset.url)}');`:''}--x:${frame%2?100:0}%;--y:${frame>1?100:0}%">${ready?'':fallback}</div>`;
+  return `<div class="story-picture ${ready&&asset.layout==='single'?'single-picture':''} ${moving?'moving':''}" role="group" aria-label="${esc(label)}" data-story-frame="${frame}"${alternate?` data-alternate="true" data-picture-phase="${phase}"`:''} data-picture-status="${asset?pictures.status(asset.url):'missing'}"${asset?` data-picture-id="${story.id}" data-picture-url="${esc(asset.url)}" data-picture-layout="${asset.layout}"`:''} style="${ready?`--picture:url('${esc(asset.url)}');`:''}--x:${frame%2?100:0}%;--y:${frame>1?100:0}%">${ready?'':picturePlaceholder(asset?pictures.status(asset.url):'missing')}</div>`;
 }
 function cancelStory(s){s.storyGeneration++;clearTimeout(s.storyTimer);s.storyDelayFinish?.(false);s.storyDelayFinish=null;s.storyRunning=false;}
 function currentStory(s,g){return session===s&&s.storyGeneration===g&&s.phase==='story'&&!modal&&!document.hidden;}
@@ -268,7 +278,7 @@ async function playStory(){const s=session;if(!s)return;cancelStory(s);cancelAtt
     if(!await delay(s,g,i<frames.length-1?650:180))return;
   }
   const asset=pictureFor(s.story,{frame:s.frame},document.baseURI);
-  if(s.storyHintPending||s.event.audioPack==='phrases-v015'&&(!asset||pictures.status(asset.url)!=='ready')){
+  if(s.storyHintPending||s.event.hintAudio&&(!asset||pictures.status(asset.url)!=='ready')){
     // Explain a slow/missing scene using its prerecorded hint; never invent a visual meaning.
     // Keep a failed explanation pending even if its picture arrives before the retry.
     s.storyHintPending=true;
@@ -353,14 +363,13 @@ async function finish(){
   const s=session;if(!s||s.phase!=='resolved'||s.finishing)return;const generation=uiGeneration;s.finishing=true;render();
   // A failed reward save may open a modal and clear temporary recording state.
   // Keep the completed practice identity stable for retries, including midnight.
-  s.rewardVariant??=gardenVariant;
+  s.rewardVariant??='b';
   s.practiceRecord??={roundId:s.id,eventId:s.event.id,date:effectiveEvidence(state).find(e=>e.attemptId===s.attemptId)?.date||today(),attemptId:s.attemptId||null,mode:s.practiceMode||'free',rewardVariant:s.assessmentMode?null:s.rewardVariant};
-  const giveReward=s.rewardVariant==='b'?meadow.rewardRound:rewardRound;
   if(!await savePractice(s)){s.finishing=false;return;}
   if(s.assessmentMode){s.finishing=false;if(session===s&&generation===uiGeneration&&!document.hidden&&!modal)navigate('parent');return;}
-  // A requested completion must finish crediting its original garden even if
+  // A requested completion must finish crediting the free garden even if
   // navigation or a cross-tab event happens while its storage lock is queued.
-  const saved=await gardenChange(latest=>giveReward(latest,{roundId:s.id,eventId:s.event.id,date:s.practiceRecord.date}),s.rewardVariant);s.finishing=false;
+  const saved=await gardenChange(latest=>meadow.rewardRound(latest,{roundId:s.id,eventId:s.event.id,date:s.practiceRecord.date}));s.finishing=false;
   if(!saved||session!==s){if(!modal&&!document.hidden&&(session===s||['home','garden'].includes(page)))render();return;}
   rewardReceipt=null;rewardSelection=null;s.phase='reward';
   // Keep the receipt ready to resume, but never let a queued completion speak
@@ -369,17 +378,17 @@ async function finish(){
   stopSpeech();render();effects.play('reward',{target:document.querySelector('.reward-treasure')});feedbackVoice(()=>{if(generation===uiGeneration&&session===s&&s.phase==='reward'&&!modal&&!document.hidden)rewardVoice();});
 }
 function rewardView(){
-  const pending=gardenVariant==='b'?meadow.pendingRewards(meadowState)[0]:null;
+  const pending=meadow.pendingRewards(meadowState)[0];
   if(pending){
     const selected=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);
     const card=(choice,label,amount,resource,purpose)=>`<button class="reward-choice ${choice==='water'?'water-choice':''}" data-action="choose-${choice}" data-reward-choice="${choice}" aria-pressed="${selected===choice}" ${rewardBusy?'disabled':''} aria-label="${label}，点一下听用途"><span class="reward-choice-resource">${resource}<b>+${amount}</b></span><span class="reward-purpose" aria-hidden="true"><span>→</span>${purpose}</span>${selected===choice?`<span class="reward-selected" aria-hidden="true">${icon('check',24)}</span>`:''}</button>`;
     return `${header()}<main class="reward-view" data-phase="reward" data-choice="true">${balance()}<div class="reward-buddy">${buddy('happy')}</div><div class="reward-choices">${card('shells',`${amounts.shells}枚贝壳可以买种子`,amounts.shells,shellArt(),packArt())}${card('water',`${amounts.water}滴水可以浇花`,amounts.water,dropArt(),canArt())}</div><div class="reward-confirm-slot">${selected?primary('confirm-reward',`收下${selected==='shells'?`${amounts.shells}枚贝壳`:`${amounts.water}滴水`}小礼物`,`${icon('gift',48)}<span class="confirm-resource" aria-hidden="true">${selected==='shells'?shellArt():dropArt()}</span>`,rewardBusy?'disabled aria-busy="true"':''):''}</div></main>`;
   }
-  const isB=gardenVariant==='b',round=isB?(meadowState.rounds.find(r=>r.roundId===rewardReceipt)|| (session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1))):null,receipt=round?.reward,amounts=round?meadow.roundReward(meadowState,round.roundId):{shells:2,water:3},shells=!isB?3:receipt==='water'?0:amounts.shells,water=!isB?2:receipt==='shells'?0:amounts.water;
-  return `${header()}<main class="reward-view" data-phase="reward" data-choice="false"><div class="celebration" aria-hidden="true">${Array.from({length:10},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><div class="reward-buddy">${buddy('happy')}</div><div class="reward-treasure">${shells?`<button class="reward-resource" data-action="shell-purpose" aria-label="${shells}枚贝壳，点一下听用途">${shellArt()}<b>+${shells}</b></button>`:''}${water?`<button class="reward-resource" data-action="water-purpose" aria-label="${water}滴水，点一下听用途">${dropArt()}<b>+${water}</b></button>`:''}</div>${primary('garden','把奖励带进我的小花园',plantArt(FLOWERS[0],2))}</main>`;
+  const round=(meadowState.rounds.find(r=>r.roundId===rewardReceipt)|| (session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1))),receipt=round?.reward,amounts=round?meadow.roundReward(meadowState,round.roundId):{shells:2,water:3},shells=receipt==='water'?0:amounts.shells,water=receipt==='shells'?0:amounts.water;
+  return `${header()}<main class="reward-view" data-phase="reward" data-choice="false"><div class="celebration" aria-hidden="true">${Array.from({length:10},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><div class="reward-buddy">${buddy('happy')}</div><div class="reward-treasure">${shells?`<button class="reward-resource" data-action="shell-purpose" aria-label="${shells}枚贝壳，点一下听用途">${shellArt()}<b>+${shells}</b></button>`:''}${water?`<button class="reward-resource" data-action="water-purpose" aria-label="${water}滴水，点一下听用途">${dropArt()}<b>+${water}</b></button>`:''}</div>${primary('garden','把奖励带进我的小花园',plantArt(meadow.FLOWERS[0],2))}</main>`;
 }
 function previewReward(choice){
-  if(gardenVariant!=='b'||rewardBusy||modal||!(page==='reward'||session?.phase==='reward'))return;
+  if(rewardBusy||modal||!(page==='reward'||session?.phase==='reward'))return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||!['shells','water'].includes(choice))return;
   cancelFeedbackVoice();stopSpeech();rewardSelection={roundId:round.roundId,choice};render();rewardVoice();
 }
@@ -389,62 +398,56 @@ function confirmReward(){
   return collectReward(selected.choice,selected.roundId);
 }
 async function collectReward(choice,roundId){
-  if(gardenVariant!=='b'||rewardBusy)return;
+  if(rewardBusy)return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||round.roundId!==roundId)return;
   rewardBusy=true;cancelFeedbackVoice();stopSpeech();render();const generation=uiGeneration;
-  try{const saved=await gardenChange(latest=>meadow.claimReward(latest,round.roundId,choice),'b');if(!saved||modal||generation!==uiGeneration)return;rewardSelection=null;rewardReceipt=round.roundId;render();effects.play('reward',{target:document.querySelector('.reward-treasure')});feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&(page==='reward'||session?.phase==='reward'))rewardVoice();});}
+  try{const saved=await gardenChange(latest=>meadow.claimReward(latest,round.roundId,choice));if(!saved||modal||generation!==uiGeneration)return;rewardSelection=null;rewardReceipt=round.roundId;render();effects.play('reward',{target:document.querySelector('.reward-treasure')});feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&(page==='reward'||session?.phase==='reward'))rewardVoice();});}
   finally{rewardBusy=false;if(!modal&&(page==='reward'||session?.phase==='reward'))render();}
 }
 function showPendingReward(){rewardReceipt=null;navigate('reward');rewardVoice();}
-function gardenView(){if(gardenVariant==='b'){const background=pictureFor(meadowPicture,{},document.baseURI);pictures.load(background.url);return meadowView({state:meadowState,header:header(),balance:balance(),challengeEntry:challengeFlag(challengeSummary(),{invite:!!challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})}),specialPending:meadow.pendingChallengeSeeds(meadowState).length>0,feedback,tool:meadowTool,backgroundUrl:pictures.status(background.url)==='ready'?background.url:null});}const next=gardenNextAction(garden),seed=garden.pendingSeed,thirsty=garden.plants.find(p=>p.waterings<2);const main=next==='plant'?primary('plant','把种子种进花盆',plantArt(null,-1)):next==='water'?primary('water','给小种子浇一滴水',canArt()):next==='pack'?primary('pack','用三枚贝壳打开种子惊喜包',packArt()):primary('next-event','再玩一个故事，收集贝壳和水',icon('play',46));return `${header()}<main class="garden-view" data-garden-next="${next}" data-guidance="${garden.plants.length>=3?'quiet':'new'}">${balance()}<div class="garden-landscape ${feedback?.kind==='bloom'?'blooming':''}"><div class="garden-cloud" aria-hidden="true"></div><div class="garden-plants">${garden.plants.map(p=>`<button class="garden-plant ${next==='water'&&p.id===thirsty?.id?'thirsty':''} ${feedback?.plantId===p.id?'just-watered':''}" data-plant="${p.id}" ${seed||p.waterings<2&&garden.water===0?'disabled':''} aria-label="${p.waterings===2?`${esc(flowerFor(p.flowerId).name)}，点一下和小花打招呼`:`小种子已经浇了${p.waterings}次水${garden.water>0?'，点一下浇水':''}`}">${plantArt(flowerFor(p.flowerId),p.waterings)}${p.waterings<2?`<span class="growth-drops" aria-hidden="true">${[1,2].map(i=>`<i class="${i<=p.waterings?'filled':''}"></i>`).join('')}</span>`:''}</button>`).join('')}</div>${feedback?.kind==='bloom'?'<span class="bloom-sparkles" aria-hidden="true">✦ ✧ ✦</span>':''}${seed?`<div class="seed-reveal" aria-hidden="true">${seedArt()}</div>`:''}</div><div class="garden-action">${main}${next==='pack'?`<span class="cost" aria-label="需要三枚贝壳">${shellArt()}<b>3</b></span>`:''}</div><div class="garden-footer">${next!=='learn'?button('next-event','再玩一个故事','play'):''}</div></main>`;}
+function gardenView(){const background=pictureFor(meadowPicture,{},document.baseURI);pictures.load(background.url);return meadowView({state:meadowState,header:header(),balance:balance(),challengeEntry:challengeFlag(challengeSummary(),{invite:!!challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})}),specialPending:meadow.pendingChallengeSeeds(meadowState).length>0,feedback,tool:meadowTool,backgroundUrl:pictures.status(background.url)==='ready'?background.url:null});}
 function gardenIsActive(){return page==='garden'&&!modal&&!document.hidden;}
 function cancelGardenReminder(){clearTimeout(gardenIdleTimer);gardenIdleTimer=null;gardenIdleGeneration++;}
 function scheduleGardenReminder(){cancelGardenReminder();if(gmWorkbenchOpen||!gardenIsActive())return;const generation=gardenIdleGeneration;gardenIdleTimer=setTimeout(()=>{gardenIdleTimer=null;if(generation===gardenIdleGeneration&&gardenIsActive())gardenGuide({reminder:true});},15000);}
 async function gardenGuide({automatic=false,reminder=false,cue}={}){cancelGardenReminder();if(!gardenIsActive())return;const generation=gardenIdleGeneration;
-  if(!automatic||activeGarden().plants.length<3){if(gardenVariant==='b')await meadowGuide(cue);else await narrate(cue||{plant:'seed',water:'water',pack:'open-pack',learn:'next'}[gardenNextAction(garden)]);}
+  if(!automatic||activeGarden().plants.length<3)await meadowGuide(cue);
   // A reminder is one-shot. Only a new interaction starts another idle period.
   if(!reminder&&generation===gardenIdleGeneration&&gardenIsActive())scheduleGardenReminder();
 }
-function enterGarden(){if(gardenVariant==='b'&&meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(gardenVariant==='b'&&!meadowState.pendingSeed&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){inviteChallenge().catch(()=>{});scheduleGardenReminder();}else gardenGuide({automatic:true});}
-function gardenFeedback(kind,plantId){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId};render();const target=plantId?document.querySelector(`[data-plant="${plantId}"],[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-reveal,.seed-tool');effects.play(kind==='planted'?'plant':kind,{target});feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
+function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(!meadowState.pendingSeed&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){inviteChallenge().catch(()=>{});scheduleGardenReminder();}else gardenGuide({automatic:true});}
+function gardenFeedback(kind,plantId){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId};render();const target=plantId?document.querySelector(`[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-tool');effects.play(kind==='planted'?'plant':kind,{target});feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
 function feedbackGuide(cue){if(activeGarden().plants.length>=3)return gardenGuide({automatic:true,cue});const expected=feedback;feedbackVoice(()=>{if(feedback===expected&&gardenIsActive())gardenGuide({automatic:true,cue});});}
-async function pack(){if(gardenVariant==='b')return meadowPack();if(await gardenChange(openSeedPack)){if(page!=='garden')return;gardenFeedback('seed');feedbackGuide('seed');}else if(!modal)render();}
-async function plant(){if(await gardenChange(plantSeed)){if(page!=='garden')return;gardenFeedback('planted',garden.plants[garden.plants.length-1].id);feedbackGuide('water');}else if(!modal)render();}
-async function water(id){const target=id||garden.plants.find(p=>p.waterings<2)?.id;if(!target)return;if(await gardenChange(latest=>waterPlant(latest,target))){if(page!=='garden')return;const p=garden.plants.find(p=>p.id===target);gardenFeedback(p.waterings===2?'bloom':'water',target);feedbackGuide(p.waterings===2?'bloom':'water');}else if(!modal){render();gardenGuide({automatic:true});}}
-function greetPlant(id){gardenFeedback('bloom',id);feedbackGuide('bloom');}
 
-function rewardVoice(){if(gardenVariant!=='b')return narrate('reward');const pending=meadow.pendingRewards(meadowState)[0];if(pending){const choice=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);return sound(voice(choice==='water'&&amounts.water===2?'flow-water-choice-v13':choice?`flow-${choice}`:'flow-choice'),choice?['confirm-reward']:['choose-shells','choose-water']);}const round=meadowState.rounds.find(r=>r.roundId===rewardReceipt)||(session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1)),receipt=round?.reward,newReward=round?.rewardVersion===3;return sound(voice(`economy-${receipt==='shells'?'shells':receipt==='water'?newReward?'water-v13':'water':newReward?'starter-v13':'starter'}`),['garden']);}
-function selectVariant(value){if(!['a','b'].includes(value))return;try{appStorage.setItem(VARIANT_KEY,value);gardenVariant=value;const url=new URL(location.href);url.searchParams.delete('garden');history.replaceState(null,'',url);navigate('home');}catch{showError('花园选择没有保存，请重试。');}}
-function selectMeadowTool(tool){if(gardenVariant!=='b'||!gardenIsActive())return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();if(tool==='can'&&!meadowState.water)sound(voice('economy-water-short'),['next-event']);effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`));}
+function rewardVoice(){const pending=meadow.pendingRewards(meadowState)[0];if(pending){const choice=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);return sound(voice(choice==='water'&&amounts.water===2?'flow-water-choice-v13':choice?`flow-${choice}`:'flow-choice'),choice?['confirm-reward']:['choose-shells','choose-water']);}const round=meadowState.rounds.find(r=>r.roundId===rewardReceipt)||(session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1)),receipt=round?.reward,newReward=round?.rewardVersion===3;return sound(voice(`economy-${receipt==='shells'?'shells':receipt==='water'?newReward?'water-v13':'water':newReward?'starter-v13':'starter'}`),['garden']);}
+function selectMeadowTool(tool){if(!gardenIsActive())return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();if(tool==='can'&&!meadowState.water)sound(voice('economy-water-short'),['next-event']);effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`));}
 function meadowGuide(cue){const action=meadow.nextAction(meadowState);if(cue==='bloom')return sound(voice('meadow-bloom'));if(cue==='giant')return sound(voice('meadow-giant'),['meadow-seed']);if(action==='challenge-seed')return sound(voice('challenge-seed'),['challenge-seed']);if(action==='reward')return sound(voice('economy-earned'),['collect-reward']);if(action==='pack')return sound(voice('economy-shop-ready'),['shop']);if(action==='learn')return meadowState.plants.some(p=>p.waterings<meadow.ALL_FLOWERS.find(f=>f.id===p.flowerId).waterNeeded)?sound(voice('economy-water-short'),['next-event']):narrate('next');return sound(voice(action==='plant'?'meadow-seed':'meadow-water-beside'),[action==='plant'?'meadow-seed':'meadow-can']);}
-async function meadowPack(){if(meadowBusy)return;meadowBusy=true;try{if(await gardenChange(meadow.openSeedPack)){if(!gardenIsActive()||gardenVariant!=='b')return;meadowTool=null;gardenFeedback('seed');feedbackGuide(meadow.ALL_FLOWERS.find(f=>f.id===meadowState.pendingSeed.flowerId).giant?'giant':'seed');}}finally{meadowBusy=false;}}
 async function openShop(){
-  if(gardenVariant!=='b'||shopBusy)return;
+  if(shopBusy)return;
   if(meadowState.pendingSeed||meadow.pendingRewards(meadowState).length)return enterGarden();
   shopBusy=true;const generation=uiGeneration;
-  try{await gardenChange(latest=>meadow.ensureShop(latest,today()),'b');if(generation!==uiGeneration||modal)return;navigate('shop');effects.prepare();if(!prefs.shopSeen){sound(voice('economy-shop'));savePrefs({...prefs,shopSeen:true});}}
+  try{await gardenChange(latest=>meadow.ensureShop(latest,today()));if(generation!==uiGeneration||modal)return;navigate('shop');effects.prepare();if(!prefs.shopSeen){sound(voice('economy-shop'));savePrefs({...prefs,shopSeen:true});}}
   finally{shopBusy=false;}
 }
 function shortOnShells(canReserve=false){const wallet=document.querySelector('.wallet');wallet?.classList.remove('short-on-shells');if(wallet)void wallet.offsetWidth;wallet?.classList.add('short-on-shells');sound(voice(canReserve?'economy-short':'economy-shells-short'),[canReserve?'reserve-offer':'next-event']);}
-function revealPurchasedSeed(generation){if(generation!==uiGeneration||modal||page!=='shop'||gardenVariant!=='b')return;navigate('garden');meadowTool='seed';gardenFeedback('seed');feedbackGuide(meadow.ALL_FLOWERS.find(f=>f.id===meadowState.pendingSeed.flowerId).giant?'giant':'seed');}
+function revealPurchasedSeed(generation){if(generation!==uiGeneration||modal||page!=='shop')return;navigate('garden');meadowTool='seed';gardenFeedback('seed');feedbackGuide(meadow.ALL_FLOWERS.find(f=>f.id===meadowState.pendingSeed.flowerId).giant?'giant':'seed');}
 async function buyMystery(){
-  if(shopBusy||page!=='shop'||gardenVariant!=='b')return;if(meadowState.shells<meadow.ECONOMY.packPrice)return shortOnShells();
-  shopBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.openSeedPack(latest),'b'))revealPurchasedSeed(generation);else if(generation===uiGeneration&&!modal)render();}finally{shopBusy=false;}
+  if(shopBusy||page!=='shop')return;if(meadowState.shells<meadow.ECONOMY.packPrice)return shortOnShells();
+  shopBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.openSeedPack(latest)))revealPurchasedSeed(generation);else if(generation===uiGeneration&&!modal)render();}finally{shopBusy=false;}
 }
 async function buySeed(id,source){
-  if(shopBusy||page!=='shop'||gardenVariant!=='b')return;
+  if(shopBusy||page!=='shop')return;
   const offer=source==='reserved'?meadowState.shop.reserved:meadowState.shop.offer;
   if(!offer||offer.id!==id)return;if(meadowState.shells<offer.price)return shortOnShells(source==='shop'&&meadowState.shop.reserved?.id!==id);
-  shopBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.buyOffer(latest,id,source),'b'))revealPurchasedSeed(generation);else if(generation===uiGeneration&&!modal)render();}finally{shopBusy=false;}
+  shopBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.buyOffer(latest,id,source)))revealPurchasedSeed(generation);else if(generation===uiGeneration&&!modal)render();}finally{shopBusy=false;}
 }
 async function reserveSeed(id,replace=false){
-  if(shopBusy||page!=='shop'||gardenVariant!=='b')return;
+  if(shopBusy||page!=='shop')return;
   const offer=meadowState.shop.offer;if(!offer||offer.id!==id){if(modal?.type==='replace-seed')closeModal();return;}
   if(meadowState.shop.reserved&&meadowState.shop.reserved.id!==id&&!replace){openModal({type:'replace-seed',offerId:id});sound(voice('economy-replace'));return;}
-  shopBusy=true;const generation=uiGeneration;try{const saved=await gardenChange(latest=>meadow.reserveOffer(latest,id,{replace}),'b');if(generation!==uiGeneration||modal?.type==='error')return;modal=null;render();if(saved)effects.play('seed',{target:document.querySelector('.reserve-seed')});sound(voice('economy-reserve'));}finally{shopBusy=false;}
+  shopBusy=true;const generation=uiGeneration;try{const saved=await gardenChange(latest=>meadow.reserveOffer(latest,id,{replace}));if(generation!==uiGeneration||modal?.type==='error')return;modal=null;render();if(saved)effects.play('seed',{target:document.querySelector('.reserve-seed')});sound(voice('economy-reserve'));}finally{shopBusy=false;}
 }
-async function meadowPlant(point){if(meadowBusy||!meadowState.pendingSeed||gardenVariant!=='b'||!gardenIsActive())return;meadowBusy=true;try{if(await gardenChange(latest=>meadow.plantSeed(latest,point))){if(!gardenIsActive()||gardenVariant!=='b')return;meadowTool=null;gardenFeedback('planted',meadowState.plants[meadowState.plants.length-1].id);feedbackGuide('water');}}finally{meadowBusy=false;}}
-async function meadowWater(id){if(meadowBusy||gardenVariant!=='b'||!gardenIsActive())return;const plant=meadowState.plants.find(p=>p.id===id);if(!plant)return;const flower=meadow.ALL_FLOWERS.find(f=>f.id===plant.flowerId);if(plant.waterings===flower.waterNeeded){gardenFeedback('bloom',id);return;}if(meadowTool!=='can'){sound(voice('meadow-water-beside'),['meadow-can']);return;}if(!meadowState.water){sound(voice('economy-water-short'),['next-event']);return;}meadowBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.waterPlant(latest,id))){if(generation!==uiGeneration||document.hidden||modal||!gardenIsActive()||gardenVariant!=='b')return;const p=meadowState.plants.find(p=>p.id===id),bloom=p.waterings===flower.waterNeeded;gardenFeedback(bloom?'bloom':'water',id);if(bloom)feedbackGuide('bloom');else scheduleGardenReminder();}}finally{meadowBusy=false;}}
+async function meadowPlant(point){if(meadowBusy||!meadowState.pendingSeed||!gardenIsActive())return;meadowBusy=true;try{if(await gardenChange(latest=>meadow.plantSeed(latest,point))){if(!gardenIsActive())return;meadowTool=null;gardenFeedback('planted',meadowState.plants[meadowState.plants.length-1].id);feedbackGuide('water');}}finally{meadowBusy=false;}}
+async function meadowWater(id){if(meadowBusy||!gardenIsActive())return;const plant=meadowState.plants.find(p=>p.id===id);if(!plant)return;const flower=meadow.ALL_FLOWERS.find(f=>f.id===plant.flowerId);if(plant.waterings===flower.waterNeeded){gardenFeedback('bloom',id);return;}if(meadowTool!=='can'){sound(voice('meadow-water-beside'),['meadow-can']);return;}if(!meadowState.water){sound(voice('economy-water-short'),['next-event']);return;}meadowBusy=true;const generation=uiGeneration;try{if(await gardenChange(latest=>meadow.waterPlant(latest,id))){if(generation!==uiGeneration||document.hidden||modal||!gardenIsActive())return;const p=meadowState.plants.find(p=>p.id===id),bloom=p.waterings===flower.waterNeeded;gardenFeedback(bloom?'bloom':'water',id);if(bloom)feedbackGuide('bloom');else scheduleGardenReminder();}}finally{meadowBusy=false;}}
 
 
 const resultNames={independent:'独立表达',supported:'有帮助才表达',not_yet:'尚未观察到',unclear:'无法确定',device_error:'设备未完成'};
@@ -460,24 +463,24 @@ function phraseLibrary(rounds){
     return `<div class="checkup-row" data-phrase="${story.event.lessonId}"><div><strong>${esc(story.event.chinese)}</strong><p class="phrase-preview">${esc(story.event.english)}</p><p>参与 ${count} 次 · 机器候选 ${status.candidateCount} 次 · 家长确认独立 ${status.independentCount} 次${status.retained?' · 已有跨日换情境证据':''}</p></div><button data-story="${story.id}">听和说</button><button data-checkup="${story.id}">${story.event.contexts.length>1?'生活验收':'熟悉情境验收'}</button></div>`;}).join('');
   return `<section class="parent-card story-library"><details><summary>表达库 · 新增 ${added.length} 句日常口语</summary><h2>熟悉、顺口、生活里用得到</h2><p>每句只有一个学习目标。普通复习使用最初见过的画面，点耳朵只重听这一句。验收由家长主动开启。已有第二情境的句子，在有独立表达证据后才换图；本次新句先用熟悉画面验证独立表达。</p><details class="new-phrase-pack" open><summary>新增 ${added.length} 句 · 日常口语</summary><p>接在原核心课程之后，也可以在这里直接试听和练习。</p>${rows(added)}</details><details class="original-phrases"><summary>原有 ${original.length} 句核心表达</summary>${rows(original)}</details><details class="extension-phrases"><summary>${extras.length} 句扩展表达与旧记录</summary><p>旧记录继续保留。新学先走核心表达；已经练过的扩展表达仍按时复习。同一句的多个旧场景合并统计。</p>${rows(extras)}</details></details></section>`;
 }
-function parentView(){const garden=activeGarden(),rounds=allRounds();const records=effectiveEvidence(state),recent=records.slice(-20).reverse(),spoken=records.filter(r=>r.kind==='speech'),matched=spoken.filter(r=>['independent','supported'].includes(r.result));return `${header()}<main class="parent-view"><div class="parent-intro"><div><span class="eyebrow">陪伴手记</span><h1>花在长，表达也慢慢长。</h1><p>奖励记录参与，能力看真实表达。故事里听过示范，就如实记为“有帮助”。</p></div><div class="parent-companion" aria-hidden="true">${buddy()}</div></div>${storageProblem?`<section class="parent-card attention"><h2>本机记录需要处理</h2><p>${esc(storageProblem)}</p><button data-action="export">导出原记录</button><p>尚未覆盖原记录。</p></section>`:''}<div class="parent-stats"><span><b>${garden.rounds.length}</b> 次故事参与</span><span><b>${spoken.length}</b> 次表达记录</span><span><b>${garden.plants.filter(p=>p.waterings===(gardenVariant==='b'?meadow.ALL_FLOWERS.find(f=>f.id===p.flowerId).waterNeeded:2)).length}</b> 朵小花</span></div>${garden.rounds.length>=3&&matched.length===0?'<section class="parent-card attention"><h2>已经在玩，还没观察到会说</h2><p>目前没有合适表达的证据。先陪孩子在真实生活里试一句，不用继续解锁代替开口练习。未开启识别或未做观察，也会出现这种情况。</p></section>':''}${practicePanel()}${phraseLibrary(rounds)}${challengeParentPanel()}<section class="parent-card"><h2>内置声音</h2><p data-audio-pack-status role="status">${esc(audioPackMessage())}</p><button data-action="audio-pack-retry">重新检查声音</button><p>中文引导和三种英语音色均为已配好的本地文件，不需要连接配音服务。</p></section><section class="parent-card"><h2>选择说英语的伙伴</h2><p>三位伙伴的英语都已提前配好。点小耳朵试听，选好后故事和示范一起切换。</p><div class="voice-grid">${VOICES.map(v=>`<div class="voice-option ${v.id===selectedVoice?'selected':''}"><button data-select-voice="${v.id}" aria-pressed="${v.id===selectedVoice}"><span class="voice-portrait">${voicePortrait(v.id)}</span>${esc(v.nickname||v.name)}${v.id===selectedVoice?' ✓':''}</button><button data-preview-voice="${v.id}" aria-label="试听${esc(v.nickname||v.name)}">${icon('ear',26)}</button></div>`).join('')}</div></section><section class="parent-card"><h2>录音与自动反馈</h2><p>本机识别给出 0–3 颗词句匹配星，帮助孩子重试；它不是发音准确率，也不会自动判定稳定掌握。录音和识别文本都不上传、不保存，离开练习即释放。</p><p>首次录音按需准备约 81 MB 的本地识别资源，准备好后支持离线。小声录音会先调整音量，再独立听写并核对词句。未准备好或麦克风不可用时，仍能听示范、回听自己的声音和继续参与。</p><div class="parent-actions"><button data-action="mic-settings">${prefs.mic?'查看麦克风设置':'允许本机录音'}</button><button data-action="recognition">${audio.speechReady()?'本地识别已就绪':'准备本机识别'}</button><button data-action="export">导出记录</button></div><p id="model-status" role="status"></p></section><section class="parent-card"><h2>花园 A / B 体验</h2><p>切换后从首页进入。两座花园分别保存种子、贝壳和花朵，学习记录共用；切换不会清空任何花园。</p><div class="garden-variant-options"><button data-variant="a" aria-pressed="${gardenVariant==='a'}"><strong>A · 花盆花园</strong><span>两次浇水开花，熟悉的玩法</span></button><button data-variant="b" aria-pressed="${gardenVariant==='b'}"><strong>B · 自由小花园</strong><span>自由播种、点水滴浇水、巨型花和彩色蝴蝶结</span></button></div><p>A：每次完整参与获得 3 枚贝壳和 2 滴水。B：新用户第一轮赠 2 贝壳和 3 水，之后每轮选 2 贝壳或 2 水。每组挑战首次完成额外获得 4 贝壳和 6 水；完成 3、6 组不同挑战，各获得一颗限定种子。已有余额和旧奖励保留。惊喜种子 2 贝壳，指定普通花 3、蝴蝶结花 6、巨型花 8；普通花 5 水、巨型花 10 水。商店每日换一款，买后即补不同品种；可免费保留一包，直到买下或主动换掉。新用户惊喜包首包为雏菊，之后十二种等概率，可能重复；买定后刷新不会重抽。A 沿用固定序列、每袋 3 贝壳。没有真钱购买，参与奖励不表示学会。</p><p>旧版学习观察和家具收藏仍在本机保留并可导出；这一版不再展示选图、家具和文字探索流程。</p></section><section class="parent-card"><h2>最近的观察</h2>${recent.map(r=>`<div class="observation-row"><div><strong>${esc(EVENTS.find(e=>e.id===r.eventId)?.title)}</strong><p>${r.date} · ${r.kind==='listening'?'旧版听懂观察':resultNames[r.result]} · ${r.source==='machine'?'机器候选':'家长观察'}${r.helped?' · 有提示':''}${r.corrected?' · 已修正':''}</p></div>${r.kind==='speech'?`<button data-correct="${esc(r.attemptId)}">核对</button>`:''}</div>`).join('')||'<p>还没有表达观察。完成故事不会自动计为“学会”。</p>'}</section><p class="fine-print">小芽英语 ${esc(document.querySelector('meta[name="xiaoya-version"]')?.content)} · ${esc(document.querySelector('meta[name="xiaoya-build"]')?.content)} · 本机体验版</p></main>`;}
+function parentView(){const garden=activeGarden(),rounds=allRounds();const records=effectiveEvidence(state),recent=records.slice(-20).reverse(),spoken=records.filter(r=>r.kind==='speech'),matched=spoken.filter(r=>['independent','supported'].includes(r.result));return `${header()}<main class="parent-view"><div class="parent-intro"><div><span class="eyebrow">陪伴手记</span><h1>花在长，表达也慢慢长。</h1><p>奖励记录参与，能力看真实表达。故事里听过示范，就如实记为“有帮助”。</p></div><div class="parent-companion" aria-hidden="true">${buddy()}</div></div>${storageProblem?`<section class="parent-card attention"><h2>本机记录需要处理</h2><p>${esc(storageProblem)}</p><button data-action="export">导出原记录</button><p>尚未覆盖原记录。</p></section>`:''}<div class="parent-stats"><span><b>${garden.rounds.length}</b> 次故事参与</span><span><b>${spoken.length}</b> 次表达记录</span><span><b>${garden.plants.filter(p=>p.waterings===meadow.ALL_FLOWERS.find(f=>f.id===p.flowerId).waterNeeded).length}</b> 朵小花</span></div>${garden.rounds.length>=3&&matched.length===0?'<section class="parent-card attention"><h2>已经在玩，还没观察到会说</h2><p>目前没有合适表达的证据。先陪孩子在真实生活里试一句，不用继续解锁代替开口练习。未开启识别或未做观察，也会出现这种情况。</p></section>':''}${practicePanel()}${phraseLibrary(rounds)}${challengeParentPanel()}<section class="parent-card"><h2>内置声音</h2><p data-audio-pack-status role="status">${esc(audioPackMessage())}</p><button data-action="audio-pack-retry">重新检查声音</button><p>中文引导和三种英语音色均为已配好的本地文件，不需要连接配音服务。</p></section><section class="parent-card"><h2>离线插画</h2><p data-art-pack-status role="status">${esc(artPackMessage())}</p><button data-action="picture-retry">重新检查图片</button><p>全部插画校验完成后，重启电脑也能打开未看过的故事。资源未就绪会明确提示，不会替换成旧画风。</p></section><section class="parent-card"><h2>选择说英语的伙伴</h2><p>三位伙伴的英语都已提前配好。点小耳朵试听，选好后故事和示范一起切换。</p><div class="voice-grid">${VOICES.map(v=>`<div class="voice-option ${v.id===selectedVoice?'selected':''}"><button data-select-voice="${v.id}" aria-pressed="${v.id===selectedVoice}"><span class="voice-portrait">${voicePortrait(v.id)}</span>${esc(v.nickname||v.name)}${v.id===selectedVoice?' ✓':''}</button><button data-preview-voice="${v.id}" aria-label="试听${esc(v.nickname||v.name)}">${icon('ear',26)}</button></div>`).join('')}</div></section><section class="parent-card"><h2>录音与自动反馈</h2><p>本机识别给出 0–3 颗词句匹配星，帮助孩子重试；它不是发音准确率，也不会自动判定稳定掌握。录音和识别文本都不上传、不保存，离开练习即释放。</p><p>首次录音按需准备约 81 MB 的本地识别资源，准备好后支持离线。小声录音会先调整音量，再独立听写并核对词句。未准备好或麦克风不可用时，仍能听示范、回听自己的声音和继续参与。</p><div class="parent-actions"><button data-action="mic-settings">${prefs.mic?'查看麦克风设置':'允许本机录音'}</button><button data-action="recognition">${audio.speechReady()?'本地识别已就绪':'准备本机识别'}</button><button data-action="export">导出记录</button></div><p id="model-status" role="status"></p></section><section class="parent-card"><h2>自由小花园</h2><p>把种子放在喜欢的位置，点水壶，再点小苗旁的水滴浇水；每滴水都会让它长大一点。普通花需要 5 滴水，巨型花需要 10 滴水，也可以收集彩色蝴蝶结花。</p><p>新用户第一轮赠 2 贝壳和 3 水，之后每轮选 2 贝壳或 2 水。每组挑战首次完成额外获得 4 贝壳和 6 水；完成 3、6 组不同挑战，各获得一颗限定种子。已有余额和旧奖励保留。惊喜种子 2 贝壳，指定普通花 3、蝴蝶结花 6、巨型花 8。商店每日换一款，买后即补不同品种；可免费保留一包，直到买下或主动换掉。新用户惊喜包首包为雏菊，之后十二种等概率，可能重复；买定后刷新不会重抽。没有真钱购买，参与奖励不表示学会。</p><p>旧花盆花园和学习观察仍在本机保留并可导出；历史参与继续用于复习安排。本版统一使用自由种植花园。</p></section><section class="parent-card"><h2>最近的观察</h2>${recent.map(r=>`<div class="observation-row"><div><strong>${esc(EVENTS.find(e=>e.id===r.eventId)?.title)}</strong><p>${r.date} · ${r.kind==='listening'?'旧版听懂观察':resultNames[r.result]} · ${r.source==='machine'?'机器候选':'家长观察'}${r.helped?' · 有提示':''}${r.corrected?' · 已修正':''}</p></div>${r.kind==='speech'?`<button data-correct="${esc(r.attemptId)}">核对</button>`:''}</div>`).join('')||'<p>还没有表达观察。完成故事不会自动计为“学会”。</p>'}</section><p class="fine-print">小芽英语·自由花园版 ${esc(document.querySelector('meta[name="xiaoya-version"]')?.content)} · ${esc(document.querySelector('meta[name="xiaoya-build"]')?.content)} · 本机体验版</p></main>`;}
 function observation(attemptId=null){requireParent(()=>{const existing=attemptId?effectiveEvidence(state).find(r=>r.attemptId===attemptId):null;openModal({type:'observe',attemptId,existing,event:existing?EVENTS.find(e=>e.id===existing.eventId):session?.event,helped:existing?existing.helped:!!session?.helped,helpedLocked:!attemptId&&!!session?.helped});});}
 async function submitObservation(result){const m=modal,s=session;if(m?.type!=='observe'||!m.event||m.saving)return;m.saving=true;const helped=m.helpedLocked||!!document.querySelector('#observed-help')?.checked,exact=!!document.querySelector('#exact-phrase')?.checked,phraseId=exact&&['independent','supported'].includes(result)?m.event.lessonId:null;
   const evidenceHelped=!!(helped||s?.retryAfterAttemptId||s?.priorChallengeHelp),evidenceResult=evidenceHelped&&result==='independent'?'supported':result;
   const next=m.attemptId?correctEvidence(state,m.attemptId,{correctionId:uid(),result,helped,phraseId,date:today()}):recordEvidence(state,{attemptId:uid(),eventId:m.event.id,contextId:s.context.id,kind:'speech',result:evidenceResult,source:'parent',helped:evidenceHelped,phraseId,date:today()});if(!save(next)){m.saving=false;return;}if(s&&!m.attemptId){s.attemptId=next.evidence[next.evidence.length-1].attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result,source:'parent',helped})){m.saving=false;return;}s.helped=helped;s.phase='resolved';}if(modal===m)modal=null;render();}
-function render(){cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;const gardenScroll=document.querySelector('.garden-plants')?.scrollTop;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='event'?eventView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),hasSeed:meadow.pendingChallengeSeeds(meadowState).length>0,primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;renderModal();applyGuide();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}const plants=document.querySelector('.garden-plants');if(plants&&gardenScroll!==undefined)plants.scrollTop=gardenScroll;scheduleIdleHint();}
+function render(){cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='event'?eventView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),hasSeed:meadow.pendingChallengeSeeds(meadowState).length>0,primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;renderModal();applyGuide();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();}
 function renderModal(){const root=document.querySelector('#modal-root');if(!root)return;if(!modal){root.innerHTML='';return;}const m=modal;let html='';
   if(m.type==='gate')html=`<h2>请交给陪伴的大人</h2><label for="parent-answer">${m.a} + ${m.b} =</label><input id="parent-answer" inputmode="numeric" autocomplete="off" aria-label="计算结果"><button class="primary-button" data-action="gate-submit">进入</button><button data-action="close">回到孩子的世界</button>`;
   if(m.type==='mic')html='<h2>录下这一次声音</h2><p>点话筒后，等它亮起来再说。停顿后自动结束，也可再次点击结束，最长 12 秒。</p><p>录音只在当前页面内存中临时回听，不上传。首次使用时浏览器还会询问麦克风权限。授权后，进入说话环节会提前打开话筒，点击后才开始录音；闲置 20 秒或离开环节会关闭话筒。</p><button class="primary-button" data-action="allow-mic">允许孩子使用本机麦克风</button><button data-action="disable-mic">暂不使用录音</button><button data-action="close">返回</button>';
   if(m.type==='observe')html=`<h2>${m.attemptId?'核对这次观察':'这一次，孩子怎样表达？'}</h2><p>${esc(m.event?.title)} · ${esc(m.event?.chinese)}</p><p>意思合适就算表达，不必强求完整长句。没听清时选“无法确定”。</p><label class="check-label"><input id="observed-help" type="checkbox" ${m.helped?'checked':''} ${m.helpedLocked?'disabled':''}> 这次听过示范、中文解释或成人提示</label><label class="check-label"><input id="exact-phrase" type="checkbox" ${m.existing?.phraseId?'checked':''}> 确实听到了原句：${esc(m.event?.english)}</label>${session?.hasClip?'<button data-action="replay">回听这次声音</button>':''}<div class="observation-options">${Object.entries(resultNames).filter(([key])=>key!=='device_error').map(([key,label])=>`<button data-observation="${key}">${label}</button>`).join('')}</div><button data-action="close">返回</button>`;
   if(m.type==='replace-seed'){const offer=meadowState.shop.offer;html=`<h2 class="sr-only">换成这包种子吗？</h2><div class="reservation-picture">${offer&&offer.id===m.offerId?offerPicture(offer):''}</div><div class="reservation-choices"><button data-action="close" aria-label="继续保留原来的种子">${icon('house',28)}</button><button data-action="replace-reservation" aria-label="换成这包种子">${icon('check',28)}</button></div>`;}
   if(m.type==='collection')html=`<h2 class="sr-only">我的花朵收藏</h2>${meadowCollection(meadowState)}<button data-action="close" aria-label="回到小花园">${icon('check',32)}</button>`;
-  if(m.type==='error')html=`<h2>这一步还没保存</h2><p>${esc(m.message)}</p>${(hasPendingChallengeRecovery()||practice.entries.some(r=>r.rewardVariant&&!((r.rewardVariant==='b'?meadowState:garden).rounds.some(done=>done.roundId===r.roundId))))?'<button data-action="retry-rewards">重试领取奖励</button>':''}<button data-action="close">知道了</button>`;
+  if(m.type==='error')html=`<h2>这一步还没保存</h2><p>${esc(m.message)}</p>${(hasPendingChallengeRecovery()||practice.entries.some(r=>r.rewardVariant==='b'&&!meadowState.rounds.some(done=>done.roundId===r.roundId)))?'<button data-action="retry-rewards">重试领取奖励</button>':''}<button data-action="close">知道了</button>`;
   root.innerHTML=`<div class="modal-backdrop"><section class="modal-card" role="dialog" aria-modal="true" aria-label="${m.type==='gate'?'家长入口':'小芽提示'}"><div class="modal-emblem" aria-hidden="true">${icon(m.type==='gate'?'parent':m.type==='collection'?'star':m.type==='mic'?'mic':'leaf')}</div>${html}</section></div>`;
 }
-function exportState(){const content=storageProblem?{problem:storageProblem,rawState:appStorage.getItem(STORAGE_KEY),rawGarden:appStorage.getItem(GARDEN_KEY),rawMeadow:appStorage.getItem(meadow.MEADOW_KEY),rawPractice:appStorage.getItem(PRACTICE_KEY),rawChallenges:appStorage.getItem(challenge.CHALLENGE_KEY)}:{product:'xiaoya-english',exported:today(),state,garden,meadow:meadowState,practice,challenges,gardenVariant,preferences:prefs,voice:selectedVoice};if(GM_SANDBOX)content.testing={mode:'gm-simulation',realLearningEvidence:false};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${GM_SANDBOX?'GM模拟记录-':'小芽英语-'}${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+function exportState(){const content=storageProblem?{problem:storageProblem,rawState:appStorage.getItem(STORAGE_KEY),rawGarden:appStorage.getItem(LEGACY_GARDEN_KEY),rawMeadow:appStorage.getItem(meadow.MEADOW_KEY),rawPractice:appStorage.getItem(PRACTICE_KEY),rawChallenges:appStorage.getItem(challenge.CHALLENGE_KEY)}:{product:'xiaoya-english',exported:today(),state,garden:gardenHistory.archive,rawGarden,meadow:meadowState,practice,challenges,gardenVariant:'b',preferences:prefs,voice:selectedVoice};if(GM_SANDBOX)content.testing={mode:'gm-simulation',realLearningEvidence:false};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${GM_SANDBOX?'GM模拟记录-':'小芽英语-'}${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 async function recognition(){if(GM_SANDBOX)return toast('免录音测试不会下载识别模型；退出 GM 后可测试真实识别。');const target=document.querySelector('#model-status');if(target)target.textContent='准备本机识别资源，可以继续浏览，请保持本页打开。';try{await audio.prepareRecognition(value=>{const el=document.querySelector('#model-status');if(el)el.textContent=typeof value==='string'?value:'正在准备…';});toast('本机识别已准备好。');if(page==='parent')render();}catch{toast('识别资源没有准备完成，可以重试。');}}
-const actions={challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro')),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome')),'audio-pack-retry':retryAudioPack,shop:openShop,'shop-pack':buyMystery,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>previewReward('shells'),'choose-water':()=>previewReward('water'),'confirm-reward':confirmReward,'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose']),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose']),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,pack,plant,water:()=>water(),'garden-guide':gardenGuide,'reward-voice':rewardVoice,'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});sound(voice('meadow-collection'));},'assessment-voice':assessmentVoice,'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>page==='challenges'?sound(voice('challenge-intro')):page==='challenge-prize'?sound(voice('challenge-clear')):page==='shop'?sound(voice('economy-shop')):page==='reward'?rewardVoice():page==='garden'?gardenGuide():session?session.phase==='story'?teach():session.phase==='reward'?rewardVoice():teach():narrate('welcome'),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
+const actions={challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro')),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome')),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':buyMystery,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>previewReward('shells'),'choose-water':()=>previewReward('water'),'confirm-reward':confirmReward,'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose']),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose']),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':gardenGuide,'reward-voice':rewardVoice,'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});sound(voice('meadow-collection'));},'assessment-voice':assessmentVoice,'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>page==='challenges'?sound(voice('challenge-intro')):page==='challenge-prize'?sound(voice('challenge-clear')):page==='shop'?sound(voice('economy-shop')):page==='reward'?rewardVoice():page==='garden'?gardenGuide():session?session.phase==='story'?teach():session.phase==='reward'?rewardVoice():teach():narrate('welcome'),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
   'gate-submit':()=>{if(modal?.type!=='gate')return;if(Number(document.querySelector('#parent-answer')?.value)===modal.a+modal.b){const callback=modal.callback;parentUnlocked=true;closeModal({keepMicIntent:true});callback();}else toast('请由陪伴的大人填写计算结果。');},'mic-settings':()=>openModal({type:'mic'}),'allow-mic':()=>{if(savePrefs({...prefs,mic:true})){const s=session,resume=s?.pendingMicIntent;closeModal();if(resume&&session===s&&s.phase==='request')return record();}},'disable-mic':()=>{if(savePrefs({...prefs,mic:false})){if(session){session.pendingMicIntent=false;cancelAttempt(session);}closeModal();}},recognition,export:exportState};
 app.addEventListener('click',event=>{const b=event.target.closest('button');if(!b||b.disabled)return;try{
   cancelFeedbackVoice();if(gardenIsActive()){clearGuide();stopSpeech();scheduleGardenReminder();}
@@ -486,8 +489,6 @@ app.addEventListener('click',event=>{const b=event.target.closest('button');if(!
   else if(b.dataset.buyOffer)buySeed(b.dataset.buyOffer,b.dataset.source).catch(error=>showError(error.message));
   else if(b.dataset.reserveOffer)reserveSeed(b.dataset.reserveOffer).catch(error=>showError(error.message));
   else if(b.dataset.action){Promise.resolve(actions[b.dataset.action]?.()).catch(error=>showError(error.message));}
-  else if(b.dataset.plant){const p=garden.plants.find(p=>p.id===b.dataset.plant);if(p?.waterings===2)greetPlant(p.id);else water(b.dataset.plant).catch(error=>showError(error.message));}
-  else if(b.dataset.variant)selectVariant(b.dataset.variant);
   else if(b.dataset.story)startEvent(storyFor(b.dataset.story).event);
   else if(b.dataset.checkup)startEvent(storyFor(b.dataset.checkup).event,true);
   else if(b.dataset.selectVoice){if(saveVoice(b.dataset.selectVoice,appStorage)){selectedVoice=readVoice(appStorage);render();sound(lessonAudio('needs-01',selectedVoice));}else showError('声音选择没有保存，请重试。');}
@@ -502,20 +503,19 @@ function suspend(){cancelIdleHint();pointerHeld=false;uiGeneration++;rewardSelec
 function resume(){
   if(gmWorkbenchOpen)return;
   if(!modal){
-    if(page==='shop'&&gardenVariant==='b'&&meadowState.pendingSeed){navigate('garden');meadowTool='seed';render();}
-    else if(page==='shop'&&gardenVariant==='b'&&meadow.pendingRewards(meadowState).length)navigate('reward');
+    if(page==='shop'&&meadowState.pendingSeed){navigate('garden');meadowTool='seed';render();}
+    else if(page==='shop'&&meadow.pendingRewards(meadowState).length)navigate('reward');
     else render();
   }
   scheduleGardenReminder();
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else resume();});window.addEventListener('pagehide',suspend);
-window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(![GARDEN_KEY,meadow.MEADOW_KEY,VARIANT_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));garden=validateGarden(JSON.parse(appStorage.getItem(GARDEN_KEY)||JSON.stringify(createGarden())));meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));if(event.key===VARIANT_KEY)gardenVariant=appStorage.getItem(VARIANT_KEY)==='b'?'b':'a';prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
-const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenVariant==='b'&&gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
+window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
+const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
 
 // Internal controls use the real screens and transaction models. Mutations are
 // allowed only in a fresh in-memory sandbox, never in a child's persisted save.
 function requireGmSandbox(){if(!GM_SANDBOX)throw new Error('请先进入免录音测试，再修改测试状态。');}
-function gmUseMeadow(){gardenVariant='b';appStorage.setItem(VARIANT_KEY,'b');}
 export const gmBridge=INTERNAL_BUILD?Object.freeze({
   pause(){
     gmWorkbenchOpen=true;uiGeneration++;cancelIdleHint();cancelGardenReminder();cancelFeedbackVoice();
@@ -529,7 +529,7 @@ export const gmBridge=INTERNAL_BUILD?Object.freeze({
   },
   resume(){gmWorkbenchOpen=false;render();scheduleGardenReminder();},
   inspect(){const wallet=activeGarden();return {
-    page,eventId:session?.event.id??null,phase:session?.phase??null,voice:selectedVoice,gardenVariant,
+    page,eventId:session?.event.id??null,phase:session?.phase??null,voice:selectedVoice,gardenVariant:'b',
     simulationResult:gmResult,wallet:{shells:wallet.shells,water:wallet.water},plants:wallet.plants.length,
     practiceCount:practice.entries.length,evidenceCount:state.evidence.length,
     challengeAttempts:challenges.attempts.length,challengeRewards:meadowState.challengeRewards.length,
@@ -541,7 +541,6 @@ export const gmBridge=INTERNAL_BUILD?Object.freeze({
   },
   navigate(target){
     requireGmSandbox();if(!['home','garden','shop','challenges','parent'].includes(target))throw new Error('未知测试页面。');
-    if(['shop','challenges'].includes(target))gmUseMeadow();
     if(target==='garden')return enterGarden();
     if(target==='shop')return openShop();
     if(target==='challenges')return openChallenges();
@@ -561,19 +560,18 @@ export const gmBridge=INTERNAL_BUILD?Object.freeze({
   },
   async prepareChallenge(unitId){
     requireGmSandbox();const unit=challenge.CHALLENGE_UNITS.find(u=>u.id===unitId);if(!unit)throw new Error('未知挑战。');
-    gmUseMeadow();
     const records=unit.eventIds.map(eventId=>({roundId:`gm-study:${uid()}`,eventId,date:today(),attemptId:null,mode:'new',rewardVariant:null}));
     if(await savePractice({practiceRecords:records}))startChallenge(unitId);
   },
   async supplyGarden(){
-    requireGmSandbox();gmUseMeadow();
+    requireGmSandbox();
     // Build valid receipts through the same ledger as learning rewards. Direct
     // balance edits would bypass invariants and hide bugs in subsequent actions.
     const rounds=Array.from({length:10},()=>({roundId:`gm-supply:${uid()}`,eventId:EVENTS[0].id,date:today()}));
     const saved=await gardenChange(latest=>rounds.reduce((value,round,index)=>{
       const earned=meadow.rewardRound(value,round);
       return meadow.claimReward(earned,round.roundId,index%2?'shells':'water');
-    },latest),'b');
+    },latest));
     if(saved)return openShop();
   },
 }):null;
@@ -591,8 +589,13 @@ async function startGmRoute(){
   }catch(error){toast(error.message);}
 }
 installPaperArt(document.body);
+document.body.addEventListener('xiaoya-art-error',showArtRecovery);
+document.body.addEventListener('xiaoya-art-ready',dismissArtRecovery);
+window.addEventListener('online',recoverVisiblePictures);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)recoverVisiblePictures();});
 render();
 onAudioPackChange(()=>{const target=document.querySelector('[data-audio-pack-status]');if(target)target.textContent=audioPackMessage();});
+onArtPackChange(status=>{const target=document.querySelector('[data-art-pack-status]');if(target)target.textContent=artPackMessage();if(status.state==='ready'){recoverVisiblePictures();dismissArtRecovery();}});
 startAudioPack();
 restorePracticeRewards();
 

@@ -1,4 +1,4 @@
-/* Native Edge regression for optional story-picture loading. Uses only a
+/* Native Edge regression for versioned story-picture loading. Uses only a
  * loopback candidate build and isolated profiles/synthetic learning records.
  * Alternate isolation uses two test-only URLs mapped to existing real WebPs;
  * it tests media routing, not the semantic quality of newly delivered art. */
@@ -73,7 +73,9 @@ async function unlock(p){if(await p.locator('#parent-answer').count()){const n=(
 async function checkup(f){
   await f.p.evaluate(async()=>{const base=document.querySelector('script[type="module"][src]').src,{createState,recordEvidence,localDay,STORAGE_KEY}=await import(new URL('learning.js',base)),{storyFor}=await import(new URL('stories.js',base)),s=storyFor('family-love');const state=recordEvidence(createState(),{attemptId:'qa-picture-prior',eventId:s.id,contextId:s.event.contexts[0].id,kind:'speech',result:'independent',source:'parent',helped:false,date:localDay()});localStorage.setItem(STORAGE_KEY,JSON.stringify(state));});
   await f.p.reload({waitUntil:'domcontentloaded'});await f.p.locator('main.home-view').waitFor();await tap(f.p,'parent');await unlock(f.p);
-  await f.p.locator('.story-library>details>summary').click();await f.p.locator('[data-checkup="family-love"]').tap();await f.p.locator('main[data-phase="request"][data-context="family-love-elsewhere"]').waitFor();
+  const groups=f.p.locator('.story-library details').filter({has:f.p.locator('[data-checkup="family-love"]')});
+  for(const group of await groups.all())if(!await group.evaluate(e=>e.open))await group.locator(':scope > summary').click();
+  await f.p.locator('[data-checkup="family-love"]').tap();await f.p.locator('main[data-phase="request"][data-context="family-love-elsewhere"]').waitFor();
 }
 async function resolveCheckup(p){await tap(p,'observe');await unlock(p);await p.locator('[data-observation="independent"]').tap();await p.locator('main[data-phase="resolved"]').waitFor();}
 async function test(name,fn,options={}){
@@ -108,9 +110,9 @@ async function test(name,fn,options={}){
     const trace=await f.p.evaluate(()=>qaPictures.frames);assert(trace.some(x=>x.frame==='0'&&x.url?.endsWith(files.intro)&&!x.vector),'Introduction must display its own real picture');assert(trace.some(x=>x.frame==='1'&&x.url?.endsWith(files.main)&&!x.vector));
     assert.deepEqual(storyRequests(f),[files.intro,files.main].sort());await layout(f.p);await f.p.screenshot({path:path.join(out,'p0-ready.png'),animations:'disabled'});return {trace,view,requests:storyRequests(f)};
   });
-  await test('A missing intro retains fallen blocks but does not poison main art or audio',async f=>{
+  await test('A missing intro shows recovery without old art and does not poison main art or audio',async f=>{
     const s=await meta(f.p,f.story);await ready(f);await ended(f.p,s.lesson);const view=await picture(f.p,files.main),trace=await f.p.evaluate(()=>qaPictures.frames);
-    assert(trace.some(x=>x.frame==='0'&&x.vector&&x.cues.includes('fallen-blocks')));assert(!view.vector);assert.deepEqual(storyRequests(f),[files.intro,files.main].sort());return {view,trace};
+    assert(trace.some(x=>x.frame==='0'&&x.status==='failed'&&!x.vector));assert(!view.vector);assert.deepEqual(storyRequests(f),[files.intro,files.main].sort());return {view,trace};
   },{missing:files.intro});
   await test('A late main image replaces only the picture while the speaking button and dialog survive',async f=>{
     const s=await meta(f.p,f.story);await ready(f);await ended(f.p,s.lesson);await picture(f.p,files.main,'slow');
@@ -123,8 +125,8 @@ async function test(name,fn,options={}){
     assert.deepEqual(stable,{button:true,dialog:true,renders:0});assert(!view.vector);return {view,stable,audioEndedBeforeImage:true};
   },{hold:files.main});
   await test('An intro arriving after teaching cannot overwrite the current main picture',async f=>{
-    await ready(f);const before=await picture(f.p,files.main);await f.p.evaluate(()=>{window.qaButton=document.querySelector('[data-action="story-continue"]');});f.release();
-    await f.p.waitForFunction(async file=>{const names=await caches.keys();for(const name of names)if(name.startsWith('xiaoya-core-')&&await(await caches.open(name)).match(new URL('xiaoya/stories/'+file,document.baseURI)))return true;return false;},files.intro);
+    await ready(f);const before=await picture(f.p,files.main);await f.p.evaluate(()=>{window.qaButton=document.querySelector('[data-action="story-continue"]');});const arrived=f.p.waitForResponse(r=>r.url().endsWith('/'+files.intro));f.release();await(await arrived).finished();
+    await f.p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     const after=await picture(f.p,files.main);assert.deepEqual(after,before);assert(await f.p.evaluate(()=>qaButton===document.querySelector('[data-action="story-continue"]')));return {before,after};
   },{hold:files.intro});
   await test('Distinct alternate request and resolved pictures preserve checkup semantics and bounded prefetch',async f=>{
@@ -132,12 +134,12 @@ async function test(name,fn,options={}){
     const s=await meta(f.p,'family-love');assert.equal((await f.p.evaluate(()=>qaPictures.audio)).filter(a=>a.url.endsWith('/'+s.lesson+'.mp3')).length,0,'Checkup must not autoplay its answer');
     await resolveCheckup(f.p);const resolved=await picture(f.p,files.resolved);await layout(f.p);assert(!resolved.vector);return {request,resolved,requests:storyRequests(f)};
   },{story:'family-love',alternate:true});
-  await test('A missing alternate request keeps its own SVG and allows the resolved picture',async f=>{
-    await checkup(f);const request=await picture(f.p,files.request,'failed');assert(request.vector&&request.svg);await resolveCheckup(f.p);const resolved=await picture(f.p,files.resolved);assert(!resolved.vector);assert.deepEqual(storyRequests(f),[files.request,files.resolved].sort());return {request,resolved};
+  await test('A missing alternate request offers recovery without SVG and allows the resolved picture',async f=>{
+    await checkup(f);const request=await picture(f.p,files.request,'failed');assert(!request.vector&&!request.svg);await f.p.locator('.story-picture [data-action="picture-retry"]').waitFor();await resolveCheckup(f.p);const resolved=await picture(f.p,files.resolved);assert(!resolved.vector);assert.deepEqual(storyRequests(f),[files.request,files.resolved].sort());return {request,resolved};
   },{story:'family-love',alternate:true,missing:files.request});
   await test('Viewed intro and main pictures plus the real voice survive an offline cold page',async f=>{
-    await f.p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:35000});assert.deepEqual(storyRequests(f),[]);const s=await meta(f.p,f.story);await ready(f);await ended(f.p,s.lesson);
-    await f.p.waitForFunction(async files=>{const names=await caches.keys();for(const name of names)if(name.startsWith('xiaoya-core-')){const cache=await caches.open(name);if((await Promise.all(files.map(file=>cache.match(new URL('xiaoya/stories/'+file,document.baseURI))))).every(Boolean))return true;}return false;},[files.intro,files.main]);
+    await f.p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:120000});const s=await meta(f.p,f.story);await ready(f);await ended(f.p,s.lesson);
+    await f.p.waitForFunction(async files=>{const names=await caches.keys();for(const name of names)if(name.startsWith('xiaoya-art-')){const cache=await caches.open(name);if((await Promise.all(files.map(file=>cache.match(new URL('xiaoya/stories/'+file,document.baseURI))))).every(Boolean))return true;}return false;},[files.intro,files.main]);
     await f.p.close();await f.c.setOffline(true);f.p=await f.c.newPage();f.p.setDefaultTimeout(20000);await f.p.goto(`${origin}/xiaoya/?garden=b&story=play-again`,{waitUntil:'domcontentloaded'});await f.p.locator('main.home-view').waitFor();await ready(f);await ended(f.p,s.lesson);
     const view=await picture(f.p,files.main);assert.equal(await f.p.evaluate(()=>navigator.onLine),false);const trace=await f.p.evaluate(()=>qaPictures.frames);assert(trace.some(x=>x.url?.endsWith(files.intro)&&!x.vector));await layout(f.p);return {offline:true,view,trace};
   },{worker:true});

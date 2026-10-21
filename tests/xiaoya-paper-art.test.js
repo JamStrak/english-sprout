@@ -62,10 +62,10 @@ test('paper map preserves the v1 art and adds exactly seven optional v2 assets w
   for(const path of Object.values(PAPER_ASSETS))assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);
 });
 
-test('optional layer keeps complete visible fallback and fixed transparent image bounds before load',()=>{
+test('mapped art has a neutral placeholder and fixed bounds, never the old illustration',()=>{
   const fallback='<path d="M0 0L20 20"/>';
   const layer=paperLayer('shell',fallback,{x:2,y:3,width:100,height:120,align:'xMidYMax meet'});
-  assert.match(layer,/<g data-paper-fallback><path d="M0 0L20 20"\/><\/g>/);
+  assert.match(layer,/<g data-paper-fallback><ellipse/);assert.ok(!layer.includes(fallback));
   assert.match(layer,/x="2" y="3" width="100" height="120"/);
   assert.match(layer,/preserveAspectRatio="xMidYMax meet" opacity="0" pointer-events="none"/);
   assert.doesNotMatch(layer,/visibility="hidden"|<svg|<script|onload=|tabindex=/);
@@ -85,7 +85,7 @@ test('plant image aligns its painted root in both wide and narrow viewports, not
   for(const options of [{width:0},{height:-1},{rootY:NaN},{centerX:Infinity},{anchorY:-.1},{anchorY:1.1}])assert.equal(paperPlantLayer('sprout','fallback',options),'fallback');
 });
 
-test('garden tools keep SVG roots; plants preserve complete vectors and separate pot/soil at every stage',()=>{
+test('garden tools keep hit geometry; visible plant layers use release artwork at every stage',()=>{
   for(const [draw,key] of [[shellArt,'shell'],[dropArt,'water-drop'],[canArt,'watering-can'],[packArt,'seed-pack'],[seedArt,'seed']]) {
     const art=draw();assert.match(art,/^<svg viewBox="0 0 160 180"/);assert.match(art,new RegExp(`data-paper-art="${key}"`));assert.match(art,/<g data-paper-fallback>/);
   }
@@ -97,19 +97,19 @@ test('garden tools keep SVG roots; plants preserve complete vectors and separate
       const art=meadowPlantArt(flower,count);
       const key=count===0?'seed-in-soil':count/flower.waterNeeded<.5?'sprout':'bud';
       assert.match(art,new RegExp(`data-paper-art="${key}"`));
-      assert.match(art,/<g data-paper-fallback><path data-part="stem"/);
+      assert.match(art,/<g data-paper-fallback><ellipse/);
       assert.match(art,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body(?: data-feedback-kind="seed")?><g data-paper-art=/);
     }
   }
   for(const [stage,key] of [[0,'seed-in-soil'],[1,'sprout'],[2,'flower-daisy']]) {
     const art=plantArt(FLOWERS[0],stage);
     assert.match(art,new RegExp(`data-paper-art="${key}"`));
-    assert.match(art,/<g data-paper-fallback><path/);
-    // Both the optional painted pot and its SVG fallback cover the soil edge.
-    assert.match(art,/<\/g><g data-paper-art="pot-front"[^>]*><g data-paper-fallback><path d="M44 120h72/);
+    assert.match(art,/<g data-paper-fallback><ellipse/);
+    // The painted pot covers the soil edge; the old drawing is absent.
+    assert.match(art,/<\/g><g data-paper-art="pot-front"[^>]*><g data-paper-fallback><ellipse/);
     const front=art.slice(art.indexOf('<g data-paper-art="pot-front"'));
     assert.match(front,/<image[^>]+ x="0" y="0" width="160" height="180"/);
-    assert.match(front,/<rect x="39" y="117" width="82" height="13"/);
+    assert.doesNotMatch(front,/<rect x="39" y="117" width="82" height="13"/);
     const [,y,height]=art.match(/<image[^>]+ y="([^"]+)"[^>]+ height="([^"]+)"/);
     const anchor=stage===2?.88:396/512;
     assert.ok(Math.abs(Number(y)+Number(height)*anchor-117)<1e-8);
@@ -147,7 +147,7 @@ test('successful meadow bitmaps also grow on every pour while staying anchored a
   }
 });
 
-test('milestone flowers retain distinct complete vectors and a root-fixed image while optional art is loading',()=>{
+test('milestone flowers retain invisible hit outlines and a root-fixed release image',()=>{
   for(const flower of SPECIAL_FLOWERS) {
     const art=meadowPlantArt(flower,flower.waterNeeded);
     const kind=flower.id==='bow-rainbow'?'rainbow':'starlight';
@@ -169,9 +169,9 @@ test('voice portraits keep bear, fox and cat identities and existing viewport an
     assert.match(art,/<image[^>]+ x="0" y="0" width="80" height="82" preserveAspectRatio="xMidYMid meet" opacity="0" pointer-events="none"/);
     assert.doesNotMatch(art,/<(?:button|a|script|text)\b|tabindex=|data-action=/);
   }
-  assert.match(bear,/<circle cx="19" cy="23" r="12"/);
-  assert.match(fox,/d="M14 41L38 49L66 41/);
-  assert.match(cat,/d="M15 49l-9-2m9 7l-9 2/);
+  assert.match(bear,/voice-aiden\.webp/);assert.doesNotMatch(bear,/<circle cx="19" cy="23" r="12"/);
+  assert.match(fox,/voice-ryan\.webp/);
+  assert.match(cat,/voice-pip\.webp/);
   assert.equal(voicePortrait('unmapped'),bear);
   assert.equal(voicePortrait('pip" onload="bad'),bear);
 });
@@ -179,7 +179,7 @@ test('voice portraits keep bear, fox and cat identities and existing viewport an
 test('painted challenge flag retains the original entry, guide and prize actions',()=>{
   const art=flagArt();
   assert.match(art,/^<svg viewBox="0 0 64 64"/);
-  assert.match(art,/<g data-paper-art="challenge-flag"[^>]*><g data-paper-fallback><path d="M20 55V10"/);
+  assert.match(art,/<g data-paper-art="challenge-flag"[^>]*><g data-paper-fallback><ellipse/);
   assert.match(art,/<image[^>]+ x="0" y="0" width="64" height="64"[^>]+pointer-events="none"/);
   const unit={id:'challenge-1',available:true,completed:false,completedCount:0,items:Array.from({length:4},()=>({passed:false}))};
   const summary={units:[unit],completedCount:0};
@@ -222,15 +222,15 @@ test('one installation handles existing and subsequently rendered native image l
   dispose();dispose();assert.equal(calls.disconnected,1);
 });
 
-test('broken image keeps its vector; removed or disposed nodes cannot receive a late visibility change',()=>{
+test('broken image stays in explicit error state; removed or disposed nodes cannot receive a late visibility change',()=>{
   const {root,add}=fixture();const dispose=installPaperArt(root);
   const broken=add();broken.image.dispatchEvent(new Event('error'));
-  assert.equal(broken.layer.getAttribute('data-paper-state'),'fallback');assert.equal(broken.fallback.getAttribute('visibility'),'visible');assert.equal(broken.image.getAttribute('opacity'),'0');
+  assert.equal(broken.layer.getAttribute('data-paper-state'),'error');assert.equal(broken.fallback.getAttribute('visibility'),'visible');assert.equal(broken.image.getAttribute('opacity'),'0');
   const removed=add('seed');root.remove(removed.layer);removed.image.dispatchEvent(new Event('load'));assert.equal(removed.layer.getAttribute('data-paper-state'),'loading');
   const late=add('water-drop');dispose();late.image.dispatchEvent(new Event('load'));assert.equal(late.layer.getAttribute('data-paper-state'),'loading');
 });
 
-test('a previously loaded picture stays ready across redraws, but a real load error restores fallback',()=>{
+test('a previously loaded picture stays ready across redraws, but a real load error restores a neutral placeholder',()=>{
   const {root,add}=fixture();const dispose=installPaperArt(root);
   const first=add('seed');first.image.dispatchEvent(new Event('load'));
   root.remove(first.layer);
@@ -242,7 +242,7 @@ test('a previously loaded picture stays ready across redraws, but a real load er
   first.image.dispatchEvent(new Event('error'));
   assert.equal(add('seed').layer.getAttribute('data-paper-state'),'ready');
   redrawn.image.dispatchEvent(new Event('error'));
-  assert.equal(redrawn.layer.getAttribute('data-paper-state'),'fallback');
+  assert.equal(redrawn.layer.getAttribute('data-paper-state'),'error');
   assert.equal(redrawn.fallback.getAttribute('visibility'),'visible');
   assert.equal(add('seed').layer.getAttribute('data-paper-state'),'loading');
   dispose();
@@ -258,13 +258,13 @@ test('unrecognized or replaced image href is never enhanced or persisted',async(
   await tick();assert.equal(calls.fetch.length,0);dispose();
 });
 
-test('first uncontrolled visit stores successful assets once per URL using existing HTTP cache',async()=>{
+test('native loads never write unverified pictures into core caches',async()=>{
   const {root,add,calls}=fixture();const dispose=installPaperArt(root);
   for(let i=0;i<3;i++)add().image.dispatchEvent(new Event('load'));
   await tick();
-  assert.deepEqual(calls.opened,['xiaoya-core-012345abcdef']);
-  assert.deepEqual(calls.fetch,[['https://example.test/nested/xiaoya/paper/v1/shell.webp',{cache:'force-cache',mode:'same-origin'}]]);
-  assert.equal(calls.put.length,1);assert.equal(calls.put[0][0],calls.fetch[0][0]);dispose();
+  assert.deepEqual(calls.opened,[]);
+  assert.deepEqual(calls.fetch,[]);
+  assert.equal(calls.put.length,0);dispose();
 });
 
 test('already cached assets avoid fetch; error, missing build or denied storage never hide the fallback',async()=>{
@@ -276,8 +276,18 @@ test('already cached assets avoid fetch; error, missing build or denied storage 
   assert.equal(calls.fetch.length,0);assert.equal(broken.fallback.getAttribute('visibility'),'visible');dispose();
 });
 
-test('without DOM or MutationObserver the original art stays usable',()=>{
+test('without DOM or MutationObserver no old artwork is revealed',()=>{
   assert.doesNotThrow(()=>installPaperArt(null)());
   const {root,add}=fixture({observer:false});const item=add();installPaperArt(root)();item.image.dispatchEvent(new Event('load'));
   assert.equal(item.image.getAttribute('opacity'),'0');assert.notEqual(item.fallback.getAttribute('visibility'),'hidden');
+});
+
+
+test('failed native images can be retried without replacing their geometry',()=>{
+  const {root,add}=fixture();const dispose=installPaperArt(root);const item=add('seed');
+  let errors=0,ready=0;root.addEventListener('xiaoya-art-error',()=>errors++);root.addEventListener('xiaoya-art-ready',()=>ready++);
+  item.image.dispatchEvent(new Event('error'));assert.equal(errors,1);
+  root.dispatchEvent(new Event('xiaoya-retry-art'));assert.equal(item.layer.getAttribute('data-paper-state'),'loading');
+  assert.equal(item.image.getAttribute('href'),PAPER_ASSETS.seed);assert.equal(item.image.getAttribute('width'),'160');
+  item.image.dispatchEvent(new Event('load'));assert.equal(ready,1);assert.equal(item.layer.getAttribute('data-paper-state'),'ready');dispose();
 });

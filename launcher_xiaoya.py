@@ -75,6 +75,16 @@ def make_handler(root: Path):
                 self.send_header("Content-Length", "0")
                 self.end_headers()
                 return
+            if re.fullmatch(r"/xiaoya/start-[a-f0-9]{12}\.html", request_path):
+                current = startup_path(root)
+                if current != "/xiaoya/" and request_path != current:
+                    query = urllib.parse.urlsplit(self.path).query
+                    self.send_response(307)
+                    self.send_header("Location", current + ("?" + query if query else ""))
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                    return
             super().respond(head)
 
     return Handler
@@ -141,7 +151,7 @@ def start_or_reuse(root: Path, ports=PORTS):
 
 def show_error(message: str):
     if os.name == "nt":
-        ctypes.windll.user32.MessageBoxW(None, message, "小芽英语 · 启动提示", 0x10)
+        ctypes.windll.user32.MessageBoxW(None, message, "小芽英语·自由花园版 · 启动提示", 0x10)
     else:
         import sys
         print(message, file=sys.stderr)
@@ -165,16 +175,17 @@ def startup_path(root: Path) -> str:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="小芽英语本机预览")
+    parser = argparse.ArgumentParser(description="小芽英语·自由花园版本机预览")
     parser.add_argument("--no-browser", action="store_true", help="仅启动或复用服务，不自动打开浏览器（维护用）")
-    parser.add_argument("--garden", choices=("a", "b"), help="临时预览指定花园，不更改已保存的花园偏好")
+    # Accept old desktop shortcuts but never launch the retired flowerpot game.
+    parser.add_argument("--garden", choices=("a", "b"), help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     server = None
     try:
         port, server, thread = start_or_reuse(ROOT)
         url = f"http://{HOST}:{port}{startup_path(ROOT)}"
         if args.garden:
-            url += f"?garden={args.garden}"
+            url += "?garden=b"
         if not args.no_browser and not webbrowser.open(url):
             show_error(f"小芽英语已启动，但未能自动打开浏览器。\n请用浏览器打开：{url}")
         if thread is not None:

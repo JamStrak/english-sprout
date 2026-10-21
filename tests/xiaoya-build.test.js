@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
@@ -9,7 +8,9 @@ import {buildXiaoya} from '../scripts/build-xiaoya.mjs';
 
 const project = path.resolve(import.meta.dirname, '..');
 async function fixture(t,{phrasePack=false,internal=false}={}) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'xiaoya-build-'));
+  const scratch = path.join(project, 'test-results', 'tmp');
+  await fs.mkdir(scratch, {recursive:true});
+  const root = await fs.mkdtemp(path.join(scratch, 'xiaoya-build-'));
   t.after(() => fs.rm(root, {recursive:true, force:true}));
   await fs.mkdir(path.join(root, 'xiaoya'), {recursive:true});
   await fs.mkdir(path.join(root, 'src'));
@@ -27,6 +28,7 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.writeFile(path.join(root, 'xiaoya', 'audio-pack.js'), '/* audio preparation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'runtime.js'), "import {INTERNAL_BUILD} from './build-config.js'; export const enabled=INTERNAL_BUILD;");
+  await fs.writeFile(path.join(root, 'xiaoya', 'garden-history.js'), '/* read-only legacy history */');
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
@@ -46,20 +48,20 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
   for (const name of ['icon-paper-v04-48.png','icon-paper-v04-192.png','icon-paper-v04-512.png']) await fs.copyFile(path.join(project, 'public/xiaoya/icons', name), path.join(root, 'public/xiaoya/icons', name));
   await fs.mkdir(path.join(root, 'public/xiaoya/stories'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/stories/goodbye-v2.webp'), 'public story bytes');
+  await fs.writeFile(path.join(root, 'public/xiaoya/stories/unvisited.webp'), 'another story bytes');
+  await fs.mkdir(path.join(root, 'public/xiaoya/paper/v1'), {recursive:true});
+  await fs.writeFile(path.join(root, 'public/xiaoya/paper/v1/seed.webp'), 'paper seed bytes');
   await fs.writeFile(path.join(root, 'public/xiaoya/stories/fallback.svg'), '<svg/>');
   await fs.writeFile(path.join(root, 'public/xiaoya/stories/private.log'), 'not catalogued');
   const result = await buildXiaoya({root,internal});
-  // The outer build copies public media; it must stay outside the eager shell.
-  await fs.mkdir(path.join(root, 'dist/xiaoya/stories'), {recursive:true});
-  await fs.writeFile(path.join(root, 'dist/xiaoya/stories/goodbye-v2.webp'), 'public story bytes');
   return {root, ...result, output:path.join(root, 'dist/xiaoya')};
 }
 
 async function worker(fixture, {corrupt = false} = {}) {
   const scope = 'https://example.test/hosted/course/xiaoya/';
-  const listeners = new Map(), stores = new Map(), fetched = [];
+  const listeners = new Map(), stores = new Map(), fetched = [], messages = [];
   const key = request => typeof request === 'string' ? request : request.url;
-  let online = true, claimed = 0, skipped = 0, badVoice = false;
+  let online = true, claimed = 0, skipped = 0, badVoice = false, badArt = false;
   const network = async request => {
     const url = new URL(key(request));
     fetched.push(url.href);
@@ -68,7 +70,7 @@ async function worker(fixture, {corrupt = false} = {}) {
     let relative = url.pathname.slice(new URL(scope).pathname.length);
     if (!relative) relative = 'index.html';
     const bytes = await fs.readFile(path.join(fixture.output, relative));
-    return new Response(corrupt && relative.endsWith('app.js') ? 'old cached module' : bytes);
+    return new Response(corrupt && relative.endsWith('app.js') ? 'old cached module' : badArt && relative === 'stories/unvisited.webp' ? 'damaged art' : bytes);
   };
   const caches = {
     keys:async () => [...stores.keys()],
@@ -86,7 +88,7 @@ async function worker(fixture, {corrupt = false} = {}) {
       };
     }
   };
-  const self = {registration:{scope}, clients:{claim:async () => { claimed++; }}, skipWaiting:async () => { skipped++; }, addEventListener:(type, handler) => listeners.set(type, handler)};
+  const self = {registration:{scope}, clients:{claim:async () => { claimed++; }, matchAll:async () => [{postMessage:message => messages.push(structuredClone(message))}]}, skipWaiting:async () => { skipped++; }, addEventListener:(type, handler) => listeners.set(type, handler)};
   const source = await fs.readFile(path.join(fixture.output, 'sw.js'), 'utf8');
   vm.runInNewContext(source, {self, caches, crypto:webcrypto, Request, Response, Headers, URL, fetch:network, console});
   const lifecycle = async type => {
@@ -102,7 +104,12 @@ async function worker(fixture, {corrupt = false} = {}) {
     await lifetime;
     return response;
   };
-  return {scope, stores, fetched, caches, lifecycle, fetchRequest, setBadVoice:value => { badVoice = value; }, setOnline:value => { online = value; }, claimed:() => claimed, skipped:() => skipped};
+  const send = async data => {
+    let lifetime;
+    listeners.get('message')({data, source:{postMessage:message => messages.push(structuredClone(message))}, waitUntil:work => { lifetime = work; }});
+    await lifetime;
+  };
+  return {scope, stores, fetched, caches, messages, lifecycle, fetchRequest, send, setBadArt:value => { badArt = value; }, setBadVoice:value => { badVoice = value; }, setOnline:value => { online = value; }, claimed:() => claimed, skipped:() => skipped};
 }
 
 test('build isolates product, fingerprints every module, rewrites shared imports, and supports nested hosting', async t => {
@@ -113,6 +120,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.17\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.17\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
@@ -129,6 +138,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
     assert.deepEqual(await fs.readFile(path.join(built.output, 'icons', name)), await fs.readFile(path.join(project, 'public/xiaoya/icons', name)));
   }
   await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/shared/speech-local.js`)), {code:'ENOENT'});
+  for (const retired of ['garden.js', 'story-art.js']) await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/${retired}`)), {code:'ENOENT'});
+  assert.ok(built.core.includes(`./releases/${built.build}/garden-history.js`));
   assert.ok(built.core.every(file => !/model-en-us|vosk-0\.0\.8|whisper-tiny-en-v1|\.(mp3|webp|onnx|wasm)$/.test(file)));
   assert.deepEqual([...await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'))], [1,2,3,4,5,6]);
   await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
@@ -160,10 +171,10 @@ test('explicit internal builds fingerprint their channel and catalogue all stati
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = true/);
   for (const file of ['gm.js','gm.css','gm-catalog.json']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
   const catalogue = JSON.parse(await fs.readFile(path.join(release, 'gm-catalog.json'), 'utf8'));
-  assert.equal(catalogue.images.length, 5);
+  assert.equal(catalogue.images.length, 6);
   assert.equal(catalogue.audio.length, 8);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/stories/goodbye-v2.webp' && entry.category === 'stories'));
-  assert.ok(catalogue.images.some(entry => entry.url.endsWith('/fallback.svg')));
+  assert.ok(!catalogue.images.some(entry => entry.url.endsWith('.svg')), 'The workbench does not offer retired SVG fallbacks');
   assert.ok(catalogue.audio.some(entry => entry.url === 'audio/characters/pip/hello-01.mp3' && entry.category === 'pip'));
   assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/phrases-v015/daily-peekaboo/hint.mp3' && entry.category === 'hint'));
   assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/v3/guide-hello.mp3' && entry.category === 'guide'));
@@ -172,13 +183,13 @@ test('explicit internal builds fingerprint their channel and catalogue all stati
     assert.ok(!entry.url.startsWith('/') && !entry.url.includes('..') && !entry.url.includes('private'));
     assert.ok(new URL(entry.url, 'https://host.test/nested/').pathname.startsWith('/nested/'));
   }
-  assert.ok(built.core.every(file => !file.endsWith('.webp') && !file.endsWith('.mp3')), 'Catalogued media remain lazy, not eager shell downloads');
+  assert.ok(built.core.every(file => !file.endsWith('.webp') && !file.endsWith('.mp3')), 'Media use separate verified packs instead of the shell cache');
   const sw = await worker(built);
   await sw.lifecycle('install');
   sw.setOnline(false);
   const offlineCatalogue = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/gm-catalog.json`, sw.scope)));
   assert.deepEqual(await offlineCatalogue.json(), catalogue, 'The review index itself is verified and available offline');
-  assert.ok(!sw.fetched.some(url => url.endsWith('.webp')), 'Reviewing the index never downloads the whole picture library');
+  assert.equal(sw.fetched.filter(url => url.endsWith('.webp')).length, 3, 'Installing the release prepares every runtime picture');
   const publicBuild = await buildXiaoya({root:built.root, dist:path.join(built.root, 'public-dist')});
   assert.notEqual(publicBuild.build, built.build);
   assert.equal(publicBuild.channel, 'public');
@@ -281,11 +292,12 @@ test('worker refuses activation when one core response is from another build', a
   assert.equal(sw.skipped(), 0);
 });
 
-test('query navigations prefer the network and fall back to this verified shell, never an older cached query page', async t => {
+test('query and restored startup navigations prefer the current entry, never an older cached page', async t => {
   const built = await fixture(t), sw = await worker(built);
   const currentHtml = await fs.readFile(path.join(built.output, 'index.html'), 'utf8');
   const oldCache = await sw.caches.open('xiaoya-core-old-query-release');
-  const urls = ['./?story=hello-goodbye', './index.html?story=hello-goodbye'].map(file => new URL(file, sw.scope).href);
+  const urls = ['./?story=hello-goodbye', './index.html?story=hello-goodbye', './start-aaaaaaaaaaaa.html?story=hello-goodbye', `./start-${built.build}.html?story=hello-goodbye`].map(file => new URL(file, sw.scope).href);
+  await fs.writeFile(path.join(built.output, 'start-aaaaaaaaaaaa.html'), currentHtml.replaceAll(built.build, 'aaaaaaaaaaaa'));
   for (const url of urls) await oldCache.put(url, new Response('<html>old query shell</html>'));
   await sw.lifecycle('install');
   await sw.lifecycle('activate');
@@ -330,15 +342,83 @@ test('a newer online shell does not replace this worker offline shell or interru
   assert.equal(sw.claimed(), 1, 'Navigation never reclaims or navigates another client');
 });
 
-test('story image loads on demand and remains available offline under a nested host', async t => {
+test('all story and garden images are available offline before any lesson is visited under a nested host', async t => {
   const sw = await worker(await fixture(t));
   await sw.lifecycle('install');
-  const url = new URL('stories/goodbye-v2.webp', sw.scope);
-  assert.ok(!sw.fetched.includes(url.href), 'Installing the shell must not download story art');
-  assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'public story bytes');
+  const requests = sw.fetched.length;
   sw.setOnline(false);
-  assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'public story bytes');
-  assert.equal(sw.fetched.filter(value => value === url.href).length, 1);
+  for (const [file, expected] of [['stories/goodbye-v2.webp','public story bytes'],['stories/unvisited.webp','another story bytes'],['paper/v1/seed.webp','paper seed bytes']]) {
+    const response = await sw.fetchRequest(new Request(new URL(file, sw.scope)));
+    assert.equal(await response.text(), expected, 'Previously unseen content must be ready immediately after restart');
+  }
+  assert.equal(sw.fetched.length, requests, 'Offline artwork must not need a first network request');
+});
+
+test('art bytes identify the public release and a separate content-versioned verified pack', async t => {
+  const built = await fixture(t);
+  const metadata = JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8'));
+  const art = JSON.parse(await fs.readFile(path.join(built.output, `releases/${built.build}/art-pack.json`), 'utf8'));
+  assert.equal(metadata.name, '小芽英语·自由花园版');
+  assert.equal(metadata.garden, 'free');
+  assert.equal(metadata.art.version, built.artVersion);
+  assert.equal(metadata.art.count, 3);
+  assert.equal(metadata.art.bytes, art.reduce((sum, file) => sum + file.bytes, 0));
+  assert.ok(art.every(file => file.bytes > 0 && /^[a-f0-9]{64}$/.test(file.sha256)));
+  await assert.rejects(fs.stat(path.join(built.output, 'stories/fallback.svg')), {code:'ENOENT'});
+  await assert.rejects(fs.stat(path.join(built.output, 'stories/private.log')), {code:'ENOENT'});
+  await fs.appendFile(path.join(built.root, 'public/xiaoya/stories/unvisited.webp'), 'new art bytes');
+  const updated = await buildXiaoya({root:built.root});
+  assert.notEqual(updated.build, built.build, 'Public builds also include the actual artwork, not only module changes');
+  assert.notEqual(updated.artVersion, built.artVersion);
+});
+
+test('corrupt art blocks activation and retry resumes a verified partial picture pack', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  sw.setBadArt(true);
+  await assert.rejects(sw.lifecycle('install'), /图片文件不完整/);
+  assert.equal(sw.skipped(), 0, 'Voices being ready must not activate an incomplete artwork release');
+  assert.equal(sw.stores.get(`xiaoya-art-${built.artVersion}`).size, 2);
+  assert.ok(sw.messages.some(message => message.type === 'xiaoya-art-pack' && message.build === built.build && message.state === 'error'));
+  assert.ok(!sw.messages.some(message => message.type === 'xiaoya-art-pack' && message.state === 'ready'));
+  const before = sw.fetched.filter(url => url.endsWith('.webp')).length;
+  sw.setBadArt(false);
+  await sw.lifecycle('install');
+  assert.equal(sw.skipped(), 1);
+  assert.equal(sw.fetched.filter(url => url.endsWith('.webp')).length - before, 1);
+  assert.deepEqual(sw.messages.filter(message => message.type === 'xiaoya-art-pack').at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:3, total:3});
+});
+
+test('art never falls back to an older shell or corrupted content cache and repairs valid bytes online', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  const url = new URL('stories/unvisited.webp', sw.scope).href;
+  const old = await sw.caches.open('xiaoya-core-retired');
+  await old.put(url, new Response('old SVG-style picture'));
+  await sw.lifecycle('install');
+  const art = await sw.caches.open(`xiaoya-art-${built.artVersion}`);
+  await art.put(url, new Response('tampered current picture'));
+  sw.setOnline(false);
+  assert.equal((await sw.fetchRequest(new Request(url))).type, 'error', 'Never show visually wrong bytes merely because a cache entry exists');
+  assert.equal((await sw.fetchRequest(new Request(new URL('stories/fallback.svg', sw.scope)))).type, 'error');
+  sw.setOnline(true);
+  const repaired = await sw.fetchRequest(new Request(url + '?from=old-bookmark'));
+  assert.equal(await repaired.text(), 'another story bytes');
+  sw.setOnline(false);
+  assert.equal(await (await sw.fetchRequest(new Request(url))).text(), 'another story bytes');
+  assert.equal(await (await old.match(url)).text(), 'old SVG-style picture', 'Other tabs and products retain their own cache records');
+});
+
+test('art preparation messages verify the entire pack and reject requests for another build', async t => {
+  const built = await fixture(t), sw = await worker(built);
+  await sw.send({type:'xiaoya-prepare-art', build:'0123456789ab'});
+  assert.deepEqual(sw.messages.at(-1), {type:'xiaoya-art-update', requestedBuild:'0123456789ab', build:built.build});
+  assert.equal(sw.fetched.length, 0);
+  await sw.send({type:'xiaoya-prepare-art', build:built.build});
+  assert.deepEqual(sw.messages.at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:3, total:3});
+  const requests = sw.fetched.length;
+  sw.setOnline(false);
+  await sw.send({type:'xiaoya-prepare-art', build:built.build});
+  assert.equal(sw.messages.at(-1).state, 'ready');
+  assert.equal(sw.fetched.length, requests, 'Already complete artwork is validated locally without redownloading');
 });
 
 test('downloaded original and new help clips play offline including byte ranges', async t => {

@@ -11,7 +11,7 @@ import * as meadow from '../xiaoya/garden-meadow.js';
 import * as meadowArt from '../xiaoya/meadow-art.js';
 import * as meadowUI from '../xiaoya/meadow-ui.js';
 import * as seedShop from '../xiaoya/seed-shop.js';
-import * as gardening from '../xiaoya/garden.js';
+import * as gardenHistory from '../xiaoya/garden-history.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
@@ -46,14 +46,14 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
       const pictureId=selector.match(/^\[data-picture-id="([^"]+)"\]$/)?.[1];if(pictureId)return html.includes(`data-picture-id="${pictureId}"`)?{}:null;
       const action=selector.match(/^\[data-action="([^"]+)"\]$/)?.[1];return action?nodes.find(node=>node.dataset.action===action):null;},
     querySelectorAll(selector){return selector==='.primary-wrap'?primaryWraps:selector==='[data-action]'?nodes.filter(node=>node.dataset.action):[];},
-    addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},body:{append(){}},createElement(){return {remove(){}};}};
+    addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},body:{append(){},addEventListener(){},dispatchEvent(){}},createElement(){return {dataset:{},setAttribute(){},querySelector(){return {addEventListener(){}};},remove(){}};}};
   const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');writes.push({key,value});stored?.set(key,value);}};
   const audio={playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
     cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
     speechReady(){return recognized!==null;},recognize(){return Promise.resolve(recognized);},prepareRecognition(){return new Promise(()=>{});},beginRecording(options){const pending=deferred();captures.push({options,...pending});return pending.promise;},finishRecording(){}};
-  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardening,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
+  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardenHistory,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
     // The VM runs the controller while imported validators use this realm.
     // Keep parsed storage and controller-created records in that same realm.
     recordEvidence:(state,input)=>learning.recordEvidence(state,JSON.parse(JSON.stringify(input))),
@@ -62,15 +62,15 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
     challenge:{...challenge,
       recordChallengeAttempt:(state,input)=>challenge.recordChallengeAttempt(state,JSON.parse(JSON.stringify(input))),
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
-    location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
+    location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
   Object.assign(sandbox,storyPictures,{createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
     setPage(value){page=value;session=null;modal=null;render();},
-    setGarden(value){garden=value;page='garden';session=null;modal=null;render();},
-    setMeadowReward(value){gardenVariant='b';meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
+    setGarden(value){meadowState=value;page='garden';session=null;modal=null;render();},
+    setMeadowReward(value){meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
     setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
   return {...sandbox.ui,document,documentListeners,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
     primaryWraps:()=>primaryWraps,
@@ -306,10 +306,10 @@ test('spoken directions highlight their actual target and survive a renderer ref
     f.sounds.at(-1).resolve(true);await pending;assert.deepEqual(f.guided(),[]);
   }
   f.setSession({phase:'resolved'});const done=f.narrate('speech-pass');assert.deepEqual(f.guided(),['finish']);f.sounds.at(-1).resolve(true);await done;
-  let garden=gardening.rewardRound(gardening.createGarden(),{roundId:'guided-round',eventId:stories.STORIES[0].id,date:'2026-10-16'});
-  for(const [cue,action] of [['open-pack','pack'],['seed','plant'],['water','water']]){
-    f.setGarden(garden);const pending=f.narrate(cue);assert.deepEqual(f.guided(),[action]);f.sounds.at(-1).resolve(true);await pending;
-    if(action==='pack')garden=gardening.openSeedPack(garden);else if(action==='plant')garden=gardening.plantSeed(garden);
+  let garden=meadow.rewardRound(meadow.createMeadow(),{roundId:'guided-round',eventId:stories.STORIES[0].id,date:'2026-10-16'});
+  for(const action of ['shop','meadow-seed','meadow-can']){
+    f.setGarden(garden);const pending=f.actions['garden-guide']();assert.deepEqual(f.guided(),[action]);f.sounds.at(-1).resolve(true);await pending;
+    if(action==='shop')garden=meadow.openSeedPack(garden,0);else if(action==='meadow-seed')garden=meadow.plantSeed(garden,{x:.5,y:.6});
   }
 });
 
@@ -448,7 +448,7 @@ test('direct review recovers failed pictures without a render or request loop',a
     assert.match(f.html(),/data-picture-id="food-water"/);
     f.render();f.render();assert.equal(f.images.length,1);
     const renders=f.renders();f.images[0].onerror();await flush();assert.equal(f.renders(),renders,'Image failure never rebuilds active controls');
-    f.render();assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-picture-status="failed"/);
+    f.render();assert.doesNotMatch(f.html(),/vector-picture/);assert.match(f.html(),/picture-placeholder/);assert.match(f.html(),/data-action="picture-retry"/);assert.match(f.html(),/data-picture-status="failed"/);
     assert.equal(f.images.length,1);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
 });
 
@@ -458,19 +458,20 @@ test('late picture failures cannot redraw a different page or interrupt its acti
   f.setPage('home');assert.match(f.html(),/home-companion/);assert.doesNotMatch(f.html(),/story-picture/);assert.equal(f.images.length,1);
 });
 
-test('failed story art falls back and advances the short teaching sequence only once',async()=>{
+test('failed core story art offers recovery and plays its phrase without restoring old drawings',async()=>{
   const f=fixture(),story=stories.storyFor('food-water');
   const s=f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'}),playing=f.playStory();
   assert.equal(f.images.length,1);f.images[0].onerror();await f.nextDelay();
-  assert.match(f.html(),/vector-picture/);assert.equal(f.sounds.length,1);
-  f.sounds[0].resolve(true);await playing;assert.equal(s.storyReady,true);assert.equal(f.images.length,1);
+  f.render();assert.doesNotMatch(f.html(),/vector-picture/);assert.match(f.html(),/picture-placeholder/);assert.equal(f.sounds.length,1);
+  assert.match(f.sounds[0].file,new RegExp(`/${story.event.lessonId}\\.mp3$`));
+  f.sounds[0].resolve(true);await playing;assert.equal(s.storyReady,true);assert.equal(f.images.length,1);assert.equal(f.sounds.length,1);
 });
 
 test('try again teaches a fallen tower before rebuilding, without repeating its paper image',async()=>{
   const f=fixture(),story=stories.storyFor('play-again');
   assert.deepEqual(story.teachingFrames,[0,1]);
   const s=f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'}),playing=f.playStory();
-  assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="fallen-blocks"/);
+  assert.doesNotMatch(f.html(),/vector-picture/);assert.match(f.html(),/picture-placeholder/);
   assert.match(f.html(),/data-story-frame="0".*data-picture-id="play-again"/);
   assert.equal(f.images.length,2);f.images[0].onload();f.images[1].onload();await f.nextDelay();
   assert.match(f.html(),/data-story-frame="1".*data-picture-id="play-again"/);
@@ -479,15 +480,14 @@ test('try again teaches a fallen tower before rebuilding, without repeating its 
   assert.equal(s.storyReady,true);assert.equal(f.writes.length,0);
 });
 
-test('try again image failure preserves different visible actions for both teaching beats',async()=>{
+test('try again image failure keeps neutral retry UI without corrupting the audio sequence',async()=>{
   const f=fixture(),story=stories.storyFor('play-again');
   f.setSession({story,event:story.event,context:story.event.contexts[0],phase:'story'});
-  const playing=f.playStory(),intro=storyArt.storyFrame(story,0);
+  const playing=f.playStory();
   f.images[0].onerror();f.images[1].onerror();await f.nextDelay();
-  assert.match(f.html(),/vector-picture/);assert.match(f.html(),/data-cue="retry-picking-up-block"/);
-  const drawing=svg=>svg.replace(/\sdata-[\w-]+="[^"]*"/g,'');
-  assert.notEqual(drawing(intro),drawing(storyArt.storyFrame(story,1)));
-  await f.nextDelay();f.sounds[0].resolve(true);await playing;
+  assert.doesNotMatch(f.html(),/vector-picture|data-cue=/);assert.match(f.html(),/picture-placeholder/);assert.match(f.html(),/data-action="picture-retry"/);
+  await f.nextDelay();assert.match(f.sounds[0].file,new RegExp(`/${story.event.lessonId}\\.mp3$`));f.sounds[0].resolve(true);await playing;
+  assert.equal(f.sounds.length,1);
   assert.equal(f.getSession().storyReady,true);assert.equal(f.images.length,2);
 });
 
@@ -495,7 +495,7 @@ test('familiar try again review starts at the final picture without playing the 
   const f=fixture(),story=stories.storyFor('play-again');
   f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true,frame:0});
   assert.match(f.html(),/data-story-frame="1".*data-picture-id="play-again"/);
-  assert.match(f.html(),/data-cue="retry-picking-up-block"/);
+  assert.match(f.html(),/data-picture-url="[^"]+play-again/);assert.doesNotMatch(f.html(),/vector-picture|data-cue=/);
   assert.doesNotMatch(f.html(),/data-story-frame="0"|story-progress/);
   assert.equal(f.images.length,1,'Familiar review only requests the main image');
   assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);

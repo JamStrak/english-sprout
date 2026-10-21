@@ -12,7 +12,7 @@ import * as meadow from '../xiaoya/garden-meadow.js';
 import * as meadowArt from '../xiaoya/meadow-art.js';
 import * as meadowUI from '../xiaoya/meadow-ui.js';
 import * as seedShop from '../xiaoya/seed-shop.js';
-import * as gardening from '../xiaoya/garden.js';
+import * as gardenHistory from '../xiaoya/garden-history.js';
 import * as voices from '../xiaoya/voices.js';
 import * as art from '../xiaoya/art.js';
 import * as gardenArt from '../xiaoya/garden-art.js';
@@ -55,7 +55,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
   const modalRoot = {innerHTML:''};
   const document = {baseURI:'https://fixture.invalid/app/', hidden:false,
     querySelector: selector => selector === '#app' ? app : selector === '#modal-root' ? modalRoot : null,
-    querySelectorAll: () => [], addEventListener() {}, body:{append() {}}, createElement: () => ({remove() {}})};
+    querySelectorAll: () => [], addEventListener() {}, body:{append() {},addEventListener() {},dispatchEvent() {}}, createElement: () => ({remove() {}})};
   const localStorage = {getItem:key => stored.get(key) ?? null, setItem(key, value) {stored.set(key, value); writes.push({key, value});}};
   const audio = {playSound: async file => {sounds.push(file); return play(file);}, stopSound() {},
     cancelRecording() {}, cancelRecognition() {}, releaseAudioSession() {},
@@ -64,11 +64,12 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
       return recognized ?? {matched:true, stars:3, heard:accepted[0]};},
     beginRecording:async () => true, finishRecording() {}, replayClip:async () => true};
   const sandbox = {...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
-    ...meadowArt, ...meadowUI, ...seedShop, ...gardening, ...voices, ...art, ...gardenArt,
+    ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
     createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
     startAudioPack() {}, retryAudioPack() {}, onAudioPackChange() {}, audioPackMessage:() => '',
+    retryArtPack() {}, onArtPackChange() {}, artPackMessage:() => '',
     recordEvidence:(state, input) => learning.recordEvidence(state, copy(input)),
     recordPractice:(state, input) => practicePlan.recordPractice(state, copy(input)),
     // Imported strict validators and JSON storage share the host realm.
@@ -77,7 +78,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     challenge:{...challenge,
       recordChallengeAttempt:(state, input) => challenge.recordChallengeAttempt(state, copy(input)),
       recordChallengeHelp:(state, input) => challenge.recordChallengeHelp(state, copy(input))},
-    location:{search:'?garden=b'}, JSON, URL, URLSearchParams, Image:class {}, navigator:{},
+    location:{search:'?garden=b'}, JSON, URL, URLSearchParams, Event, Image:class {}, navigator:{},
     window:{addEventListener() {}, scrollTo() {}},
     setTimeout(fn, delay) {const id = ++sequence; timers.set(id, {fn, delay}); return id;},
     clearTimeout(id) {timers.delete(id);}};

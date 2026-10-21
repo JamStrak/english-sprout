@@ -1,4 +1,5 @@
-// Optional art: the complete vector stays visible until this SVG image loads.
+// Release art has one identity. Loading/errors use a neutral placeholder;
+// the previous vector characters and flowers must never reappear.
 // URLs are relative to the document's project-root <base>, not the JS release.
 const ROOT='xiaoya/paper/v1/';
 const NEXT_ROOT='xiaoya/paper/v2/';
@@ -15,7 +16,7 @@ export function paperLayer(key,fallback,{x=0,y=0,width=160,height=180,align='xMi
   if(!Object.prototype.hasOwnProperty.call(PAPER_ASSETS,key))return fallback;
   if(![x,y,width,height].every(Number.isFinite)||width<=0||height<=0)return fallback;
   const position=align==='xMidYMax meet'?align:'xMidYMid meet';
-  return `<g data-paper-art="${key}" data-paper-state="loading" pointer-events="none"><g data-paper-fallback>${fallback}</g><image data-paper-image href="${PAPER_ASSETS[key]}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="${position}" opacity="0" pointer-events="none" aria-hidden="true"/></g>`;
+  return `<g data-paper-art="${key}" data-paper-state="loading" pointer-events="none"><g data-paper-fallback><ellipse cx="${x+width/2}" cy="${y+height*.72}" rx="${width*.15}" ry="${height*.055}" fill="currentColor" opacity=".12"/></g><image data-paper-image href="${PAPER_ASSETS[key]}" x="${x}" y="${y}" width="${width}" height="${height}" preserveAspectRatio="${position}" opacity="0" pointer-events="none" aria-hidden="true"/></g>`;
 }
 
 /** The plant canvases are 384×512; their visible root is at (.5, .88). */
@@ -38,29 +39,11 @@ export function installPaperArt(root=globalThis.document) {
   if(installed.has(root))return installed.get(root);
   const view=root.ownerDocument?.defaultView||root.defaultView||globalThis;
   const Observer=view.MutationObserver;
-  if(!Observer)return ()=>{}; // Without enhancement, all original art survives.
+  if(!Observer)return ()=>{};
   const bound=new WeakMap();
-  const saved=new Set();
   const loaded=new Set();
-  const document=root.ownerDocument||root;
   let active=true;
   const selector='image[data-paper-image]';
-  function remember(path) {
-    // On the very first visit an image may load before the worker controls us.
-    // Read its HTTP-cached response once; never delay visible art on persistence.
-    const build=document.querySelector?.('meta[name="xiaoya-build"]')?.content;
-    if(!/^[a-f0-9]{12}$/.test(build||'')||!view.caches||typeof view.fetch!=='function')return;
-    let url;
-    try {url=new URL(path,document.baseURI);if(url.origin!==view.location.origin)return;}catch{return;}
-    if(saved.has(url.href))return;
-    saved.add(url.href);
-    Promise.resolve().then(async()=>{
-      const cache=await view.caches.open(`xiaoya-core-${build}`);
-      if(await cache.match(url.href))return;
-      const response=await view.fetch(url.href,{cache:'force-cache',mode:'same-origin'});
-      if(response.status===200)await cache.put(url.href,response);
-    }).catch(()=>{});
-  }
   function bind(image) {
     if(bound.has(image))return;
     const layer=image.parentElement;
@@ -72,16 +55,16 @@ export function installPaperArt(root=globalThis.document) {
       if(!active||!root.contains(image))return;
       image.setAttribute('opacity',ready?'1':'0');
       fallback.setAttribute('visibility',ready?'hidden':'visible');
-      layer.setAttribute('data-paper-state',ready?'ready':'fallback');
+      layer.setAttribute('data-paper-state',ready?'ready':'error');
     };
-    const load=()=>{if(!active||!root.contains(image))return;loaded.add(key);show(true);remember(PAPER_ASSETS[key]);};
-    const error=()=>{if(!active||!root.contains(image))return;loaded.delete(key);show(false);};
+    const load=()=>{if(!active||!root.contains(image))return;loaded.add(key);show(true);root.dispatchEvent?.(new (view.Event||Event)('xiaoya-art-ready'));};
+    const error=()=>{if(!active||!root.contains(image))return;loaded.delete(key);show(false);root.dispatchEvent?.(new (view.Event||Event)('xiaoya-art-error'));};
     bound.set(image,{load,error});
     image.addEventListener('load',load);
     image.addEventListener('error',error);
     // A garden tap redraws the same cached picture. Restore its known artwork
     // before paint so neither the picture nor its hit shape flashes to vector.
-    // Native errors still restore the fallback; a new installation starts cold.
+    // Native errors show only a neutral placeholder; a new installation is cold.
     if(loaded.has(key))show(true);
   }
   function scan(node) {
@@ -94,9 +77,16 @@ export function installPaperArt(root=globalThis.document) {
   });
   observer.observe(root,{childList:true,subtree:true});
   scan(root);
+  const retry=()=>{
+    for(const image of root.querySelectorAll(selector))if(image.parentElement?.getAttribute('data-paper-state')==='error'){
+      image.parentElement.setAttribute('data-paper-state','loading');
+      const path=image.getAttribute('href');image.setAttribute('href','');image.setAttribute('href',path);
+    }
+  };
+  root.addEventListener?.('xiaoya-retry-art',retry);
   const dispose=()=>{
     if(!active)return;
-    active=false;observer.disconnect();
+    active=false;observer.disconnect();root.removeEventListener?.('xiaoya-retry-art',retry);
     for(const image of root.querySelectorAll(selector)) {
       const listeners=bound.get(image);
       if(listeners)for(const name of ['load','error'])image.removeEventListener(name,listeners[name]);

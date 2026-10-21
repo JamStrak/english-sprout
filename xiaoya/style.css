@@ -54,3 +54,13 @@
 .story-picture.single-picture{background-size:cover;background-position:center}
 .event-view .story-picture.moving{animation:picture-in .38s ease-out both}
 .extension-phrases{margin-top:24px;border-top:1px solid var(--line);padding-top:10px}
+
+/* Release identity and an honest, recoverable image-loading state. */
+.edition-label{display:block;font-size:10px;font-weight:400;letter-spacing:0;line-height:1.6;opacity:.7}
+[data-picture-placeholder]{height:100%;min-height:180px;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#e8e6da;color:#52645a;font-size:14px;gap:12px;padding:24px;text-align:center}
+[data-picture-placeholder] p{margin:0}[data-picture-placeholder] button,[data-art-recovery] button{min-height:44px;border-radius:14px;padding:10px 18px;background:#344b45;color:#fff}
+.picture-loading-dot{width:20px;height:20px;border-radius:50%;background:#9eaf8f;animation:picture-breathe 1.8s ease-in-out infinite}
+[data-art-recovery]{position:fixed;z-index:200;top:90px;left:50%;transform:translateX(-50%);width:min(480px,calc(100% - 24px));display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:18px;background:#fff8e8;box-shadow:0 4px 20px #344b4522;font-size:12px}
+[data-art-recovery] button{flex-shrink:0;font-size:12px}
+@keyframes picture-breathe{50%{opacity:.4;transform:scale(.85)}}
+@media(prefers-reduced-motion:reduce){.picture-loading-dot{animation:none}}

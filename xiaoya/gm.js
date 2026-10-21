@@ -185,7 +185,7 @@ function installWorkbench() {
   }
   function describeState() {
     const state = gmBridge.inspect();
-    return `当前：${state.page || 'home'}${state.eventId?` / ${state.eventId}`:''}${state.phase?` / ${state.phase}`:''} · 花园 ${(state.gardenVariant || 'b').toUpperCase()}`;
+    return `当前：${state.page || 'home'}${state.eventId?` / ${state.eventId}`:''}${state.phase?` / ${state.phase}`:''} · 自由花园`;
   }
   function showImage(button) {
     previewFocus = button; const url = button.dataset.gmImage;

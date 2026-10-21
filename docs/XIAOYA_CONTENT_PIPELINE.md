@@ -1,6 +1,6 @@
 # 小芽英语：句子、图片与声音交接
 
-核对日期：2026-10-19。代码基线：`51090a5`，小芽英语 `0.16.0`。本文说明已落地的内容管线；当前版本与实际工作树以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。首次接手先读 [AI 交接入口](AI_HANDOFF.md)，按需查 [文档索引](INDEX.md)。无需读取任何聊天记录即可按本文续做。运行、GM 和发布入口见 [使用说明](XIAOYA_USE.md) 与 [实现说明](XIAOYA_IMPLEMENTATION.md)。
+核对日期：2026-10-21。当前为小芽英语·自由花园版 `0.17.0`，内测构建 `51f87facf915`、公开构建 `42ec3d088537`；交付提交见项目入口。本文说明已落地的内容管线；当前版本与实际工作树以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。首次接手先读 [AI 交接入口](AI_HANDOFF.md)，按需查 [文档索引](INDEX.md)。无需读取任何聊天记录即可按本文续做。运行、GM 和发布入口见 [使用说明](XIAOYA_USE.md) 与 [实现说明](XIAOYA_IMPLEMENTATION.md)。
 
 ## 1. 先找到事实来源
 
@@ -13,11 +13,12 @@
 | 已验收资源回执 | [60 句图片回执](../design/xiaoya-phrases-v015/accepted-assets.json)、[音频回执](../design/xiaoya-phrases-v015/audio-manifest.json)、[交付记录](../design/xiaoya-phrases-v015/DELIVERY.md) |
 | 较早内容的补图 | [美术补齐交付](../design/xiaoya-art-completion-20261019/DELIVERY.md)、[回执](../design/xiaoya-art-completion-20261019/accepted-assets.json) |
 | 花园与 UI 美术 | [资源路标](../xiaoya/art-README.md)、[纸艺方向](../design/xiaoya-paper-v010/ART_DIRECTION.md)、[首批规格](../design/xiaoya-paper-v010/art-manifest.json) |
+| 图片整包与离线校验 | `releases/<build>/art-pack.json` 由 [build-xiaoya.mjs](../scripts/build-xiaoya.mjs) 生成；[audio-pack.js](../xiaoya/audio-pack.js) 管理状态，[sw.template.js](../xiaoya/sw.template.js) 下载并校验 |
 | 声音选取与离线清单 | [voices.js](../xiaoya/voices.js)、[audio-pack.js](../xiaoya/audio-pack.js)、[build-xiaoya.mjs](../scripts/build-xiaoya.mjs) |
 
 基线包括 115 个事件、113 个去重表达、84 个核心学习表达、21 组挑战。新增包是 **60 个新表达**，其中 49 个 easy、11 个 later；这两个标签是编排选择，不是经儿童实验验证的年龄等级。已有 55 个事件 / 53 个表达保留。三个旧 `Help me please` 场景共享 `needs-08`，属于兼容数据，不得照此继续扩量，也不能为了报表去重直接删除旧 ID。
 
-新增包已有 60 张主图（共 6,183,046 字节），240 段声音（3,793,542 字节）：每句 3 个英文音色和 1 个中文帮助。全量构建音频清单是 821 段 / 14,886,530 字节。内部 GM 的 229 张图片是所有扫描到的图片资源，不能当成 229 个独立故事。数量是本次基线，不是未来扩包必须维持的上限。
+新增包已有 60 张主图（共 6,183,046 字节），240 段声音（3,793,542 字节）：每句 3 个英文音色和 1 个中文帮助。全量构建音频清单是 821 段 / 14,886,530 字节。正式图片包为 223 张（195 张故事＋28 张纸艺），19,638,436 字节，包版本 `c05c69f847cbcaf9`。内部 GM 审图索引是 228 项，即正式图包加 5 个应用图标；其中 2 个旧图标只供资源审核，不进入儿童界面。不能把审图项数当成独立故事数。数量是本次基线，不是未来扩包必须维持的上限。
 
 ## 2. 新句先定稿，再生产
 
@@ -80,7 +81,7 @@ public/xiaoya/audio/phrases-v015/{id}/
 | `content.js` / `curriculum.js` | 合并事件与物品；追加核心顺序；保留旧学习主键与挑战组 |
 | 新图片映射 / `stories.js` | 引入映射，默认 `imageLayout: single`；按需要设置 `cueFrame`、`introFrame`、`teachingFrames` |
 | `voices.js` | `lessonAudio()` 当前专门识别 v015 ID 集合。必须扩展新包解析，否则会回落到旧目录请求不存在的文件 |
-| `scripts/build-xiaoya.mjs` | 新 JS 模块加入显式 `MODULES`；新音频目录加入枚举、复制和哈希清单，不能只靠文件存在 |
+| `scripts/build-xiaoya.mjs` | 新 JS 模块加入显式 `MODULES`；新音频与正式故事/纸艺图片加入枚举、复制、长度和 SHA-256 清单；完整图包字节必须影响内测与公开构建指纹，不能只靠文件存在 |
 | 同一构建脚本的 GM catalog | 新包声音路径需要正确分类为 Aiden / Ryan / Pip / 中文帮助；当前有 `/phrases-v015/` 特判 |
 | 资源回执与测试 | 对应新包的尺寸、哈希、覆盖数、去重、旧 ID 兼容、音频解析与构建资产测试 |
 
@@ -92,9 +93,11 @@ v015 事件仍有 `choices` 等兼容结构，不能据此重新推出“听一�
 
 新应用 `xiaoya/audio.js` 与 `xiaoya/sw.template.js` 的声音缓存名当前均为 `xiaoya-audio-v3`。变化涉及缓存策略/版本时必须一起改；旧产品 `src/media.js` 与根 `sw.template.js` 是另一套入口，不能只改它们就认为新应用已更新。构建生成按内容哈希校验的 `audio-pack.json`，新音频必须进入该清单；同源预制音频准备完成后可离线播，不在使用时现生成。
 
-故事图按当前帧与相邻必要帧加载，不一口气预载全部。`story-pictures.js` 在慢加载时给状态/兜底，后到图片继续替换；未看过的图片不保证首次离线已经缓存。纸艺增强层加载失败保留 SVG，不得留下空白按钮或为了换图重建录音状态。
+前台只解码当前故事帧与必要相邻帧；后台按 `art-pack.json` 准备完整 223 张图片，不以是否看过该故事决定缓存。当前图片缓存为 `xiaoya-art-c05c69f847cbcaf9`。核心、声音和图片整包都通过长度与 SHA-256 校验后，新 SW 才可激活；未完成时不能承诺全包离线。家长页显示插画包进度和重试入口。
 
-**图片换内容也要换版本化 URL。** 公开版构建哈希不能单靠图片文件字节变化自动更新；内部 GM 虽扫描图片哈希，也不能当作公开版的缓存保证。修改图片文件名/版本目录及映射、重新构建，并验证旧缓存用户可更新。音频内容已进入构建哈希，但仍遵守发布 URL 不覆盖的约束。
+缺图使用中性占位和重试，禁止恢复旧 SVG 故事或旧界面兜底；后到图片只局部替换，不重建录音会话。只有带 `event.hintAudio` 的新 60 句在首次新学缺图时自动补充预制中文情境说明，旧课继续使用原上下文帮助；复习和挑战不自动给答案。
+
+**图片内容已进入两个渠道的构建指纹。** 修改图片后重新构建会更新图片清单、图包版本及构建指纹；不依赖 GM 扫描来保证公开版更新。仍优先使用新版本路径并更新映射，保持已发布资源一致性；音频同样保留发布 URL 不覆盖的约束。新版 SW 已安装后，任意旧 `start-<hash>.html` 在线读取当前入口、离线读取该 SW 已校验入口。重启电脑用当前 VBS 启动服务；浏览器清除站点数据后，需要服务重新提供资源，不能把缓存当成永久离线安装。
 
 ## 7. 验证与交付
 
@@ -115,6 +118,7 @@ npm run build:dev
 | --- | --- |
 | 新句、ID、素材清单 | `tests/xiaoya-phrase-pack.test.js`、`xiaoya-phrase-delivery.test.js`、`xiaoya-phrase-integration.test.js`；为新包扩展等价覆盖 |
 | 完整 60 句学习/复习/图片 | `node tests/xiaoya-phrase-pack-browser.cjs`；默认自建临时服务，可用 `TEST_URL` 指定隔离的本机服务；过滤执行须写明覆盖范围 |
+| 图片整包、构建指纹与重启离线 | `tests/xiaoya-build.test.js`、`node tests/xiaoya-restart-art-browser.cjs`；覆盖完整图包校验、旧入口和未浏览图片离线读取 |
 | 图片加载与帧序 | `node tests/xiaoya-story-pictures-browser.cjs`；纸艺相关 `xiaoya-paper-art-browser.cjs` / `xiaoya-paper-layer-browser.cjs` |
 | 植物替图 | 先运行 `python scripts/generate-meadow-hit-shapes.py`，再 `python -m unittest discover -s tests -p test_meadow_hit_shapes.py`，以及 `xiaoya-meadow-hit-browser.cjs` / `xiaoya-meadow-anchor-browser.cjs` |
 | 音频覆盖、缓存与离线 | `node tests/xiaoya-offline-audio-browser.cjs`；必须让 `TEST_URL` 对应刚构建的隔离版本，覆盖首次准备、完整性与断网重播 |

@@ -14,7 +14,7 @@ test('intro, main and alternate beats select their own single picture',()=>{
   for(const options of [{frame:0},{frame:1},{alternate:true,phase:'resolved'}])assert.equal(pictureFor(story,options,base).layout,'single');
 });
 
-test('missing intro or alternate must use its original SVG, never a different beat image',()=>{
+test('missing intro or alternate remains unavailable, never a different beat image',()=>{
   assert.equal(pictureFor({...story,introImage:null},{frame:0},base),null);
   assert.equal(pictureFor({...story,alternateImages:{request:'request.webp'}},{alternate:true,phase:'resolved'},base),null);
   assert.equal(pictureFor({...story,alternateImages:null},{alternate:true},base),null);
@@ -36,7 +36,7 @@ test('preload is bounded to current and immediate next teaching beat',()=>{
   assert.deepEqual(pictureSequence(story,{alternate:true,phase:'resolved'},base).map(file),['resolved.webp']);
 });
 
-test('SVG intro may preload its immediate successor, and shared URLs are deduplicated',()=>{
+test('missing intro may preload its immediate successor, and shared URLs are deduplicated',()=>{
   assert.deepEqual(pictureSequence({...story,introImage:null},{frame:0,phase:'story'},base).map(file),['main.webp']);
   assert.equal(pictureSequence({...story,introImage:'main.webp'},{frame:0,phase:'story'},base).length,1);
   assert.equal(pictureSequence({...story,alternateImages:{request:'same.webp',resolved:'same.webp'}},{alternate:true,phase:'request'},base).length,1);
@@ -72,7 +72,7 @@ test('a failed intro or alternate cannot mark the main or another alternate unav
   loader.load('intro');assert.equal(images.length,4,'Repeated renders do not create a failed-resource request loop');
 });
 
-test('timeout releases callers to SVG while a late decode can still become ready without a new request',async()=>{
+test('timeout releases callers to the loading placeholder while a late decode can still become ready without a new request',async()=>{
   const {loader,images,timers,changes,persisted}=harness();
   const result=loader.load('slow'),lateLoad=images[0].onload;
   [...timers.values()][0]();assert.equal(await result,'slow');
@@ -103,4 +103,23 @@ test('synchronous image creation error is contained and the absent asset never l
   const {loader,timers}=harness({createImage:()=>{throw new Error('unavailable');}});
   assert.equal(await loader.load('broken'),'failed');assert.equal(timers.size,0);
   assert.equal(await loader.load(null),'missing');
+});
+
+
+test('explicit retry recovers a failed URL without replacing ready pictures',async()=>{
+  const {loader,images,changes}=harness();
+  const failed=loader.load('main');images[0].onerror();await failed;
+  const retried=loader.load('main',{retry:true});assert.equal(images.length,2);
+  assert.equal(loader.status('main'),'pending');images[1].onload();
+  assert.equal(await retried,'ready');assert.equal(loader.load('main',{retry:true}),retried);
+  assert.deepEqual(changes,[['main','failed'],['main','ready']]);
+});
+
+test('retrying a timed-out picture rejects stale callbacks from the replaced request',async()=>{
+  const {loader,images,timers,changes}=harness();
+  const slow=loader.load('main'),oldLoad=images[0].onload,oldError=images[0].onerror;
+  [...timers.values()][0]();await slow;
+  const retried=loader.load('main',{retry:true});oldLoad();oldError();
+  assert.equal(loader.status('main'),'pending');images[1].onload();
+  assert.equal(await retried,'ready');assert.deepEqual(changes,[['main','slow'],['main','ready']]);
 });
