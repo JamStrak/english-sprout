@@ -1,0 +1,93 @@
+// Disposable Edge profile, real MP3 and SW cache. No child save or microphone.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const crypto=require('node:crypto');
+const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
+if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Use a loopback server.');
+const out=path.resolve(__dirname,'../test-results/xiaoya-garden-music');
+const report={origin,scope:'Real native MP3, touch gestures and offline SW cache in disposable Edge. Background visibility is simulated. No physical-speaker or device listening assessment.',checks:[]};
+const check=(name,detail)=>report.checks.push({name,pass:true,detail});
+let browser;
+(async()=>{
+  fs.mkdirSync(out,{recursive:true});
+  browser=await chromium.launch({channel:'msedge',headless:true,args:['--autoplay-policy=no-user-gesture-required']});
+  const c=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,timezoneId:'Asia/Shanghai',reducedMotion:'reduce'});
+  const errors=[];
+  await c.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort());
+  await c.addInitScript(()=>{
+    const NativeAudio=Audio;
+    window.qaMusic={players:[],plays:0,volumes:[]};
+    window.Audio=function(...args){
+      const a=new NativeAudio(...args);
+      if(String(args[0]||'').endsWith('/garden-piano.mp3')){
+        qaMusic.players.push(a);
+        a.addEventListener('playing',()=>qaMusic.plays++);
+        a.addEventListener('volumechange',()=>qaMusic.volumes.push(a.volume));
+      }
+      return a;
+    };
+    window.Audio.prototype=NativeAudio.prototype;
+  });
+  const p=await c.newPage();p.setDefaultTimeout(20000);
+  p.on('pageerror',e=>errors.push(e.message));
+  const click=action=>p.locator(`[data-action="${action}"]`).first().tap();
+  const steady=(volume,paused=false)=>p.waitForFunction(({volume,paused})=>{
+    const a=qaMusic.players[0];return a&&a.paused===paused&&Math.abs(a.volume-volume)<0.001;
+  },{volume,paused});
+  await p.goto(origin+'/xiaoya/');await p.locator('.home-view').waitFor();
+  report.build=await p.locator('meta[name="xiaoya-build"]').getAttribute('content');
+  await p.evaluate(async()=>{
+    const m=await import(new URL('garden-meadow.js',document.querySelector('script[type="module"][src]').src));
+    const s=m.rewardRound(m.createMeadow(),{roundId:'qa-music',eventId:'hello-everyone',date:'2026-10-21'});
+    localStorage.setItem(m.MEADOW_KEY,JSON.stringify(s));
+  });
+  await p.reload();await p.locator('.home-view').waitFor();
+  assert.equal(await p.evaluate(()=>qaMusic.players.length),0);
+  check('Home creates no background player');
+  await click('garden');await p.locator('.meadow-view').waitFor();
+  await click('meadow-can');await steady(.5);
+  const initial=await p.evaluate(()=>{const a=qaMusic.players[0];return{loop:a.loop,duration:a.duration,plays:qaMusic.plays};});
+  assert(initial.loop&&initial.duration>1&&Number.isFinite(initial.duration));
+  await click('meadow-can');await steady(.5);
+  assert.equal(await p.evaluate(()=>qaMusic.players.length),1);
+  assert.equal(await p.evaluate(()=>qaMusic.plays),initial.plays);
+  check('Garden loops real MP3 at 50%; rerender keeps one continuous player',initial);
+  await click('help');await steady(.12);await steady(.5);
+  check('Narration ducks music to 12% then restores 50%');
+  await p.evaluate(()=>{const a=qaMusic.players[0];a.currentTime=a.duration-.15;});
+  await p.waitForFunction(()=>qaMusic.players[0].currentTime<2&&!qaMusic.players[0].paused);
+  check('Native audio loops at end of track');
+  await click('meadow-collection');await steady(0,true);
+  await click('close');await steady(.5);
+  await p.locator('[data-gm-action="open"]').tap();await steady(0,true);
+  await p.locator('[data-gm-action="close"]').tap();await steady(.5);
+  check('Collection and GM pause music; returning resumes it');
+  await p.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));});
+  await steady(0,true);
+  await p.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));});
+  await steady(.5);
+  await click('home');await p.locator('.home-view').waitFor();await steady(0,true);
+  assert(await p.evaluate(()=>qaMusic.volumes.every(v=>v>=0&&v<=.5)));
+  check('Background immediately pauses; leaving garden fades to zero without exceeding 50%');
+  const musicURL=origin+'/xiaoya/audio/v3/garden-piano.mp3';
+  await p.waitForFunction(async url=>Boolean(await caches.match(url)),musicURL,{timeout:60000});
+  const cached=await p.evaluate(async url=>{
+    const response=await caches.match(url),bytes=await response.arrayBuffer();
+    const digest=await crypto.subtle.digest('SHA-256',bytes);
+    return{bytes:bytes.byteLength,sha256:[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('')};
+  },musicURL);
+  const source=fs.readFileSync(path.resolve(__dirname,'../public/xiaoya/audio/garden-piano.mp3'));
+  assert.equal(cached.bytes,source.length);assert.equal(cached.sha256,crypto.createHash('sha256').update(source).digest('hex'));
+  await c.setOffline(true);
+  await p.reload();await p.locator('.home-view').waitFor();
+  await click('garden');await p.locator('.meadow-view').waitFor();await click('meadow-can');await steady(.5);
+  await p.waitForFunction(()=>qaMusic.players[0].currentTime>.1&&qaMusic.players[0].readyState>=2);
+  check('Verified local music survives offline reload and plays from SW cache',cached);
+  assert.deepEqual(errors,[]);check('No page script errors');
+  await c.close();
+})().catch(error=>{report.error=error.stack;process.exitCode=1;}).finally(async()=>{
+  await browser?.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));
+  console.log(JSON.stringify(report,null,2));
+});

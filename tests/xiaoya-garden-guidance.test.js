@@ -74,7 +74,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
   let meadowActions;
   const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},
     retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},installPaperArt(){},
-    ...practicePlan,...curriculum,challenge,...challengeUI,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),
+    ...practicePlan,...curriculum,challenge,...challengeUI,createGardenMusic:()=>({setState(){},retry(){}}),createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),
     ...content,...learning,...stories,...gardenHistory,...seedShop,...voices,...art,...gardenArt,...meadowArt,...meadowUI,
     layoutMeadowWatering(){/* Geometry has separate browser tests. */},
     bindMeadowInteractions(root,actions){meadowActions=actions;return ()=>{};},meadow,audio,document,JSON,Event,

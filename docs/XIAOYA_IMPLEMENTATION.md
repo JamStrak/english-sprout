@@ -1,5 +1,21 @@
 # 小芽英语 · 实施记录
 
+## v0.20.2 · 花园钢琴背景音乐（2026-10-21）
+
+接入用户提供、由用户通过 MiniMax 生成的 `garden_piano.mp3`。原始文件位于 `E:\AI新项目\其他实验\英语小芽-无声版\voice_tryouts\garden_piano.mp3`，原字节复制到 `public/xiaoya/audio/garden-piano.mp3`；656,810 字节 / 40.97 秒，来源与 SHA-256 记录于同目录 `garden-piano-source.json`。本次只按用户指定用在应用花园，未附独立许可文档。
+
+- 复用浏览器原生 Audio 和现有静态离线清单；独立 `garden-music.js` 保持一个循环播放器，默认 0.5 音量，提示语期间压到 0.12，结束恢复。无需新依赖、接口或存档字段。
+- 进入渐入、离开花园约 300ms 淡出，收藏弹窗暂停；后台和 GM 工作台立即静音并暂停。返回继续原进度，种植/浇水重绘不会重新开始或叠播。浏览器拒绝播放后等下一次真实操作重试，不弹语音失败提示。
+- 静态声音包增至 849 段 / 16,178,128 字节；GM 可搜索 `garden-piano` 试听原音，实际混音在花园体验。画面和经济规则未改。
+- 基于 `b973378`，分支 `codex/xiaoya-garden-ab`；内测 **0.20.2 / 05f5e13efcb0**，公开 **d600ff42cb4b**；旧产品仍 **1.8.1 / c4bccf69eebc**。最终 dist 为内测，未部署。交付提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询。
+
+验证（最终运行代码）：
+
+- `npm test` **763/763**，含新增 5 项音乐生命周期测试：音量、循环实例、压低恢复、快速进出、后台暂停、播放被拒及迟到完成。日志 `test-results/xiaoya-v0202-unit.log`。
+- `node tests/xiaoya-garden-music-browser.cjs` **8/8**，真实 Edge 原生 MP3、触摸和服务工作线程：50% 播放、重复操作不重启、语音压低恢复、音轨末尾循环、收藏和 GM 暂停恢复、离场淡出、后台暂停，以及完整哈希核对后断网重载播放。报告 `test-results/xiaoya-garden-music/report.json`；后台事件为模拟。
+- `TEST_URL=http://127.0.0.1:24756 REPORT_NAME=xiaoya-v0202-legacy node tests/browser.cjs` 旧产品浏览器回归 **36/36**，报告 [UI_QA_xiaoya-v0202-legacy.md](UI_QA_xiaoya-v0202-legacy.md)。使用隔离测试记录与虚拟麦克风。
+- `npm run build`、`npm run build:dev` 均通过。未改启动器，未重跑 Python 启动器、完整插画离线包或独立 GM 全套；自动化未替代实体设备扬声器或儿童主观试听验收。
+
 ## v0.20.1 · 奖励选择与领取时淡出说明语音（2026-10-21）
 
 奖励页说明“贝壳可以买种子，水滴可以浇花”时，孩子选择资源或确认领取会让当前说明在约 180ms 内淡出，界面即时响应，不必等声音播完。

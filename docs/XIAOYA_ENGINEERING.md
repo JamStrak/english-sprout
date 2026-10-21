@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.20.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.20.2。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -33,6 +33,7 @@
 | 三种示范音色 | `voices.js`：`VOICES`、`readVoice`、`saveVoice`、`lessonAudio` | Aiden / Ryan / Pip 使用同一学习进度；切声音不能重复发奖 |
 | 播放、录音、评分 | `audio.js`：`playSound`、`prepareRecording`、`beginRecording`、`finishRecording`、`replayClip`、`recognize`；`speech-local.js`、`speech-worker.js` | 真正录音就绪后才提示开口；停止/取消生命周期与临时音频清理 |
 | 引导与反馈 | `experience.js` 的 `scheduleIdleHint`、`sound`；`feedback.js`；`feedback.css`、`paper.css`、`style.css` | 指引手仅闲置后出现；录音期间、后台与关弹窗时不能留下音效/提示 |
+| 花园背景音乐 | `garden-music.js`：`createGardenMusic`；`experience.js`：`syncGardenMusic` | 独立循环通道，50% 上限、语音 12%；离场淡出、后台/GM 立即暂停，不随浇水重建。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json`；离线清单由构建自动纳入 |
 | GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 公开包物理排除、内存存档隔离、模拟标记、真实儿童记录不变 |
 | 静态发布与离线 | `scripts/build.mjs`、`scripts/build-xiaoya.mjs`、`xiaoya/audio-pack.js`、`xiaoya/sw.template.js` | 两产品、渠道、完整声音/图片清单、后台 SHA-256 校验、版本更新需一起核对 |
 

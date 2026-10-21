@@ -68,7 +68,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
-    createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
+    createGardenMusic:()=>({setState(){},retry(){}}),createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
     startAudioPack() {}, retryAudioPack() {}, onAudioPackChange() {}, audioPackMessage:() => '',
     retryArtPack() {}, onArtPackChange() {}, artPackMessage:() => '',
     recordEvidence:(state, input) => learning.recordEvidence(state, copy(input)),
