@@ -33,7 +33,7 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
   await fs.writeFile(path.join(root, 'xiaoya', 'welcome-greetings.js'), '/* local welcome rotation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
-  for (const name of ['gm-growth.js', 'growth-core.js', 'growth-settings.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal growth workbench */');
+  for (const name of ['gm-growth.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal growth workbench */');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), new Uint8Array([1,2,3,4,5,6]));
   for (const directory of ['', 'ryan', 'characters/pip']) {
@@ -125,8 +125,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语·自由花园版 v0\.21\.1<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.21\.1/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.22\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.22\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
@@ -162,7 +162,7 @@ test('public is the default and contains no GM entry, workbench, stylesheet or a
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = false/);
   assert.doesNotMatch(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /gm\.js/);
   assert.ok(!built.core.some(file => /\/gm[.-]/.test(file)));
-  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-growth.js', 'growth-core.js', 'growth-settings.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
+  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-growth.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
   await assert.rejects(fs.stat(path.join(built.output, 'growth')), {code:'ENOENT'});
   assert.ok(built.core.includes(`./releases/${built.build}/runtime.js`));
   assert.ok(built.core.includes(`./releases/${built.build}/build-config.js`));
@@ -175,7 +175,7 @@ test('explicit internal builds fingerprint their channel and catalogue all stati
   assert.equal(JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8')).channel, 'internal');
   assert.match(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /import '\.\/gm\.js'/);
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = true/);
-  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-growth.js','growth-core.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
+  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-growth.js','growth-core.js', 'growth-motion.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
   const catalogue = JSON.parse(await fs.readFile(path.join(release, 'gm-catalog.json'), 'utf8'));
   assert.equal(catalogue.images.length, 7);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/growth/v09/flower.webp'));

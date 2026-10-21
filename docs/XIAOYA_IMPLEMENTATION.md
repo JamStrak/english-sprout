@@ -1,5 +1,24 @@
 # 小芽英语 · 实施记录
 
+## v0.22.0 · GM 花朵成长动效调试（2026-10-21）
+
+接续 `53619c9`，分支 `codex/xiaoya-garden-ab`。用户希望逐滴浇水有柔性左右摆动、淡化换阶段与弹动长大的反馈。本次复用现有 50 花 / 268 图的 GM 成长审核，不新增素材依赖；候选花尚未进入儿童花园、商店或挑战，动效参数目前只控制审核预览。
+
+- 新增 `growth-motion.js` 纯参数与逐帧计算；每滴按落水、柔摆、交叉淡化长大、回弹稳定的顺序播放。延迟剪切与阻尼旋转产生跟随感，前后两张图共享同一根点和变换，不移动土中根部。水滴、飞溅、星光、根部光圈用于加强反馈；同阶段每滴仍有尺寸变化。
+- GM 三套预设与六项调节：总时长、左右幅度、柔性跟随、弹性、淡化时长、粒子强度。支持重播上一滴、半速、连续长到盛放和停止；重播不增加水数。停止保留最后完成的一滴。切花/调参/切页/关闭/后台都取消旧 RAF、预解码与连续任务。下一图预解码成功才播放，失败保留旧图并提示重试。系统减少动态效果时使用短淡化，关闭摇摆与粒子。
+- `growth-settings:v1` 新增顶层 motion，兼容旧参数，统一经 appStorage 保存和 JSON 导出；免录音沙盒仅内存。没有改儿童经济、存档与音频。公开包物理排除新增 GM 模块和候选资源。
+- 公开构建 **0.22.0 / e1bd901197ab**，内测 **0.22.0 / b8a9e316fb64**，最终 dist 为内测，未部署。公开插画 224 / 19,785,028 字节，内测 492 / 33,120,438 字节；声音仍为 849 / 16,178,128 字节。
+
+验证：
+
+- `npm test` **786/786**（`test-results/growth-motion-unit.log`）；最终淡化精度修正后，`node --test tests/xiaoya-growth-motion.test.js tests/xiaoya-growth.test.js tests/xiaoya-build.test.js` **36/36**。
+- 成长浏览器完整 **15/15**（`test-results/xiaoya-v022-growth/results.json`）；最终构建定向 **8/8**（`test-results/xiaoya-v022-growth/final/results-partial.json`）。真实 RAF 采样 411 帧，57 帧呈现双图混合，根点最大漂移 0.438px；设置淡化 350ms / 120ms，实测约 344ms / 111ms。覆盖重播/连续/停止、调参/选花/切页/关闭/后台取消、预解码失败恢复、保存/导出/沙盒隔离、268 张原生图片解码和 320px/桌面布局。减少动态效果实测约 221ms，未出现旋转或粒子。
+- GM **10/10**（`test-results/xiaoya-v022-gm/results.json`），公开排除 **1/1**（`test-results/xiaoya-v022-growth-public/results.json`），[旧产品浏览器 36/36](UI_QA_xiaoya-v022-legacy.md)。`npm run build` 和 `npm run build:dev` 通过，最终两渠道日志为 `test-results/growth-motion-final-*-build.log`。
+- 本地 24756 健康身份、HTTP 版本与构建专属入口已核对（`test-results/growth-motion-final-http.json`）；侧栏已打开内测 GM 成长页，截图 `test-results/growth-motion-sidebar.png`。
+- 测试使用隔离浏览器；真实用户界面只作不扣水的 GM 预览。成长回归的欢迎语测试前置固定为当天已播，避免首页既有延时问候导致严格存档比较误报；没有放松儿童账本隔离断言。后台与资源失败通过注入验证，不代表实体手机实测。
+
+本轮未重跑 Python 启动器、实际候选图片完整离线下载或独立 BGM 全套；真实触控、最终动效与候选美术观感待用户验收。交付提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询。
+
 ## v0.21.1 · 补接新版纸艺礼盒（2026-10-21）
 
 接续 `e4fea79`，分支 `codex/xiaoya-garden-ab`。用户截图中的单色礼物来自 `xiaoya/art.js` 仍保留的旧绘制，并非这次页面缓存失效。创意资产实验室 v08 已交付礼盒，但之前漏接。本次复用原始 WebP，首页、拆礼物和领奖统一调用共享纸艺礼盒；删除旧礼物矢量内容，资源失败沿用中性占位与重试。

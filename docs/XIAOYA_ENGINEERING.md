@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.21.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.22.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -35,7 +35,7 @@
 | 引导与反馈 | `experience.js` 的 `scheduleIdleHint`、`sound`；`feedback.js`；`feedback.css`、`paper.css`、`style.css` | 指引手仅闲置后出现；录音期间、后台与关弹窗时不能留下音效/提示 |
 | 花园背景音乐 | `garden-music.js`：`createGardenMusic`、`gardenMusicSettings`；`experience.js`：`syncGardenMusic`、`gmBridge.musicSettings/setMusicSettings/previewMusic` | 默认 50%，可设 0–100% 和关闭；语音压至 `min(0.12, volume*0.24)`。GM 试听与花园共用一个循环通道，切页/关台/后台停止试听，不随浇水重建。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json`；离线清单由构建自动纳入 |
 | GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 公开包物理排除、内存存档隔离、模拟标记、真实儿童记录不变 |
-| GM 花朵成长 | `gm-growth.js`、`growth-core.js`、`growth-settings.js`、`growth-catalog.js` | 50 花 × 5 阶段＋18 种子，只供内测审核；默认 10 水、40/55/70/85/100%，逐滴插值；全画布根点 `(192,451)` 固定，不裁切，单层缩放；不写儿童账本 |
+| GM 花朵成长 | `gm-growth.js`、`growth-core.js`、`growth-motion.js`、`growth-settings.js`、`growth-catalog.js` | 50 花 × 5 阶段＋18 种子，只供内测审核；默认 10 水、40/55/70/85/100%，逐滴插值；全画布根点 `(192,451)` 固定，不裁切，双图层共用根点与柔摆/缩放变换；RAF 驱动落水、柔摆、交叉淡化和回弹；不写儿童账本 |
 | 静态发布与离线 | `scripts/build.mjs`、`scripts/build-xiaoya.mjs`、`xiaoya/audio-pack.js`、`xiaoya/sw.template.js` | 两产品、渠道、完整声音/图片清单、后台 SHA-256 校验、版本更新需一起核对 |
 
 表中未带目录的 JS/CSS 均在 `xiaoya/`。小模块大多是纯状态函数；`experience.js` 负责将 UI、存档写入、异步播放与它们连接。新增功能先找对应领域模块，不把全部规则继续写进界面事件回调。
@@ -55,7 +55,7 @@
 | `xiaoya-english:meadow:v1` | `garden-meadow.js`，自由花园经济、购买、种植、挑战奖；当前对象 `schemaVersion: 4`，新增 `welcomeGifts: [{date, kind}]` 每日欢迎礼物账本，键名仍是 v1 |
 | `xiaoya-english:welcome-greetings:v1` | `welcome-greetings.js`，schema 1 的日期、当日语音 ID、剩余轮换列表；只影响欢迎语，不是奖励凭据。经 appStorage 隔离 GM；存储失败回退内存，不阻塞学习 |
 | `xiaoya-english:preferences:v1` | `experience.js`，麦克风许可意愿、引导及 `gardenMusic:{enabled,volume}`；缺失音乐偏好默认开启/0.5，数值夹到 0–1。GM 普通内测允许持久化此偏好，模拟模式通过 `appStorage` 只写内存，不覆盖真实设置 |
-| `xiaoya-english:growth-settings:v1` | `growth-settings.js` 经 appStorage 保存；schema `xiaoya-growth-settings/v1`，releaseId `v09-growth-complete`，统一 defaults 与稳定花 ID 的 overrides。总水量 4–50、五阶段比例 15–150%；GM 沙盒只写内存。无效输入不保存，写失败明确提示并支持重试/导出；只读打开不覆盖损坏数据 |
+| `xiaoya-english:growth-settings:v1` | `growth-settings.js` 经 appStorage 保存；schema `xiaoya-growth-settings/v1`，releaseId `v09-growth-complete`，统一 defaults 与稳定花 ID 的 overrides；新增顶层 motion，旧 v1 设置自动补默认值。动效范围：duration 700–2400ms、sway 0–18°、flex 0–100%、bounce 0–24%、crossfade 120–600ms（最多总时长一半）、particles 0–100%。总水量 4–50、五阶段比例 15–150%；GM 沙盒只写内存。无效输入不保存，写失败明确提示并支持重试/导出；只读打开不覆盖损坏数据 |
 | `xiaoya-english:garden-variant:v1` | 旧 A/B 偏好键，当前忽略且不再写入；旧 URL `garden=a` 也不能进入 A |
 | `xiaoya-english:voice:v1` | `voices.js`，示范声音选择 |
 
@@ -81,20 +81,20 @@
 
 新增持久化必须通过 `appStorage`；直接调用 localStorage 会穿透 GM 隔离。正式 storage 事件处理在 GM 下跳过；`gmBridge` 的写入操作要求沙盒。免录音操作通过共享 `applySpeechResult` 走流程，但不会启动麦克风或识别模型。GM 导出带 `testing.mode = 'gm-simulation'`、`realLearningEvidence: false` 和 `GM模拟记录-` 文件名前缀，不能作为真实学习效果证据。
 
-公开构建不装入 `gm.js`、`gm.css`、`gm-catalog.json`、`gm-growth.js`、`growth-core.js`、`growth-settings.js`、`growth-catalog.js` 或 `xiaoya/growth/` 候选图片目录；只改 URL 不能开启。运行时的构建标志与空桥接守卫仍在正常模块中，不能把“公开隔离”理解为源码中一个 GM 字符都不存在。
+公开构建不装入 `gm.js`、`gm.css`、`gm-catalog.json`、`gm-growth.js`、`growth-core.js`、`growth-motion.js`、`growth-settings.js`、`growth-catalog.js` 或 `xiaoya/growth/` 候选图片目录；只改 URL 不能开启。运行时的构建标志与空桥接守卫仍在正常模块中，不能把“公开隔离”理解为源码中一个 GM 字符都不存在。
 
 ## 4. 声音、图片与识别的离线边界
 
 | 资源 | 当前实现 | 什么情况下可离线 |
 | --- | --- | --- |
 | 英文示范、中文帮助、引导及 BGM | 849 段静态音频，16,178,128 字节；`audio-pack.js` 与 SW 校验字节数、SHA-256 | 当前构建完整声音包通过校验后；首次需从本站取得资源，运行时不生成 TTS |
-| 课程与界面图片 | 公开包 223 张（195 故事＋28 纸艺），19,638,436 字节；内测加 268 张成长候选，共 491 张、32,973,846 字节；`art-pack.json` 列出长度与 SHA-256 | 整包后台下载并校验后，包含从未浏览过的课程图；图片包与声音包分别显示状态 |
+| 课程与界面图片 | 公开包 224 张（195 故事＋29 纸艺），19,785,028 字节；内测加 268 张成长候选，共 492 张、33,120,438 字节；`art-pack.json` 列出长度与 SHA-256 | 整包后台下载并校验后，包含从未浏览过的课程图；图片包与声音包分别显示状态 |
 | 语音识别 | 本机 Worker / WASM，Whisper tiny.en，`speech-assets.js` 的 10 项固定资源，总计 81,191,822 字节 | 单独下载并校验模型及运行时后；声音整包状态不代表模型就绪 |
 | 核心界面 | 按构建指纹缓存的 JS/CSS/入口资源 | 服务工作线程正确安装并控制当前页面后 |
 
-`audio-pack.js` 同时管理声音与图片包状态：`startAudioPack` / `retryAudioPack`、`artPackStatus` / `retryArtPack` / `onArtPackChange`。`sw.template.js` 的核心缓存为 `xiaoya-core-<build>`，声音缓存为 `xiaoya-audio-v3`，图片缓存按渠道清单生成：v0.21.0 内测 `xiaoya-art-ac8b18a158c2aa63`、公开 `xiaoya-art-c05c69f847cbcaf9`；识别缓存为 `english-sprout-speech-v1`。核心、完整声音包及完整图片包通过长度与 SHA-256 校验后，新 SW 才可激活接管；下载可复用已校验项。声音支持 Range 请求。家长页分别显示包进度与重试入口，不用清除全部缓存解决版本问题。
+`audio-pack.js` 同时管理声音与图片包状态：`startAudioPack` / `retryAudioPack`、`artPackStatus` / `retryArtPack` / `onArtPackChange`。`sw.template.js` 的核心缓存为 `xiaoya-core-<build>`，声音缓存为 `xiaoya-audio-v3`，图片缓存按渠道清单生成：v0.22.0 内测 `xiaoya-art-0de11ffa1045fcb0`、公开 `xiaoya-art-dc1c5cdc876bdca7`；识别缓存为 `english-sprout-speech-v1`。核心、完整声音包及完整图片包通过长度与 SHA-256 校验后，新 SW 才可激活接管；下载可复用已校验项。声音支持 Range 请求。家长页分别显示包进度与重试入口，不用清除全部缓存解决版本问题。
 
-当前 GM 审图索引为 496 项：已上线插画 223 张、成长候选图 268 张加 5 个应用图标，其中 2 个旧应用图标只供资源审核，不会回到儿童界面。这不是独立故事数量。候选图来源及逐文件哈希、像素一致性回执见 `design/xiaoya-growth-v09-source.json`；重导入用 `scripts/import-xiaoya-growth.mjs --source <v09-growth-complete>`，仅此维护脚本需要带 Pillow/WebP 的 Python，APP 不增加依赖。268 张无损 WebP 共 13,335,410 字节，原 PNG 共 19,680,312 字节；保留完整 RGBA、透明留白与锚点。美术尚未获用户验收，不能据技术检查将其标为已上线。
+当前 GM 审图索引为 497 项：已上线插画 224 张、成长候选图 268 张加 5 个应用图标，其中 2 个旧应用图标只供资源审核，不会回到儿童界面。这不是独立故事数量。候选图来源及逐文件哈希、像素一致性回执见 `design/xiaoya-growth-v09-source.json`；重导入用 `scripts/import-xiaoya-growth.mjs --source <v09-growth-complete>`，仅此维护脚本需要带 Pillow/WebP 的 Python，APP 不增加依赖。268 张无损 WebP 共 13,335,410 字节，原 PNG 共 19,680,312 字节；保留完整 RGBA、透明留白与锚点。美术尚未获用户验收，不能据技术检查将其标为已上线。
 
 启动器打开带当前构建指纹的独立 HTML 路径，绕过旧 SW 对 `/xiaoya/` 的缓存命中；单纯添加查询参数不能达到这个效果。该 HTML 与本次 `index.html` 字节一致，列入核心缓存与完整性清单。自 v0.17.0 起，SW 对 `/xiaoya/`、`index.html` 及任意旧 `start-<hash>.html` 导航，在线都请求服务器当前入口；离线回退本 SW 已校验的入口，不把新 HTML 写进旧构建的缓存。此规则以新版 SW 已安装为前提，首次脱离旧控制器仍应使用当前启动器。页面无需等待全包准备才能打开，现有活动页不会被强制刷新。
 
@@ -135,7 +135,7 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`art-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。新产品模块清单包含 `garden-history.js`，不再打包旧 `garden.js` 与 `story-art.js`。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.21.0 核对值：内测 `4fa3d191fb4f`，公开 `ae3fc34554d6`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.22.0 核对值：内测 `b8a9e316fb64`，公开 `e1bd901197ab`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
@@ -159,7 +159,7 @@ v0.21.0 核对值：内测 `4fa3d191fb4f`，公开 `ae3fc34554d6`。构建指纹
 | 图片/配音/内容包 | `tests/xiaoya-phrase-pack.test.js`、`xiaoya-phrase-delivery.test.js`、`xiaoya-phrase-art.test.js`；`xiaoya-phrase-pack-browser.cjs`、`xiaoya-art-completion-browser.cjs`、`xiaoya-offline-audio-browser.cjs` |
 | 识别与下载完整性 | `tests/xiaoya-speech-signal.test.js`、`speech-match.test.js`、`speech-download.test.js`、`speech-download-recovery.test.js`；`xiaoya-speech-quality.cjs`、`xiaoya-speech.cjs` |
 | GM 隔离、构建渠道 | `tests/xiaoya-build.test.js`、`xiaoya-runtime.test.js`；内测/公开两种构建分别运行 `tests/xiaoya-gm-browser.cjs` |
-| GM 花朵成长 | `tests/xiaoya-growth.test.js`、`xiaoya-growth-assets.test.js`、`xiaoya-growth-browser.cjs`；逐滴变化、根点、保存/导出/失败重试、沙盒与儿童账本隔离、268 图解码及窄屏全画布。候选资源同时受构建渠道排除测试约束 |
+| GM 花朵成长 | `tests/xiaoya-growth.test.js`、`xiaoya-growth-motion.test.js`、`xiaoya-growth-assets.test.js`、`xiaoya-growth-browser.cjs`；真实 RAF 帧、逐滴变化、根点、淡化时长、减少动态效果、停止/切换/后台取消、保存/导出/失败重试、沙盒与儿童账本隔离、268 图解码及窄屏全画布。候选资源同时受构建渠道排除测试约束 |
 | 启动器、端口 | `python -m unittest tests.test_launcher tests.test_xiaoya_launcher` |
 | 旧 SW 升级、首次启动、离线入口 | `tests/xiaoya-startup-update-browser.cjs`、`tests/xiaoya-restart-art-browser.cjs`；独立服务与浏览器，覆盖旧 SW、旧指纹入口和未浏览图片的重启离线读取 |
 | 欢迎小礼物、存档迁移与交互 | `tests/xiaoya-welcome-gift.test.js`、`tests/xiaoya-welcome-greetings.test.js`、`tests/xiaoya-welcome-voices.test.js`、`tests/xiaoya-welcome-browser.cjs`；每日幂等与轮换、原生声音、自动播放恢复、双标签、写失败重试、取消、小屏与 GM 隔离 |
@@ -187,9 +187,9 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-v0.21.0：Node 单测 **781/781**、GM 内测 **10/10**、成长浏览器 **9/9**、公开排除 **1/1**、旧产品浏览器 **36/36**，两渠道构建通过，最终 dist 为内测。成长浏览器覆盖 268 张原生 WebP 解码、每滴变化、根点不移、保存/导出/失败重试、沙盒隔离与 320px 最大缩放。单测之后的无效输入清理和窄屏样式修复由最终浏览器检查验证。本轮未重跑启动器、实际候选图片完整离线或独立 BGM 全套。原始报告和范围见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
+v0.22.0 本轮：Node 全量单测 **786/786**；最后微调淡化时间后，受影响单测 **36/36**。成长浏览器完整 **15/15**，最终构建定向复测 **8/8**；GM **10/10**、公开排除 **1/1**、[旧产品浏览器](UI_QA_xiaoya-v022-legacy.md) **36/36**。两渠道构建通过，最终 dist 为内测。覆盖真实动画帧、固定根点、交叉淡化时长、减少动态效果、取消与恢复、保存/导出/失败重试、儿童账本隔离、268 图解码和 320px 布局。本轮未改启动器，未重跑 Python 启动器、候选图片完整离线下载或独立 BGM 全套。实体设备和动效观感待用户验收；详细证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
 
-历史 v0.20.0：Node 单测 **753/753**、欢迎礼物原生浏览器 **11/11**、旧产品浏览器 **36/36**，公开/内测构建通过；这些不是 v0.21.0 的本轮重跑结果。
+历史 v0.20.0：Node 单测 **753/753**、欢迎礼物原生浏览器 **11/11**、旧产品浏览器 **36/36**，公开/内测构建通过；这些不是本轮重跑结果。
 
 历史 v0.16.1：Node 单测 689/689、GM 内测浏览器 9/9、公开隔离 1/1、旧产品浏览器 36/36、Python 启动器 30 项（29 通过、1 平台跳过）；最终包首页布局 7/7、旧 SW 升级 7/7、图片加载定向 4/4。完整命令、构建差异与实际范围见 [实施记录 v0.16.1](XIAOYA_IMPLEMENTATION.md) 和 [旧产品回归摘要](UI_QA_xiaoya-v0161-legacy.md)。
 

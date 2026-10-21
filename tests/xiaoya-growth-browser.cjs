@@ -63,10 +63,40 @@ async function open(p){
 }
 async function rendered(p){
   await p.waitForFunction(()=>{
+    const preview=document.querySelector('[data-growth-preview]');if(preview?.dataset.motionState&&preview.dataset.motionState!=='idle')return false;
     const image=document.querySelector('[data-growth-image]');if(!image||!image.complete||!image.naturalWidth||getComputedStyle(image).visibility!=='visible')return false;
     return Math.abs(new DOMMatrix(getComputedStyle(image).transform).a-Number(image.dataset.scale))<.0001;
   });
 }
+const waterCount=async p=>Number((await p.locator('[data-growth-progress]').textContent()).match(/^\d+/)[0]);
+async function motionRange(p,name,value){
+  const input=p.locator(`[data-growth-motion="${name}"]`);await input.waitFor();
+  const bounds=await input.evaluate(e=>({min:Number(e.min),max:Number(e.max)}));
+  assert(value>=bounds.min&&value<=bounds.max,`${name}=${value} outside ${JSON.stringify(bounds)}`);
+  await input.evaluate((e,value)=>{e.value=String(value);e.dispatchEvent(new Event('input',{bubbles:true}));},value);
+}
+async function phase(p,state){await p.waitForFunction(value=>document.querySelector('[data-growth-preview]')?.dataset.motionState===value,state);}
+async function startFrameCapture(p){
+  await p.evaluate(()=>{
+    window.qaMotionFrames=[];window.qaMotionCapture=true;
+    const frame=()=>{
+      if(!window.qaMotionCapture)return;
+      const preview=document.querySelector('[data-growth-preview]'),image=document.querySelector('[data-growth-image]'),incoming=document.querySelector('[data-growth-incoming]');
+      if(preview&&image){
+        const style=getComputedStyle(image),matrix=new DOMMatrix(style.transform),next=incoming?getComputedStyle(incoming):null;
+        const parent=image.offsetParent,box=parent.getBoundingClientRect(),pivot=style.transformOrigin.split(' ').map(Number.parseFloat),root=document.querySelector('[data-growth-root]').getBoundingClientRect();
+        const point=new DOMPoint(parseFloat(style.width)*.5-pivot[0],parseFloat(style.height)*.880859375-pivot[1]).matrixTransform(matrix);
+        const rootError=Math.hypot(box.x+parent.clientLeft-parent.scrollLeft+image.offsetLeft+pivot[0]+point.x-root.x-root.width/2,box.y+parent.clientTop-parent.scrollTop+image.offsetTop+pivot[1]+point.y-root.y-root.height/2);
+        window.qaMotionFrames.push({t:performance.now(),state:preview.dataset.motionState,opacity:Number(style.opacity),incomingOpacity:next?Number(next.opacity):0,
+          transform:style.transform,a:matrix.a,b:matrix.b,c:matrix.c,d:matrix.d,phase:document.querySelector('[data-growth-phase]')?.textContent||'',
+          rootError,effectsVisible:[...preview.querySelectorAll('[data-growth-effect]')].filter(e=>Number(getComputedStyle(e).opacity)>.01).length,
+          outgoing:image.currentSrc,incoming:incoming?.currentSrc||'',progress:document.querySelector('[data-growth-progress]')?.textContent||''});
+      }
+      requestAnimationFrame(frame);
+    };requestAnimationFrame(frame);
+  });
+}
+async function stopFrameCapture(p){return p.evaluate(()=>{window.qaMotionCapture=false;return window.qaMotionFrames;});}
 async function geometry(p){
   await rendered(p);
   return p.locator('[data-growth-image]').evaluate(image=>{
@@ -94,17 +124,18 @@ async function main(){
   assert.equal(expected.channel,publicBuild?'public':'internal','Build intended channel before running.');
   const {createState,STORAGE_KEY}=await import(pathToFileURL(path.join(root,'xiaoya/learning.js')).href);
   const {createMeadow,MEADOW_KEY}=await import(pathToFileURL(path.join(root,'xiaoya/garden-meadow.js')).href);
-  initialRecords={'qa-growth-child':'isolated-existing-child-record','xiaoya-english:preferences:v1':JSON.stringify({welcome:true,mic:false,guideStep:'done'}),'xiaoya-english:voice:v1':'ryan',[STORAGE_KEY]:JSON.stringify(createState()),[MEADOW_KEY]:JSON.stringify(createMeadow())};
+  const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai'}).format(new Date());
+  initialRecords={'qa-growth-child':'isolated-existing-child-record','xiaoya-english:preferences:v1':JSON.stringify({welcome:true,mic:false,guideStep:'done'}),'xiaoya-english:voice:v1':'ryan','xiaoya-english:welcome-greetings:v1':JSON.stringify({schema:1,date,id:'welcome-gift-first',remaining:[]}),[STORAGE_KEY]:JSON.stringify(createState()),[MEADOW_KEY]:JSON.stringify(createMeadow())};
   origin=process.env.TEST_URL?new URL(process.env.TEST_URL).origin:await serve();assert(['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname));
   browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--autoplay-policy=no-user-gesture-required']});
   if(publicBuild){
     await check('public excludes growth workbench modules and candidate art',async f=>{
       assert.equal(await f.p.locator('[data-gm-action],[data-gm-tab],[data-growth-preview]').count(),0);
       const release=path.join(dist,'xiaoya','releases',expected.build);
-      for(const name of ['gm-growth.js','growth-core.js','growth-settings.js','growth-catalog.js'])assert(!fs.existsSync(path.join(release,name)),name+' leaked into public');
+      for(const name of ['gm-growth.js','growth-core.js','growth-settings.js','growth-catalog.js','growth-motion.js'])assert(!fs.existsSync(path.join(release,name)),name+' leaked into public');
       assert(!fs.existsSync(path.join(dist,'xiaoya','growth')),'Unapproved candidate art leaked into public');
       assert(!f.requests.some(url=>/gm-growth|growth-catalog|\/growth\/v09\//.test(url)));
-      return {excludedModules:4,excludedCandidateImages:268};
+      return {excludedModules:5,excludedCandidateImages:268};
     });return;
   }
   await check('all 50 choices and 268 native transparent WebP decodes',async f=>{
@@ -192,6 +223,140 @@ async function main(){
     await f.p.reload();await f.p.locator('main.home-view').waitFor();await open(f.p);assert.equal(await f.p.locator('[data-growth-total]').inputValue(),'10');assert.equal(await f.p.locator('[data-growth-scale="0"]').inputValue(),'40');assert.match(await f.p.locator('[data-growth-progress]').textContent(),/^0 \/ 10/);
     assert.deepEqual(await saved(f.p),real);return {realDefault:16,sandboxDefault:7,afterReload:10,realSavedDataUnchanged:true};
   });
+  await check('motion controls persist export and restore without child ledger changes',async f=>{
+    await open(f.p);
+    assert.deepEqual(await f.p.locator('[data-growth-preset] option').evaluateAll(options=>options.map(e=>e.value).filter(Boolean).filter(v=>v!=='custom')),['gentle','playful','bouncy']);
+    for(const preset of ['gentle','bouncy','playful']){
+      await f.p.locator('[data-growth-preset]').selectOption(preset);
+      const motion=(await saved(f.p)).motion;assert(motion&&Object.keys(motion).length>=6);
+      for(const key of ['duration','sway','flex','bounce','crossfade','particles'])assert.equal(Number(await f.p.locator(`[data-growth-motion="${key}"]`).inputValue()),motion[key]);
+    }
+    await motionRange(f.p,'duration',2400);await motionRange(f.p,'crossfade',600);await motionRange(f.p,'duration',700);
+    assert.equal(await f.p.locator('[data-growth-motion="crossfade"]').getAttribute('max'),'350');
+    assert.equal(Number(await f.p.locator('[data-growth-motion="crossfade"]').inputValue()),350);
+    assert.equal((await saved(f.p)).motion.crossfade,350,'Shorter animation must save its displayed crossfade limit');
+    await motionRange(f.p,'duration',2400);assert.equal(await f.p.locator('[data-growth-motion="crossfade"]').getAttribute('max'),'600');
+    const values={duration:1800,sway:12,flex:65,bounce:18,crossfade:300,particles:75};
+    for(const [key,value]of Object.entries(values))await motionRange(f.p,key,value);
+    assert.deepEqual((await saved(f.p)).motion,values);
+    const exportPending=f.p.waitForEvent('download');await press(f.p,'[data-growth-action="export"]');const download=await exportPending;
+    const exportPath=path.join(out,'growth-motion-settings-export.json');await download.saveAs(exportPath);
+    assert.deepEqual(JSON.parse(await fsp.readFile(exportPath,'utf8')).motion,values);
+    await f.p.reload();await f.p.locator('main.home-view').waitFor();await open(f.p);
+    for(const [key,value]of Object.entries(values))assert.equal(Number(await f.p.locator(`[data-growth-motion="${key}"]`).inputValue()),value);
+    await f.p.goto(`${origin}/xiaoya/?garden=b&gm=test&gmPage=home`,{waitUntil:'domcontentloaded'});await f.p.locator('main.home-view').waitFor();await open(f.p);
+    await f.p.locator('[data-growth-preset]').selectOption('gentle');assert.deepEqual((await saved(f.p)).motion,values,'Sandbox motion touched persisted real settings');
+    return {savedMotion:values,exportedMotion:true,reloadRestored:true,sandboxDoesNotPersist:true,crossfadeLimitTracksDuration:true};
+  });
+  await check('real animation drops sway crossfade and settle before committing water',async f=>{
+    await open(f.p);await f.p.emulateMedia({reducedMotion:'no-preference'});await f.p.locator('[data-growth-total]').fill('4');
+    await motionRange(f.p,'duration',2400);await motionRange(f.p,'crossfade',500);
+    const initial=await geometry(f.p);assert(await f.p.locator('[data-growth-action="replay"]').isDisabled());
+    await f.p.locator('[data-growth-preview]').scrollIntoViewIfNeeded();await startFrameCapture(f.p);
+    await press(f.p,'[data-growth-action="water"]');
+    assert(await f.p.locator('[data-growth-action="water"]').isDisabled());assert(await f.p.locator('[data-growth-action="replay"]').isDisabled());assert.equal(await waterCount(f.p),0);
+    for(const state of ['drop','sway','grow']){
+      await phase(f.p,state);
+      if(state==='grow')await f.p.waitForFunction(()=>{const value=Number(getComputedStyle(document.querySelector('[data-growth-incoming]')).opacity);return value>.25&&value<.75;});
+      await f.p.locator('[data-growth-preview]').screenshot({path:path.join(out,`motion-${state}.png`)});
+    }
+    await rendered(f.p);const frames=await stopFrameCapture(f.p);await fsp.writeFile(path.join(out,'motion-frames.json'),JSON.stringify(frames,null,2));
+    assert.equal(await waterCount(f.p),1);const final=await geometry(f.p);anchored(final);assert.equal(final.stage,1);assert(final.scale>initial.scale);
+    await f.p.locator('[data-growth-preview]').screenshot({path:path.join(out,'motion-settled.png')});
+    for(const state of ['drop','sway','grow','settle'])assert(frames.some(frame=>frame.state===state),`Missing animation phase ${state}`);
+    assert(frames.some(frame=>frame.b>.005)&&frames.some(frame=>frame.b<-.005),'Sway must visibly change direction');
+    const blends=frames.filter(frame=>frame.opacity>.05&&frame.opacity<.95&&frame.incomingOpacity>.05&&frame.incomingOpacity<.95&&frame.outgoing!==frame.incoming);
+    assert(blends.length>0,'No real decoded old/new image crossfade frames');
+    assert(frames.every(frame=>frame.rootError<1.2),`Root moved during animation: ${Math.max(...frames.map(frame=>frame.rootError))}px`);
+    assert(frames.some(frame=>frame.effectsVisible>0),'No water, splash or sparkle feedback was visible');
+    assert(frames.filter(frame=>frame.state!=='idle').every(frame=>frame.progress.startsWith('0 / 4')),'Water committed before visual feedback completed');
+    assert(frames.some(frame=>frame.state!=='idle'&&frame.phase.length>0),'Animation phases should be readable in the tool');
+    await press(f.p,'[data-growth-action="replay"]');await rendered(f.p);assert.equal(await waterCount(f.p),1,'Replay must not add water');anchored(await geometry(f.p));
+    const crossfadeTimings=[];
+    for(const timing of [{duration:700,crossfade:350},{duration:2400,crossfade:120}]){
+      await motionRange(f.p,'duration',timing.duration);await motionRange(f.p,'crossfade',timing.crossfade);await startFrameCapture(f.p);
+      await press(f.p,'[data-growth-action="replay"]');await rendered(f.p);const sampled=await stopFrameCapture(f.p);
+      const transition=sampled.filter(frame=>frame.state!=='idle'&&frame.incomingOpacity>0&&frame.incomingOpacity<1);
+      assert(transition.length>1,'Missing native crossfade samples');
+      const measured=transition.at(-1).t-transition[0].t;
+      assert(Math.abs(measured-timing.crossfade)<90,`Displayed ${timing.crossfade}ms crossfade lasted ${measured}ms`);
+      assert.equal(await waterCount(f.p),1,'Extreme motion replay must not add water');
+      crossfadeTimings.push({...timing,measuredMs:measured,frames:transition.length});
+      await fsp.writeFile(path.join(out,`motion-crossfade-${timing.duration}-${timing.crossfade}.json`),JSON.stringify(sampled,null,2));
+    }
+    return {phases:[...new Set(frames.map(frame=>frame.state))],frames:frames.length,blendFrames:blends.length,replayDoesNotAddWater:true,committedOnlyAtEnd:true,maximumRootErrorPx:Math.max(...frames.map(frame=>frame.rootError)),crossfadeTimings};
+  });
+  await check('automatic watering completes every drop and can restart at maturity',async f=>{
+    await open(f.p);await f.p.locator('[data-growth-total]').fill('4');await press(f.p,'[data-growth-action="auto"]');
+    await f.p.waitForFunction(()=>document.querySelector('[data-growth-progress]')?.textContent.startsWith('4 / 4')&&document.querySelector('[data-growth-preview]')?.dataset.motionState==='idle');
+    assert(await f.p.locator('[data-growth-action="water"]').isDisabled());assert.match(await f.p.locator('[data-growth-action="auto"]').textContent(),/从头/);anchored(await geometry(f.p));
+    await f.p.emulateMedia({reducedMotion:'no-preference'});await motionRange(f.p,'duration',1800);await press(f.p,'[data-growth-action="auto"]');await phase(f.p,'drop');
+    await press(f.p,'[data-growth-action="stop"]');await rendered(f.p);assert.equal(await waterCount(f.p),0);
+    await f.p.waitForTimeout(2100);assert.equal(await waterCount(f.p),0,'Stopped automatic playback resumed itself');
+    return {automaticallyCompleted:4,restartFromMaturity:true,stoppedUnfinishedDropNotCounted:true};
+  });
+  await check('pending image decode cancellation and decode failure never commit water',async f=>{
+    await open(f.p);await f.p.emulateMedia({reducedMotion:'no-preference'});await motionRange(f.p,'duration',700);
+    const originalImage=await geometry(f.p);
+    // Delay only detached predecode images after their real native decode. The
+    // visible image and all normal visual evidence still use native decoding.
+    await f.p.evaluate(()=>{
+      window.qaNativeDecode=HTMLImageElement.prototype.decode;window.qaDecodeReleases=[];
+      HTMLImageElement.prototype.decode=function(){
+        const native=window.qaNativeDecode.call(this);
+        return this.isConnected?native:native.then(()=>new Promise(resolve=>window.qaDecodeReleases.push(resolve)));
+      };
+    });
+    await press(f.p,'[data-growth-action="auto"]');await phase(f.p,'loading');
+    await f.p.waitForFunction(()=>window.qaDecodeReleases.length===2);
+    assert(await f.p.locator('[data-growth-action="water"]').isDisabled());assert(await f.p.locator('[data-growth-action="replay"]').isDisabled());
+    assert.equal(await waterCount(f.p),0);assert.equal(await f.p.locator('[data-growth-image]').evaluate(image=>image.currentSrc),originalImage.src);
+    await press(f.p,'[data-growth-action="stop"]');await rendered(f.p);
+    await f.p.evaluate(()=>{HTMLImageElement.prototype.decode=window.qaNativeDecode;for(const resolve of window.qaDecodeReleases)resolve();delete window.qaNativeDecode;delete window.qaDecodeReleases;});
+    await f.p.waitForTimeout(1100);assert.equal(await waterCount(f.p),0,'A cancelled decode resumed auto watering');
+    await f.p.evaluate(()=>{
+      const decode=HTMLImageElement.prototype.decode;let fail=true;
+      HTMLImageElement.prototype.decode=function(){
+        const native=decode.call(this);if(this.isConnected||!fail)return native;
+        fail=false;return native.then(()=>{throw new DOMException('QA decode failure','EncodingError');});
+      };
+      window.qaRestoreDecode=()=>{HTMLImageElement.prototype.decode=decode;delete window.qaRestoreDecode;};
+    });
+    await press(f.p,'[data-growth-action="water"]');await rendered(f.p);
+    assert.equal(await waterCount(f.p),0);assert.match(await f.p.locator('[data-growth-image-error]').textContent(),/未加载/);
+    await f.p.evaluate(()=>window.qaRestoreDecode());await press(f.p,'[data-growth-action="water"]');await rendered(f.p);
+    assert.equal(await waterCount(f.p),1);anchored(await geometry(f.p));
+    return {pendingDecodeCancelled:true,lateDecodeDoesNotResumeAuto:true,injectedDecodeFailureRecovered:true,nativeDecodeThenTestDelay:true};
+  });
+  await check('unfinished animation cancels on stop edits flower tab close and visibility',async f=>{
+    await open(f.p);await press(f.p,'[data-growth-action="water"]');await rendered(f.p);assert.equal(await waterCount(f.p),1);
+    await f.p.emulateMedia({reducedMotion:'no-preference'});await motionRange(f.p,'duration',1800);const cancelled=[];
+    async function start(){await press(f.p,'[data-growth-action="water"]');await phase(f.p,'drop');}
+    async function remains(expectedWater){await rendered(f.p);assert.equal(await waterCount(f.p),expectedWater);await f.p.waitForTimeout(1950);assert.equal(await waterCount(f.p),expectedWater,'Cancelled animation callback changed water');}
+    await start();await press(f.p,'[data-growth-action="stop"]');await remains(1);cancelled.push('stop');
+    await start();await motionRange(f.p,'sway',10);await remains(1);cancelled.push('motion edit');
+    await start();await f.p.locator('[data-growth-total]').fill('12');await remains(1);cancelled.push('growth edit');
+    await start();await press(f.p,'[data-growth-action="next"]');await remains(0);cancelled.push('flower');
+    await press(f.p,'[data-growth-action="water"]');await rendered(f.p);assert.equal(await waterCount(f.p),1);
+    await start();await press(f.p,'[data-gm-tab="music"]');await press(f.p,'[data-gm-tab="growth"]');await remains(1);cancelled.push('tab');
+    await start();await press(f.p,'[data-gm-action="close"]');await open(f.p);await remains(1);cancelled.push('close');
+    await start();await f.p.evaluate(()=>{
+      Object.defineProperty(document,'hidden',{configurable:true,value:true});Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await remains(1);await f.p.evaluate(()=>{delete document.hidden;delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'));});cancelled.push('synthetic visibilitychange');
+    await f.p.locator('[data-growth-slow]').check();await start();await press(f.p,'[data-growth-action="stop"]');await rendered(f.p);assert.equal(await waterCount(f.p),1);cancelled.push('slow playback stop');
+    return {cancelled,completedWaterPreserved:1,visibilityEventSimulated:true};
+  });
+  await check('reduced motion completes quickly without sway and supports replay',async f=>{
+    await open(f.p);await f.p.locator('[data-growth-total]').fill('4');await motionRange(f.p,'duration',2400);await startFrameCapture(f.p);
+    const start=Date.now();await press(f.p,'[data-growth-action="water"]');await rendered(f.p);const elapsed=Date.now()-start,frames=await stopFrameCapture(f.p);
+    assert.equal(await waterCount(f.p),1);assert(elapsed<1500,`Reduced motion retained full duration: ${elapsed}ms`);
+    assert(frames.every(frame=>Math.abs(frame.b)<.001&&Math.abs(frame.c)<.001),'Reduced motion rotated or skewed the flower');
+    assert(frames.every(frame=>frame.effectsVisible===0),'Reduced motion showed flying visual effects');
+    assert(!frames.some(frame=>frame.state==='sway'),'Reduced motion entered sway phase');
+    await press(f.p,'[data-growth-action="replay"]');await rendered(f.p);assert.equal(await waterCount(f.p),1);anchored(await geometry(f.p));
+    return {configuredDuration:2400,elapsedMs:elapsed,frames:frames.length,noRotationOrSkew:true,replayDoesNotAddWater:true};
+  });
   for(const width of [1180,320])await check(`layout root and full canvas at maximum scale width ${width}`,async f=>{
     await open(f.p);await f.p.locator('[data-growth-scale="0"]').fill('150');const g=await geometry(f.p);anchored(g);
     const layout=await f.p.locator('#gm-workbench').evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth,viewport:innerWidth,body:document.body.scrollWidth}));
@@ -200,6 +365,9 @@ async function main(){
     for(const tab of await f.p.locator('[data-gm-tab]').all()){const box=await tab.boundingBox();assert(box.x>=0&&box.x+box.width<=width+1);}
     await f.p.locator('[data-growth-preview]').scrollIntoViewIfNeeded();await f.p.screenshot({path:path.join(out,`growth-${width}.png`),fullPage:true});
     await f.p.locator('[data-growth-action="export"]').scrollIntoViewIfNeeded();await f.p.screenshot({path:path.join(out,`growth-${width}-controls.png`),fullPage:true});
+    for(const selector of ['[data-growth-preset]','[data-growth-motion="duration"]','[data-growth-slow]','[data-growth-action="auto"]','[data-growth-action="replay"]']){
+      const control=f.p.locator(selector);await control.scrollIntoViewIfNeeded();const box=await control.boundingBox();assert(box.x>=0&&box.x+box.width<=width+1,`Motion control clipped ${selector}`);
+    }
     return {width,layout,root:g.root,imageRoot:g.imageRoot,maximumScale:1.5};
   },width);
 }

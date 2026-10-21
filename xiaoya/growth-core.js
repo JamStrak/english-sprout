@@ -1,3 +1,4 @@
+import {motionConfig} from './growth-motion.js';
 /** Adapted from the asset lab's v09 growth-core.js. No browser or storage dependencies. */
 export const DEFAULTS = Object.freeze({
   totalWater: 10,
@@ -47,6 +48,7 @@ export function config(value = {}, ids = []) {
     releaseId: 'v09-growth-complete',
     defaults,
     overrides: Object.fromEntries(entries),
+    motion: motionConfig(input.motion),
   };
 }
 

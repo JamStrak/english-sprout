@@ -96,7 +96,7 @@ function installWorkbench() {
     render(); dialog.querySelector('[data-gm-action="close"]').focus();
   }
   function close() {
-    stopPlayback(); if (preview.open) preview.close(); dialog.close(); gmBridge.resume();
+    growthWorkbench.stop(); stopPlayback(); if (preview.open) preview.close(); dialog.close(); gmBridge.resume();
     if (previousFocus?.isConnected) previousFocus.focus();
   }
   function resetUrl() {
@@ -137,6 +137,7 @@ function installWorkbench() {
   }
   function pageItems(items, size) { pages[activeTab]=Math.min(pages[activeTab],Math.max(0,Math.ceil(items.length/size)-1)); return items.slice(pages[activeTab]*size,(pages[activeTab]+1)*size); }
   function renderContent() {
+    growthWorkbench.stop();
     if (activeTab === 'courses') renderCourses();
     else if (activeTab === 'flows') renderFlows();
     else if (activeTab === 'music') renderMusic();
@@ -285,6 +286,6 @@ function installWorkbench() {
   });
   dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
   preview.addEventListener('cancel', event => { event.preventDefault(); closePreview(); });
-  window.addEventListener('pagehide',()=>stopPlayback());
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopPlayback();});
+  window.addEventListener('pagehide',()=>{growthWorkbench.stop();stopPlayback();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){growthWorkbench.stop();stopPlayback();}});
 }

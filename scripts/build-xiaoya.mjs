@@ -2,14 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.21.1';
+export const XIAOYA_VERSION = '0.22.0';
 export const XIAOYA_NAME = '小芽英语·自由花园版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 MODULES.push('blindbox-ui.js', 'seed-appearance.js', 'seed-shop.js', 'economy.css', 'meadow-hit-shapes.js', 'audio-pack.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'story-assets.js', 'story-pictures.js');
 MODULES.push('phrase-pack-v015.js', 'phrase-assets-v015.js');
 MODULES.push('runtime.js', 'garden-history.js', 'welcome-greetings.js', 'garden-music.js');
-const INTERNAL_MODULES = ['gm.js', 'gm.css', 'gm-growth.js', 'growth-core.js', 'growth-settings.js', 'growth-catalog.js'];
+const INTERNAL_MODULES = ['gm.js', 'gm.css', 'gm-growth.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js', 'growth-catalog.js'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 

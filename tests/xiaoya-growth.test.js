@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DEFAULTS, profile, config, effective, sample, waterStep} from '../xiaoya/growth-core.js';
 import {GROWTH_SETTINGS_KEY, createGrowthSettingsStore} from '../xiaoya/growth-settings.js';
+import {MOTION_DEFAULTS} from '../xiaoya/growth-motion.js';
 
 const ids = ['magic-starlight-01', 'magic-starlight-02'];
 function memory(initial = {}) {
@@ -22,7 +23,7 @@ test('growth uses the approved five-stage source defaults and immutable constant
   assert.deepEqual(profile(), DEFAULTS);
   assert.deepEqual(config(), {
     schema: 'xiaoya-growth-settings/v1', releaseId: 'v09-growth-complete',
-    defaults: profile(), overrides: {},
+    defaults: profile(), overrides: {}, motion: {...MOTION_DEFAULTS},
   });
 });
 
