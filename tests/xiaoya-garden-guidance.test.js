@@ -20,6 +20,8 @@ import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
+import * as chapters from '../xiaoya/chapters.js';
+import {getChallengeFlower} from '../xiaoya/challenge-flowers.js';
 import { createWelcomeGreetings } from '../xiaoya/welcome-greetings.js';
 import { createGuidanceClock, GUIDANCE_IDLE_MS, VISUAL_HINT_IDLE_MS } from '../xiaoya/guidance-clock.js';
 import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/guidance-policy.js';
@@ -101,7 +103,9 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[],firstS
     createGuidancePolicy:options=>createGuidancePolicy({...options,...(firstSession?{returning:false}:{})}),GUIDANCE_KEY,GUIDANCE_IDLE_MS,VISUAL_HINT_IDLE_MS,
     createGuidanceClock:options=>createGuidanceClock({...options,now:()=>clock,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
     createPictureLoader:()=>({load(){},status:()=> 'ready'})});
-  vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
+  Object.assign(sandbox,chapters,{getChallengeFlower});
+  const chapterUI=fs.readFileSync(new URL('../xiaoya/chapter-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export function /gm,'function ');
+  vm.runInNewContext(`{${chapterUI};Object.assign(globalThis,{chapterHome,chapterBoardView,chapterDetailView,chapterRail});}\n`+source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
     getGarden:()=>meadowState,getFeedback:()=>feedback};`,sandbox);
   async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener({type,...event});await flush();}
   return {...sandbox.ui,sounds,calls,writes,document,buttons,html:()=>html,storage,

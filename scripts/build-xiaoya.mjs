@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 
-export const XIAOYA_VERSION = '0.25.1';
+export const XIAOYA_VERSION = '0.26.0';
 export const XIAOYA_NAME = '小芽英语启蒙正式版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
@@ -14,6 +14,7 @@ MODULES.push('sound-catalog.js', 'sound-settings.js', 'sound-player.js');
 MODULES.push('guidance-clock.js', 'guidance-policy.js');
 MODULES.push('challenge-flowers.js', 'economy-settings.js');
 MODULES.push('meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js');
+MODULES.push('chapters.js', 'chapter-ui.js', 'chapters.css');
 const INTERNAL_MODULES = ['gm-economy.js', 'tuning-backup.js', 'gm.js', 'gm.css', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -174,7 +175,7 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist'), interna
   await fs.writeFile(path.join(output, release, 'art-pack.json'), artManifest);
   const html = template.replaceAll('__XIAOYA_BUILD__', build).replaceAll('__XIAOYA_VERSION__', XIAOYA_VERSION)
     .replaceAll('xiaoya/app.js', `xiaoya/${release}/app.js`).replaceAll('xiaoya/style.css', `xiaoya/${release}/style.css`).replaceAll('xiaoya/feedback.css', `xiaoya/${release}/feedback.css`).replaceAll('xiaoya/meadow.css', `xiaoya/${release}/meadow.css`).replaceAll('xiaoya/paper.css', `xiaoya/${release}/paper.css`);
-  const page = html.replaceAll('xiaoya/economy.css', `xiaoya/${release}/economy.css`).replaceAll('xiaoya/challenge.css', `xiaoya/${release}/challenge.css`);
+  const page = html.replaceAll('xiaoya/economy.css', `xiaoya/${release}/economy.css`).replaceAll('xiaoya/challenge.css', `xiaoya/${release}/challenge.css`).replaceAll('xiaoya/chapters.css',`xiaoya/${release}/chapters.css`);
   await fs.writeFile(path.join(output, 'index.html'), page);
   // A distinct pathname bypasses already-installed workers that always serve
   // their old index for /xiaoya/, even when its query contains a new build ID.

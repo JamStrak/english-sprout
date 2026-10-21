@@ -21,6 +21,8 @@ import * as gardenArt from '../xiaoya/garden-art.js';
 import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
+import * as chapters from '../xiaoya/chapters.js';
+import {getChallengeFlower} from '../xiaoya/challenge-flowers.js';
 import * as matcher from '../src/speech-match.js';
 import {prepareSamples} from '../xiaoya/speech-signal.js';
 import {PHRASE_PACK_V015_EVENT_IDS} from '../xiaoya/phrase-pack-v015.js';
@@ -94,7 +96,10 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     clearTimeout(id) {timers.delete(id);}};
   sandbox.createPictureLoader = options => storyPictures.createPictureLoader({...options,
     createImage:() => {const image = new sandbox.Image(); images.push(image); return image;}, setTimer:sandbox.setTimeout, clearTimer:sandbox.clearTimeout});
-  vm.runInNewContext(`${controllerSource}\nglobalThis.api={startEvent,storyContinue,teach,sample,assessClip,finish,startChallenge,retryChallengeStep,restoreChallengeRewards,practiceToday,navigate,
+  Object.assign(sandbox, chapters, {getChallengeFlower});
+  const chapterUI = fs.readFileSync(new URL('../xiaoya/chapter-ui.js', import.meta.url), 'utf8')
+    .replace(/^import .*;\r?\n/gm, '').replace(/^export function /gm, 'function ');
+  vm.runInNewContext(`{${chapterUI};Object.assign(globalThis,{chapterHome,chapterBoardView,chapterDetailView,chapterRail});}\n${controllerSource}\nglobalThis.api={startEvent,storyContinue,teach,sample,assessClip,finish,startChallenge,retryChallengeStep,restoreChallengeRewards,practiceToday,navigate,
     actions,getSession:()=>session,getState:()=>state,getPractice:()=>practice,getMeadow:()=>meadowState,getChallenges:()=>challenges,challengeSummary,getModal:()=>modal};`, sandbox);
   return {...sandbox.api, sounds, recognitionCalls, stored, writes, images, html:() => html,
     async cueDelay() {const entry=[...timers].find(([,timer])=>timer.delay===320);

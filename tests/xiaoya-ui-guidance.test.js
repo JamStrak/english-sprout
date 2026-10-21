@@ -21,6 +21,8 @@ import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
+import * as chapters from '../xiaoya/chapters.js';
+import {getChallengeFlower} from '../xiaoya/challenge-flowers.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
 import { createWelcomeGreetings, WELCOME_GREETINGS_KEY } from '../xiaoya/welcome-greetings.js';
 import { createGuidanceClock, GUIDANCE_IDLE_MS, VISUAL_HINT_IDLE_MS } from '../xiaoya/guidance-clock.js';
@@ -57,7 +59,7 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
   function parse(markup){return [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map(match=>{
     const [,attributes,body]=match;
     const attrs=Object.fromEntries([...attributes.matchAll(/([\w-]+)(?:="([^"]*)")?/g)].map(([,name,value])=>[name,value??'']));
-    return {body,attrs,inPrimaryWrap:markup.slice(0,match.index).endsWith('<div class="primary-wrap">'),visible:true,dataset:{action:attrs['data-action'],previewVoice:attrs['data-preview-voice']},disabled:'disabled' in attrs,
+    return {body,attrs,inPrimaryWrap:/<div class="primary-wrap(?: [^"]*)?">$/.test(markup.slice(0,match.index)),visible:true,dataset:{action:attrs['data-action'],previewVoice:attrs['data-preview-voice']},disabled:'disabled' in attrs,
       classList:classList(attrs.class||''),getAttribute:name=>attrs[name]??null,getClientRects(){return this.visible?[{}]:[];},
       hasAttribute:name=>name in attrs,style:{setProperty(){}},focus(){}};
   });}
@@ -102,7 +104,9 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
   Object.assign(sandbox,storyPictures,{createMeadowMotion,createWelcomeGreetings,audioControls,createGuidancePolicy,GUIDANCE_KEY,GUIDANCE_IDLE_MS,VISUAL_HINT_IDLE_MS,
     createGuidanceClock:options=>createGuidanceClock({...options,now:()=>now,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
     createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
-  vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
+  Object.assign(sandbox,chapters,{getChallengeFlower});
+  const chapterUI=fs.readFileSync(new URL('../xiaoya/chapter-ui.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export function /gm,'function ');
+  vm.runInNewContext(`{${chapterUI};Object.assign(globalThis,{chapterHome,chapterBoardView,chapterDetailView,chapterRail});}\n`+source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
     setPage(value){cancelWelcomeGift();page=value;session=null;modal=null;render();},
@@ -472,13 +476,14 @@ test('leaving, hiding and opening a parent modal release preparation without ren
   }
 });
 
-test('home keeps its companion and defers lesson pictures until practice',()=>{
+test('home offers illustrated learning and garden entries without preloading lesson pictures',()=>{
     const f=fixture({storyId:'food-water'});
-    assert.match(f.html(),/home-companion/);
-    assert.match(f.html(),/data-paper-art="buddy-welcome"/);
+    assert.match(f.html(),/data-chapter-home/);
+    assert.match(f.html(),/learning-entry\.webp/);
+    assert.match(f.html(),/garden-entry\.webp/);
     assert.doesNotMatch(f.html(),/data-picture-id|story-picture/);
     f.render();f.render();assert.equal(f.images.length,0);
-    assert.deepEqual(f.buttons().filter(b=>b.hasAttribute('data-primary')).map(b=>b.dataset.action),['next-event']);
+    assert.deepEqual(f.buttons().filter(b=>b.hasAttribute('data-primary')).map(b=>b.dataset.action),['learning']);
 });
 
 test('direct review recovers failed pictures without a render or request loop',async()=>{
@@ -494,7 +499,7 @@ test('direct review recovers failed pictures without a render or request loop',a
 test('late picture failures cannot redraw a different page or interrupt its activity',async()=>{
   const f=fixture(),story=stories.storyFor('food-water');f.setSession({story,event:story.event,context:story.event.contexts[0],recallMode:true});f.navigate('parent');const before=f.renders();
   f.images[0].onerror();await flush();assert.equal(f.renders(),before);assert.equal(f.sounds.length,0);
-  f.setPage('home');assert.match(f.html(),/home-companion/);assert.doesNotMatch(f.html(),/story-picture/);assert.equal(f.images.length,1);
+  f.setPage('home');assert.match(f.html(),/data-chapter-home/);assert.doesNotMatch(f.html(),/story-picture/);assert.equal(f.images.length,1);
 });
 
 test('failed core story art offers recovery and plays its phrase without restoring old drawings',async()=>{
@@ -607,7 +612,7 @@ test('assessment completion uses a gift while parent checkups keep their save ch
 });
 
 test('the button halo waits 30 idle seconds before highlighting the sole primary action',async()=>{
-  for(const [state,action] of [[null,'next-event'],[{},'record'],[{phase:'story',storyReady:true},'story-continue'],[{phase:'resolved'},'finish']]){
+  for(const [state,action] of [[null,'learning'],[{},'record'],[{phase:'story',storyReady:true},'story-continue'],[{phase:'resolved'},'finish']]){
     const f=fixture();await finishHomeWelcome(f);if(state)f.setSession(state);
     assert.equal(f.primaryWraps().length,1);assert.equal(f.idleHintTarget(),f.primaryWraps()[0]);
     f.dispatch('click');assert.deepEqual(f.hinted(),[]);f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],action);
@@ -617,11 +622,11 @@ test('the button halo waits 30 idle seconds before highlighting the sole primary
 
 test('document activity removes a visible button halo and restarts its full idle interval',async()=>{
   for(const type of ['pointerup','pointercancel','keydown','scroll','click']){
-    const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();assert.deepEqual(f.hinted(),['learning']);
     const registered=f.documentListeners.get(type).find(entry=>entry.callback===f.idleHintActivity);
     assert.ok(registered,`${type} is observed`);assert.equal(registered.options.capture,true);assert.equal(registered.options.passive,true);
     f.dispatch(type);assert.deepEqual(f.hinted(),[],type);
-    f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],type);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event'],type);
+    f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],type);f.advance(1);await flush();assert.deepEqual(f.hinted(),['learning'],type);
   }
 });
 
@@ -629,7 +634,7 @@ test('a held pointer suppresses the button halo across repaint until release or 
   for(const release of ['pointerup','pointercancel']){
     const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
     assert.equal(f.idleHintTarget(),null);f.render();f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
-    f.dispatch(release);f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
+    f.dispatch(release);f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['learning']);
   }
 });
 
@@ -651,10 +656,10 @@ test('the button halo stays quiet during recording, recognition, teaching and un
 
 test('modal and background transitions cancel the button halo; returning starts a fresh interval',async()=>{
   const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
-  f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
+  f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['learning']);
   f.document.hidden=true;f.dispatch('visibilitychange');assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
   f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
-  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
+  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['learning']);
   for(const page of ['parent','shop']){f.setPage(page);f.advance(VISUAL_HINT_IDLE_MS*2);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[],page);}
 });
 
@@ -707,7 +712,7 @@ test('leaving or backgrounding after a one-tap claim cannot resurrect its old re
 
 test('disabled, busy, hidden or competing primary buttons cannot receive an idle button halo',async()=>{
   for(const unavailable of ['disabled','busy','hidden','competing']){
-    const f=fixture();await finishHomeWelcome(f);const button=f.button('next-event');
+    const f=fixture();await finishHomeWelcome(f);const button=f.button('learning');
     if(unavailable==='disabled')button.disabled=true;
     if(unavailable==='busy')button.attrs['aria-busy']='true';
     if(unavailable==='hidden')button.visible=false;
@@ -720,7 +725,7 @@ test('a cancelled timer cannot shorten the new interval even when its target is 
   const f=fixture();await finishHomeWelcome(f);
   const old=[...f.timers.values()].find(timer=>timer.delay===VISUAL_HINT_IDLE_MS);assert.ok(old);
   f.advance(5000);f.dispatch('keydown');old.fn();assert.deepEqual(f.hinted(),[]);
-  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
+  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['learning']);
 });
 
 test('late timers cannot reveal a button halo on an old screen or contaminate a replacement screen',async()=>{
@@ -735,7 +740,7 @@ test('late timers cannot reveal a button halo on an old screen or contaminate a 
     if(change==='recording')s.recording=true;
     f.timers.delete(oldId);old.fn();assert.equal(oldWrap.classList.contains('is-idle-hint'),false,change);assert.deepEqual(f.hinted(),[],change);
     if(['repaint','navigate'].includes(change)){
-      f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],change);f.advance(1);await flush();assert.deepEqual(f.hinted(),[change==='navigate'?'next-event':'record']);
+      f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],change);f.advance(1);await flush();assert.deepEqual(f.hinted(),[change==='navigate'?'learning':'record']);
     }else{f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[],change);}
   }
 });

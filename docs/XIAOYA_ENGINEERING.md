@@ -1,6 +1,8 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语启蒙正式版 v0.25.1。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为入口，历次证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-22，当前为小芽英语启蒙正式版 v0.26.0。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为入口，历次证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+
+章节实现专项见 [章节交接](XIAOYA_CHAPTERS.md)。`startEvent` 第五参数携带 `learningRoute`，领奖后的队列推进由 `chapterAfterReward` 处理；单句按钮同时有 `data-chapter`，必须先处理 `data-chapter-phrase`，避免误回详情页。开放读取既有 `firstDate` 参与记录，不把星级当章节门槛，也不把参与升级成独立证据。
 
 ## 1. 先分清两个产品
 
@@ -20,6 +22,8 @@
 | 工作 | 主要文件与入口符号 | 修改时同时检查 |
 | --- | --- | --- |
 | 页面、学习会话、导航 | `xiaoya/experience.js`：`startEvent`、`playStory`、`teach`、`record`、`assessClip`、`applySpeechResult`、`finish`、`navigate` | 首学、复习、挑战必须区分；帮助后不能写独立掌握。切页/弹窗/后台须取消旧异步任务 |
+| 章节开放与选句 | `xiaoya/chapters.js`：21×4 稳定映射、基于已有参与卡的宽松开放、熟悉图选句与三章混合复习 | 不另建持久化键；保留旧用户已练内容的访问权限 |
+| 章节界面与首页 | `xiaoya/chapter-ui.js` / `xiaoya/chapters.css`：双插画入口、灰/彩章节地图、四句进度、目标花挑战 | 章节样式最后加载，避免旧首页定位覆盖 |
 | 课程与句子身份 | `content.js`：`EVENTS`；`phrase-pack-v015.js`；`curriculum.js`：`CORE_PHRASE_EVENT_IDS`、`phraseIdFor`、`canonicalEventId`、`phraseEvents` | 旧事件 ID 保留，通过表达归并避免重复当新课；不要重排既有挑战组成员 |
 | 故事和情境图 | `stories.js`：`STORIES`、`storyFor`；`story-pictures.js`：`pictureFor`、`pictureSequence`、`createPictureLoader`；`story-assets.js`、`phrase-assets-v015.js` | 熟悉图用于复习；图片晚到只替换画面，不重置会话。资源生产详见 [内容流水线](XIAOYA_CONTENT_PIPELINE.md) |
 | 学习证据 | `learning.js`：`recordEvidence`、`correctEvidence`、`effectiveEvidence`、`phraseStatus`、`phraseCheckupContext` | 参与、机器候选、家长确认分别记录，不能用奖励或星级推出掌握 |
