@@ -1,3 +1,5 @@
+import {CHALLENGE_GROWTH_ASSETS} from './challenge-flowers.js';
+
 // Release art has one identity. Loading/errors use a neutral placeholder;
 // the previous vector characters and flowers must never reappear.
 // URLs are relative to the document's project-root <base>, not the JS release.
@@ -9,6 +11,7 @@ export const PAPER_ASSETS=Object.freeze(Object.fromEntries([
   ...FLOWER_IDS.map(id=>[`flower-${id}`,`${ROOT}flowers/${id}.webp`]),
   ...['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'].map(key=>[key,`${NEXT_ROOT}${key}.webp`]),
   ...['bow-rainbow','bow-starlight'].map(id=>[`flower-${id}`,`${NEXT_ROOT}flowers/${id}.webp`]),
+  ...Object.entries(CHALLENGE_GROWTH_ASSETS),
 ]));
 
 /** Keep the existing SVG root/viewBox and put only its replaceable body here. */

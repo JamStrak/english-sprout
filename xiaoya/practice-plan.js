@@ -41,9 +41,16 @@ function gardenRound(value) {
   // Validate the persisted receipt contract without importing the garden: its
   // challenge catalogue depends on this scheduler. Quantities never become
   // learning evidence, and old receipts retain their original reward amounts.
-  if (![1, 2, 3].includes(value.rewardVersion) ||
+  if (![1, 2, 3, 4].includes(value.rewardVersion) ||
       (value.rewardVersion === 1) !== (value.reward === 'legacy')) fail('花园参与补给版本错误');
   fields(value.amounts, ['shells', 'water']);
+  // Version 4 stores the GM tuning that applied when this round was earned.
+  // It is an immutable bounded snapshot; today's settings cannot change it.
+  if (value.rewardVersion === 4) {
+    if (Object.values(value.amounts).some(amount => !Number.isInteger(amount) || amount < 0 || amount > 1000))
+      fail('花园参与补给金额错误');
+    return;
+  }
   const shells = value.rewardVersion === 1 ? 3 : 2;
   const water = value.rewardVersion === 3 ? (value.starter ? 3 : 2) : 5;
   if (value.amounts.shells !== shells || value.amounts.water !== water) fail('花园参与补给金额错误');

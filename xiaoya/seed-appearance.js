@@ -30,5 +30,5 @@ export function seedAppearance(flower) {
     own(FLOWER_SEED_COLORS,flower?.id)?FLOWER_SEED_COLORS[flower.id]:'natural';
   const palette=SEED_COLORS[colorTag];
   const name=typeof flower?.name==='string'&&flower.name.trim()?flower.name.trim():'小花';
-  return Object.freeze({colorTag,colorName:palette.name,color:palette.color,seedName:`${name}种子`});
+  return Object.freeze({colorTag,colorName:palette.name,color:palette.color,seedName:`${flower?.giant&&!name.startsWith('巨型')?'巨型':''}${name}种子`});
 }

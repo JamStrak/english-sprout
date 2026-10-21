@@ -5,6 +5,7 @@ include every pixel with alpha >= 24, including leaves, without the blank sky.
 """
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 from PIL import Image
 
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def discover_assets(root=ROOT):
-    """Use delivered v2 milestone flowers, leaving missing ones on SVG fallback."""
+    """Include released growth art only, retaining its full canvas and root."""
     art = Path(root) / 'public/xiaoya/paper'
     original = art / 'v1'
     files = {name: original / f'{name}.webp' for name in ('seed-in-soil', 'sprout', 'bud')}
@@ -21,6 +22,13 @@ def discover_assets(root=ROOT):
         path = art / 'v2/flowers' / f'{flower}.webp'
         if path.is_file():
             files[f'flower-{flower}'] = path
+    module = Path(root) / 'xiaoya/challenge-flowers.js'
+    if module.is_file():
+        script = "import {CHALLENGE_GROWTH_ASSETS} from './xiaoya/challenge-flowers.js'; console.log(JSON.stringify(CHALLENGE_GROWTH_ASSETS));"
+        result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=root,
+                                check=True, capture_output=True, encoding='utf-8')
+        files.update((key, Path(root) / 'public' / relative)
+                     for key, relative in json.loads(result.stdout).items())
     return files
 
 
@@ -43,7 +51,9 @@ def build_shapes(files):
             points = left + right[::-1]
             if not points:
                 raise ValueError(f'{name}: no visible alpha silhouette')
+            bounds = alpha.point(lambda a: 255 if a >= 24 else 0).getbbox()
             shapes[name] = {'path': 'M' + 'L'.join(f'{x},{y}' for x, y in points) + 'Z',
+                            'bounds': list(bounds),
                             'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
     return shapes
 

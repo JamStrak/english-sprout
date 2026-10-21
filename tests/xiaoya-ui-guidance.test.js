@@ -1,3 +1,4 @@
+import {createEconomySettingsStore,ECONOMY_SETTINGS_KEY} from '../xiaoya/economy-settings.js';
 import {gardenMusicSettings} from '../xiaoya/garden-music.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -77,12 +78,12 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
   const soundPlayer={play(id){cueId=id;(calls.cues??=[]).push(id);return Promise.resolve(true);},stop(){cueId=null;},setState(){},status:()=>({id:cueId}),resolve:id=>cueDurations[id]===undefined?null:{enabled:true,volume:1,asset:{duration:cueDurations[id],url:`fixture:${id}`}}};
   const soundSettings={subscribe:()=>()=>{},reload(){}};
   const createMeadowMotion=()=>({capture:()=>null,play:async()=>false,cancel(){}});
-  const sandbox={soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardenHistory,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
+  const sandbox={getEconomySettings:()=>createEconomySettingsStore({storage:localStorage}).load(),ECONOMY_SETTINGS_KEY,soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},...practicePlan,...curriculum,challenge,...challengeUI,installPaperArt,createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),...content,...learning,...stories,...gardenHistory,...voices,...art,...gardenArt,...storyArt,...meadowArt,...meadowUI,...seedShop,layoutMeadowWatering(){/* Physical layout is covered by watering browser tests. */},meadow,audio,document,localStorage,
     // The VM runs the controller while imported validators use this realm.
     // Keep parsed storage and controller-created records in that same realm.
     recordEvidence:(state,input)=>learning.recordEvidence(state,JSON.parse(JSON.stringify(input))),
     recordPractice:(state,input)=>practicePlan.recordPractice(state,JSON.parse(JSON.stringify(input))),
-    meadow:{...meadow,rewardChallenge:(state,input)=>meadow.rewardChallenge(state,JSON.parse(JSON.stringify(input)))},
+    meadow:{...meadow,rewardChallenge:(state,input)=>meadow.rewardChallenge(state,JSON.parse(JSON.stringify(input)),.5)},
     challenge:{...challenge,
       recordChallengeAttempt:(state,input)=>challenge.recordChallengeAttempt(state,JSON.parse(JSON.stringify(input))),
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
@@ -122,7 +123,7 @@ test('challenge prompts preview the first-clear prize and never promise daily or
   const f=challengeFixture({recognized:{matched:true,stars:3,heard:'hello'}});
   for(const eventId of challenge.CHALLENGE_UNITS[0].eventIds){
     f.startChallenge('challenge-1');const s=f.getSession();assert.equal(s.event.id,eventId);
-    assert.match(f.html(),/class="round-goal" role="img" aria-label="整组首次完成可获得四枚贝壳和六滴水"/);
+    assert.match(f.html(),/class="round-goal" role="img" aria-label="整组首次完成可获得4枚贝壳和6滴水，还有这关的花种"/);
     assert.match(f.html().split('class="round-goal"')[1],/<span>4<\/span><span>＋<\/span>[\s\S]*<span>6<\/span>/);
     await f.assessClip(s,'blob:prize',s.speechGeneration);
   }
@@ -219,7 +220,7 @@ test('a durable challenge step restores its interrupted review record on retry o
 
 test('a failed first-clear wallet write recovers once and repeated or reloaded recovery does not write storage',async()=>{
   const today=learning.localDay(),stored=new Map();
-  const wallet=meadow.openSeedPack(meadow.rewardRound(meadow.createMeadow(),{roundId:'existing-starter',eventId:challenge.CHALLENGE_UNITS[0].eventIds[0],date:today}),0);
+  const wallet=meadow.openSeedPack(meadow.rewardRound(meadow.createMeadow(),{roundId:'existing-starter',eventId:challenge.CHALLENGE_UNITS[0].eventIds[0],date:today}),0,.5);
   stored.set(meadow.MEADOW_KEY,JSON.stringify(wallet));
   let reject=true;
   const f=challengeFixture({stored,recognized:{matched:true,stars:3,heard:'hello'},failWrite:key=>key===meadow.MEADOW_KEY&&reject});
@@ -334,7 +335,7 @@ test('spoken directions highlight their actual target and survive a renderer ref
   let garden=meadow.rewardRound(meadow.createMeadow(),{roundId:'guided-round',eventId:stories.STORIES[0].id,date:'2026-10-16'});
   for(const action of ['shop','meadow-seed','meadow-can']){
     f.setGarden(garden);const pending=f.actions['garden-guide']();assert.deepEqual(f.guided(),[action]);f.sounds.at(-1).resolve(true);await pending;
-    if(action==='shop')garden=meadow.openSeedPack(garden,0);else if(action==='meadow-seed')garden=meadow.plantSeed(garden,{x:.5,y:.6});
+    if(action==='shop')garden=meadow.openSeedPack(garden,0,.5);else if(action==='meadow-seed')garden=meadow.plantSeed(garden,{x:.5,y:.6});
   }
 });
 

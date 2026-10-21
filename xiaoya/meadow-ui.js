@@ -1,24 +1,27 @@
-import {ALL_FLOWERS,nextAction,pendingRewards,hasUnlimitedResources} from './garden-meadow.js';
+import {ALL_FLOWERS,nextAction,pendingRewards,hasUnlimitedResources,flowerForSeed} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt,seedArtForFlower} from './garden-art.js';
 import {icon} from './art.js';
+import {getEconomySettings} from './economy-settings.js';
 
-const flowerFor=id=>ALL_FLOWERS.find(f=>f.id===id);
+
 export function meadowView({state,header,balance,feedback,tool,backgroundUrl=null,challengeEntry='',specialPending=false}) {
   const unlimited=hasUnlimitedResources(state),canWater=unlimited||state.water>0;
-  const next=nextAction(state),seed=state.pendingSeed,thirsty=state.plants.find(p=>p.waterings<flowerFor(p.flowerId).waterNeeded);
-  const flower=seed&&flowerFor(seed.flowerId),collected=new Set(state.plants.filter(p=>p.waterings===flowerFor(p.flowerId).waterNeeded).map(p=>p.flowerId));
+  const next=nextAction(state),seed=state.pendingSeed,thirsty=state.plants.find(p=>p.waterings<flowerForSeed(p).waterNeeded);
+  const flower=seed&&flowerForSeed(seed),collected=new Set(state.plants.filter(p=>p.waterings===flowerForSeed(p).waterNeeded).map(p=>p.flowerId));
+  const largestScale=Math.max(1,...state.plants.map(p=>flowerForSeed(p).scale));
+  const lowestSeedPrice=Math.min(getEconomySettings().packPrice,...[state.shop?.offer?.price,state.shop?.reserved?.price].filter(Number.isFinite));
   return `${header}<main class="meadow-view" data-garden-next="${next}" data-guidance="${state.plants.length>=3?'quiet':'new'}" data-tool="${tool||''}">
     <div class="meadow-top">${balance}${pendingRewards(state).length?`<button class="icon-button" data-action="collect-reward" aria-label="领取还没选的小礼物">${icon('star',28)}</button>`:''}${challengeEntry}<button class="meadow-collection-button" data-action="meadow-collection" aria-label="看我的花朵收藏">${icon('star',24)}<b>${collected.size}<small> / ${ALL_FLOWERS.length}</small></b></button></div>
-    <div class="meadow-field ${tool?'has-tool':''} ${backgroundUrl?'has-paper':''}" ${backgroundUrl?`data-picture-id="garden-background" style="--meadow-picture:url('${backgroundUrl}')"`:''} data-meadow-field role="group" aria-label="自由播种的小花园，先拿起种子再点草地" tabindex="0">
+    <div class="meadow-field ${tool?'has-tool':''} ${backgroundUrl?'has-paper':''}" ${backgroundUrl?'data-picture-id="garden-background"':''} style="--largest-plant-scale:${largestScale};${backgroundUrl?`--meadow-picture:url('${backgroundUrl}')`:''}" data-meadow-field role="group" aria-label="自由播种的小花园，先拿起种子再点草地" tabindex="0">
       <div class="meadow-sky" aria-hidden="true"><i></i><i></i><span>☀</span></div><div class="meadow-path" aria-hidden="true"></div>
       ${Array.from({length:16},(_,i)=>`<i class="meadow-grass" aria-hidden="true" style="left:${5+(i*37)%90}%;top:${30+(i*19)%62}%"></i>`).join('')}
-      ${state.plants.map(p=>{const f=flowerFor(p.flowerId),bloom=p.waterings===f.waterNeeded;return `<button class="meadow-plant ${bloom?'is-bloom':'is-growing'} ${f.giant?'is-giant':''} ${feedback?.plantId===p.id?'just-watered':''} ${tool==='can'&&!bloom&&canWater?'can-water':''}" data-meadow-plant="${p.id}" data-waterings="${p.waterings}" data-needed="${f.waterNeeded}" style="--soil-x:${p.x*100}%;--soil-y:${p.y*100}%;--scale:${f.scale};z-index:${Math.round(p.y*100)}" aria-label="${f.name}，已浇${p.waterings}次，共需${f.waterNeeded}次${bloom?'，已经开花':''}">${meadowPlantArt(f,p.waterings)}${!bloom?`<span class="meadow-drops" aria-hidden="true">${Array.from({length:f.waterNeeded},(_,i)=>`<i class="${i<p.waterings?'filled':''}"></i>`).join('')}</span>`:''}${feedback?.plantId===p.id&&!feedback.motion?`<span class="meadow-splash" aria-hidden="true">${bloom?'✦':dropArt()}</span>`:''}</button>`;}).join('')}
-      ${tool==='can'?`<div class="meadow-water-layer" data-water-layer><svg class="meadow-water-links" aria-hidden="true"></svg>${state.plants.filter(p=>p.waterings<flowerFor(p.flowerId).waterNeeded).map(p=>`<button class="meadow-water-target ${feedback?.plantId===p.id?'just-watered':''}" data-water-plant="${p.id}" aria-label="给${flowerFor(p.flowerId).name}浇一滴水，还需${flowerFor(p.flowerId).waterNeeded-p.waterings}滴" ${canWater?'':'aria-disabled="true"'}><span data-feedback-body>${dropArt()}</span></button>`).join('')}</div>`:''}
+      ${state.plants.map(p=>{const f=flowerForSeed(p),bloom=p.waterings===f.waterNeeded;return `<button class="meadow-plant ${bloom?'is-bloom':'is-growing'} ${f.giant?'is-giant':''} ${feedback?.plantId===p.id?'just-watered':''} ${tool==='can'&&!bloom&&canWater?'can-water':''}" data-meadow-plant="${p.id}" data-waterings="${p.waterings}" data-needed="${f.waterNeeded}" style="--soil-x:${p.x*100}%;--soil-y:${p.y*100}%;--scale:${f.scale};z-index:${Math.round(p.y*100)}" aria-label="${f.name}，已浇${p.waterings}次，共需${f.waterNeeded}次${bloom?'，已经开花':''}">${meadowPlantArt(f,p.waterings)}${!bloom?`<span class="meadow-drops" aria-hidden="true">${Array.from({length:f.waterNeeded},(_,i)=>`<i class="${i<p.waterings?'filled':''}"></i>`).join('')}</span>`:''}${feedback?.plantId===p.id&&!feedback.motion?`<span class="meadow-splash" aria-hidden="true">${bloom?'✦':dropArt()}</span>`:''}</button>`;}).join('')}
+      ${tool==='can'?`<div class="meadow-water-layer" data-water-layer><svg class="meadow-water-links" aria-hidden="true"></svg>${state.plants.filter(p=>p.waterings<flowerForSeed(p).waterNeeded).map(p=>`<button class="meadow-water-target ${feedback?.plantId===p.id?'just-watered':''}" data-water-plant="${p.id}" aria-label="给${flowerForSeed(p).name}浇一滴水，还需${flowerForSeed(p).waterNeeded-p.waterings}滴" ${canWater?'':'aria-disabled="true"'}><span data-feedback-body>${dropArt()}</span></button>`).join('')}</div>`:''}
       ${tool==='seed'?`<span class="meadow-landing" aria-hidden="true">${icon('tap',40)}<i></i></span>`:!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
     </div>
     <div class="meadow-tools">
-      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.name}种子，放到草地上">${seedArtForFlower(flower)}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:next==='challenge-seed'||specialPending?`<button class="meadow-tool seed-tool challenge-seed-tool inviting" data-action="challenge-seed" aria-label="领取挑战赢得的特别花种子">${seedArt()}<span class="giant-badge" aria-hidden="true">✦</span></button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}2+</span></button>`}
+      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.name}种子，放到草地上">${seedArtForFlower(flower)}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:next==='challenge-seed'||specialPending?`<button class="meadow-tool seed-tool challenge-seed-tool inviting" data-action="challenge-seed" aria-label="领取挑战赢得的特别花种子">${seedArt()}<span class="giant-badge" aria-hidden="true">✦</span></button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}${lowestSeedPrice}+</span></button>`}
       <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="点水壶，再点小苗进度条旁边的水滴浇水">${canArt()}<span class="meadow-cost">${dropArt()}${unlimited?'∞':state.water}</span></button>
       <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，选择贝壳或水">${icon('play',40)}</button>
     </div>
@@ -26,7 +29,7 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
 }
 
 export function meadowCollection(state) {
-  const grown=new Set(state.plants.filter(p=>p.waterings===flowerFor(p.flowerId).waterNeeded).map(p=>p.flowerId));
+  const grown=new Set(state.plants.filter(p=>p.waterings===flowerForSeed(p).waterNeeded).map(p=>p.flowerId));
   return `<div class="meadow-collection">${ALL_FLOWERS.map(f=>`<div class="flower-stamp ${grown.has(f.id)?'collected':''}" aria-label="${grown.has(f.id)?f.name:'尚未种出的花'}">${grown.has(f.id)?meadowPlantArt(f,f.waterNeeded):'<span aria-hidden="true">?</span>'}</div>`).join('')}</div>`;
 }
 
@@ -121,7 +124,7 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
     if(hit)return hit.dataset.meadowPlant;
     const field=root.querySelector('[data-meadow-field]');if(!field||!position(event))return null;
     let closest=null,distance=70;
-    for(const p of read().state.plants){const f=flowerFor(p.flowerId);if(p.waterings>=f.waterNeeded)continue;const rect=field.querySelector(`[data-meadow-plant="${p.id}"]`)?.getBoundingClientRect();if(!rect)continue;const d=Math.hypot(rect.left+rect.width/2-event.clientX,rect.top+rect.height*.65-event.clientY);if(d<distance){closest=p.id;distance=d;}}
+    for(const p of read().state.plants){const f=flowerForSeed(p);if(p.waterings>=f.waterNeeded)continue;const rect=field.querySelector(`[data-meadow-plant="${p.id}"]`)?.getBoundingClientRect();if(!rect)continue;const d=Math.hypot(rect.left+rect.width/2-event.clientX,rect.top+rect.height*.65-event.clientY);if(d<distance){closest=p.id;distance=d;}}
     return closest;
   }
   root.addEventListener('pointerdown',event=>{
@@ -138,7 +141,7 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
     if(!drag||drag.id!==event.pointerId||!active())return;
     if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;
     drag.moved=true;event.preventDefault();
-    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.innerHTML=drag.tool==='seed'?seedArtForFlower(flowerFor(read().state.pendingSeed?.flowerId)):canArt();document.body.append(ghost);}
+    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.innerHTML=drag.tool==='seed'?seedArtForFlower(flowerForSeed(read().state.pendingSeed)):canArt();document.body.append(ghost);}
     ghost.style.left=`${event.clientX}px`;ghost.style.top=`${event.clientY}px`;
   });
   root.addEventListener('pointerup',event=>{

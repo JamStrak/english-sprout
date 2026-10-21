@@ -1,4 +1,5 @@
-import {ALL_FLOWERS,ECONOMY} from './garden-meadow.js';
+import {getEconomySettings} from './economy-settings.js';
+import {flowerForSeed} from './garden-meadow.js';
 import {packArt,shellArt,seedArtForFlower} from './garden-art.js';
 import {seedAppearance} from './seed-appearance.js';
 import {icon} from './art.js';
@@ -8,7 +9,7 @@ const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 // The six bags are choices of wrapping, not six different odds or a finite pool.
 // Only the persisted pendingSeed determines the result, including after reload.
 export function blindboxView({state,header,balance,selection=null,busy=false}) {
-  const flower=ALL_FLOWERS.find(f=>f.id===state.pendingSeed?.flowerId);
+  const flower=state.pendingSeed?flowerForSeed(state.pendingSeed):null;
   if(flower){
     const seed=seedAppearance(flower),opening=selection?.animate===true;
     return `${header}<main class="blindbox-view blindbox-reveal ${opening?'is-opening':''}" data-blindbox-phase="revealed" data-flower-id="${flower.id}">${balance}
@@ -18,9 +19,9 @@ export function blindboxView({state,header,balance,selection=null,busy=false}) {
     </main>`;
   }
   return `${header}<main class="blindbox-view" data-blindbox-phase="choose" aria-busy="${busy}">${balance}
-    <button class="blindbox-instruction" data-action="blindbox-voice" aria-label="听一听：选一袋，用两枚贝壳打开">选一袋，拆开看看${icon('sound',24)}</button>
-    <div class="blindbox-price" aria-label="每袋需要${ECONOMY.packPrice}枚贝壳">${shellArt()}<b>${ECONOMY.packPrice}</b><span>一袋</span></div>
-    <div class="blindbox-bags" role="group" aria-label="六个一样的惊喜种子袋，选中一袋才扣贝壳">${Array.from({length:6},(_,i)=>`<button class="blindbox-bag ${selection?.index===i?'is-selected':''}" data-mystery-bag="${i}" aria-label="选择第${i+1}袋，用${ECONOMY.packPrice}枚贝壳打开" ${busy?'disabled':''}><span class="blindbox-bag-art" aria-hidden="true">${packArt()}</span><span class="blindbox-bag-shadow" aria-hidden="true"></span></button>`).join('')}</div>
+    <button class="blindbox-instruction" data-action="blindbox-voice" aria-label="听一听：选一袋，用${getEconomySettings().packPrice}枚贝壳打开">选一袋，拆开看看${icon('sound',24)}</button>
+    <div class="blindbox-price" aria-label="每袋需要${getEconomySettings().packPrice}枚贝壳">${shellArt()}<b>${getEconomySettings().packPrice}</b><span>一袋</span></div>
+    <div class="blindbox-bags" role="group" aria-label="六个一样的惊喜种子袋，选中一袋才扣贝壳">${Array.from({length:6},(_,i)=>`<button class="blindbox-bag ${selection?.index===i?'is-selected':''}" data-mystery-bag="${i}" aria-label="选择第${i+1}袋，用${getEconomySettings().packPrice}枚贝壳打开" ${busy?'disabled':''}><span class="blindbox-bag-art" aria-hidden="true">${packArt()}</span><span class="blindbox-bag-shadow" aria-hidden="true"></span></button>`).join('')}</div>
     <div class="blindbox-footer"><button class="icon-button" data-action="blindbox-back" aria-label="返回种子商店，不购买">${icon('back',30)}</button><button class="icon-button" data-action="next-event" aria-label="玩英语，收集贝壳或水">${icon('play',30)}</button></div>
   </main>`;
 }

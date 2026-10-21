@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MEADOW_KEY,FLOWERS,ECONOMY,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,nextAction} from '../xiaoya/garden-meadow.js';
+import {MEADOW_KEY,FLOWERS,NORMAL_FLOWERS,ECONOMY,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,nextAction} from '../xiaoya/garden-meadow.js';
 import {meadowPlantArt} from '../xiaoya/meadow-art.js';
 import {GARDEN_KEY,createGarden,validateGarden} from '../xiaoya/garden.js';
 import {EVENTS} from '../xiaoya/content.js';
@@ -13,14 +13,14 @@ function freeze(value) {
   return value;
 }
 const rewarded=()=>rewardRound(createMeadow(),round('first'));
-const pending=()=>openSeedPack(rewarded(),0);
+const pending=()=>openSeedPack(rewarded(),0,.99);
 const planted=()=>plantSeed(pending(),{x:.321,y:.789});
 function reward(state,id,choice='shells') {
   const recorded=rewardRound(state,round(id));
   return claimReward(recorded,id,choice);
 }
-function addPlant(state,index,point={x:.5,y:.5},random=0) {
-  return plantSeed(openSeedPack(reward(state,`round-${index}`),random),point);
+function addPlant(state,index,point={x:.5,y:.5},random=0,giantRandom=.99) {
+  return plantSeed(openSeedPack(reward(state,`round-${index}`),random,giantRandom),point);
 }
 
 test('B meadow keeps its storage key, immutable varieties and independent A economy',()=>{
@@ -56,7 +56,7 @@ test('each content event records participation once and each later reward needs 
     state=rewardRound(state,payload);
     assert.equal(before.rounds.length,index);
     assert.deepEqual(state.rounds[index],{...payload,starter:index===0,reward:index===0?'starter':'pending',
-      rewardVersion:3,amounts:{shells:2,water:index===0?3:2}});
+      rewardVersion:4,amounts:{shells:2,water:index===0?3:2}});
     assert.strictEqual(rewardRound(state,payload),state);
     if(index===0) {shells+=2;water+=3;}
     else {
@@ -79,9 +79,9 @@ test('each content event records participation once and each later reward needs 
 
 test('a bought mystery is stable through reload and duplicate clicks until planted',()=>{
   const before=freeze(reward(rewarded(),'second'));
-  const purchased=openSeedPack(before,0);
+  const purchased=openSeedPack(before,0,.99);
   assert.deepEqual([purchased.shells,purchased.water,purchased.seedPacksOpened],[2,3,1]);
-  assert.deepEqual(purchased.pendingSeed,{id:'seed-1',flowerId:'daisy'});
+  assert.deepEqual(purchased.pendingSeed,{id:'seed-1',flowerId:'daisy',growth:{giant:false,waterNeeded:5,scale:1}});
   assert.equal(before.shells,4);assert.equal(before.pendingSeed,null);
   assert.strictEqual(openSeedPack(purchased,.99),purchased);
   const restored=freeze(clone(purchased));
@@ -89,17 +89,17 @@ test('a bought mystery is stable through reload and duplicate clicks until plant
   assert.strictEqual(openSeedPack(restored,.99),restored);
   const point=freeze({x:.123456,y:.987654});
   const plantedState=plantSeed(restored,point);
-  assert.deepEqual(plantedState.plants,[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:0,...point}]);
+  assert.deepEqual(plantedState.plants,[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:0,...point,growth:{giant:false,waterNeeded:5,scale:1}}]);
   assert.equal(plantedState.pendingSeed,null);
   assert.deepEqual([plantedState.shells,plantedState.water],[2,3]);
   assert.strictEqual(plantSeed(plantedState,point),plantedState);
-  assert.deepEqual(restored.pendingSeed,{id:'seed-1',flowerId:'daisy'});
+  assert.deepEqual(restored.pendingSeed,{id:'seed-1',flowerId:'daisy',growth:{giant:false,waterNeeded:5,scale:1}});
 });
 
 test('newcomer mystery is a daisy while later mystery outcomes use the supplied draw',()=>{
   for(const random of [0,.1,.5,.99]) assert.equal(openSeedPack(rewarded(),random).pendingSeed.flowerId,'daisy');
   const base=reward(planted(),'second');
-  for(const [index,flower] of FLOWERS.entries()) assert.equal(openSeedPack(base,(index+.5)/FLOWERS.length).pendingSeed.flowerId,flower.id);
+  for(const [index,flower] of NORMAL_FLOWERS.entries()) assert.equal(openSeedPack(base,(index+.5)/NORMAL_FLOWERS.length).pendingSeed.flowerId,flower.id);
   for(const value of [-1,1,Infinity,NaN,'0.5',null]) assert.throws(()=>openSeedPack(rewarded(),value),/随机值/);
 });
 
@@ -143,8 +143,8 @@ test('ordinary flowers need five one-unit pours and mature plants spend no water
 test('a giant needs ten pours and water-only rewards refill without forcing another seed',()=>{
   let state=reward(planted(),'finish-first-flower','water');
   for(let n=0;n<5;n++)state=waterPlant(state,'plant-1');
-  state=addPlant(state,2,{x:.4,y:.6},10.5/12);
-  assert.equal(state.plants[1].flowerId,'giant-daisy');assert.equal(state.water,0);
+  state=addPlant(state,2,{x:.4,y:.6},0,0);
+  assert.equal(state.plants[1].flowerId,'daisy');assert.equal(state.water,0);
   assert.strictEqual(waterPlant(state,'plant-2'),state);
   for(let batch=0;batch<5;batch++) {
     state=reward(freeze(state),`refill-${batch}`,'water');
@@ -184,7 +184,7 @@ test('next action prioritizes unclaimed rewards, pending seed, thirsty plant the
 test('validation rejects forged balances, purchases, plants and learning evidence everywhere',()=>{
   const valid=reward(planted(),'second');
   const mutations=[
-    (s)=>{s.schemaVersion=5;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
+    (s)=>{s.schemaVersion=6;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
     (s)=>{s.mastery=100;},(s)=>{s.shells++;},(s)=>{s.water++;},(s)=>{s.shells=-1;},
     (s)=>{s.water=Infinity;},(s)=>{s.seedPacksOpened=.5;},
     (s)=>{s.rounds.push({...s.rounds[0]});s.shells+=2;s.water+=5;},
@@ -206,7 +206,7 @@ test('validation rejects forged balances, purchases, plants and learning evidenc
     }
   }
   for(const replacement of [{id:'seed-9',flowerId:'daisy'},{id:'seed-1',flowerId:'bow-pink'}]) {
-    assert.throws(()=>validateMeadow({...pending(),pendingSeed:replacement}),/待播种/);
+    assert.throws(()=>validateMeadow({...pending(),pendingSeed:{...pending().pendingSeed,...replacement}}),/待播种/);
   }
   for(const value of [null,[],{},new Date()])assert.throws(()=>validateMeadow(value),/小芽草地记录无效/);
 });

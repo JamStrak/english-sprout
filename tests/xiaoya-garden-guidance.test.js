@@ -1,3 +1,4 @@
+import {createEconomySettingsStore,ECONOMY_SETTINGS_KEY} from '../xiaoya/economy-settings.js';
 import {gardenMusicSettings} from '../xiaoya/garden-music.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,13 +38,13 @@ function funded(state,shells=2,water=5){
 function grown(count){
   let state=meadow.createMeadow();
   for(let i=0;i<count;i++){
-    state=meadow.plantSeed(meadow.openSeedPack(funded(state),0),{x:.2+i*.16,y:.65});
+    state=meadow.plantSeed(meadow.openSeedPack(funded(state),0,.5),{x:.2+i*.16,y:.65});
     const plant=state.plants.at(-1),flower=meadow.ALL_FLOWERS.find(f=>f.id===plant.flowerId);
     for(let n=0;n<flower.waterNeeded;n++)state=meadow.waterPlant(state,plant.id);
   }
   return state;
 }
-function readySeed(count=0){return meadow.openSeedPack(funded(grown(count)),0);}
+function readySeed(count=0){return meadow.openSeedPack(funded(grown(count)),0,.5);}
 function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
   let html='',nodes=[],modalNodes=[],clock=0,timerId=0;
   const timers=new Map(),sounds=[],writes=[],calls={chimes:0},events={app:{},document:{},window:{},body:{}};
@@ -79,7 +80,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
   // Keep controller scheduling deterministic; native cue playback has its own tests.
   const soundPlayer={play(id){(calls.cues??=[]).push(id);return Promise.resolve(true);},stop(){},setState(){},status:()=>({id:null}),resolve:()=>null};
   const soundSettings={subscribe:()=>()=>{},reload(){}};
-  const sandbox={soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},
+  const sandbox={getEconomySettings:()=>createEconomySettingsStore({storage:{getItem:key=>storage.get(key)??null}}).load(),ECONOMY_SETTINGS_KEY,soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},
     retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},installPaperArt(){},
     ...practicePlan,...curriculum,challenge,...challengeUI,gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),
     ...content,...learning,...stories,...gardenHistory,...seedShop,...voices,...art,...gardenArt,...meadowArt,...meadowUI,

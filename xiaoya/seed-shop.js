@@ -1,10 +1,11 @@
-import {FLOWERS,ECONOMY,hasUnlimitedResources} from './garden-meadow.js';
+import {getEconomySettings} from './economy-settings.js';
+import {FLOWERS,hasUnlimitedResources} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {shellArt,packArt,seedArtForFlower} from './garden-art.js';
 import {icon} from './art.js';
 
 const flowerFor=id=>FLOWERS.find(f=>f.id===id);
-function price(value,owned){return `<span class="seed-price" aria-hidden="true">${shellArt()}<b>${value}</b><span class="shell-progress">${Array.from({length:value},(_,i)=>`<i class="${i<owned?'filled':''}"></i>`).join('')}</span></span>`;}
+function price(value,owned){return `<span class="seed-price" aria-hidden="true">${shellArt()}<b>${value}</b><span class="shell-progress">${Array.from({length:Math.min(value,12)},(_,i)=>`<i class="${i<owned?'filled':''}"></i>`).join('')}</span></span>`;}
 export function offerPicture(offer){const f=flowerFor(offer.flowerId);return `<span class="offer-picture" aria-hidden="true">${meadowPlantArt(f,f.waterNeeded)}<span class="offer-seed">${seedArtForFlower(f)}</span></span>`;}
 function offerCard(offer,state,source){
   if(!offer)return '';
@@ -18,7 +19,7 @@ function offerCard(offer,state,source){
 }
 export function seedShopView({state,header,balance}){
   return `${header}<main class="seed-shop-view">${balance}<div class="seed-shop-shelf">
-    <section class="seed-offer mystery-offer"><button class="seed-purchase" data-action="shop-pack" aria-label="进入盲盒，六个袋子选一个，每袋两枚贝壳"><span class="shop-card-label">惊喜种子</span><span class="mystery-picture" aria-hidden="true">${packArt()}<b>?</b></span>${price(ECONOMY.packPrice,hasUnlimitedResources(state)?Infinity:state.shells)}</button></section>
+    <section class="seed-offer mystery-offer"><button class="seed-purchase" data-action="shop-pack" aria-label="进入盲盒，六个袋子选一个，每袋${getEconomySettings().packPrice}枚贝壳"><span class="shop-card-label">惊喜种子</span><span class="mystery-picture" aria-hidden="true">${packArt()}<b>?</b></span>${price(getEconomySettings().packPrice,hasUnlimitedResources(state)?Infinity:state.shells)}</button></section>
     ${offerCard(state.shop.offer,state,'shop')}
     ${state.shop.reserved&&state.shop.reserved.id!==state.shop.offer?.id?offerCard(state.shop.reserved,state,'reserved'):''}
     </div><div class="shop-footer"><button class="icon-button" data-action="shop-back" aria-label="回到花园">${icon('house',32)}</button><button class="icon-button" data-action="next-event" aria-label="玩英语，收集贝壳或水">${icon('play',32)}</button></div></main>`;

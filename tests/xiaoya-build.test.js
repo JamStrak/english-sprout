@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
+import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 import {buildXiaoya} from '../scripts/build-xiaoya.mjs';
 
 const project = path.resolve(import.meta.dirname, '..');
@@ -25,7 +26,7 @@ async function fixture(t,{phrasePack=false,soundPack=false,internal=false}={}) {
   for (const name of ['garden-music.js', 'phrase-pack-v015.js', 'phrase-assets-v015.js', 'story-assets.js', 'story-pictures.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'meadow-hit-shapes.js', 'economy.css', 'seed-shop.js', 'paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
   for (const name of ['sound-catalog.js', 'sound-settings.js', 'sound-player.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* shared sound module */');
-  for (const name of ['meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* public garden motion */');
+  for (const name of ['challenge-flowers.js', 'economy-settings.js', 'meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* public garden motion */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.writeFile(path.join(root, 'xiaoya', 'audio-pack.js'), '/* audio preparation */');
@@ -35,7 +36,7 @@ async function fixture(t,{phrasePack=false,soundPack=false,internal=false}={}) {
   await fs.writeFile(path.join(root, 'xiaoya', 'welcome-greetings.js'), '/* local welcome rotation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
-  for (const name of ['gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal workbench */');
+  for (const name of ['gm-economy.js', 'tuning-backup.js', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal workbench */');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), new Uint8Array([1,2,3,4,5,6]));
   for (const directory of ['', 'ryan', 'characters/pip']) {
@@ -65,6 +66,11 @@ async function fixture(t,{phrasePack=false,soundPack=false,internal=false}={}) {
   await fs.writeFile(path.join(root, 'public/xiaoya/paper/v1/seed.webp'), 'paper seed bytes');
   await fs.mkdir(path.join(root, 'public/xiaoya/growth/v09'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/growth/v09/flower.webp'), 'candidate growth bytes');
+  for (const asset of Object.values(CHALLENGE_GROWTH_ASSETS)) {
+    const target=path.join(root, 'public', asset);
+    await fs.mkdir(path.dirname(target), {recursive:true});
+    await fs.writeFile(target, 'approved challenge flower bytes');
+  }
   await fs.writeFile(path.join(root, 'public/xiaoya/stories/fallback.svg'), '<svg/>');
   await fs.writeFile(path.join(root, 'public/xiaoya/stories/private.log'), 'not catalogued');
   const result = await buildXiaoya({root,internal});
@@ -134,8 +140,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语·自由花园版 v0\.23\.1<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.23\.1/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.24\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.24\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
@@ -172,9 +178,12 @@ test('public is the default and contains no GM entry, workbench, stylesheet or a
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = false/);
   assert.doesNotMatch(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /gm\.js/);
   assert.ok(!built.core.some(file => /\/gm[.-]/.test(file)));
-  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
+  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-economy.js', 'tuning-backup.js', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
   for (const file of ['meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
-  await assert.rejects(fs.stat(path.join(built.output, 'growth')), {code:'ENOENT'});
+  await assert.rejects(fs.stat(path.join(built.output, 'growth/v09/flower.webp')), {code:'ENOENT'});
+  const publicArt=JSON.parse(await fs.readFile(path.join(release,'art-pack.json'),'utf8'));
+  assert.equal(publicArt.filter(item=>item.url.startsWith('./growth/')).length,105);
+  for(const asset of Object.values(CHALLENGE_GROWTH_ASSETS)) assert.ok((await fs.stat(path.join(built.output,asset.replace(/^xiaoya\//,'')))).size>0);
   assert.ok(built.core.includes(`./releases/${built.build}/runtime.js`));
   assert.ok(built.core.includes(`./releases/${built.build}/build-config.js`));
 });
@@ -186,9 +195,9 @@ test('explicit internal builds fingerprint their channel and catalogue all stati
   assert.equal(JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8')).channel, 'internal');
   assert.match(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /import '\.\/gm\.js'/);
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = true/);
-  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-sounds.js','gm-growth.js','growth-core.js', 'growth-motion.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
+  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-economy.js','tuning-backup.js','gm-sounds.js','gm-growth.js','growth-core.js', 'growth-motion.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
   const catalogue = JSON.parse(await fs.readFile(path.join(release, 'gm-catalog.json'), 'utf8'));
-  assert.equal(catalogue.images.length, 7);
+  assert.equal(catalogue.images.length, 112);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/growth/v09/flower.webp'));
   assert.equal(catalogue.audio.length, 10);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/stories/goodbye-v2.webp' && entry.category === 'stories'));
@@ -208,7 +217,7 @@ test('explicit internal builds fingerprint their channel and catalogue all stati
   sw.setOnline(false);
   const offlineCatalogue = await sw.fetchRequest(new Request(new URL(`releases/${built.build}/gm-catalog.json`, sw.scope)));
   assert.deepEqual(await offlineCatalogue.json(), catalogue, 'The review index itself is verified and available offline');
-  assert.equal(sw.fetched.filter(url => url.endsWith('.webp')).length, 4, 'Installing the internal release also prepares every candidate growth picture');
+  assert.equal(sw.fetched.filter(url => url.endsWith('.webp')).length, 109, 'Installing the internal release also prepares every candidate growth picture');
   const publicBuild = await buildXiaoya({root:built.root, dist:path.join(built.root, 'public-dist')});
   assert.notEqual(publicBuild.build, built.build);
   assert.equal(publicBuild.channel, 'public');
@@ -407,7 +416,7 @@ test('art bytes identify the public release and a separate content-versioned ver
   assert.equal(metadata.name, '小芽英语·自由花园版');
   assert.equal(metadata.garden, 'free');
   assert.equal(metadata.art.version, built.artVersion);
-  assert.equal(metadata.art.count, 3);
+  assert.equal(metadata.art.count, 108);
   assert.equal(metadata.art.bytes, art.reduce((sum, file) => sum + file.bytes, 0));
   assert.ok(art.every(file => file.bytes > 0 && /^[a-f0-9]{64}$/.test(file.sha256)));
   await assert.rejects(fs.stat(path.join(built.output, 'stories/fallback.svg')), {code:'ENOENT'});
@@ -423,7 +432,7 @@ test('corrupt art blocks activation and retry resumes a verified partial picture
   sw.setBadArt(true);
   await assert.rejects(sw.lifecycle('install'), /图片文件不完整/);
   assert.equal(sw.skipped(), 0, 'Voices being ready must not activate an incomplete artwork release');
-  assert.equal(sw.stores.get(`xiaoya-art-${built.artVersion}`).size, 2);
+  assert.equal(sw.stores.get(`xiaoya-art-${built.artVersion}`).size, 2 + Object.keys(CHALLENGE_GROWTH_ASSETS).length);
   assert.ok(sw.messages.some(message => message.type === 'xiaoya-art-pack' && message.build === built.build && message.state === 'error'));
   assert.ok(!sw.messages.some(message => message.type === 'xiaoya-art-pack' && message.state === 'ready'));
   const before = sw.fetched.filter(url => url.endsWith('.webp')).length;
@@ -431,7 +440,8 @@ test('corrupt art blocks activation and retry resumes a verified partial picture
   await sw.lifecycle('install');
   assert.equal(sw.skipped(), 1);
   assert.equal(sw.fetched.filter(url => url.endsWith('.webp')).length - before, 1);
-  assert.deepEqual(sw.messages.filter(message => message.type === 'xiaoya-art-pack').at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:3, total:3});
+  const artCount=3+Object.keys(CHALLENGE_GROWTH_ASSETS).length;
+  assert.deepEqual(sw.messages.filter(message => message.type === 'xiaoya-art-pack').at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:artCount, total:artCount});
 });
 
 test('art never falls back to an older shell or corrupted content cache and repairs valid bytes online', async t => {
@@ -459,7 +469,8 @@ test('art preparation messages verify the entire pack and reject requests for an
   assert.deepEqual(sw.messages.at(-1), {type:'xiaoya-art-update', requestedBuild:'0123456789ab', build:built.build});
   assert.equal(sw.fetched.length, 0);
   await sw.send({type:'xiaoya-prepare-art', build:built.build});
-  assert.deepEqual(sw.messages.at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:3, total:3});
+  const artCount=3+Object.keys(CHALLENGE_GROWTH_ASSETS).length;
+  assert.deepEqual(sw.messages.at(-1), {type:'xiaoya-art-pack', build:built.build, state:'ready', done:artCount, total:artCount});
   const requests = sw.fetched.length;
   sw.setOnline(false);
   await sw.send({type:'xiaoya-prepare-art', build:built.build});

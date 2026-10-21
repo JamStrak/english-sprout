@@ -1,3 +1,4 @@
+import {createEconomySettingsStore,ECONOMY_SETTINGS_KEY} from '../xiaoya/economy-settings.js';
 import {gardenMusicSettings} from '../xiaoya/garden-music.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,7 +71,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     beginRecording:async () => true, finishRecording() {}, replayClip:async () => true};
   const soundPlayer = {play:async () => true,stop() {},setState() {},status:() => ({id:null}),resolve:() => null};
   const soundSettings = {subscribe:() => () => {},reload() {}};
-  const sandbox = {soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
+  const sandbox = {getEconomySettings:()=>createEconomySettingsStore({storage:localStorage}).load(),ECONOMY_SETTINGS_KEY,soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
@@ -81,7 +82,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     recordPractice:(state, input) => practicePlan.recordPractice(state, copy(input)),
     // Imported strict validators and JSON storage share the host realm.
     meadow:{...meadow, rewardRound:(state, input) => meadow.rewardRound(state, copy(input)),
-      rewardChallenge:(state, input) => meadow.rewardChallenge(state, copy(input))},
+      rewardChallenge:(state, input) => meadow.rewardChallenge(state, copy(input), .5)},
     challenge:{...challenge,
       recordChallengeAttempt:(state, input) => challenge.recordChallengeAttempt(state, copy(input)),
       recordChallengeHelp:(state, input) => challenge.recordChallengeHelp(state, copy(input))},
@@ -251,7 +252,10 @@ test('unit 21 uses real new phrase recognition, awards one first clear and resto
   assert.equal(f.challengeSummary().units.at(-1).completed, true);
   const wallet = f.getMeadow(); assert.deepEqual([wallet.shells, wallet.water], [4,6]);
   assert.equal(wallet.challengeRewards.length, 1); assert.equal(wallet.rounds.length, 0);
-  assert.deepEqual(meadow.pendingChallengeSeeds(wallet), []);
+  assert.deepEqual(meadow.pendingChallengeSeeds(wallet), [{
+    milestoneId:'challenge-flower-v1:challenge-21',unitId:'challenge-21',flowerId:'magic-starlight-05',seedId:null,
+    growth:{giant:false,scale:1,waterNeeded:5},
+  }]);
   assert.deepEqual(meadow.validateMeadow(copy(wallet)), wallet);
   assert.ok(f.getPractice().entries.slice(-4).every(entry => entry.mode === 'review' && entry.rewardVariant === null));
   f.startChallenge(unit.id); const replay = f.getSession(); await f.assessClip(replay, 'blob:fixture-only', replay.speechGeneration);
@@ -283,7 +287,7 @@ test('three stars after help clear the step and survive refresh without becoming
   assert.deepEqual([refreshed.getMeadow().shells, refreshed.getMeadow().water], [0,0]);
 });
 
-test('new ordinary lessons save v3 rewards and tomorrow reviews without treating rewards or machine scores as mastery', async () => {
+test('new ordinary lessons save v4 rewards and tomorrow reviews without treating rewards or machine scores as mastery', async () => {
   const f = controllerFixture({stored:new Map([['xiaoya-english:preferences:v1', JSON.stringify({mic:true})]])}); await flush();
   for (const event of added.slice(0,2)) {
     f.startEvent(event); await f.storyDelay(); f.storyContinue(); await flush();
@@ -296,7 +300,7 @@ test('new ordinary lessons save v3 rewards and tomorrow reviews without treating
   assert.equal(f.getModal(), null);
   const wallet = f.getMeadow();
   assert.deepEqual(wallet.rounds.map(round => [round.eventId, round.rewardVersion, round.amounts]), [
-    [added[0].id, 3, {shells:2, water:3}], [added[1].id, 3, {shells:2, water:2}],
+    [added[0].id, 4, {shells:2, water:3}], [added[1].id, 4, {shells:2, water:2}],
   ]);
   const today = learning.localDay(), tomorrow = practicePlan.addPracticeDays(today, 1);
   const earned = meadow.claimReward(wallet, wallet.rounds[1].roundId, 'water');

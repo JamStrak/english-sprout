@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {MEADOW_HIT_SHAPES} from '../xiaoya/meadow-hit-shapes.js';
+import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 import {PAPER_ASSETS,paperLayer,paperPlantLayer,installPaperArt} from '../xiaoya/paper-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt,plantArt} from '../xiaoya/garden-art.js';
 import {meadowPlantArt} from '../xiaoya/meadow-art.js';
@@ -44,7 +45,7 @@ function fixture({cached=false,failCache=false,observer=true,build='012345abcdef
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 
 test('plant hit outlines match the currently shipped art assets',()=>{
-  const keys=['seed-in-soil','sprout','bud',...[...FLOWERS,...shippedSpecialFlowers].map(f=>`flower-${f.id}`)];
+  const keys=['seed-in-soil','sprout','bud',...[...FLOWERS,...shippedSpecialFlowers].map(f=>`flower-${f.id}`),...Object.keys(CHALLENGE_GROWTH_ASSETS)];
   assert.deepEqual(Object.keys(MEADOW_HIT_SHAPES).sort(),keys.sort());
   for(const key of keys){
     const hash=createHash('sha256').update(fs.readFileSync(new URL(`../public/${PAPER_ASSETS[key]}`,import.meta.url))).digest('hex');
@@ -52,14 +53,17 @@ test('plant hit outlines match the currently shipped art assets',()=>{
   }
 });
 
-test('paper map includes the welcome gift and seven optional v2 assets with nested-host relative paths',()=>{
-  assert.equal(Object.keys(PAPER_ASSETS).length,29);
+test('paper map includes shared art and the 21 promoted five-stage flowers with nested-host relative paths',()=>{
+  assert.equal(Object.keys(PAPER_ASSETS).length,29+21*5);
   assert.ok(Object.isFrozen(PAPER_ASSETS));
   for(const stage of ['seed-in-soil','sprout','bud'])assert.equal(PAPER_ASSETS[stage],`xiaoya/paper/v1/${stage}.webp`);
   for(const flower of FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v1/flowers/${flower.id}.webp`);
   for(const flower of SPECIAL_FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v2/flowers/${flower.id}.webp`);
   for(const key of ['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'])assert.equal(PAPER_ASSETS[key],`xiaoya/paper/v2/${key}.webp`);
-  for(const path of Object.values(PAPER_ASSETS))assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);
+  for(const [key,path] of Object.entries(PAPER_ASSETS)) {
+    if(key in CHALLENGE_GROWTH_ASSETS)assert.equal(path,CHALLENGE_GROWTH_ASSETS[key]);
+    else assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);
+  }
 });
 
 test('every shared gift icon uses the delivered paper box without the old vector gift',()=>{
@@ -101,11 +105,12 @@ test('garden tools keep hit geometry; visible plant layers use release artwork a
   }
   for(const flower of ALL_FLOWERS) {
     const mature=meadowPlantArt(flower,flower.waterNeeded);
-    assert.match(mature,new RegExp(`data-paper-art="flower-${flower.id}"`));
+    assert.match(mature,new RegExp(`data-paper-art="${flower.stages?`growth-${flower.id}-mature`:`flower-${flower.id}`}"`));
     assert.match(mature,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body><g data-paper-art=/);
     for(let count=0;count<flower.waterNeeded;count++) {
       const art=meadowPlantArt(flower,count);
-      const key=count===0?'seed-in-soil':count/flower.waterNeeded<.5?'sprout':'bud';
+      const stage=flower.stages?.[Math.floor((count-1)*4/Math.max(1,flower.waterNeeded-1))];
+      const key=count===0?'seed-in-soil':stage?`growth-${flower.id}-${stage.id}`:count/flower.waterNeeded<.5?'sprout':'bud';
       assert.match(art,new RegExp(`data-paper-art="${key}"`));
       assert.match(art,/<g data-paper-fallback><ellipse/);
       assert.match(art,/<ellipse data-feedback-anchor data-part="soil"[^>]+\/><g data-plant-body data-feedback-body(?: data-feedback-kind="seed")?><g data-paper-art=/);
@@ -140,14 +145,14 @@ test('successful meadow bitmaps also grow on every pour while staying anchored a
       const art=meadowPlantArt(flower,count);
       const [,x,y,width,height]=art.match(/<image[^>]+ x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/);
       const paintedHeight=Math.min(Number(height),Number(width)/(384/512));
-      assert.ok(Math.abs(Number(y)+Number(height)-paintedHeight+paintedHeight*.88-164)<1e-8);
+      assert.ok(Math.abs(Number(y)+Number(height)-paintedHeight+paintedHeight*451/512-164)<1e-8);
       assert.equal(Math.round((Number(x)+Number(width)/2)*100),8000);
       const key=art.match(/data-paper-art="([^"]+)"/)[1];
       // The source alpha outline is independently tied to the asset hash above.
       // Transparent canvas growth must not pass as actual plant growth.
       assert.ok(MEADOW_HIT_SHAPES[key],`${key}: generate its hit outline before shipping the image`);
-      const top=Math.min(...[...MEADOW_HIT_SHAPES[key].path.matchAll(/[ML]([\d.]+),([\d.]+)/g)].map(m=>Number(m[2])));
-      const visibleHeight=paintedHeight*(512*.88-top)/512;
+      const top=MEADOW_HIT_SHAPES[key].bounds[1];
+      const visibleHeight=paintedHeight*(451-top)/512;
       assert.ok(visibleHeight-previousVisibleHeight>=7.9,`${flower.id} pour ${count}: visible height ${previousVisibleHeight} -> ${visibleHeight}`);
       previousVisibleHeight=visibleHeight;
       stages.add(key);
@@ -167,7 +172,7 @@ test('milestone flowers retain invisible hit outlines and a root-fixed release i
     assert.match(art,/<image[^>]+opacity="0" pointer-events="none"/);
     const [,x,y,width,height]=art.match(/<image[^>]+ x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/);
     assert.equal(Number(x)+Number(width)/2,80);
-    assert.ok(Math.abs(Number(y)+Number(height)*.88-164)<1e-8);
+    assert.ok(Math.abs(Number(y)+Number(height)*451/512-164)<1e-8);
   }
 });
 

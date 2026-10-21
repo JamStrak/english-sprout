@@ -30,11 +30,13 @@ export function createSandboxStorage(readRealStorage = () => globalThis.localSto
       if (Object.keys(gardenMusic).length) memory.setItem(preferencesKey, JSON.stringify({gardenMusic}));
     }
   } catch { /* A broken preference must not block a disposable test session. */ }
-  const growthKey = 'xiaoya-english:growth-settings:v1';
-  try {
-    const raw = source?.getItem(growthKey), value = JSON.parse(raw || 'null');
-    if (value && typeof value === 'object' && !Array.isArray(value)) memory.setItem(growthKey, raw);
-  } catch { /* The growth workbench will use its normal defaults. */ }
+  // Only explicit tuning keys are inherited, never the player's progress or wallet.
+  for (const key of ['xiaoya-english:growth-settings:v1','xiaoya-english:economy-settings:v1','xiaoya-english:sounds:v1']) {
+    try {
+      const raw = source?.getItem(key), value = JSON.parse(raw || 'null');
+      if (value && typeof value === 'object' && !Array.isArray(value)) memory.setItem(key, raw);
+    } catch { /* Each workbench can fall back to its own defaults. */ }
+  }
   return memory;
 }
 
@@ -45,4 +47,5 @@ const testStorage = GM_SANDBOX ? createSandboxStorage() : createMemoryStorage();
 export const appStorage = Object.freeze({
   getItem(key) { return (GM_SANDBOX ? testStorage : globalThis.localStorage).getItem(key); },
   setItem(key, value) { return (GM_SANDBOX ? testStorage : globalThis.localStorage).setItem(key, value); },
+  removeItem(key) { return (GM_SANDBOX ? testStorage : globalThis.localStorage).removeItem(key); },
 });

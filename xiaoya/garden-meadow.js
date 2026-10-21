@@ -1,6 +1,8 @@
 import {EVENTS} from './content.js';
 import {CHALLENGE_UNITS} from './challenges.js';
 import {GM_SANDBOX} from './runtime.js';
+import {DEFAULT_ECONOMY_SETTINGS,getEconomySettings} from './economy-settings.js';
+import {CHALLENGE_FLOWERS,getChallengeFlower} from './challenge-flowers.js';
 
 /** Meadow rewards record participation or welcome gifts, never language ability. */
 export const MEADOW_KEY = 'xiaoya-english:meadow:v1';
@@ -24,7 +26,9 @@ export const SPECIAL_FLOWERS = Object.freeze([
   {id:'bow-rainbow',name:'彩虹蝴蝶结花',color:'#e998b7',shape:'bow',waterNeeded:5,scale:1,giant:false,special:true},
   {id:'bow-starlight',name:'星光蝴蝶结花',color:'#a99bdb',shape:'bow',waterNeeded:5,scale:1,giant:false,special:true},
 ].map(Object.freeze));
-export const ALL_FLOWERS = Object.freeze([...FLOWERS,...SPECIAL_FLOWERS]);
+// Keep legacy giant IDs readable; new draws mutate one of ten ordinary species.
+export const NORMAL_FLOWERS = Object.freeze(FLOWERS.filter((flower)=>!flower.giant));
+export const ALL_FLOWERS = Object.freeze([...FLOWERS,...SPECIAL_FLOWERS,...CHALLENGE_FLOWERS]);
 
 const PRODUCT = 'xiaoya-english-meadow';
 const eventIds = new Set(EVENTS.map((event)=>event.id));
@@ -58,6 +62,63 @@ function whole(value,label) {
   if(!Number.isSafeInteger(value) || value<0) fail(`${label}应为非负安全整数`);
 }
 
+function boundedInteger(value,min,max,label) {
+  if(!Number.isSafeInteger(value) || value<min || value>max) fail(`${label}超出范围`);
+}
+
+function validateAmounts(value) {
+  fields(value,['shells','water']);
+  boundedInteger(value.shells,0,1000,'奖励贝壳');
+  boundedInteger(value.water,0,1000,'奖励水滴');
+}
+
+function validateGrowth(value) {
+  fields(value,['giant','waterNeeded','scale']);
+  if(typeof value.giant!=='boolean') fail('巨型标记错误');
+  boundedInteger(value.waterNeeded,1,100,'开花水滴');
+  if(!Number.isFinite(value.scale) || value.scale<.25 || value.scale>10) fail('花朵倍率超出范围');
+  if(!value.giant && value.scale!==1) fail('普通花朵倍率错误');
+}
+
+function sameGrowth(a,b) {
+  validateGrowth(a);validateGrowth(b);
+  return a.giant===b.giant && a.waterNeeded===b.waterNeeded && a.scale===b.scale;
+}
+
+const baseGrowth=(flower)=>({giant:flower.giant,waterNeeded:flower.waterNeeded,scale:flower.scale});
+
+/** Existing flowers retain their own acquisition snapshot after GM tuning changes. */
+export function flowerForSeed(seedOrPlant) {
+  if(!seedOrPlant) return null;
+  const base=allFlowerById.get(seedOrPlant.flowerId??seedOrPlant.id);
+  if(!base) return null;
+  if(seedOrPlant.growth) {
+    validateGrowth(seedOrPlant.growth);
+    return {...base,...seedOrPlant.growth};
+  }
+  // Rendering also accepts a complete static/preview flower.
+  return seedOrPlant.flowerId?base:{...base,...seedOrPlant};
+}
+
+function rollGrowth(randomValue,settings) {
+  if(typeof randomValue!=='number' || !Number.isFinite(randomValue) || randomValue<0 || randomValue>=1) fail('随机值应在 0 到 1 之间');
+  const giant=randomValue<settings.giantChance;
+  return {giant,waterNeeded:giant?settings.giantWaterNeeded:settings.normalWaterNeeded,scale:giant?settings.giantScale:1};
+}
+
+const challengeSeedId=(unitId)=>`challenge-flower-v1:${unitId}`;
+function challengeEntitlement(unitId,randomValue,settings) {
+  const flower=getChallengeFlower(unitId);
+  if(!flower) fail('挑战缺少对应花种');
+  return {milestoneId:challengeSeedId(unitId),unitId,flowerId:flower.id,seedId:null,growth:rollGrowth(randomValue,settings)};
+}
+
+function stableRandom(text) {
+  let hash=2166136261;
+  for(const char of text) hash=Math.imul(hash^char.charCodeAt(0),16777619);
+  return (hash>>>0)/4294967296;
+}
+
 function position(value) {
   fields(value,['x','y']);
   for(const key of ['x','y']) {
@@ -84,10 +145,11 @@ const remainingBag = (opened) => SEED_CYCLE.slice(opened%SEED_CYCLE.length);
 
 function emptyMeadow() {
   return {
-    schemaVersion:4,product:PRODUCT,shells:0,water:0,rounds:[],
+    schemaVersion:5,product:PRODUCT,shells:0,water:0,rounds:[],
     seedPacksOpened:0,pendingSeed:null,plants:[],purchases:[],legacy:null,
     shop:{date:null,offer:null,reserved:null,offers:[]},
     previousRoundCount:0,challengeRewards:[],challengeSeeds:[],welcomeGifts:[],
+    economyStartRound:0,seedSnapshotStart:0,legacyChallengeCount:0,
   };
 }
 
@@ -149,7 +211,8 @@ const priceFor = (flowerId) => {
 function migrateLegacy(state) {
   validateLegacy(state);
   const legacy=copy(state);
-  return {...emptyMeadow(),shells:state.shells,water:state.water,
+  const {economyStartRound,seedSnapshotStart,legacyChallengeCount,...base}=emptyMeadow();
+  return {...base,schemaVersion:4,shells:state.shells,water:state.water,
     rounds:state.rounds.map((round)=>({...round,starter:false,reward:'legacy',rewardVersion:1,
       amounts:{shells:LEGACY_SHELL_REWARD,water:LEGACY_WATER_REWARD}})),
     previousRoundCount:state.rounds.length,
@@ -166,10 +229,12 @@ function expectedRoundAmounts(version,starter) {
 }
 
 function validateEconomyState(state,modern) {
-  const hasWelcomeGifts=state.schemaVersion===4;
+  const snapshots=state.schemaVersion===5;
+  const hasWelcomeGifts=state.schemaVersion>=4;
   const unlimited=hasWelcomeGifts && hasUnlimitedResources(state);
   fields(state,['schemaVersion','product','shells','water','rounds','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop',
-    ...(modern?['previousRoundCount','challengeRewards','challengeSeeds']:[]),...(hasWelcomeGifts?['welcomeGifts']:[]),...(unlimited?['testMode']:[])]);
+    ...(modern?['previousRoundCount','challengeRewards','challengeSeeds']:[]),...(hasWelcomeGifts?['welcomeGifts']:[]),
+    ...(snapshots?['economyStartRound','seedSnapshotStart','legacyChallengeCount']:[]),...(unlimited?['testMode']:[])]);
   whole(state.shells,'贝壳');whole(state.water,'水');whole(state.seedPacksOpened,'种子包数量');
   if(!Array.isArray(state.rounds) || !Array.isArray(state.plants) || !Array.isArray(state.purchases)) fail('列表错误');
   if(state.legacy!==null) validateLegacy(state.legacy);
@@ -180,16 +245,23 @@ function validateEconomyState(state,modern) {
     whole(state.previousRoundCount,'旧奖励记录数量');
     if(state.previousRoundCount<legacyRounds || state.previousRoundCount>state.rounds.length) fail('旧奖励记录边界不符');
   }
+  if(snapshots) {
+    for(const [key,minimum,maximum] of [
+      ['economyStartRound',state.previousRoundCount,state.rounds.length],
+      ['seedSnapshotStart',legacySeeds,state.purchases.length],
+      ['legacyChallengeCount',0,state.challengeRewards?.length??0],
+    ]) {whole(state[key],key);if(state[key]<minimum || state[key]>maximum) fail('历史记录边界不符');}
+  }
   const roundIds=new Set();
   let earnedShells=0,earnedWater=0;
   for(const [index,round] of state.rounds.entries()) {
     fields(round,['roundId','eventId','date','starter','reward',...(modern?['rewardVersion','amounts']:[])]);validateRound(roundInput(round));
     if(roundIds.has(round.roundId)) fail('互动编号重复');
     roundIds.add(round.roundId);
-    const version=index<legacyRounds?1:modern && index>=state.previousRoundCount?3:2;
-    const amounts=expectedRoundAmounts(version,round.starter);
+    const version=snapshots && index>=state.economyStartRound?4:index<legacyRounds?1:modern && index>=state.previousRoundCount?3:2;
+    const amounts=version===4?round.amounts:expectedRoundAmounts(version,round.starter);
     if(modern) {
-      fields(round.amounts,['shells','water']);
+      validateAmounts(round.amounts);
       if(round.rewardVersion!==version || round.amounts.shells!==amounts.shells || round.amounts.water!==amounts.water) fail('参与奖励版本或金额不符');
     }
     if(index<legacyRounds) {
@@ -209,19 +281,32 @@ function validateEconomyState(state,modern) {
   if(modern) {
     if(!Array.isArray(state.challengeRewards) || !Array.isArray(state.challengeSeeds)) fail('挑战奖励列表错误');
     const awardedUnits=new Set();
-    for(const receipt of state.challengeRewards) {
-      fields(receipt,['id','unitId','date','shells','water']);day(receipt.date);
+    for(const [index,receipt] of state.challengeRewards.entries()) {
+      const saved=snapshots && index>=state.legacyChallengeCount;
+      fields(receipt,['id','unitId','date','shells','water',...(saved?['rewardVersion']:[])]);day(receipt.date);
       if(!challengeIds.has(receipt.unitId) || receipt.id!==`challenge:first-clear:${receipt.unitId}` || awardedUnits.has(receipt.unitId)) fail('挑战首通编号或重复奖励错误');
-      if(receipt.shells!==CHALLENGE_ECONOMY.shells || receipt.water!==CHALLENGE_ECONOMY.water) fail('挑战首通奖励金额不符');
+      if(saved) {
+        validateAmounts({shells:receipt.shells,water:receipt.water});
+        if(receipt.rewardVersion!==2) fail('挑战奖励版本错误');
+      } else if(receipt.shells!==CHALLENGE_ECONOMY.shells || receipt.water!==CHALLENGE_ECONOMY.water) fail('挑战首通奖励金额不符');
       awardedUnits.add(receipt.unitId);earnedShells+=receipt.shells;earnedWater+=receipt.water;
     }
-    const earnedMilestones=CHALLENGE_MILESTONES.filter((milestone)=>awardedUnits.size>=milestone.clears);
-    if(state.challengeSeeds.length!==earnedMilestones.length) fail('挑战纪念种子数量不符');
+    const legacyCount=snapshots?state.legacyChallengeCount:awardedUnits.size;
+    const earnedMilestones=CHALLENGE_MILESTONES.filter((milestone)=>legacyCount>=milestone.clears);
+    const expectedCount=earnedMilestones.length+(snapshots?state.challengeRewards.length:0);
+    if(state.challengeSeeds.length!==expectedCount) fail('挑战纪念种子数量不符');
     for(const [index,seed] of state.challengeSeeds.entries()) {
-      fields(seed,['milestoneId','flowerId','seedId']);
-      const milestone=earnedMilestones[index];
-      if(seed.milestoneId!==milestone.id || seed.flowerId!==milestone.flowerId ||
-        (seed.seedId!==null && (typeof seed.seedId!=='string' || !/^seed-[1-9]\d*$/.test(seed.seedId)))) fail('挑战纪念种子记录不符');
+      const oldMilestone=index<earnedMilestones.length;
+      fields(seed,['milestoneId','flowerId','seedId',...(!oldMilestone?['unitId','growth']:[])]);
+      if(oldMilestone) {
+        const milestone=earnedMilestones[index];
+        if(seed.milestoneId!==milestone.id || seed.flowerId!==milestone.flowerId) fail('挑战纪念种子记录不符');
+      } else {
+        const receipt=state.challengeRewards[index-earnedMilestones.length];
+        if(seed.unitId!==receipt.unitId || seed.milestoneId!==challengeSeedId(receipt.unitId) || seed.flowerId!==getChallengeFlower(receipt.unitId)?.id) fail('挑战对应花种记录不符');
+        validateGrowth(seed.growth);
+      }
+      if(seed.seedId!==null && (typeof seed.seedId!=='string' || !/^seed-[1-9]\d*$/.test(seed.seedId))) fail('挑战纪念种子编号错误');
       if(seed.seedId!==null) {
         if(milestoneSeeds.has(seed.seedId)) fail('挑战纪念种子重复领取');
         milestoneSeeds.set(seed.seedId,seed);
@@ -265,12 +350,18 @@ function validateEconomyState(state,modern) {
   const boughtOffers=new Set();
   let spentShells=0,mysteries=0;
   for(const [index,purchase] of state.purchases.entries()) {
-    fields(purchase,['id','flowerId','source','price','offerId']);
+    const savedGrowth=snapshots && index>=state.seedSnapshotStart;
+    fields(purchase,['id','flowerId','source','price','offerId',...(savedGrowth?['growth']:[])]);
+    if(savedGrowth) validateGrowth(purchase.growth);
     if(purchase.id!==`seed-${index+1}` || !(modern?allFlowerById:flowerById).has(purchase.flowerId)) fail('购买种子编号或品种不符');
     if(index<legacySeeds) {
       if(purchase.source!=='legacy' || purchase.price!==LEGACY_PACK_PRICE || purchase.offerId!==null || purchase.flowerId!==flowerFor(index+1)) fail('旧购买记录被改写');
     } else if(purchase.source==='mystery') {
-      if(purchase.price!==ECONOMY.packPrice || purchase.offerId!==null || !flowerById.has(purchase.flowerId)) fail('盲盒成本或品种不符');
+      if(savedGrowth) {
+        boundedInteger(purchase.price,1,1000,'盲盒价格');
+        if(!NORMAL_FLOWERS.some((flower)=>flower.id===purchase.flowerId)) fail('盲盒品种不符');
+      } else if(purchase.price!==ECONOMY.packPrice) fail('盲盒成本不符');
+      if(purchase.offerId!==null || !flowerById.has(purchase.flowerId)) fail('盲盒成本或品种不符');
       if(newcomer(state) && mysteries===0 && purchase.flowerId!=='daisy') fail('首次盲盒应为雏菊');
       mysteries++;
     } else if(['shop','reserved'].includes(purchase.source)) {
@@ -280,6 +371,7 @@ function validateEconomyState(state,modern) {
     } else if(modern && purchase.source==='challenge') {
       const seed=milestoneSeeds.get(purchase.id);
       if(!seed || seed.flowerId!==purchase.flowerId || purchase.price!==0 || purchase.offerId!==null) fail('挑战纪念种子领取不符');
+      if(seed.growth && !sameGrowth(seed.growth,purchase.growth)) fail('挑战种子成长参数被改写');
       milestoneSeeds.delete(purchase.id);
     } else fail('未知购买来源');
     spentShells+=purchase.price;
@@ -291,18 +383,22 @@ function validateEconomyState(state,modern) {
   if(state.seedPacksOpened!==state.purchases.length || state.seedPacksOpened!==state.plants.length+(state.pendingSeed===null?0:1)) fail('购买、待播种与植物数量不符');
   let usedWater=0;
   for(const [index,plant] of state.plants.entries()) {
-    fields(plant,['id','seedId','flowerId','waterings','x','y']);
+    const savedGrowth=snapshots && index>=state.seedSnapshotStart;
+    fields(plant,['id','seedId','flowerId','waterings','x','y',...(savedGrowth?['growth']:[])]);
     const purchase=state.purchases[index];
+    if(savedGrowth && !sameGrowth(plant.growth,purchase.growth)) fail('植物成长参数与种子不符');
     if(plant.id!==`plant-${index+1}` || plant.seedId!==purchase.id || plant.flowerId!==purchase.flowerId) fail('植物、种子或购买品种不符');
     whole(plant.waterings,'浇水次数');position({x:plant.x,y:plant.y});
-    if(plant.waterings>(modern?allFlowerById:flowerById).get(plant.flowerId).waterNeeded) fail('浇水次数超出开花所需');
+    if(plant.waterings>flowerForSeed(plant).waterNeeded) fail('浇水次数超出开花所需');
     const old=state.legacy?.plants[index];
     if(old && (plant.id!==old.id || plant.seedId!==old.seedId || plant.flowerId!==old.flowerId || plant.x!==old.x || plant.y!==old.y || plant.waterings<old.waterings)) fail('旧植物记录被改写');
     usedWater+=plant.waterings;
   }
   if(state.pendingSeed!==null) {
-    fields(state.pendingSeed,['id','flowerId']);
+    const savedGrowth=snapshots && state.purchases.length>state.seedSnapshotStart;
+    fields(state.pendingSeed,['id','flowerId',...(savedGrowth?['growth']:[])]);
     const purchase=state.purchases.at(-1);
+    if(savedGrowth && !sameGrowth(state.pendingSeed.growth,purchase.growth)) fail('待播种成长参数与种子不符');
     if(!purchase || state.pendingSeed.id!==purchase.id || state.pendingSeed.flowerId!==purchase.flowerId) fail('待播种的种子编号或品种不符');
   }
   if(state.legacy && state.plants.length<state.legacy.plants.length) fail('旧植物不能丢失');
@@ -314,20 +410,29 @@ function validateEconomyState(state,modern) {
 
 /** Validate old ledgers before migration; no balance is recomputed at new rates. */
 export function validateMeadow(input) {
-  if(input?.product!==PRODUCT || ![1,2,3,4].includes(input?.schemaVersion)) fail('产品或版本不匹配');
-  if(input.schemaVersion===1) return validateEconomyState(migrateLegacy(input),true);
+  if(input?.product!==PRODUCT || ![1,2,3,4,5].includes(input?.schemaVersion)) fail('产品或版本不匹配');
+  if(input.schemaVersion===5) return validateEconomyState(input,true);
+  let previous=input;
+  if(input.schemaVersion===1) previous=migrateLegacy(input);
   if(input.schemaVersion===2) {
     validateEconomyState(input,false);
-    return validateEconomyState({...copy(input),schemaVersion:4,previousRoundCount:input.rounds.length,
+    previous={...copy(input),schemaVersion:4,previousRoundCount:input.rounds.length,
       rounds:input.rounds.map((round)=>({...round,rewardVersion:round.reward==='legacy'?1:2,
         amounts:expectedRoundAmounts(round.reward==='legacy'?1:2,round.starter)})),
-      challengeRewards:[],challengeSeeds:[],welcomeGifts:[]},true);
+      challengeRewards:[],challengeSeeds:[],welcomeGifts:[]};
   }
   if(input.schemaVersion===3) {
     validateEconomyState(input,true);
-    return validateEconomyState({...copy(input),schemaVersion:4,welcomeGifts:[]},true);
+    previous={...copy(input),schemaVersion:4,welcomeGifts:[]};
   }
-  return validateEconomyState(input,true);
+  validateEconomyState(previous,true);
+  // Deterministic historical backfill is stable even before the caller saves the
+  // migration. Current GM settings cannot reroll or reprice previously earned gifts.
+  const challengeSeeds=[...copy(previous.challengeSeeds),...previous.challengeRewards.map((receipt)=>
+    challengeEntitlement(receipt.unitId,stableRandom(`${receipt.id}:${receipt.date}`),DEFAULT_ECONOMY_SETTINGS))];
+  return validateEconomyState({...copy(previous),schemaVersion:5,
+    economyStartRound:previous.rounds.length,seedSnapshotStart:previous.purchases.length,
+    legacyChallengeCount:previous.challengeRewards.length,challengeSeeds},true);
 }
 
 /** The caller supplies its local calendar day. Opening this preview never pays. */
@@ -356,9 +461,10 @@ export function rewardRound(state,input) {
     return state;
   }
   const starter=newcomer(state) && state.rounds.length===0;
-  const amounts=expectedRoundAmounts(3,starter);
+  const settings=getEconomySettings();
+  const amounts={shells:starter?settings.starterShellReward:settings.shellReward,water:starter?settings.starterWaterReward:settings.waterReward};
   return validateMeadow({...state,shells:state.shells+(starter?amounts.shells:0),water:state.water+(starter?amounts.water:0),
-    rounds:[...state.rounds,{...roundInput(input),starter,reward:starter?'starter':'pending',rewardVersion:3,amounts}]});
+    rounds:[...state.rounds,{...roundInput(input),starter,reward:starter?'starter':'pending',rewardVersion:4,amounts}]});
 }
 
 /** Receipt-specific quantities keep an old unclaimed five-water gift intact. */
@@ -383,22 +489,20 @@ export function claimReward(state,roundId,choice) {
 }
 
 /** Call only after persisting a completed challenge. Replays cannot mint rewards. */
-export function rewardChallenge(state,input) {
+export function rewardChallenge(state,input,giantRandom=Math.random()) {
   state=validateMeadow(state);fields(input,['unitId','date']);day(input.date);
   if(!challengeIds.has(input.unitId)) fail('未知挑战');
   if(state.challengeRewards.some((receipt)=>receipt.unitId===input.unitId)) return state;
-  const challengeRewards=[...state.challengeRewards,{id:`challenge:first-clear:${input.unitId}`,...input,...CHALLENGE_ECONOMY}];
-  const challengeSeeds=[...state.challengeSeeds];
-  for(const milestone of CHALLENGE_MILESTONES) {
-    if(challengeRewards.length>=milestone.clears && !challengeSeeds.some((seed)=>seed.milestoneId===milestone.id))
-      challengeSeeds.push({milestoneId:milestone.id,flowerId:milestone.flowerId,seedId:null});
-  }
-  return validateMeadow({...state,shells:state.shells+CHALLENGE_ECONOMY.shells,water:state.water+CHALLENGE_ECONOMY.water,
+  const settings=getEconomySettings();
+  const amounts={shells:settings.challengeShells,water:settings.challengeWater};
+  const challengeRewards=[...state.challengeRewards,{id:`challenge:first-clear:${input.unitId}`,...input,...amounts,rewardVersion:2}];
+  const challengeSeeds=[...state.challengeSeeds,challengeEntitlement(input.unitId,giantRandom,settings)];
+  return validateMeadow({...state,shells:state.shells+amounts.shells,water:state.water+amounts.water,
     challengeRewards,challengeSeeds});
 }
 
 export function pendingChallengeSeeds(state) {
-  return validateMeadow(state).challengeSeeds.filter((seed)=>seed.seedId===null).map((seed)=>({...seed}));
+  return validateMeadow(state).challengeSeeds.filter((seed)=>seed.seedId===null).map(copy);
 }
 
 /** A saved entitlement waits safely while another seed is in the child's hands. */
@@ -407,7 +511,9 @@ export function redeemChallengeSeed(state) {
   if(state.pendingSeed!==null) return state;
   const next=state.challengeSeeds.find((seed)=>seed.seedId===null);
   if(!next) return state;
-  const purchased=purchaseSeed(state,next.flowerId,'challenge',0);
+  // Already-earned legacy milestone seeds keep their historical size and water cost.
+  const growth=next.growth??baseGrowth(allFlowerById.get(next.flowerId));
+  const purchased=purchaseSeed(state,next.flowerId,'challenge',0,null,growth);
   return validateMeadow({...purchased,challengeSeeds:state.challengeSeeds.map((seed)=>seed===next?
     {...seed,seedId:purchased.pendingSeed.id}:seed)});
 }
@@ -417,23 +523,24 @@ function randomFlower(pool,randomValue) {
   return pool[Math.floor(randomValue*pool.length)].id;
 }
 
-function purchaseSeed(state,flowerId,source,price,offerId=null) {
+function purchaseSeed(state,flowerId,source,price,offerId=null,growth) {
   const serial=state.seedPacksOpened+1;
   return {...state,shells:state.shells-(hasUnlimitedResources(state)?0:price),seedPacksOpened:serial,
-    pendingSeed:{id:`seed-${serial}`,flowerId},purchases:[...state.purchases,{id:`seed-${serial}`,flowerId,source,price,offerId}]};
+    pendingSeed:{id:`seed-${serial}`,flowerId,growth:{...growth}},purchases:[...state.purchases,{id:`seed-${serial}`,flowerId,source,price,offerId,growth:{...growth}}]};
 }
 
 /** Persist before revealing. One pending seed prevents duplicate charges and rerolls. */
-export function openSeedPack(state,randomValue=Math.random()) {
+export function openSeedPack(state,randomValue=Math.random(),giantRandom=Math.random()) {
   state=validateMeadow(state);
-  if(state.pendingSeed!==null || !hasUnlimitedResources(state) && state.shells<ECONOMY.packPrice) return state;
+  const settings=getEconomySettings();
+  if(state.pendingSeed!==null || !hasUnlimitedResources(state) && state.shells<settings.packPrice) return state;
   const first=newcomer(state) && !state.purchases.some((purchase)=>purchase.source==='mystery');
-  const pool=first?[flowerById.get('daisy')]:FLOWERS;
-  return validateMeadow(purchaseSeed(state,randomFlower(pool,randomValue),'mystery',ECONOMY.packPrice));
+  const pool=first?[flowerById.get('daisy')]:NORMAL_FLOWERS;
+  return validateMeadow(purchaseSeed(state,randomFlower(pool,randomValue),'mystery',settings.packPrice,null,rollGrowth(giantRandom,settings)));
 }
 
 function refreshShop(state,date,randomValue) {
-  const pool=FLOWERS.filter((flower)=>flower.id!==state.shop.offer?.flowerId);
+  const pool=NORMAL_FLOWERS.filter((flower)=>flower.id!==state.shop.offer?.flowerId);
   const flowerId=randomFlower(pool,randomValue);
   const offer={id:`offer-${state.shop.offers.length+1}`,flowerId,price:priceFor(flowerId)};
   return {...state,shop:{...state.shop,date,offer,offers:[...state.shop.offers,{...offer,date}]}};
@@ -456,12 +563,14 @@ export function reserveOffer(state,expectedOfferId,options={replace:false}) {
 }
 
 /** IDs bind the action to what the child saw; stale/repeated taps cannot spend. */
-export function buyOffer(state,expectedOfferId,source='shop',randomValue=Math.random()) {
+export function buyOffer(state,expectedOfferId,source='shop',randomValue=Math.random(),giantRandom=Math.random()) {
   state=validateMeadow(state);
   if(!['shop','reserved'].includes(source)) fail('商店购买来源错误');
   const offer=source==='shop'?state.shop.offer:state.shop.reserved;
   if(!offer || offer.id!==expectedOfferId || state.pendingSeed!==null || !hasUnlimitedResources(state) && state.shells<offer.price) return state;
-  let result=purchaseSeed(state,offer.flowerId,source,offer.price,offer.id);
+  const flower=allFlowerById.get(offer.flowerId);
+  const growth=flower.giant?baseGrowth(flower):rollGrowth(giantRandom,getEconomySettings());
+  let result=purchaseSeed(state,offer.flowerId,source,offer.price,offer.id,growth);
   if(state.shop.reserved?.id===offer.id) result={...result,shop:{...result.shop,reserved:null}};
   if(state.shop.offer?.id===offer.id) result=refreshShop(result,state.shop.date,randomValue);
   return validateMeadow(result);
@@ -473,7 +582,8 @@ export function plantSeed(state,point) {
   if(state.pendingSeed===null) return state;
   position(point);
   const plant={id:`plant-${state.seedPacksOpened}`,seedId:state.pendingSeed.id,
-    flowerId:state.pendingSeed.flowerId,waterings:0,x:point.x,y:point.y};
+    flowerId:state.pendingSeed.flowerId,waterings:0,x:point.x,y:point.y,
+    ...(state.pendingSeed.growth?{growth:{...state.pendingSeed.growth}}:{})};
   return validateMeadow({...state,pendingSeed:null,plants:[...state.plants,plant]});
 }
 
@@ -483,7 +593,7 @@ export function waterPlant(state,plantId) {
   const index=state.plants.findIndex((plant)=>plant.id===plantId);
   if(index===-1) fail('找不到植物');
   const target=state.plants[index];
-  if(!hasUnlimitedResources(state) && state.water<1 || target.waterings===allFlowerById.get(target.flowerId).waterNeeded) return state;
+  if(!hasUnlimitedResources(state) && state.water<1 || target.waterings===flowerForSeed(target).waterNeeded) return state;
   return validateMeadow({...state,water:state.water-(hasUnlimitedResources(state)?0:1),plants:state.plants.map((plant,i)=>
     i===index?{...plant,waterings:plant.waterings+1}:plant)});
 }
@@ -493,7 +603,7 @@ export function nextAction(state) {
   if(pendingRewards(state).length>0) return 'reward';
   if(state.pendingSeed!==null) return 'plant';
   if(pendingChallengeSeeds(state).length>0) return 'challenge-seed';
-  if((hasUnlimitedResources(state) || state.water>0) && state.plants.some((plant)=>plant.waterings<allFlowerById.get(plant.flowerId).waterNeeded)) return 'water';
-  if(hasUnlimitedResources(state) || state.shells>=ECONOMY.packPrice) return 'pack';
+  if((hasUnlimitedResources(state) || state.water>0) && state.plants.some((plant)=>plant.waterings<flowerForSeed(plant).waterNeeded)) return 'water';
+  if(hasUnlimitedResources(state) || state.shells>=getEconomySettings().packPrice) return 'pack';
   return 'learn';
 }

@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FLOWERS,SPECIAL_FLOWERS,ALL_FLOWERS,CHALLENGE_ECONOMY,CHALLENGE_MILESTONES,
+  FLOWERS,NORMAL_FLOWERS,SPECIAL_FLOWERS,ALL_FLOWERS,CHALLENGE_ECONOMY,CHALLENGE_MILESTONES,
   createMeadow,validateMeadow,rewardRound,roundReward,claimReward,
   rewardChallenge,pendingChallengeSeeds,redeemChallengeSeed,
   openSeedPack,plantSeed,waterPlant,ensureShop,nextAction,
 } from '../xiaoya/garden-meadow.js';
+import {getChallengeFlower} from '../xiaoya/challenge-flowers.js';
 import {CHALLENGE_UNITS} from '../xiaoya/challenges.js';
 
 const clone=(value)=>JSON.parse(JSON.stringify(value));
@@ -14,7 +15,7 @@ const freeze=(value)=>{
   return value;
 };
 const round=(id)=>({roundId:id,eventId:'family-love',date:'2026-10-19'});
-const clear=(state,index)=>rewardChallenge(state,{unitId:CHALLENGE_UNITS[index].id,date:'2026-10-19'});
+const clear=(state,index)=>rewardChallenge(state,{unitId:CHALLENGE_UNITS[index].id,date:'2026-10-19'},.99);
 
 function previousSave() {
   const receipt=(id,reward,starter=false)=>({...round(id),starter,reward});
@@ -31,7 +32,7 @@ function previousSave() {
 test('v2 migration preserves the exact wallet, positions, reservation and pending five-water entitlement',()=>{
   const source=freeze(previousSave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,4);
+  assert.equal(migrated.schemaVersion,5);
   for(const key of ['shells','water','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop'])
     assert.deepEqual(migrated[key],source[key],key);
   assert.equal(migrated.previousRoundCount,4);
@@ -66,7 +67,7 @@ test('v2 validation runs before migration and new reward amounts cannot rewrite 
   for(const mutate of [
     (s)=>s.rounds[3].amounts.water=2,
     (s)=>s.rounds[3].rewardVersion=3,
-    (s)=>s.rounds[4].amounts.water=5,
+    (s)=>s.rounds[4].amounts.water=1001,
     (s)=>s.rounds[4].amounts.extra=1,
     (s)=>s.previousRoundCount=-1,
     (s)=>s.previousRoundCount=6,
@@ -82,7 +83,7 @@ test('empty v2 saves use the new starter, then one more water reward completes t
     shop:{date:null,offer:null,reserved:null,offers:[]}};
   let state=rewardRound(freeze(old),round('first'));
   assert.deepEqual(roundReward(state,'first'),{shells:2,water:3});
-  state=plantSeed(openSeedPack(state,0),{x:.5,y:.5});
+  state=plantSeed(openSeedPack(state,0,.99),{x:.5,y:.5});
   for(let i=0;i<3;i++)state=waterPlant(state,'plant-1');
   assert.equal(state.plants[0].waterings,3);assert.equal(state.water,0);
   assert.strictEqual(waterPlant(state,'plant-1'),state);
@@ -100,70 +101,67 @@ test('each different unit first clear pays both resources exactly once, includin
     assert.equal(before.challengeRewards.length,index);
     assert.deepEqual([state.shells,state.water],[(index+1)*4,(index+1)*6]);
     assert.equal(state.rounds.length,0,'challenge currency never creates pretend learning rounds');
-    assert.deepEqual(state.challengeRewards[index],{id:`challenge:first-clear:${unit.id}`,unitId:unit.id,date:'2026-10-19',shells:4,water:6});
+    assert.deepEqual(state.challengeRewards[index],{id:`challenge:first-clear:${unit.id}`,unitId:unit.id,date:'2026-10-19',shells:4,water:6,rewardVersion:2});
     state=freeze(clone(state));
     assert.strictEqual(rewardChallenge(state,{unitId:unit.id,date:'2026-10-20'}),state);
     assert.strictEqual(clear(state,index),state);
   }
-  assert.equal(state.challengeSeeds.length,2);
+  assert.equal(state.challengeSeeds.length,21);
   for(const [index] of CHALLENGE_UNITS.entries())assert.strictEqual(clear(state,index),state);
 });
 
-test('third and sixth different first clears save named seed entitlements until there is room to plant',()=>{
-  let state=openSeedPack(rewardRound(createMeadow(),round('starter')),0);
+test('every first clear saves its own flower until the held seed has been planted',()=>{
+  let state=openSeedPack(rewardRound(createMeadow(),round('starter')),0,.99);
   const original=clone(state.pendingSeed);
   for(let i=0;i<6;i++) {
     state=clear(freeze(state),i);
-    assert.deepEqual(state.pendingSeed,original,'a challenge never overwrites the seed already held');
-    assert.equal(pendingChallengeSeeds(state).length,i<2?0:i<5?1:2);
+    assert.deepEqual(state.pendingSeed,original,'a challenge never overwrites the held seed');
+    assert.equal(pendingChallengeSeeds(state).length,i+1);
     assert.strictEqual(redeemChallengeSeed(state),state);
   }
   state=plantSeed(freeze(clone(state)),{x:.1,y:.4});
   assert.equal(nextAction(state),'challenge-seed');
   const wallet=[state.shells,state.water];
-  state=redeemChallengeSeed(state);
-  assert.deepEqual(state.pendingSeed,{id:'seed-2',flowerId:'bow-rainbow'});
-  assert.deepEqual([state.shells,state.water],wallet);
-  assert.equal(pendingChallengeSeeds(state).length,1);
-  assert.strictEqual(redeemChallengeSeed(state),state,'a second tap cannot consume the second entitlement');
-  state=plantSeed(state,{x:.7,y:.4});
-  state=redeemChallengeSeed(freeze(clone(state)));
-  assert.deepEqual(state.pendingSeed,{id:'seed-3',flowerId:'bow-starlight'});
-  state=plantSeed(state,{x:.3,y:.6});
+  for(let i=0;i<6;i++) {
+    state=redeemChallengeSeed(freeze(clone(state)));
+    assert.equal(state.pendingSeed.id,`seed-${i+2}`);
+    assert.equal(state.pendingSeed.flowerId,getChallengeFlower(CHALLENGE_UNITS[i].id).id);
+    assert.deepEqual(state.pendingSeed.growth,{giant:false,waterNeeded:5,scale:1});
+    assert.equal(pendingChallengeSeeds(state).length,5-i);
+    assert.strictEqual(redeemChallengeSeed(state),state);
+    state=plantSeed(state,{x:.3,y:.6});
+  }
   assert.deepEqual(pendingChallengeSeeds(state),[]);
   assert.strictEqual(redeemChallengeSeed(state),state);
-  assert.deepEqual(state.purchases.slice(1).map((entry)=>[entry.source,entry.price]),[['challenge',0],['challenge',0]]);
-  assert.deepEqual(state.challengeSeeds.map((entry)=>entry.seedId),['seed-2','seed-3']);
-  for(const id of ['plant-2','plant-3']) {
-    for(let i=0;i<5;i++)state=waterPlant(state,id);
-    assert.strictEqual(waterPlant(state,id),state);
-  }
-  assert.equal(state.water,wallet[1]-10);
-  assert.deepEqual(state.plants.map(({x,y})=>({x,y})),[{x:.1,y:.4},{x:.7,y:.4},{x:.3,y:.6}]);
+  assert.deepEqual([state.shells,state.water],wallet);
+  assert.ok(state.purchases.slice(1).every(entry=>entry.source==='challenge' && entry.price===0));
+  assert.deepEqual(state.challengeSeeds.map((entry)=>entry.seedId),Array.from({length:6},(_,i)=>`seed-${i+2}`));
 });
 
-test('milestones depend on distinct units, not unit order, replay count or abandoned challenge entries',()=>{
+test('assigned flowers follow the actual unit, not clear order or replay count; milestones no longer accumulate',()=>{
   let state=createMeadow();
   for(const index of [5,2])state=clear(state,index);
   for(let n=0;n<12;n++)state=clear(state,5);
-  assert.deepEqual(pendingChallengeSeeds(state),[]);
+  assert.equal(pendingChallengeSeeds(state).length,2);
   state=clear(state,0);
-  assert.deepEqual(pendingChallengeSeeds(state),[{milestoneId:'challenge-seed-3',flowerId:'bow-rainbow',seedId:null}]);
-  const detached=pendingChallengeSeeds(state);detached[0].seedId='seed-99';
+  assert.deepEqual(pendingChallengeSeeds(state).map(seed=>seed.flowerId),[5,2,0].map(index=>getChallengeFlower(CHALLENGE_UNITS[index].id).id));
+  const detached=pendingChallengeSeeds(state);detached[0].seedId='seed-99';detached[0].growth.waterNeeded=99;
   assert.equal(pendingChallengeSeeds(state)[0].seedId,null);
+  assert.equal(pendingChallengeSeeds(state)[0].growth.waterNeeded,5);
   state=redeemChallengeSeed(state);
-  assert.equal(state.pendingSeed.flowerId,'bow-rainbow');
-  assert.deepEqual(CHALLENGE_MILESTONES.map((item)=>item.clears),[3,6]);
+  assert.equal(state.pendingSeed.flowerId,getChallengeFlower(CHALLENGE_UNITS[5].id).id);
+  assert.deepEqual(CHALLENGE_MILESTONES.map((item)=>item.clears),[3,6],'historical definitions remain for saved entitlements');
+  assert.equal(state.legacyChallengeCount,0);
 });
 
 test('exclusive flowers stay out of all shop and mystery outcomes while ordinary prices remain unchanged',()=>{
-  assert.equal(FLOWERS.length,12);assert.equal(ALL_FLOWERS.length,14);
+  assert.equal(FLOWERS.length,12);assert.equal(ALL_FLOWERS.length,35);
   assert.deepEqual(SPECIAL_FLOWERS.map((flower)=>flower.id),['bow-rainbow','bow-starlight']);
   assert.ok(SPECIAL_FLOWERS.every((flower)=>Object.isFrozen(flower) && flower.waterNeeded===5));
   let funded=clear(createMeadow(),0);
   funded=plantSeed(openSeedPack(funded,0),{x:.2,y:.2});
-  for(const [index,flower] of FLOWERS.entries()) {
-    const random=(index+.5)/FLOWERS.length;
+  for(const [index,flower] of NORMAL_FLOWERS.entries()) {
+    const random=(index+.5)/NORMAL_FLOWERS.length;
     assert.equal(openSeedPack(funded,random).pendingSeed.flowerId,flower.id);
     const shown=ensureShop(funded,'2026-10-19',random);
     assert.equal(shown.shop.offer.flowerId,flower.id);

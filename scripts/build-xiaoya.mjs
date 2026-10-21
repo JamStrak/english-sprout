@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 
-export const XIAOYA_VERSION = '0.23.1';
+export const XIAOYA_VERSION = '0.24.0';
 export const XIAOYA_NAME = '小芽英语·自由花园版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
@@ -10,8 +11,9 @@ MODULES.push('blindbox-ui.js', 'seed-appearance.js', 'seed-shop.js', 'economy.cs
 MODULES.push('phrase-pack-v015.js', 'phrase-assets-v015.js');
 MODULES.push('runtime.js', 'garden-history.js', 'welcome-greetings.js', 'garden-music.js');
 MODULES.push('sound-catalog.js', 'sound-settings.js', 'sound-player.js');
+MODULES.push('challenge-flowers.js', 'economy-settings.js');
 MODULES.push('meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js');
-const INTERNAL_MODULES = ['gm.js', 'gm.css', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js'];
+const INTERNAL_MODULES = ['gm-economy.js', 'tuning-backup.js', 'gm.js', 'gm.css', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -102,6 +104,16 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist'), interna
       artwork.set(relative, bytes);
       art.push({url:`./${relative}`, bytes:bytes.length, sha256:digest(bytes)});
     }
+  }
+  // Only these reviewed challenge species are promoted to the public pack.
+  // Candidate species and the full laboratory catalogue remain internal-only.
+  for (const asset of Object.values(CHALLENGE_GROWTH_ASSETS)) {
+    const relative = asset.replace(/^xiaoya\//, '');
+    if (artwork.has(relative)) continue;
+    const bytes = await fs.readFile(path.join(root, 'public/xiaoya', relative));
+    if (!bytes.length) throw new Error(`Empty challenge artwork: ${relative}`);
+    artwork.set(relative, bytes);
+    art.push({url:`./${relative}`, bytes:bytes.length, sha256:digest(bytes)});
   }
   const artManifest = JSON.stringify(art), artVersion = digest(artManifest).slice(0, 16);
   if (internal) files.set('gm-catalog.json', await gmCatalog(root, audio));

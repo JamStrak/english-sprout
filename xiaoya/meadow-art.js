@@ -1,4 +1,4 @@
-import {ALL_FLOWERS} from './garden-meadow.js';
+import {ALL_FLOWERS,flowerForSeed} from './garden-meadow.js';
 import {paperPlantLayer} from './paper-art.js';
 import {MEADOW_HIT_SHAPES} from './meadow-hit-shapes.js';
 
@@ -20,11 +20,17 @@ function blossom(flower) {
 
 /**
  * Soil-level plant, no pot. Every pour changes visible geometry, up to full bloom.
- * The UI sizes the planting target using flower.scale (1 or 1.75), anchored at soil.
+ * The UI applies the exact per-seed scale outside this shared, soil-rooted model.
  */
 export function meadowPlantArt(input,waterings=0) {
   // Resolve known metadata instead of inserting caller-controlled text into SVG.
-  const flower=ALL_FLOWERS.find((item)=>item.id===input?.id)||ALL_FLOWERS[0];
+  const resolved=flowerForSeed(input);
+  const base=ALL_FLOWERS.find((item)=>item.id===resolved?.id)||ALL_FLOWERS[0];
+  const flower={...base,
+    waterNeeded:Number.isInteger(resolved?.waterNeeded)&&resolved.waterNeeded>=1&&resolved.waterNeeded<=100?resolved.waterNeeded:base.waterNeeded,
+    scale:Number.isFinite(resolved?.scale)&&resolved.scale>=.25&&resolved.scale<=10?resolved.scale:base.scale,
+    giant:typeof resolved?.giant==='boolean'?resolved.giant:base.giant
+  };
   const growth=Number.isFinite(waterings)?Math.max(0,Math.min(flower.waterNeeded,Math.floor(waterings))):0;
   const progress=growth/flower.waterNeeded;
   const bloom=growth===flower.waterNeeded;
@@ -46,21 +52,24 @@ export function meadowPlantArt(input,waterings=0) {
     head=`<g data-part="bud" transform="translate(80 ${top})"><path d="M0 9q-${budSize+open} -7-${budSize} -${budSize+3}Q-5 -${budSize+10} 0 -${budSize+3}q6-8 ${budSize} 0Q${budSize+open} 2 0 9Z" fill="${flower.color}" stroke="#698d5b" stroke-width="2"/><path d="M-9 5L0 10 9 5M0 9V-5" stroke="#81a565" stroke-width="3" stroke-linecap="round"/></g>`;
   }
   const vector=`<path data-part="stem" d="M80 162Q${n(76-progress*3)} ${n(162-stemHeight/2)} 80 ${top}" stroke="#608b55" stroke-width="${n(3+progress*3)}" stroke-linecap="round"/>${leaves}${head}<path d="M67 165l-3-7m31 7 3-9" stroke="#88aa6d" stroke-width="3" stroke-linecap="round"/>`;
-  const key=bloom?`flower-${flower.id}`:growth===0?'seed-in-soil':progress<.5?'sprout':'bud';
-  // Measure the painted plant, not its transparent 384×512 canvas. Each giant
-  // pour adds 8 visible SVG units; ordinary pours add 16, including form changes.
-  // These source-art tops are guarded against the shipped alpha silhouettes.
-  // Keep the seed legible and the approved full-bloom size unchanged.
-  const paintedTop=key==='sprout'?296:131;
-  const height=n(growth===0?120:bloom?166:(18.5+progress*80)*512/(512*.88-paintedTop));
-  const width=n(height*384/512);
-  const paper=paperPlantLayer(key,vector,{rootY:164,width,height});
-  // Hit the painted silhouette, not the full canvas's transparent rectangle.
-  // Keep targets outside the animated body so a tap never moves its next target.
-  const hitScale=Math.min(height/512,width/384),hitX=80-192*hitScale,hitY=164-512*.88*hitScale;
-  // Milestone flowers have their own vector art until a matching painted asset
-  // ships. Their vector silhouette is also their hit target, at the same root.
+  // The five reviewed pictures share their full 384×512 canvas and root.
+  // Spread them across the seed's acquisition-time water budget (including giants).
+  const stage=flower.stages?.[bloom?4:Math.max(0,Math.min(4,Math.floor((growth-1)*4/Math.max(1,flower.waterNeeded-1))))];
+  const key=growth===0?'seed-in-soil':stage?`growth-${flower.id}-${stage.id}`:bloom?`flower-${flower.id}`:progress<.5?'sprout':'bud';
   const paperHit=MEADOW_HIT_SHAPES[key];
+  const rootPixel=451,anchorY=rootPixel/512;
+  const matureKey=flower.stages?`growth-${flower.id}-mature`:`flower-${flower.id}`;
+  const matureTop=MEADOW_HIT_SHAPES[matureKey]?.bounds?.[1]??109;
+  // Normalize painted height, never crop transparent canvas. This keeps every
+  // water step visibly larger even when a new source picture has different bounds.
+  const finalPaintedHeight=flower.stages?112:(rootPixel-matureTop)*166/512;
+  const paintedHeight=growth===0?(rootPixel-(paperHit?.bounds?.[1]??372))*120/512:18.5+progress*(finalPaintedHeight-18.5);
+  const paintedTop=paperHit?.bounds?.[1]??(key==='sprout'?296:131);
+  const height=n(growth===0?120:paintedHeight*512/(rootPixel-paintedTop));
+  const width=height*384/512;
+  const paper=paperPlantLayer(key,vector,{rootY:164,width,height,anchorY});
+  // Hit the painted silhouette outside the animated body, at the same root.
+  const hitScale=Math.min(height/512,width/384),hitX=80-192*hitScale,hitY=164-rootPixel*hitScale;
   const hit=`${paperHit?`<g data-plant-hit="paper" transform="translate(${hitX} ${hitY}) scale(${hitScale})"><path d="${paperHit.path}" fill="transparent" stroke="transparent" stroke-width="${growth===0?18:8}" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g>`:''}<g data-plant-hit="vector" opacity="0">${vector}<ellipse cx="80" cy="164" rx="28" ry="12"/></g>`;
-  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}"><ellipse data-feedback-anchor data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/><g data-plant-body data-feedback-body${growth===0?' data-feedback-kind="seed"':''}>${paper}</g>${hit}</svg>`;
+  return `<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" data-flower="${flower.id}" data-growth="${growth}" data-bloom="${bloom}" data-giant="${flower.giant}" data-scale="${flower.scale}" data-painted-height="${n(paintedHeight)}" data-stage="${growth===0?'seed':stage?.id||key}"><ellipse data-feedback-anchor data-part="soil" cx="80" cy="164" rx="${n(19+progress*15)}" ry="6" fill="#8d8f59" opacity=".25"/><g data-plant-body data-feedback-body${growth===0?' data-feedback-kind="seed"':''}>${paper}</g>${hit}</svg>`;
 }

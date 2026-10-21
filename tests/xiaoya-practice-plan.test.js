@@ -500,6 +500,10 @@ test('versioned garden receipts preserve legacy amounts and accept the new start
       rewardVersion,reward,starter:reward==='starter',
       amounts:{shells:2,water:rewardVersion===2?5:reward==='starter'?3:2},
     }))),
+    ...['starter','pending','shells','water'].flatMap(reward=>[
+      {rewardVersion:4,reward,starter:reward==='starter',amounts:{shells:0,water:1000}},
+      {rewardVersion:4,reward,starter:reward==='starter',amounts:{shells:1000,water:0}},
+    ]),
   ];
   for(const variant of variants) {
     const input=freeze([{...round('gift'),...variant}]);
@@ -510,8 +514,8 @@ test('versioned garden receipts preserve legacy amounts and accept the new start
   let meadow=rewardMeadowRound(createMeadow(),round('starter'));
   meadow=rewardMeadowRound(meadow,round('later',eventId,'2026-10-02'));
   assert.deepEqual(meadow.rounds.map(({rewardVersion,amounts})=>({rewardVersion,amounts})),[
-    {rewardVersion:3,amounts:{shells:2,water:3}},
-    {rewardVersion:3,amounts:{shells:2,water:2}},
+    {rewardVersion:4,amounts:{shells:2,water:3}},
+    {rewardVersion:4,amounts:{shells:2,water:2}},
   ]);
   assert.deepEqual(
     getPracticePlan(createPracticePlan(),{rounds:freeze(meadow.rounds),date:'2026-10-02'}),
@@ -524,7 +528,7 @@ test('partial, unknown or inconsistent reward metadata cannot enter scheduling h
   const mutations=[
     value=>delete value.rewardVersion, value=>delete value.amounts,
     value=>delete value.reward, value=>delete value.starter,
-    value=>value.rewardVersion=0, value=>value.rewardVersion=4, value=>value.rewardVersion='3',
+    value=>value.rewardVersion=0, value=>value.rewardVersion=5, value=>value.rewardVersion='3',
     value=>value.amounts=null, value=>value.amounts=[], value=>value.amounts={shells:2},
     value=>value.amounts.shells=3, value=>value.amounts.water=5, value=>value.amounts.water='2',
     value=>value.amounts.mastered=true, value=>value.mastered=true,
@@ -545,6 +549,25 @@ test('partial, unknown or inconsistent reward metadata cannot enter scheduling h
     assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[value],date:day}),/小芽/);
 });
 
+test('tuned garden receipt snapshots reject malformed amounts and retain their exact shape',()=>{
+  const base={...round('tuned'),starter:false,reward:'pending',rewardVersion:4,amounts:{shells:11,water:7}};
+  const mutations=[
+    ...[-1,1001,1.5,NaN,Infinity,'2',null,true].flatMap(amount=>[
+      value=>value.amounts.shells=amount,
+      value=>value.amounts.water=amount,
+    ]),
+    value=>delete value.amounts.water,
+    value=>value.amounts.mastered=true,
+    value=>value.reward='legacy',
+    value=>value.starter=true,
+    value=>value.rewardVersion='4',
+  ];
+  for(const mutate of mutations) {
+    const invalid=clone(base);mutate(invalid);freeze(invalid);
+    assert.throws(()=>getPracticePlan(createPracticePlan(),{rounds:[invalid],date:day}),/小芽/);
+  }
+});
+
 test('reward versions and currency choices cannot alter evidence, mastery or review intervals',()=>{
   const dates=[day,'2026-10-02'];
   const plain=dates.map((date,index)=>round(`same-${index}`,eventId,date));
@@ -555,11 +578,12 @@ test('reward versions and currency choices cannot alter evidence, mastery or rev
     freeze(state);
     const before=JSON.stringify(state);
     const expected=getPracticePlan(createPracticePlan(),{rounds:plain,learningState:state,date:dates[1]});
-    for(const rewardVersion of [1,2,3]) for(const choice of ['pending','shells','water']) {
+    for(const rewardVersion of [1,2,3,4]) for(const choice of ['pending','shells','water']) {
       const rounds=plain.map((value,index)=>({
         ...value,rewardVersion,starter:rewardVersion!==1 && index===0,
         reward:rewardVersion===1?'legacy':index===0?'starter':choice,
-        amounts:{shells:rewardVersion===1?3:2,water:rewardVersion===3?(index===0?3:2):5},
+        amounts:rewardVersion===4?{shells:index?1000:0,water:index?0:1000}:
+          {shells:rewardVersion===1?3:2,water:rewardVersion===3?(index===0?3:2):5},
       }));
       assert.deepEqual(getPracticePlan(createPracticePlan(),{rounds:freeze(rounds),learningState:state,date:dates[1]}),expected);
     }

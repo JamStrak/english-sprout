@@ -137,7 +137,7 @@ async function run(){
     await p.screenshot({animations:'disabled',path:path.join(out,'challenge-board-390.png'),fullPage:true});
     await start(p);const story=info.stories.find(s=>s.id===unit.items[0].eventId);
     assert.equal(await p.locator('.round-goal').isVisible(),false,'The prompt stays focused; rewards are previewed on the board');
-    assert.equal(await p.locator('.round-goal').getAttribute('aria-label'),'整组首次完成可获得四枚贝壳和六滴水');
+    assert.equal(await p.locator('.round-goal').getAttribute('aria-label'),'整组首次完成可获得4枚贝壳和6滴水，还有这关的花种');
     assert.equal(await p.locator('#app main').getAttribute('data-event'),story.id);assert.equal(await p.locator('#app main').getAttribute('data-context'),story.contextId);
     await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/challenge-question.mp3')));
     await p.waitForFunction(()=>qa.audios.some(x=>x.url.endsWith('/challenge-question.mp3')&&x.ended));
@@ -200,22 +200,23 @@ async function run(){
   await test('A persisted clear with a missing wallet receipt recovers on reload exactly once',async({p})=>{
     await seed(p,{completed:1});const restored=await saved(p,B);
     assert.equal(restored.shells,5);assert.equal(restored.water,6);assert.equal(restored.challengeRewards.length,1);
-    assert.equal(restored.challengeRewards[0].id,'challenge:first-clear:challenge-1');assert.equal(restored.challengeSeeds.length,0);
+    assert.equal(restored.challengeRewards[0].id,'challenge:first-clear:challenge-1');assert.equal(restored.challengeSeeds.length,1);
     const log=await saved(p,CHALLENGE),practice=await saved(p,PLAN);
     assert.equal(practice.entries.length,8,'Four existing studies and four interrupted challenge review writes are preserved');
     assert.deepEqual(practice.entries.filter(x=>x.roundId.startsWith('challenge:')),log.attempts.map(a=>({roundId:`challenge:${a.attemptId}`,eventId:a.eventId,date:a.date,attemptId:a.attemptId,mode:'review',rewardVariant:null})),'Recovered review metadata refers only to real saved challenge attempts and grants no participation reward');
     await reload(p);assert.deepEqual(await saved(p,B),restored);assert.deepEqual(await saved(p,CHALLENGE),log);assert.deepEqual(await saved(p,PLAN),practice,'Reload cannot duplicate recovered review entries');
     assert.equal((await saved(p,STATE)).evidence.length,0,'Recovery does not invent independent learning evidence');
   });
-  for(const count of [3,6])await test(`The ${count}-unit milestone grants its special seed once and preserves an ordinary seed already in hand`,async({p})=>{
+  for(const count of [3,6])await test(`Each of ${count} cleared units grants its own flower seed once and preserves an ordinary seed already in hand`,async({p})=>{
     const info=await seed(p,{studied:24,completed:count-1,partial:3,pendingOrdinary:true});
     const held=info.originalGarden.pendingSeed;await start(p,`challenge-${count}`);await observe(p);await click(p,'finish');
     await p.locator(`[data-challenge-complete="challenge-${count}"]`).waitFor();
     let wallet=await saved(p,B);assert.equal(wallet.challengeRewards.length,count);assert.equal(wallet.shells,1+count*4);assert.equal(wallet.water,3+count*6);
-    assert.deepEqual(wallet.pendingSeed,held,'Milestone entitlements cannot replace a seed the child already holds');
-    const flowers=count===3?['bow-rainbow']:['bow-rainbow','bow-starlight'];assert.deepEqual(wallet.challengeSeeds.map(x=>x.flowerId),flowers);assert(wallet.challengeSeeds.every(x=>x.seedId===null));
+    assert.deepEqual(wallet.pendingSeed,held,'Challenge entitlements cannot replace a seed the child already holds');
+    const flowers=await p.evaluate(async count=>{const base=document.querySelector('script[type="module"][src]').src;const {getChallengeFlower}=await import(new URL('challenge-flowers.js',base));return Array.from({length:count},(_,i)=>getChallengeFlower(`challenge-${i+1}`).id);},count);
+    assert.deepEqual(wallet.challengeSeeds.map(x=>x.flowerId),flowers);assert(wallet.challengeSeeds.every(x=>x.seedId===null));
     assert.equal(await p.locator('.challenge-seed-earned').count(),1);const layoutFailure=await layout(p).then(()=>null,error=>error);
-    await p.screenshot({animations:'disabled',path:path.join(out,`challenge-milestone-${count}-390.png`),fullPage:true});
+    await p.screenshot({animations:'disabled',path:path.join(out,`challenge-seeds-${count}-390.png`),fullPage:true});
     await click(p,'garden');await p.locator('main.meadow-view[data-garden-next="plant"]').waitFor();assert.equal(await p.locator('[data-action="meadow-seed"]').count(),1);
     await board(p);await click(p,'challenge-seed');await p.locator('main.meadow-view[data-garden-next="plant"]').waitFor();
     assert.deepEqual((await saved(p,B)).pendingSeed,held,'Even requesting the special seed takes the child to plant their existing seed first');
@@ -226,12 +227,22 @@ async function run(){
       wallet=await saved(p,B);const special=wallet.pendingSeed;assert.equal(wallet.challengeSeeds[i].seedId,special.id);
       assert.equal(wallet.shells,1+count*4,'Claiming an earned seed costs no shells');
       await reload(p);assert.deepEqual((await saved(p,B)).pendingSeed,special,'The exact claimed seed persists across refresh');
-      await click(p,'garden');await p.locator('main.meadow-view').waitFor();await plantPending(p,{x:180+i*70,y:230});
+      await click(p,'garden');await p.locator('main.meadow-view').waitFor();await plantPending(p,{x:60+(i%3)*100,y:80+Math.floor(i/3)*100});
     }
     wallet=await saved(p,B);assert.deepEqual(wallet.plants.slice(1).map(x=>x.flowerId),flowers);assert(wallet.challengeSeeds.every(x=>x.seedId));
-    await board(p);assert.equal(await p.locator('[data-action="challenge-seed"]').count(),0,'Claimed milestone seeds cannot be claimed again');
-    assert.equal(await p.locator('.challenge-milestone.earned').count(),count===3?1:2);
-    await reload(p);assert.deepEqual(await saved(p,B),wallet,'Restart does not duplicate milestone entitlements or wallet rewards');if(layoutFailure)throw layoutFailure;
+    await board(p);assert.equal(await p.locator('[data-action="challenge-seed"]').count(),0,'Claimed challenge seeds cannot be claimed again');
+    assert.equal(await p.locator('.challenge-milestone').count(),0,'Old 3/6-unit reward gates are removed');
+    assert.equal(await p.locator('.challenge-unit.completed').count(),count);
+    await reload(p);assert.deepEqual(await saved(p,B),wallet,'Restart does not duplicate flower entitlements or wallet rewards');if(layoutFailure)throw layoutFailure;
+  });
+  await test('All 21 completed units recover 21 different flower rewards and render their real card images',async({p})=>{
+    await seed(p,{studied:84,completed:21});const wallet=await saved(p,B);
+    assert.equal(wallet.challengeSeeds.length,21);assert.equal(new Set(wallet.challengeSeeds.map(seed=>seed.flowerId)).size,21);
+    await board(p);assert.equal(await p.locator('[data-reward-flower]').count(),21);assert.equal(await p.locator('.challenge-unit.completed').count(),21);
+    assert.deepEqual(await p.locator('[data-reward-flower]').evaluateAll(cards=>cards.map(card=>card.dataset.rewardFlower)),wallet.challengeSeeds.map(seed=>seed.flowerId));
+    const images=await p.locator('.challenge-target-flower image').evaluateAll(async images=>Promise.all(images.map(async element=>{const img=new Image();img.src=element.getAttribute('href');try{await img.decode();return{url:img.src,ok:img.naturalWidth>0};}catch{return{url:img.src,ok:false};}})));
+    assert.equal(images.length,21);assert(images.every(image=>image.ok),'Every goal uses a decodable illustrated flower');
+    await reload(p);assert.deepEqual(await saved(p,B),wallet,'Recovering all old clears is idempotent');
   });
 }
 

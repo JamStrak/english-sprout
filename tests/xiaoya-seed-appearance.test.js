@@ -5,7 +5,8 @@ import {SEED_COLORS,FLOWER_SEED_COLORS,seedAppearance} from '../xiaoya/seed-appe
 import {seedArt,seedArtForFlower,packArt} from '../xiaoya/garden-art.js';
 
 test('every current flower keeps its identity and shares a small seed colour palette',()=>{
-  assert.deepEqual(Object.keys(FLOWER_SEED_COLORS).sort(),ALL_FLOWERS.map(f=>f.id).sort());
+  assert.deepEqual(Object.keys(FLOWER_SEED_COLORS).sort(),ALL_FLOWERS.filter(f=>!f.seedColor).map(f=>f.id).sort(),
+    'legacy IDs retain their colour mapping; new catalogue flowers carry explicit seedColor metadata');
   assert.equal(Object.keys(SEED_COLORS).length,7);
   const seen=new Set();
   for(const flower of ALL_FLOWERS) {

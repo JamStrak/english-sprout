@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FLOWERS,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,ensureShop,reserveOffer,buyOffer,nextAction} from '../xiaoya/garden-meadow.js';
+import {FLOWERS,NORMAL_FLOWERS,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,ensureShop,reserveOffer,buyOffer,nextAction} from '../xiaoya/garden-meadow.js';
 
 const clone=(value)=>JSON.parse(JSON.stringify(value));
 function freeze(value) {
@@ -27,7 +27,7 @@ function legacy() {
 test('schema1 migration preserves balances, planted positions, pending seed and consumed round IDs',()=>{
   const source=freeze(legacy()),before=clone(source);
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,4);
+  assert.equal(migrated.schemaVersion,5);
   assert.deepEqual([migrated.shells,migrated.water],[3,11]);
   assert.deepEqual(migrated.plants,source.plants);assert.deepEqual(migrated.pendingSeed,source.pendingSeed);
   assert.deepEqual(migrated.legacy,source);assert.notStrictEqual(migrated.legacy,source);
@@ -45,8 +45,8 @@ test('schema1 migration preserves balances, planted positions, pending seed and 
   assert.deepEqual([next.shells,next.water],[3,10]);assert.equal(nextAction(next),'reward');
   next=claimReward(next,'new-1','shells');
   assert.deepEqual([next.shells,next.water],[5,10]);
-  next=openSeedPack(next,10.5/12);
-  assert.equal(next.pendingSeed.flowerId,'giant-daisy','migrated users do not restart the ordinary-only first draw');
+  next=openSeedPack(next,8.5/10,.99);
+  assert.equal(next.pendingSeed.flowerId,'bow-yellow','migrated users do not restart the ordinary-only first draw');
   assert.equal(next.pendingSeed.id,'seed-3');assert.equal(next.shells,3);
 });
 
@@ -54,7 +54,7 @@ test('all model actions accept legacy state and return a migrated value without 
   const source=freeze(legacy());
   for(const next of [rewardRound(source,round('old-1')),claimReward(source,'old-1','water'),openSeedPack(source),
     plantSeed(source,{x:.3,y:.5}),waterPlant(source,'plant-1'),ensureShop(source,'2026-10-18',0),
-    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,4);
+    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,5);
   assert.deepEqual(source,legacy());
 });
 
@@ -62,15 +62,15 @@ test('an empty schema1 save still gets the complete first-participation daisy lo
   const empty=freeze({schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],
     seedPacksOpened:0,bag:[...oldCycle],pendingSeed:null,plants:[]});
   let state=validateMeadow(empty);
-  assert.equal(state.schemaVersion,4);assert.deepEqual(state.legacy,empty);
+  assert.equal(state.schemaVersion,5);assert.deepEqual(state.legacy,empty);
   state=rewardRound(freeze(state),round('first-real-participation'));
   assert.deepEqual([state.shells,state.water],[2,3]);
   assert.equal(state.rounds[0].starter,true);assert.equal(state.rounds[0].reward,'starter');
   assert.equal(pendingRewards(state).length,0);
-  state=openSeedPack(freeze(clone(state)),.99999);
-  assert.deepEqual(state.pendingSeed,{id:'seed-1',flowerId:'daisy'});
+  state=openSeedPack(freeze(clone(state)),.99999,.99);
+  assert.deepEqual(state.pendingSeed,{id:'seed-1',flowerId:'daisy',growth:{giant:false,waterNeeded:5,scale:1}});
   const forged=clone(state);forged.purchases[0].flowerId='giant-daisy';forged.pendingSeed.flowerId='giant-daisy';
-  assert.throws(()=>validateMeadow(forged),/首次盲盒/);
+  assert.throws(()=>validateMeadow(forged),/首次盲盒|盲盒品种/);
   state=plantSeed(state,{x:.56,y:.32});
   for(let index=0;index<3;index++)state=waterPlant(freeze(state),'plant-1');
   assert.equal(state.plants[0].waterings,3);assert.deepEqual([state.shells,state.water],[0,0]);
@@ -139,8 +139,8 @@ test('daily shop stays stable through reload and backwards clocks, then changes 
 });
 
 test('shop prices are fixed by ordinary, bow and giant variety instead of forged offer values',()=>{
-  for(const [index,flower] of FLOWERS.entries()) {
-    const shown=ensureShop(fund(),'2026-10-18',(index+.5)/FLOWERS.length);
+  for(const [index,flower] of NORMAL_FLOWERS.entries()) {
+    const shown=ensureShop(fund(),'2026-10-18',(index+.5)/NORMAL_FLOWERS.length);
     const price=flower.giant?8:flower.shape==='bow'?6:3;
     assert.equal(shown.shop.offer.price,price);
     const bought=buyOffer(shown,shown.shop.offer.id,'shop',0);
@@ -167,7 +167,7 @@ test('shop buying is idempotent and a pending seed prevents both purchase channe
 });
 
 test('reservation survives daily refresh and old reserved purchase leaves current shop unchanged',()=>{
-  let state=ensureShop(fund(),'2026-10-18',6.5/12);
+  let state=ensureShop(fund(),'2026-10-18',6.5/10);
   state=reserveOffer(state,'offer-1');
   const kept=clone(state.shop.reserved);
   state=ensureShop(freeze(state),'2026-10-19',.9);
@@ -210,15 +210,16 @@ test('buying either reference to the same offer clears its reservation and reple
 });
 
 test('first mystery stays a daisy even when the first seed was a purchased giant',()=>{
-  let state=ensureShop(fund(),'2026-10-18',10.5/12);
-  state=buyOffer(state,'offer-1','shop',0);
-  assert.equal(state.pendingSeed.flowerId,'giant-daisy');
+  let state=ensureShop(fund(),'2026-10-18',0);
+  state=buyOffer(state,'offer-1','shop',0,0);
+  assert.equal(state.pendingSeed.flowerId,'daisy');
+  assert.deepEqual(state.pendingSeed.growth,{giant:true,waterNeeded:10,scale:2.5});
   state=plantSeed(state,{x:.5,y:.5});
   state=openSeedPack(state,.99);
   assert.equal(state.pendingSeed.flowerId,'daisy');
   state=plantSeed(state,{x:.8,y:.5});
   state=openSeedPack(state,.99);
-  assert.equal(state.pendingSeed.flowerId,'giant-sunflower');
+  assert.equal(state.pendingSeed.flowerId,'bow-purple');
 });
 
 test('shop, purchase and offer history must reconcile with balances and unique seed identities',()=>{

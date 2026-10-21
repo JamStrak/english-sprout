@@ -28,7 +28,10 @@ async function loadRuntime(internal,search,storage) {
 
 async function sandbox(real=createMemoryStorage()) {
   const {runtime,url}=await loadRuntime(true,'?gm=test',real);
+  const settings=dataModule((await readFile(new URL('../xiaoya/economy-settings.js',import.meta.url),'utf8')).replaceAll("'./runtime.js'",JSON.stringify(url)));
   const source=(await readFile(new URL('../xiaoya/garden-meadow.js',import.meta.url),'utf8'))
+    .replaceAll("'./economy-settings.js'",JSON.stringify(settings))
+    .replaceAll("'./challenge-flowers.js'",JSON.stringify(new URL('../xiaoya/challenge-flowers.js',import.meta.url).href))
     .replaceAll("'./runtime.js'",JSON.stringify(url))
     .replaceAll("'./content.js'",JSON.stringify(new URL('../xiaoya/content.js',import.meta.url).href))
     .replaceAll("'./challenges.js'",JSON.stringify(new URL('../xiaoya/challenges.js',import.meta.url).href));
@@ -76,11 +79,11 @@ test('sandbox purchases and every pour remain unlimited without fabricating lear
   const {model:m}=await sandbox();let state=m.createMeadow();
   assert.equal(m.hasUnlimitedResources(state),true);assert.equal(m.nextAction(state),'pack');
   for(let i=0;i<30;i++) {
-    state=m.openSeedPack(state,(i%12)/12);
+    state=m.openSeedPack(state,(i%10)/10,i%2?0:.99);
     assert.equal(state.pendingSeed.id,`seed-${i+1}`);
     assert.equal(m.openSeedPack(state,0),state,'a pending seed still prevents double purchase');
     state=m.plantSeed(state,{x:0.15+(i%5)*0.15,y:0.2+(i%4)*0.15});
-    const plant=state.plants.at(-1),needed=m.ALL_FLOWERS.find(f=>f.id===plant.flowerId).waterNeeded;
+    const plant=state.plants.at(-1),needed=m.flowerForSeed(plant).waterNeeded;
     assert.equal(m.nextAction(state),'water');
     for(let step=0;step<needed;step++)state=m.waterPlant(state,plant.id);
     assert.equal(state.plants.at(-1).waterings,needed);
