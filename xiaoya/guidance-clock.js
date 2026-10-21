@@ -1,4 +1,5 @@
 export const GUIDANCE_IDLE_MS = 60000;
+export const VISUAL_HINT_IDLE_MS = 30000;
 
 /** A single idle reminder clock. Rendering may schedule it without postponing it. */
 export function createGuidanceClock({

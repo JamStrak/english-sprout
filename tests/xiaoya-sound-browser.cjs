@@ -288,8 +288,9 @@ async function main() {
     assert.deepEqual(await snapshot(f.p),f.child);
     return {blockedStates:results,activePreviewStopped:true,stalePlaybackSuppressed:true,physicalMicrophone:false};
   });
-  await check('background music follows the current scene and stops on learning or GM',async f=>{
-    await sandbox(f.p);await waitMusic(f.p,true);
+  await check('background music belongs only to the garden and fades away on navigation or GM',async f=>{
+    await sandbox(f.p);await waitMusic(f.p,false);
+    await bridge(f.p,'navigate','garden');await waitMusic(f.p,true);
     assert.equal((await bridge(f.p,'musicSettings')).playing,true);
     await f.p.evaluate(()=>dispatchEvent(new PageTransitionEvent('pagehide',{persisted:true})));
     assert.equal(await f.p.evaluate(()=>document.hidden),false,'Synthetic pagehide must exercise lifecycle independently of visibility');
@@ -299,9 +300,17 @@ async function main() {
     assert.equal(await moduleCall(f.p,'sound-player.js','m=>m.soundPlayer.play("tap",{preview:true})'),false);
     await f.p.evaluate(()=>dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
     await waitMusic(f.p,true);
-    await openWorkbench(f.p);assert.equal((await bridge(f.p,'musicSettings')).playing,false);
-    await press(f.p,`${card('bgm-home')} [data-sound-enabled]`);await closeWorkbench(f.p);
-    assert.equal((await bridge(f.p,'musicSettings')).playing,false,'Disabled home scene still played BGM');
+    await openWorkbench(f.p);await waitMusic(f.p,false);
+    assert.equal(await f.p.locator(card('bgm-home')).count(),0);
+    await closeWorkbench(f.p);await waitMusic(f.p,true);
+    for(const page of ['home','shop','blindbox']){
+      if(page==='blindbox'){
+        await bridge(f.p,'navigate','shop');await press(f.p,'[data-action="shop-pack"]');
+      }else await bridge(f.p,'navigate',page);
+      await waitMusic(f.p,false);
+      assert(await f.p.evaluate(()=>qaSound.elements.every(element=>!element.loop||element.paused)),`${page} started garden music`);
+      await bridge(f.p,'navigate','garden');await waitMusic(f.p,true);
+    }
     await bridge(f.p,'navigate','garden');await f.p.locator('.meadow-view').waitFor();
     await waitMusic(f.p,true);
     assert.equal((await bridge(f.p,'musicSettings')).playing,true);
@@ -310,13 +319,13 @@ async function main() {
     await observedSound(f.p,'xiaoya/sfx/ui-select.mp3',()=>closeWorkbench(f.p));
     assert(await f.p.evaluate(()=>qaSound.elements.some(element=>element.loop&&!element.paused&&element.currentSrc.endsWith('xiaoya/sfx/ui-select.mp3'))),'The scene ignored its replacement binding');
     await openWorkbench(f.p);await press(f.p,`${card('bgm-garden')} [data-sound-action="delete"]`);await closeWorkbench(f.p);
-    assert.equal((await bridge(f.p,'musicSettings')).playing,false,'Deleted scene music remained active');
+    await waitMusic(f.p,false);
     await openWorkbench(f.p);await press(f.p,`${card('bgm-garden')} [data-sound-action="reset"]`);
     await observedSound(f.p,'xiaoya/audio/v3/garden-piano.mp3',()=>closeWorkbench(f.p));
     await press(f.p,'[data-action="next-event"]');await f.p.locator('main.event-view').waitFor();
     await f.p.waitForFunction(()=>qaSound.elements.every(element=>!element.loop||element.paused));
     assert.equal((await bridge(f.p,'musicSettings')).playing,false);assert.deepEqual(await snapshot(f.p),f.child);
-    return {pagehideSilent:true,pageshowRestoresScene:true,homeSceneDisabled:true,gardenScenePlaying:true,sceneReplacementAndDeletion:true,learningSceneSilent:true,maximumSimultaneousLoops:1};
+    return {pagehideSilent:true,pageshowRestoresScene:true,homeShopBlindboxSilent:true,gardenScenePlaying:true,sceneReplacementAndDeletion:true,learningSceneSilent:true,maximumSimultaneousLoops:1};
   });
   await check('sound filters and actions fit a 320 pixel screen',async f=>{
     await sandbox(f.p);await openWorkbench(f.p);

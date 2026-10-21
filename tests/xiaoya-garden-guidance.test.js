@@ -21,7 +21,7 @@ import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { createWelcomeGreetings } from '../xiaoya/welcome-greetings.js';
-import { createGuidanceClock, GUIDANCE_IDLE_MS } from '../xiaoya/guidance-clock.js';
+import { createGuidanceClock, GUIDANCE_IDLE_MS, VISUAL_HINT_IDLE_MS } from '../xiaoya/guidance-clock.js';
 import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/guidance-policy.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
@@ -98,7 +98,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[],firstS
     // then complete the animation. Geometry is covered in browser tests.
     (calls.motions??=[]).push({...sandbox.ui.getFeedback()});return true;
   },cancel(){}}),createWelcomeGreetings,audioControls,
-    createGuidancePolicy:options=>createGuidancePolicy({...options,...(firstSession?{returning:false}:{})}),GUIDANCE_KEY,GUIDANCE_IDLE_MS,
+    createGuidancePolicy:options=>createGuidancePolicy({...options,...(firstSession?{returning:false}:{})}),GUIDANCE_KEY,GUIDANCE_IDLE_MS,VISUAL_HINT_IDLE_MS,
     createGuidanceClock:options=>createGuidanceClock({...options,now:()=>clock,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
     createPictureLoader:()=>({load(){},status:()=> 'ready'})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
@@ -234,11 +234,15 @@ test('old garden URL and saved A preference cannot select a retired garden or ov
   }
 });
 
-test('hands stay idle-only and free-garden feedback respects reduced motion',()=>{
+test('button halos stay idle-only and free-garden feedback respects reduced motion',()=>{
   const css=fs.readFileSync(new URL('../xiaoya/style.css',import.meta.url),'utf8');
   const meadowCss=fs.readFileSync(new URL('../xiaoya/meadow.css',import.meta.url),'utf8');
-  assert.match(css,/\.tap-cue\{display:none;/);
-  assert.match(css,/\.primary-wrap\.is-idle-hint:has\(button:enabled\) \.tap-cue\{display:block\}/);
+  assert.doesNotMatch(css,/tap-cue/);
+  assert.doesNotMatch(source,/class="tap-cue"/);
+  const paperCss=fs.readFileSync(new URL('../xiaoya/paper.css',import.meta.url),'utf8');
+  assert.match(paperCss,/\.primary-wrap\.is-idle-hint > \[data-primary\]/);
+  assert.match(paperCss,/@keyframes button-idle-halo/);
+  assert.match(css,/border-radius:inherit;opacity:0;pointer-events:none/);
   assert.match(meadowCss,/\.meadow-tool\.inviting:not\(:disabled\):not\(\.selected\)\{animation:meadow-invite/);
   assert.match(meadowCss,/@media\(prefers-reduced-motion:reduce\)\{\.meadow-view \*,\.vector-picture>svg\{animation:none!important/);
 });

@@ -18,38 +18,62 @@ function fixture({reject=false,wait=false}={}) {
 }
 test('garden track is lazy, maps default 50% to a softer gain, and rerenders do not restart it',async()=>{
   const f=fixture();f.music.setState({active:false});assert.equal(f.created,0);
-  f.music.setState({active:true});await flush();f.advance(320);
+  f.music.setState({active:true});await flush();f.advance(640);
   assert.equal(f.player.volume,.25);assert.equal(f.player.loop,true);
   for(let i=0;i<8;i++)f.music.setState({active:true});
   assert.equal(f.created,1);assert.equal(f.player.plays,1);assert.equal(f.player.currentTime,12);
   assert.ok(f.volumes.every(v=>v>=0&&v<=.25));
 });
 test('narration ducks music and interruption/restoration cancels outdated fades',async()=>{
-  const f=fixture();f.music.setState({active:true});await flush();f.advance(320);
+  const f=fixture();f.music.setState({active:true});await flush();f.advance(640);
   f.music.setState({active:true,ducked:true});f.advance(128);assert.equal(f.player.volume,.06);
   f.music.setState({active:true});f.advance(80);assert.ok(f.player.volume>.06);
-  f.music.setState({active:true,ducked:true});f.advance(320);assert.equal(f.player.volume,.06);
-  f.music.setState({active:true});f.advance(320);assert.equal(f.player.volume,.25);
+  f.music.setState({active:true,ducked:true});f.advance(640);assert.equal(f.player.volume,.06);
+  f.music.setState({active:true});f.advance(640);assert.equal(f.player.volume,.25);
 });
 test('exit fades then pauses; quick reentry preserves playback; background pauses immediately',async()=>{
-  const f=fixture();f.music.setState({active:true});await flush();f.advance(320);
+  const f=fixture();f.music.setState({active:true});await flush();f.advance(640);
   f.music.setState({active:false});f.advance(160);assert.ok(f.player.volume>0&&f.player.volume<.25);
-  f.music.setState({active:true});f.advance(320);assert.equal(f.player.volume,.25);assert.equal(f.player.plays,1);
-  f.music.setState({active:false});f.advance(320);assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);
-  f.music.setState({active:true});await flush();f.advance(320);assert.equal(f.player.plays,2);
+  f.music.setState({active:true});f.advance(640);assert.equal(f.player.volume,.25);assert.equal(f.player.plays,1);
+  f.music.setState({active:false});f.advance(640);assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);
+  f.music.setState({active:true});await flush();f.advance(640);assert.equal(f.player.plays,2);
   f.music.setState({active:false,immediate:true});assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);
   f.advance(500);assert.equal(f.player.volume,0);
 });
 test('autoplay rejection waits for a real retry and never creates overlapping players',async()=>{
-  const f=fixture({reject:true});f.music.setState({active:true});await flush();f.advance(320);
+  const f=fixture({reject:true});f.music.setState({active:true});await flush();f.advance(640);
   f.music.setState({active:true});assert.equal(f.player.plays,1);
   f.music.retry();await flush();assert.equal(f.player.plays,2);assert.equal(f.player.paused,false);assert.equal(f.created,1);
   f.music.setState({active:false,immediate:true});f.music.retry();assert.equal(f.player.plays,2);
 });
 test('late play completion cannot resurrect music after leaving the garden',async()=>{
-  const f=fixture({wait:true});f.music.setState({active:true});f.advance(320);
+  const f=fixture({wait:true});f.music.setState({active:true});f.advance(640);
   f.music.setState({active:false,immediate:true});f.resolve();await flush();
   assert.equal(f.player.paused,true);assert.equal(f.player.volume,0);
+});
+
+test('normal page exit takes a full smooth fade even when narration is ducking',async()=>{
+  const f=fixture({wait:true});f.music.setState({active:true});
+  assert.equal(f.player.volume,0);
+  f.advance(300);assert.ok(f.player.volume>0&&f.player.volume<.25);
+  f.advance(340);assert.equal(f.player.volume,.25);
+  f.music.setState({active:true,ducked:true});f.advance(128);
+  const before=f.player.volume;
+  f.music.setState({active:false,ducked:true});
+  assert.equal(f.player.volume,before);assert.equal(f.player.paused,false);
+  f.advance(160);assert.ok(f.player.volume>0&&f.player.volume<before);
+  f.advance(480);assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);
+  f.resolve();await flush();assert.equal(f.player.paused,true);
+});
+
+test('turning music off fades and a quick unmute continues from its current volume',async()=>{
+  const f=fixture();f.music.setState({active:true});await flush();f.advance(640);
+  f.music.setState({active:true,enabled:false});f.advance(200);
+  const midway=f.player.volume;assert.ok(midway>0&&midway<.25);
+  f.music.setState({active:true,enabled:true});assert.equal(f.player.volume,midway);
+  f.advance(640);assert.equal(f.player.volume,.25);assert.equal(f.player.plays,1);
+  f.music.setState({active:true,volume:0});f.advance(640);
+  assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);
 });
 
 test('music preferences default safely and clamp corrupt or older saved values',()=>{
@@ -60,17 +84,17 @@ test('music preferences default safely and clamp corrupt or older saved values',
   assert.deepEqual(gardenMusicSettings({volume:2}),{enabled:true,volume:1});
 });
 test('live volume changes use one player; narration never increases a quiet setting',async()=>{
-  const f=fixture();f.music.setState({active:true,volume:1});await flush();f.advance(320);
+  const f=fixture();f.music.setState({active:true,volume:1});await flush();f.advance(640);
   assert.equal(f.player.volume,1);assert.equal(f.music.status().playing,true);
   f.music.setState({active:true,volume:1,ducked:true});f.advance(128);assert.equal(f.player.volume,.12);
-  f.music.setState({active:true,volume:.2});f.advance(320);assert.equal(f.player.volume,gardenMusicGain(.2));
+  f.music.setState({active:true,volume:.2});f.advance(640);assert.equal(f.player.volume,gardenMusicGain(.2));
   f.music.setState({active:true,volume:.2,ducked:true});f.advance(128);assert.equal(f.player.volume,gardenMusicGain(.2)*.24);
-  f.music.setState({active:true,volume:.2});f.advance(320);assert.equal(f.player.volume,gardenMusicGain(.2));
+  f.music.setState({active:true,volume:.2});f.advance(640);assert.equal(f.player.volume,gardenMusicGain(.2));
   assert.equal(f.created,1);assert.equal(f.player.plays,1);assert.equal(f.player.currentTime,12);
 });
 test('off and zero volume pause and suppress retries; re-enabling restores chosen volume',async()=>{
   const f=fixture();f.music.setState({active:true,enabled:false});f.music.retry();assert.equal(f.created,0);
-  f.music.setState({active:true,volume:.3});await flush();f.advance(320);
+  f.music.setState({active:true,volume:.3});await flush();f.advance(640);
   f.music.setState({active:true,volume:0,immediate:true});f.music.retry();
   assert.equal(f.player.paused,true);assert.equal(f.player.plays,1);
   f.music.setState({active:true,enabled:false,volume:.3,immediate:true});f.music.retry();assert.equal(f.player.plays,1);
@@ -94,11 +118,11 @@ test('low listening levels are distinct, monotonic, and substantially quieter th
 });
 
 test('changing low volume during duck restores the latest setting, with no stale louder fade',async()=>{
-  const f=fixture();f.music.setState({active:true,volume:.5});await flush();f.advance(320);
+  const f=fixture();f.music.setState({active:true,volume:.5});await flush();f.advance(640);
   f.music.setState({active:true,ducked:true,volume:.5});f.advance(48);
   f.music.setState({active:true,ducked:true,volume:.05});f.advance(128);
   assert.equal(f.player.volume,gardenMusicGain(.05)*.24);
-  f.music.setState({active:true,volume:.05});f.advance(320);
+  f.music.setState({active:true,volume:.05});f.advance(640);
   assert.equal(f.player.volume,gardenMusicGain(.05));
   f.music.setState({active:true,volume:0,immediate:true});f.advance(500);
   assert.equal(f.player.volume,0);assert.equal(f.player.paused,true);

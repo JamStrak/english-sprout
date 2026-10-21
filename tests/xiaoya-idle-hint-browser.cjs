@@ -11,14 +11,14 @@ assert(['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname),'Use
 const out=path.resolve(process.env.XIAOYA_IDLE_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-idle-hint'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const DAY='2026-10-18',B='xiaoya-english:meadow:v1',PLAN='xiaoya-english:practice-plan:v1',PREFS='xiaoya-english:preferences:v1',GUIDANCE='xiaoya-english:guidance:v1';
-const report={origin,scope:'Disposable Edge contexts; 60-second thresholds use Playwright virtual time. Local recorded audio is native at 4x. Microphone is a synthetic device; ASR, visibility and idle input events are controlled. No real player data, remote requests, or server changes.',checks:[]};
+const report={origin,scope:'Disposable Edge contexts; 30-second visual / 60-second voice thresholds use Playwright virtual time. Local recorded audio is native at 4x. Microphone is a synthetic device; ASR, visibility and idle input events are controlled. No real player data, remote requests, or server changes.',checks:[]};
 let browser,seed;
 const save=()=>fs.writeFileSync(path.join(out,filter?'results-filtered.json':'results.json'),JSON.stringify(report,null,2));
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function poll(p,fn,arg,timeout=20000){const start=Date.now();while(Date.now()-start<timeout){const result=await p.evaluate(fn,arg);if(result)return result;await delay(50);}throw Error('Timed out waiting for browser state: '+String(fn).slice(0,180));}
 const action=(p,name)=>p.locator(`[data-action="${name}"]`).first().evaluate(b=>b.click());
-const hand=p=>p.locator('.tap-cue:visible').count();
-async function noHand(p,message){assert.equal(await hand(p),0,message);assert.equal(await p.locator('.is-idle-hint').count(),0,message+' (no stale class)');}
+const hint=p=>p.locator('.primary-wrap.is-idle-hint > [data-primary]:visible').count();
+async function noHint(p,message){assert.equal(await hint(p),0,message);assert.equal(await p.locator('.tap-cue').count(),0,'No old hand markup');assert.equal(await p.locator('.is-idle-hint').count(),0,message+' (no stale class)');}
 const voices=p=>p.evaluate(()=>qaIdle.media.filter(a=>/\/audio\/v3\//.test(a.url)&&!a.url.endsWith('/garden-piano.mp3')));
 const countVoice=(p,suffix)=>p.evaluate(s=>qaIdle.media.filter(a=>a.url.endsWith(s)).length,suffix);
 async function ended(p,suffix,n=1){return poll(p,({suffix,n})=>qaIdle.media.filter(a=>a.url.endsWith(suffix)&&a.ended).length>=n,{suffix,n});}
@@ -72,7 +72,7 @@ async function review(p){
 }
 async function check(name,fn,options){
   if(filter&&!filter.test(name))return;let f;
-  try{f=await fixture(options);const evidence=await fn(f);assert.deepEqual(f.errors,[]);assert.deepEqual(await f.p.evaluate(()=>qaIdle.errors),[]);assert(f.requests.every(r=>r.method==='GET'&&new URL(r.url).origin===origin),'Only loopback GET requests');if(!f.mic)assert.equal(await f.p.evaluate(()=>qaIdle.microphoneCalls),0);const hints=await f.p.evaluate(()=>qaIdle.hints);assert(hints.every(h=>!h.recording&&!h.hidden&&!h.modal&&!h.gm&&!h.speaking&&!['preparing','assessing'].includes(h.status)),'No transient hand during a blocked state');report.checks.push({name,status:'PASS',evidence,hints});console.log('PASS '+name);}
+  try{f=await fixture(options);const evidence=await fn(f);assert.deepEqual(f.errors,[]);assert.deepEqual(await f.p.evaluate(()=>qaIdle.errors),[]);assert(f.requests.every(r=>r.method==='GET'&&new URL(r.url).origin===origin),'Only loopback GET requests');if(!f.mic)assert.equal(await f.p.evaluate(()=>qaIdle.microphoneCalls),0);const hints=await f.p.evaluate(()=>qaIdle.hints);assert(hints.every(h=>!h.recording&&!h.hidden&&!h.modal&&!h.gm&&!h.speaking&&!['preparing','assessing'].includes(h.status)),'No transient halo during a blocked state');report.checks.push({name,status:'PASS',evidence,hints});console.log('PASS '+name);}
   catch(e){report.checks.push({name,status:'FAIL',error:e.stack,diagnostic:f?await f.p.evaluate(()=>({main:document.querySelector('main')?.outerHTML,media:qaIdle.media,hints:qaIdle.hints,records:qaIdle.records})).catch(()=>null):null,screenshot:f?await snapshot(f.p,'failure-'+(report.checks.length+1)).catch(()=>null):null});process.exitCode=1;console.error('FAIL '+name+' '+e.message);}
   finally{if(f)await f.c.close();save();}
 }
@@ -87,35 +87,45 @@ async function check(name,fn,options){
     await p.reload();await p.locator('main.home-view').waitFor();await pause(p);await action(p,'garden');await p.clock.fastForward(2500);assert.equal(await countVoice(p,'/flow-choice.mp3'),0,'A returning session stays quiet');
     return {firstPromptCount:1,repeatPromptCount:0,reloadPromptCount:0,seen:await p.evaluate(k=>JSON.parse(localStorage.getItem(k)).seen,GUIDANCE)};
   },{returning:false});
-  await check('Returning reminders wait 60 seconds and repeat 60 seconds after playback ends',async({p})=>{
-    await reset(p);await p.clock.fastForward(59999);assert.equal((await voices(p)).length,0);await noHand(p,'No early visual hint');
-    await p.clock.fastForward(1);await ended(p,'/garden-welcome.mp3');assert.equal(await hand(p),1);assert.equal(await countVoice(p,'/garden-welcome.mp3'),1);
-    await p.clock.fastForward(59999);assert.equal(await countVoice(p,'/garden-welcome.mp3'),1,'No repeat before the full interval');
-    await p.clock.fastForward(1);await ended(p,'/garden-welcome.mp3',2);assert.equal(await hand(p),1);
-    const screenshot=await snapshot(p,'home-idle-hand');await p.setViewportSize({width:320,height:844});
-    const narrow=await p.evaluate(()=>{const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};return {viewport:innerWidth,buttons:[...document.querySelectorAll('.topbar button')].map(e=>({action:e.dataset.action,...rect(e)})),brand:rect(document.querySelector('.topbar .brand')),hand:rect(document.querySelector('.tap-cue')),wallet:rect(document.querySelector('.reward-preview')),wrap:rect(document.querySelector('.primary-wrap')),orb:rect(document.querySelector('.primary-orb'))};});
+  await check('Button halo starts at 30 seconds; voice waits 60 and repeats 60 seconds after playback',async({p})=>{
+    await reset(p);await p.clock.fastForward(29999);assert.equal((await voices(p)).length,0);await noHint(p,'No early visual hint');
+    await p.clock.fastForward(1);assert.equal(await hint(p),1);assert.equal((await voices(p)).length,0,'Visual hint does not start narration');
+    const screenshot=await snapshot(p,'home-idle-halo');
+    await p.emulateMedia({reducedMotion:'no-preference'});
+    const motion=await p.locator('[data-primary]').evaluate(b=>{const a=getComputedStyle(b,'::before'),z=getComputedStyle(b,'::after');return {animation:a.animationName,second:z.animationName,delay:z.animationDelay,pointerEvents:a.pointerEvents,radius:a.borderRadius,buttonRadius:getComputedStyle(b).borderRadius};});
+    assert.equal(motion.animation,'button-idle-halo');assert.equal(motion.second,'button-idle-halo');assert.equal(motion.delay,'1.1s');assert.equal(motion.pointerEvents,'none');assert.equal(motion.radius,motion.buttonRadius);
+    await p.emulateMedia({reducedMotion:'reduce'});
+    await p.setViewportSize({width:320,height:844});
+    const narrow=await p.evaluate(()=>{const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};return {viewport:innerWidth,buttons:[...document.querySelectorAll('.topbar button')].map(e=>({action:e.dataset.action,...rect(e)})),brand:rect(document.querySelector('.topbar .brand')),wallet:rect(document.querySelector('.reward-preview')),wrap:rect(document.querySelector('.primary-wrap')),orb:rect(document.querySelector('.primary-orb'))};});
     const overlaps=(a,b)=>a.x<b.right&&a.right>b.x&&a.y<b.bottom&&a.bottom>b.y;
     assert(narrow.buttons.some(b=>b.action==='audio-settings'),'Sound settings remains available at 320px');
     for(let i=0;i<narrow.buttons.length;i++){const b=narrow.buttons[i];assert(b.x>=0&&b.right<=320,'Header button stays inside 320px viewport: '+b.action);assert(!overlaps(b,narrow.brand),'Header button does not cover brand: '+b.action);for(const other of narrow.buttons.slice(i+1))assert(!overlaps(b,other),'Header buttons do not collide');}
-    return {intervalMs:60000,nativePlaybacks:2,screenshot,narrow,screenshot320:await snapshot(p,'home-idle-hand-320')};
+    assert(narrow.orb.x>22&&narrow.orb.right<298,'Expanding halo fits inside the narrow screen');
+    const screenshot320=await snapshot(p,'home-idle-halo-320');
+    await p.clock.fastForward(29999);assert.equal((await voices(p)).length,0);
+    await p.clock.fastForward(1);await ended(p,'/garden-welcome.mp3');await noHint(p,'Voice end starts a fresh visual interval');
+    await p.clock.fastForward(29999);await noHint(p,'Full quiet interval after voice');await p.clock.fastForward(1);assert.equal(await hint(p),1);
+    await p.clock.fastForward(29999);assert.equal(await countVoice(p,'/garden-welcome.mp3'),1,'No repeat before full voice interval');
+    await p.clock.fastForward(1);await ended(p,'/garden-welcome.mp3',2);await noHint(p,'Second voice also resets visual interval');
+    return {visualIntervalMs:30000,voiceIntervalMs:60000,nativePlaybacks:2,motion,screenshot,narrow,screenshot320};
   });
   await check('Pointer, key, scroll and click reset the full interval; held touch stays quiet',async({p})=>{
     for(const type of ['pointerdown','keydown','scroll','click']){
-      await reset(p,type);await noHand(p,type+' hides hand');if(type==='pointerdown'){await p.clock.fastForward(60000);await noHand(p,'Held touch has no hand');await reset(p,'pointerup');}
-      await p.clock.fastForward(59999);await noHand(p,type+' resets deadline');await p.clock.fastForward(1);assert.equal(await hand(p),1,type+' can hint after 60 seconds');
+      await reset(p,type);await noHint(p,type+' hides halo');if(type==='pointerdown'){await p.clock.fastForward(30000);await noHint(p,'Held touch has no halo');await reset(p,'pointerup');}
+      await p.clock.fastForward(29999);await noHint(p,type+' resets deadline');await p.clock.fastForward(1);assert.equal(await hint(p),1,type+' can hint after 30 seconds');
     }
-    await reset(p);await p.clock.fastForward(59000);await reset(p,'scroll');await p.clock.fastForward(1001);await noHand(p,'Old deadline cancelled');await p.clock.fastForward(58999);assert.equal(await hand(p),1);return {events:['pointerdown/up','keydown','scroll','click'],midIntervalReset:true};
+    await reset(p);await p.clock.fastForward(29000);await reset(p,'scroll');await p.clock.fastForward(1001);await noHint(p,'Old deadline cancelled');await p.clock.fastForward(28999);assert.equal(await hint(p),1);return {events:['pointerdown/up','keydown','scroll','click'],midIntervalReset:true};
   },{reminders:false});
   await check('Audio modal, background and GM block hints and restart with a fresh interval',async({p})=>{
-    await reset(p);await p.clock.fastForward(60000);assert.equal(await hand(p),1);
-    await action(p,'audio-settings');await p.clock.fastForward(120000);await noHand(p,'Audio modal blocks background hand');await action(p,'close');await p.clock.fastForward(59999);await noHand(p,'Modal close has a fresh interval');await p.clock.fastForward(1);assert.equal(await hand(p),1);
-    await hidden(p,true);await p.clock.fastForward(120000);await noHand(p,'Background blocks hand');await hidden(p,false);await p.clock.fastForward(59999);await noHand(p,'Foreground has a fresh interval');await p.clock.fastForward(1);assert.equal(await hand(p),1);
-    await p.locator('.gm-launcher').evaluate(b=>b.click());await p.locator('#gm-workbench[open]').waitFor();await p.clock.fastForward(120000);await noHand(p,'GM blocks background hand');await p.locator('[data-gm-action="close"]').evaluate(b=>b.click());await p.clock.fastForward(59999);await noHand(p,'GM close has a fresh interval');await p.clock.fastForward(1);assert.equal(await hand(p),1);return {modal:true,visibilityEventControlled:true,gm:true};
+    await reset(p);await p.clock.fastForward(30000);assert.equal(await hint(p),1);
+    await action(p,'audio-settings');await p.clock.fastForward(120000);await noHint(p,'Audio modal blocks background halo');await action(p,'close');await p.clock.fastForward(29999);await noHint(p,'Modal close has a fresh interval');await p.clock.fastForward(1);assert.equal(await hint(p),1);
+    await hidden(p,true);await p.clock.fastForward(120000);await noHint(p,'Background blocks halo');await hidden(p,false);await p.clock.fastForward(29999);await noHint(p,'Foreground has a fresh interval');await p.clock.fastForward(1);assert.equal(await hint(p),1);
+    await p.locator('.gm-launcher').evaluate(b=>b.click());await p.locator('#gm-workbench[open]').waitFor();await p.clock.fastForward(120000);await noHint(p,'GM blocks background halo');await p.locator('[data-gm-action="close"]').evaluate(b=>b.click());await p.clock.fastForward(29999);await noHint(p,'GM close has a fresh interval');await p.clock.fastForward(1);assert.equal(await hint(p),1);return {modal:true,visibilityEventControlled:true,gm:true};
   },{reminders:false});
   await check('Both reward choices credit on one click and ignore double or stale clicks',async({p})=>{
     const changes=[];
     for(const [serial,choice] of [[1,'water'],[2,'shells']]){
-      await reward(p,serial);await reset(p);await p.clock.fastForward(60000);await ended(p,'/flow-choice.mp3',serial);await noHand(p,'No reward choice is preferred by a hand');
+      await reward(p,serial);await reset(p);await p.clock.fastForward(60000);await ended(p,'/flow-choice.mp3',serial);await noHint(p,'No reward choice is preferred by a halo');
       assert.equal(await p.locator('[data-primary], [data-action="confirm-reward"]').count(),0);const before=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),B);
       await p.locator(`[data-reward-choice="${choice}"]`).evaluate(b=>{window.qaStaleReward=b;b.click();b.click();});await poll(p,()=>document.querySelector('.reward-view')?.dataset.choice==='false');
       const after=await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),B);assert(after[choice]>before[choice]);assert.equal(after[choice==='water'?'shells':'water'],before[choice==='water'?'shells':'water']);assert.equal(after.rounds.find(r=>r.roundId==='qa-pending-'+serial).reward,choice);
@@ -132,15 +142,15 @@ async function check(name,fn,options){
     return {manualHelpCompleted:true,englishCompleted:played,preferences:await p.evaluate(k=>JSON.parse(localStorage.getItem(k)),PREFS),screenshot:await snapshot(p,'audio-settings-muted')};
   });
   await check('Review keeps listening and speaking equal after an idle reminder',async({p})=>{
-    await review(p);assert.equal(await countVoice(p,'/flow-review-v13.mp3'),0);assert.equal(await p.locator('[data-recall-ready] button').count(),2);await reset(p);await p.clock.fastForward(60000);await ended(p,'/garden-speak.mp3');await noHand(p,'Review never points only to the microphone');assert.equal(await p.locator('[data-primary]').count(),0);return {screenshot:await snapshot(p,'review-equal-options')};
+    await review(p);assert.equal(await countVoice(p,'/flow-review-v13.mp3'),0);assert.equal(await p.locator('[data-recall-ready] button').count(),2);await reset(p);await p.clock.fastForward(60000);await ended(p,'/garden-speak.mp3');await noHint(p,'Review never points only to the microphone');assert.equal(await p.locator('[data-primary]').count(),0);return {screenshot:await snapshot(p,'review-equal-options')};
   });
-  await check('Music switch stops and resumes native garden BGM independently of reminders',async({p})=>{
+  await check('Music switch fades native garden BGM out and in independently of reminders',async({p})=>{
     const playing=()=>[...qaIdle.active].some(a=>a.loop&&!a.paused&&a.volume>0&&a.currentSrc.endsWith('/garden-piano.mp3'));
-    await reward(p);await action(p,'choose-water');await poll(p,()=>document.querySelector('.reward-view')?.dataset.choice==='false');await action(p,'garden');await p.clock.fastForward(2500);await poll(p,playing);await action(p,'audio-settings');await action(p,'toggle-music');await action(p,'close');await p.clock.fastForward(500);assert.equal(await p.evaluate(playing),false,'Muted BGM is stopped');
-    await action(p,'audio-settings');await action(p,'toggle-reminders');await action(p,'toggle-music');await action(p,'close');await p.clock.fastForward(500);await poll(p,playing);assert.equal(await p.evaluate(k=>JSON.parse(localStorage.getItem(k)).audioControls.reminders,PREFS),false,'Re-enabling music preserves muted reminders');return {nativeBGMStopped:true,nativeBGMResumed:true,remindersRemainOff:true};
+    await reward(p);await action(p,'choose-water');await poll(p,()=>document.querySelector('.reward-view')?.dataset.choice==='false');await action(p,'garden');await p.clock.fastForward(2500);await poll(p,playing);await action(p,'audio-settings');await action(p,'toggle-music');await action(p,'close');await p.clock.fastForward(800);assert.equal(await p.evaluate(playing),false,'Muted BGM pauses after its 600 ms fade');
+    await action(p,'audio-settings');await action(p,'toggle-reminders');await action(p,'toggle-music');await action(p,'close');await p.clock.fastForward(800);await poll(p,playing);assert.equal(await p.evaluate(k=>JSON.parse(localStorage.getItem(k)).audioControls.reminders,PREFS),false,'Re-enabling music preserves muted reminders');return {nativeBGMStopped:true,nativeBGMResumed:true,remindersRemainOff:true};
   });
   await check('Synthetic recording and controlled recognition suppress all idle reminders',async({p})=>{
-    await review(p);await action(p,'record');await poll(p,()=>!!document.querySelector('.recording-indicator'));await noHand(p,'Recording has no hand');await delay(1500);await action(p,'record');await poll(p,()=>!!qaIdle.finishASR);const before=(await voices(p)).length;await p.clock.fastForward(120000);await noHand(p,'Pending recognition has no hand');assert.equal(await p.locator('[data-status="assessing"]').count(),1);assert.equal((await voices(p)).length,before,'Pending recognition has no reminder');
+    await review(p);await action(p,'record');await poll(p,()=>!!document.querySelector('.recording-indicator'));await noHint(p,'Recording has no halo');await delay(1500);await action(p,'record');await poll(p,()=>!!qaIdle.finishASR);const before=(await voices(p)).length;await p.clock.fastForward(120000);await noHint(p,'Pending recognition has no halo');assert.equal(await p.locator('[data-status="assessing"]').count(),1);assert.equal((await voices(p)).length,before,'Pending recognition has no reminder');
     await p.evaluate(()=>qaIdle.finishASR());await poll(p,()=>document.querySelector('[data-assessment]')?.dataset.status==='retry');await p.clock.fastForward(2500);await ended(p,'/garden-speech-retry.mp3');const records=await p.evaluate(()=>qaIdle.records);assert(records.length===1&&records[0].started&&records[0].stopped&&records[0].bytes>0);return {records,controlledASR:true};
   },{mic:true});
 })().catch(e=>{console.error(e);process.exitCode=1;report.fatal=e.stack;}).finally(async()=>{await browser?.close();save();});

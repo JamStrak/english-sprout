@@ -45,5 +45,5 @@ export const SOUND_EVENTS = Object.freeze([
   event('bloom','首次开花','花园','本次浇水使花朵成熟','flower-bloom',.7,3,300),
   event('flower-touch','轻触已开花植物','花园','触摸已成熟花朵','ui-select',.45,1,250),
   event('collection','打开花朵收藏','花园','打开收藏册','page-turn',.5),
-  ...[['bgm-home','首页背景音乐','首页'],['bgm-garden','花园背景音乐','花园'],['bgm-shop','商店背景音乐','商店'],['bgm-blindbox','选盲盒背景音乐','商店']].map(([id,title,module])=>({id,title,module,trigger:'页面停留时循环；语音时降低，学习/录音/后台/GM时停止',assetId:'garden-piano',volume:id==='bgm-garden'?1:.55,priority:0,cooldownMs:0,kind:'bgm'})),
+  {id:'bgm-garden',title:'花园背景音乐',module:'花园',trigger:'仅花园循环；进入淡入，离开淡出；语音时降低，录音/后台静音；GM可主动试听',assetId:'garden-piano',volume:1,priority:0,cooldownMs:0,kind:'bgm'},
 ].map(item=>Object.freeze({...item,enabled:item.id!=='record-stop'})));

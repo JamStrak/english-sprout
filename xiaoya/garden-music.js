@@ -1,5 +1,6 @@
 // A separate channel keeps the looping garden track out of narration and mic sessions.
 export const GARDEN_MUSIC_VOLUME = 0.5;
+export const GARDEN_MUSIC_FADE_MS = 600;
 export const GARDEN_MUSIC_FILE = 'xiaoya/audio/v3/garden-piano.mp3';
 export function gardenMusicSettings(value) {
   return {enabled: value?.enabled !== false, volume: typeof value?.volume === 'number' && Number.isFinite(value.volume)
@@ -43,10 +44,11 @@ export function createGardenMusic({
     if (!player) return;
     if (target === volume && !immediate) return;
     clearTimer(timer); timer = null; target = volume;
-    const from = player.volume, start = now(), duration = immediate ? 0 : ducked ? 120 : 300;
+    const from = player.volume, start = now(), duration = immediate ? 0 : active && ducked ? 120 : GARDEN_MUSIC_FADE_MS;
     function step() {
       const progress = duration ? Math.min(1, (now() - start) / duration) : 1;
-      player.volume = progress === 1 ? volume : Math.max(0, Math.min(1, from + (volume - from) * progress));
+      const eased = progress * progress * (3 - 2 * progress);
+      player.volume = progress === 1 ? volume : Math.max(0, Math.min(1, from + (volume - from) * eased));
       if (progress < 1) timer = setTimer(step, 16);
       else { timer = null; if (!active && volume === 0) player.pause(); }
     }

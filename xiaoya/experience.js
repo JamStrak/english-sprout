@@ -24,7 +24,7 @@ import {createGardenMusic,gardenMusicSettings} from './garden-music.js';
 import {createMeadowMotion} from './meadow-motion.js';
 import {soundPlayer} from './sound-player.js';
 import {soundSettings,SOUND_SETTINGS_KEY} from './sound-settings.js';
-import {createGuidanceClock} from './guidance-clock.js';
+import {createGuidanceClock,VISUAL_HINT_IDLE_MS} from './guidance-clock.js';
 import {createGuidancePolicy,audioControls} from './guidance-policy.js';
 import * as challenge from './challenges.js';
 import {flagArt,challengeFlag,challengeSteps,challengeBoard,challengePrize} from './challenge-ui.js';
@@ -36,7 +36,7 @@ let state=createState(),gardenHistory=readGardenHistory(null),prefs={mic:false},
 let storageProblem=null,rawState=null,rawGarden=null,session=null,modal=null,parentUnlocked=false;
 let page='home',toastTimer,feedback=null,feedbackTimer,restoreFocus,gmWorkbenchOpen=false;
 let guideActions=[],guideGeneration=0;
-let idleHintGeneration=0,pointerHeld=false,feedbackVoiceTimer;
+let pointerHeld=false,feedbackVoiceTimer;
 let idleReminderActive=false,automaticVoice=false;
 let practice=createPracticePlan(),speaking=false,soundGeneration=0;
 let challenges=challenge.createChallenges(),challengeReceipt=null,challengeBusy=false;
@@ -66,10 +66,12 @@ let audioActivity={playing:false,recording:false},pageSuspended=false;
 function syncGardenMusic(){
   const recording=audioActivity.recording||!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status);
   soundPlayer.setState({muted:!audioControls(prefs.audioControls).music,speech:speaking||audioActivity.playing,recording,hidden:document.hidden||pageSuspended,suspended:gmWorkbenchOpen});
-  const scene=gmWorkbenchOpen?'bgm-garden':`bgm-${page}`,binding=soundPlayer.resolve(scene),settings=gardenMusicSettings(prefs.gardenMusic);
+  // Keep one garden player/source across navigation, including while it fades out.
+  // Legacy scene bindings must never start this track outside the garden.
+  const binding=soundPlayer.resolve('bgm-garden'),settings=gardenMusicSettings(prefs.gardenMusic);
   gardenMusic.setState({...settings,file:binding?.asset?.url,volume:settings.volume*(binding?.volume||0),
-    enabled:audioControls(prefs.audioControls).music&&settings.enabled&&!!binding?.enabled,active:!pageSuspended&&!document.hidden&&!recording&&(gmWorkbenchOpen?gmMusicPreview:!!binding&&!modal&&!welcomePhase),
-    ducked:speaking||audioActivity.playing,immediate:pageSuspended||document.hidden||gmWorkbenchOpen||recording});
+    enabled:audioControls(prefs.audioControls).music&&settings.enabled&&!!binding?.enabled,active:!pageSuspended&&!document.hidden&&!recording&&(gmWorkbenchOpen?gmMusicPreview:page==='garden'&&!modal&&!welcomePhase),
+    ducked:speaking||audioActivity.playing,immediate:pageSuspended||document.hidden||recording});
 }
 // Cue narration is cancellable with the same navigation generation as the view.
 function afterCue(callback,delay=320){const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&!gmWorkbenchOpen)callback();},delay);}
@@ -91,6 +93,7 @@ try{prefs={...JSON.parse(appStorage.getItem(PREFS)||'{}'),mic:JSON.parse(appStor
 try{const raw=appStorage.getItem(PRACTICE_KEY);if(raw)practice=validatePracticePlan(JSON.parse(raw));}catch(error){storageProblem=error.message;}
 const guidancePolicy=createGuidancePolicy({storage:appStorage,returning:allRounds().length>0||practice.entries.length>0||state.evidence.length>0||prefs.shopSeen===true});
 const guidanceClock=createGuidanceClock({onDue:remindAfterIdle});
+const visualHintClock=createGuidanceClock({delay:VISUAL_HINT_IDLE_MS,onDue:()=>idleHintTarget()?.classList.toggle('is-idle-hint',true)});
 let planCache;
 function practiceToday(){const date=today();if(!planCache||planCache.practice!==practice||planCache.state!==state||planCache.gardenHistory!==gardenHistory||planCache.meadow!==meadowState||planCache.date!==date)planCache={practice,state,gardenHistory,meadow:meadowState,date,value:getPracticePlan(practice,{rounds:allRounds(),learningState:state,date})};return planCache.value;}
 async function savePractice(s){
@@ -213,9 +216,9 @@ function toast(message){clearTimeout(toastTimer);document.querySelector('.toast'
 function showError(message){openModal({type:'error',message});}
 const voice=id=>`xiaoya/audio/v3/${id}.mp3`;
 const english=s=>lessonAudio(s.event,selectedVoice);
-// A hand is a recovery hint, never a permanent instruction or a forced choice.
+// Highlight only a single clear next action after an uninterrupted idle interval.
 function idleHintTarget(){
-  if(document.hidden||modal||speaking||pointerHeld||rewardBusy||shopBusy||meadowBusy||welcomePhase||['parent','shop','blindbox'].includes(page))return null;
+  if(guidancePaused()||speaking||audioActivity.playing||audioActivity.recording||pointerHeld||rewardBusy||shopBusy||meadowBusy||welcomePhase||['parent','shop','blindbox'].includes(page))return null;
   if(session&&(session.waiting||session.recording||session.teaching||session.storyRunning||session.finishing||['preparing','assessing'].includes(session.assessment?.status)))return null;
   // A failed attempt can reasonably lead to listening, help or another try.
   if(page==='event'&&session?.phase==='request'&&(session.recallReady||session.assessment))return null;
@@ -226,29 +229,27 @@ function idleHintTarget(){
   return candidates.length===1?candidates[0]:null;
 }
 function cancelIdleHint(){
-  idleHintGeneration++;
   for(const wrap of document.querySelectorAll('.primary-wrap'))wrap.classList.toggle('is-idle-hint',false);
 }
 function guidancePaused(){return document.hidden||pageSuspended||!!modal||gmWorkbenchOpen;}
 function scheduleIdleHint(){
-  if(guidancePaused()){cancelIdleHint();guidanceClock.pause();return;}
-  if(guidanceClock.status().paused)guidanceClock.resume();else guidanceClock.schedule();
+  if(guidancePaused()){cancelIdleHint();guidanceClock.pause();visualHintClock.pause();return;}
+  for(const clock of [guidanceClock,visualHintClock]){
+    if(clock.status().paused)clock.resume();else clock.schedule();
+  }
 }
 function idleHintActivity(event){
   if(event.type==='pointerdown')pointerHeld=true;
   else if(['pointerup','pointercancel'].includes(event.type))pointerHeld=false;
   if(idleReminderActive){stopSpeech();clearGuide();idleReminderActive=false;}
-  cancelIdleHint();guidanceClock.activity();scheduleIdleHint();
+  cancelIdleHint();guidanceClock.activity();visualHintClock.activity();scheduleIdleHint();
 }
 async function remindAfterIdle(){
   if(guidancePaused()||pointerHeld||speaking||audioActivity.playing||audioActivity.recording||rewardBusy||shopBusy||meadowBusy||welcomePhase)return;
   if(session&&(session.waiting||session.recording||session.teaching||session.storyRunning||session.finishing||['preparing','assessing'].includes(session.assessment?.status)))return;
-  const generation=uiGeneration;
   idleReminderActive=true;
   try{await contextualReminder({idle:true});}
   finally{idleReminderActive=false;}
-  // Input/navigation invalidates the pending reminder; never point at a stale target.
-  if(generation===uiGeneration&&guidanceClock.status().pending&&!guidancePaused())idleHintTarget()?.classList.toggle('is-idle-hint',true);
 }
 function contextualReminder(options={}){
   if(page==='parent')return;
@@ -290,12 +291,12 @@ async function sound(file,targets=[],{automatic=false,fadePrevious=false,manual=
     }
     return await audio.playSound(file);
   }catch(error){if(!(automatic&&error.name==='NotAllowedError'))toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}
-  finally{if(playback===soundGeneration){speaking=false;automaticVoice=false;effects.setSilent(false);syncGardenMusic();if(!idle)guidanceClock.activity();}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}
+  finally{if(playback===soundGeneration){speaking=false;automaticVoice=false;effects.setSilent(false);syncGardenMusic();if(!idle)guidanceClock.activity();visualHintClock.activity();}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}
 }
 const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],next:['next-event']};
 const narrate=(id,options={})=>sound(voice(`garden-${id}`),guideTargets[id]||[],options);
 function button(action,label,glyph,extra=''){return `<button class="icon-button" data-action="${action}" aria-label="${esc(label)}" ${extra}>${icon(glyph)}</button>`;}
-function primary(action,label,body,extra=''){return `<div class="primary-wrap"><button class="primary-orb" data-primary data-action="${action}" aria-label="${esc(label)}" ${extra}>${body}</button><span class="tap-cue" aria-hidden="true">${icon('tap',36)}</span></div>`;}
+function primary(action,label,body,extra=''){return `<div class="primary-wrap"><button class="primary-orb" data-primary data-action="${action}" aria-label="${esc(label)}" ${extra}>${body}</button></div>`;}
 function header(){
   const localHelp=page==='event'&&['story','request'].includes(session?.phase);
   const controls=button('audio-settings','声音设置','sound')+(page==='parent'?'':`${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}`);
@@ -306,7 +307,7 @@ function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firs
 function nextStory(){return storyFor(nextPractice().eventId);}
 function stopSession(){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
 function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);soundPlayer.play(next==='shop'?'shop-open':next==='challenges'?'challenge-start':'navigate');}
-function openModal(value){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;guidanceClock.pause();renderModal();soundPlayer.play(value.type==='collection'?'collection':value.type==='error'?'blocked':'panel-open');setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
+function openModal(value){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;guidanceClock.pause();visualHintClock.pause();renderModal();soundPlayer.play(value.type==='collection'?'collection':value.type==='error'?'blocked':'panel-open');setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
 function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();restoreFocus?.focus?.();soundPlayer.play('panel-close');}
 function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback();openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function homeView(){
@@ -723,7 +724,7 @@ function toggleAudioControl(key){
 }
 function exportState(){const content=storageProblem?{problem:storageProblem,rawState:appStorage.getItem(STORAGE_KEY),rawGarden:appStorage.getItem(LEGACY_GARDEN_KEY),rawMeadow:appStorage.getItem(meadow.MEADOW_KEY),rawPractice:appStorage.getItem(PRACTICE_KEY),rawChallenges:appStorage.getItem(challenge.CHALLENGE_KEY)}:{product:'xiaoya-english',exported:today(),state,garden:gardenHistory.archive,rawGarden,meadow:meadowState,practice,challenges,gardenVariant:'b',preferences:prefs,voice:selectedVoice};if(GM_SANDBOX)content.testing={mode:'gm-simulation',realLearningEvidence:false};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${GM_SANDBOX?'GM模拟记录-':'小芽英语-'}${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 async function recognition(){if(GM_SANDBOX)return toast('免录音测试不会下载识别模型；退出 GM 后可测试真实识别。');const target=document.querySelector('#model-status');if(target)target.textContent='准备本机识别资源，可以继续浏览，请保持本页打开。';try{await audio.prepareRecognition(value=>{const el=document.querySelector('#model-status');if(el)el.textContent=typeof value==='string'?value:'正在准备…';});toast('本机识别已准备好。');if(page==='parent')render();}catch{toast('识别资源没有准备完成，可以重试。');}}
-const actions={'audio-settings':()=>openModal({type:'audio'}),'toggle-music':()=>toggleAudioControl('music'),'toggle-reminders':()=>toggleAudioControl('reminders'),'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro'),[],{manual:true}),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome'),[],{manual:true}),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':()=>blindboxVoice({manual:true}),'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>chooseReward('shells'),'choose-water':()=>chooseReward('water'),'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose'],{manual:true}),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose'],{manual:true}),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':()=>gardenGuide({manual:true}),'reward-voice':()=>rewardVoice({manual:true}),'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&modal?.type==='collection'&&!document.hidden)sound(voice('meadow-collection'),[],{manual:true});});},'assessment-voice':()=>assessmentVoice({manual:true}),'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;syncGardenMusic();scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>session&&['story','request'].includes(session.phase)?teach():contextualReminder({manual:true}),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
+const actions={'audio-settings':()=>openModal({type:'audio'}),'toggle-music':()=>toggleAudioControl('music'),'toggle-reminders':()=>toggleAudioControl('reminders'),'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro'),[],{manual:true}),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome'),[],{manual:true}),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':()=>blindboxVoice({manual:true}),'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>chooseReward('shells'),'choose-water':()=>chooseReward('water'),'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose'],{manual:true}),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose'],{manual:true}),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':()=>gardenGuide({manual:true}),'reward-voice':()=>rewardVoice({manual:true}),'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&modal?.type==='collection'&&!document.hidden)sound(voice('meadow-collection'),[],{manual:true});});},'assessment-voice':()=>assessmentVoice({manual:true}),'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;visualHintClock.activity();syncGardenMusic();scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>session&&['story','request'].includes(session.phase)?teach():contextualReminder({manual:true}),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
   'gate-submit':()=>{if(modal?.type!=='gate')return;if(Number(document.querySelector('#parent-answer')?.value)===modal.a+modal.b){const callback=modal.callback;parentUnlocked=true;closeModal({keepMicIntent:true});callback();}else toast('请由陪伴的大人填写计算结果。');},'mic-settings':()=>openModal({type:'mic'}),'allow-mic':()=>{if(savePrefs({...prefs,mic:true})){const s=session,resume=s?.pendingMicIntent;closeModal();if(resume&&session===s&&s.phase==='request')return record();}},'disable-mic':()=>{if(savePrefs({...prefs,mic:false})){if(session){session.pendingMicIntent=false;cancelAttempt(session);}closeModal();}},recognition,export:exportState};
 app.addEventListener('click',event=>{const summary=event.target.closest('summary');if(summary){soundPlayer.play(summary.parentElement?.open?'panel-close':'panel-open');return;}const b=event.target.closest('button');if(!b||b.disabled)return;try{
   cancelFeedbackVoice();if(gardenIsActive()){clearGuide();stopSpeech();scheduleGardenReminder();}
@@ -749,7 +750,7 @@ document.addEventListener('keydown',event=>{if(gmWorkbenchOpen||!modal)return;if
 for(const type of ['pointerdown','keydown'])document.addEventListener(type,()=>gardenMusic.retry(),{capture:true,passive:true});
 for(const type of ['pointerdown','pointerup','pointercancel','keydown','scroll','click'])document.addEventListener(type,idleHintActivity,{capture:true,passive:true});
 for(const type of ['pointerdown','keydown','scroll'])app.addEventListener(type,()=>{if(gardenIsActive()){cancelFeedbackVoice();scheduleGardenReminder();}},{capture:true,passive:true});
-function suspend(){guidanceClock.pause();meadowMotion.cancel();pageSuspended=true;soundPlayer.setState({hidden:true});cancelWelcomeGift();gardenMusic.setState({active:false,immediate:true});cancelWelcomeGreeting();cancelIdleHint();pointerHeld=false;uiGeneration++;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
+function suspend(){guidanceClock.pause();visualHintClock.pause();meadowMotion.cancel();pageSuspended=true;soundPlayer.setState({hidden:true});cancelWelcomeGift();gardenMusic.setState({active:false,immediate:true});cancelWelcomeGreeting();cancelIdleHint();pointerHeld=false;uiGeneration++;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
 function resume(){
   pageSuspended=false;syncGardenMusic();scheduleIdleHint();
   if(gmWorkbenchOpen)return;
@@ -771,7 +772,7 @@ window.addEventListener('xiaoya:tuning-restored',refreshTuning);
 window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(event.key===PREFS){try{prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');if(!audioControls(prefs.audioControls).reminders&&automaticVoice)stopSpeech({fade:true});syncGardenMusic();if(modal?.type==='audio')renderModal();}catch{}return;}if(event.key===ECONOMY_SETTINGS_KEY){refreshTuning();return;}if(event.key===SOUND_SETTINGS_KEY||event.key===null){soundSettings.reload();if(event.key===SOUND_SETTINGS_KEY)return;}if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
 const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{if(meadowBusy)return;cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event&&!(meadowTool==='can'&&target?.closest?.('[data-meadow-plant],[data-water-plant]'))){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
 
-audio.onAudioActivity(value=>{const wasRecording=audioActivity.recording;audioActivity=value;syncGardenMusic();if(wasRecording&&!value.recording)guidanceClock.activity();});
+audio.onAudioActivity(value=>{const wasRecording=audioActivity.recording;audioActivity=value;syncGardenMusic();if(wasRecording&&!value.recording){guidanceClock.activity();visualHintClock.activity();}});
 app.addEventListener('change',event=>{if(event.target.matches('input[type=checkbox]'))soundPlayer.play('select');});
 
 // Internal controls use the real screens and transaction models. Learning and
@@ -780,7 +781,7 @@ app.addEventListener('change',event=>{if(event.target.matches('input[type=checkb
 function requireGmSandbox(){if(!GM_SANDBOX)throw new Error('请先进入免录音测试，再修改测试状态。');}
 export const gmBridge=INTERNAL_BUILD?Object.freeze({
   pause(){
-    cancelWelcomeGift();cancelWelcomeGreeting();gmMusicPreview=false;gmWorkbenchOpen=true;guidanceClock.pause();uiGeneration++;cancelIdleHint();cancelGardenReminder();cancelFeedbackVoice();
+    cancelWelcomeGift();cancelWelcomeGreeting();gmMusicPreview=false;gmWorkbenchOpen=true;guidanceClock.pause();visualHintClock.pause();uiGeneration++;cancelIdleHint();cancelGardenReminder();cancelFeedbackVoice();
     stopSpeech();meadowMotion.cancel();effects.cancel();cancelMeadowDrag?.();audio.releaseAudioSession();
     if(session){
       cancelStory(session);

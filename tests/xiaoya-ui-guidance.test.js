@@ -23,7 +23,7 @@ import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
 import { createWelcomeGreetings, WELCOME_GREETINGS_KEY } from '../xiaoya/welcome-greetings.js';
-import { createGuidanceClock, GUIDANCE_IDLE_MS } from '../xiaoya/guidance-clock.js';
+import { createGuidanceClock, GUIDANCE_IDLE_MS, VISUAL_HINT_IDLE_MS } from '../xiaoya/guidance-clock.js';
 import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/guidance-policy.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
@@ -99,7 +99,7 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
     location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},performance:{now:()=>now},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createMeadowMotion,createWelcomeGreetings,audioControls,createGuidancePolicy,GUIDANCE_KEY,GUIDANCE_IDLE_MS,
+  Object.assign(sandbox,storyPictures,{createMeadowMotion,createWelcomeGreetings,audioControls,createGuidancePolicy,GUIDANCE_KEY,GUIDANCE_IDLE_MS,VISUAL_HINT_IDLE_MS,
     createGuidanceClock:options=>createGuidanceClock({...options,now:()=>now,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
     createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
@@ -606,56 +606,56 @@ test('assessment completion uses a gift while parent checkups keep their save ch
   f.setSession({phase:'resolved',assessmentMode:true});assert.match(f.button('finish').body,/data-icon="check"/);
 });
 
-test('the hand waits 60 idle seconds and the contextual reminder before pointing at the sole primary action',async()=>{
+test('the button halo waits 30 idle seconds before highlighting the sole primary action',async()=>{
   for(const [state,action] of [[null,'next-event'],[{},'record'],[{phase:'story',storyReady:true},'story-continue'],[{phase:'resolved'},'finish']]){
     const f=fixture();await finishHomeWelcome(f);if(state)f.setSession(state);
     assert.equal(f.primaryWraps().length,1);assert.equal(f.idleHintTarget(),f.primaryWraps()[0]);
-    f.dispatch('click');assert.deepEqual(f.hinted(),[]);f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],action);
-    f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),[action]);
+    f.dispatch('click');assert.deepEqual(f.hinted(),[]);f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],action);
+    f.advance(1);await flush();assert.deepEqual(f.hinted(),[action]);
   }
 });
 
-test('document activity removes a visible hand and restarts its full idle interval',async()=>{
+test('document activity removes a visible button halo and restarts its full idle interval',async()=>{
   for(const type of ['pointerup','pointercancel','keydown','scroll','click']){
-    const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();assert.deepEqual(f.hinted(),['next-event']);
     const registered=f.documentListeners.get(type).find(entry=>entry.callback===f.idleHintActivity);
     assert.ok(registered,`${type} is observed`);assert.equal(registered.options.capture,true);assert.equal(registered.options.passive,true);
     f.dispatch(type);assert.deepEqual(f.hinted(),[],type);
-    f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],type);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event'],type);
+    f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],type);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event'],type);
   }
 });
 
-test('a held pointer suppresses the hand across repaint until release or cancellation',async()=>{
+test('a held pointer suppresses the button halo across repaint until release or cancellation',async()=>{
   for(const release of ['pointerup','pointercancel']){
-    const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
-    assert.equal(f.idleHintTarget(),null);f.render();f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
-    f.dispatch(release);f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
+    assert.equal(f.idleHintTarget(),null);f.render();f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
+    f.dispatch(release);f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
   }
 });
 
-test('playback cancels the hand and starts a new idle interval only after the voice ends',async()=>{
-  const f=fixture();f.setSession();f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['record']);
+test('playback cancels the button halo and starts a new idle interval only after the voice ends',async()=>{
+  const f=fixture();f.setSession();f.advance(VISUAL_HINT_IDLE_MS);await flush();assert.deepEqual(f.hinted(),['record']);
   const pending=f.narrate('speak',{manual:true});assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
-  f.render();f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
+  f.render();f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
   f.sounds.at(-1).resolve(true);await pending;assert.deepEqual(f.hinted(),[]);
-  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['record']);
+  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['record']);
 });
 
-test('the hand stays quiet during recording, recognition, teaching and unresolved attempts',()=>{
+test('the button halo stays quiet during recording, recognition, teaching and unresolved attempts',()=>{
   for(const state of [{waiting:true},{recording:true},{teaching:true},{storyRunning:true},{phase:'resolved',finishing:true},
     ...['preparing','assessing','retry','silence','unavailable'].map(status=>({assessment:{status,stars:0}}))]){
     const f=fixture();f.setSession(state);
-    assert.equal(f.idleHintTarget(),null,JSON.stringify(state));f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],JSON.stringify(state));
+    assert.equal(f.idleHintTarget(),null,JSON.stringify(state));f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[],JSON.stringify(state));
   }
 });
 
-test('modal and background transitions cancel the hand; returning starts a fresh interval',async()=>{
-  const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
-  f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
+test('modal and background transitions cancel the button halo; returning starts a fresh interval',async()=>{
+  const f=fixture();await finishHomeWelcome(f);f.advance(VISUAL_HINT_IDLE_MS);await flush();f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
+  f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
   f.document.hidden=true;f.dispatch('visibilitychange');assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
-  f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
-  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
-  for(const page of ['parent','shop']){f.setPage(page);f.advance(GUIDANCE_IDLE_MS*2);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[],page);}
+  f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
+  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
+  for(const page of ['parent','shop']){f.setPage(page);f.advance(VISUAL_HINT_IDLE_MS*2);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[],page);}
 });
 
 test('recall and reward choices never favor an option; one tap collects the chosen resource',async()=>{
@@ -705,28 +705,28 @@ test('leaving or backgrounding after a one-tap claim cannot resurrect its old re
   }
 });
 
-test('disabled, busy, hidden or competing primary buttons cannot receive an idle hand',async()=>{
+test('disabled, busy, hidden or competing primary buttons cannot receive an idle button halo',async()=>{
   for(const unavailable of ['disabled','busy','hidden','competing']){
     const f=fixture();await finishHomeWelcome(f);const button=f.button('next-event');
     if(unavailable==='disabled')button.disabled=true;
     if(unavailable==='busy')button.attrs['aria-busy']='true';
     if(unavailable==='hidden')button.visible=false;
     if(unavailable==='competing')f.primaryWraps().push({...f.primaryWraps()[0]});
-    f.scheduleIdleHint();assert.equal(f.idleHintTarget(),null,unavailable);f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],unavailable);
+    f.scheduleIdleHint();assert.equal(f.idleHintTarget(),null,unavailable);f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[],unavailable);
   }
 });
 
 test('a cancelled timer cannot shorten the new interval even when its target is unchanged',async()=>{
   const f=fixture();await finishHomeWelcome(f);
-  const old=[...f.timers.values()].find(timer=>timer.delay===GUIDANCE_IDLE_MS);assert.ok(old);
+  const old=[...f.timers.values()].find(timer=>timer.delay===VISUAL_HINT_IDLE_MS);assert.ok(old);
   f.advance(5000);f.dispatch('keydown');old.fn();assert.deepEqual(f.hinted(),[]);
-  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
+  f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await flush();assert.deepEqual(f.hinted(),['next-event']);
 });
 
-test('late timers cannot reveal a hand on an old screen or contaminate a replacement screen',async()=>{
+test('late timers cannot reveal a button halo on an old screen or contaminate a replacement screen',async()=>{
   for(const change of ['repaint','navigate','modal','hidden','recording']){
     const f=fixture();await finishHomeWelcome(f);
-    const s=f.setSession(),oldWrap=f.primaryWraps()[0],oldEntry=[...f.timers].find(([,timer])=>timer.delay===GUIDANCE_IDLE_MS);
+    const s=f.setSession(),oldWrap=f.primaryWraps()[0],oldEntry=[...f.timers].find(([,timer])=>timer.delay===VISUAL_HINT_IDLE_MS);
     assert.ok(oldEntry);const [oldId,old]=oldEntry;
     if(change==='repaint')f.render();
     if(change==='navigate')f.navigate('home');
@@ -735,7 +735,7 @@ test('late timers cannot reveal a hand on an old screen or contaminate a replace
     if(change==='recording')s.recording=true;
     f.timers.delete(oldId);old.fn();assert.equal(oldWrap.classList.contains('is-idle-hint'),false,change);assert.deepEqual(f.hinted(),[],change);
     if(['repaint','navigate'].includes(change)){
-      f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],change);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),[change==='navigate'?'next-event':'record']);
-    }else{f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],change);}
+      f.advance(VISUAL_HINT_IDLE_MS-1);assert.deepEqual(f.hinted(),[],change);f.advance(1);await flush();assert.deepEqual(f.hinted(),[change==='navigate'?'next-event':'record']);
+    }else{f.advance(VISUAL_HINT_IDLE_MS*2);assert.deepEqual(f.hinted(),[],change);}
   }
 });

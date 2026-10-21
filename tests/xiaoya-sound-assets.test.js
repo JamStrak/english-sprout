@@ -53,8 +53,8 @@ test('all 17 selected Soundbox SFX retain reviewed CC0 provenance and exact outp
   assert.doesNotMatch(JSON.stringify(sources), /[A-Z]:\\|127\.0\.0\.1|localhost|learning-record|recording/i, 'Published provenance must not leak local paths or records');
 });
 
-test('all 34 usage slots resolve local static audio and preserve recording-safe defaults', () => {
-  assert.equal(SOUND_EVENTS.length, 34);
+test('all 31 usage slots resolve local static audio and preserve recording-safe defaults', () => {
+  assert.equal(SOUND_EVENTS.length, 31);
   assert.equal(new Set(SOUND_EVENTS.map(event => event.id)).size, SOUND_EVENTS.length);
   const assets = new Map(SOUND_ASSETS.map(asset => [asset.id, asset]));
   const base = new URL('https://example.test/nested/course/');

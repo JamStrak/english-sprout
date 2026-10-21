@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语启蒙正式版 v0.25.0。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为入口，历次证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语启蒙正式版 v0.25.1。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为入口，历次证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -34,9 +34,9 @@
 | 自由花园画面及触摸 | `meadow-ui.js`：`meadowView`、`bindMeadowInteractions`、`layoutMeadowWatering`；`meadow-art.js`、`meadow-hit-shapes.js`、`meadow.css` | 根点、透明像素命中、水滴与对应植物、逐滴成长；不是只改 CSS 视觉尺寸 |
 | 三种示范音色 | `voices.js`：`VOICES`、`readVoice`、`saveVoice`、`lessonAudio` | Aiden / Ryan / Pip 使用同一学习进度；切声音不能重复发奖 |
 | 播放、录音、评分 | `audio.js`：`playSound`、`prepareRecording`、`beginRecording`、`finishRecording`、`replayClip`、`recognize`；`speech-local.js`、`speech-worker.js` | 真正录音就绪后才提示开口；停止/取消生命周期与临时音频清理 |
-| 引导与反馈 | `guidance-clock.js`：`createGuidanceClock`、`GUIDANCE_IDLE_MS`；`guidance-policy.js`：`createGuidancePolicy`；`experience.js`：`scheduleIdleHint`、`sound`；`paper.css` | 统一 60 秒空闲时钟，新手首会话每情境一次；提醒结束再计满；交互重置，弹窗/后台/GM 暂停，录音/忙碌不催促；纸艺手仅唯一推荐动作时出现 |
-| 页面背景音乐 | `garden-music.js`：`createGardenMusic`、`gardenMusicSettings`、`gardenMusicGain`；`experience.js`：`syncGardenMusic`、`gmBridge.musicSettings/setMusicSettings/previewMusic` | 首页、花园、商店和选盲盒 4 个使用点复用原钢琴；总音量默认 50%，乘使用点音量后使用平方增益，语音压至 `min(0.12, gain*0.24)`。循环通道不随浇水重建；学习无 BGM，录音/后台/GM 时停止，GM 显式试听除外。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json` |
-| 交互声音与配置 | `sound-catalog.js`：`SOUND_ASSETS`、`SOUND_EVENTS`；`sound-settings.js`：`createSoundSettingsStore`；`sound-player.js`：`createSoundPlayer`；`experience.js`、`feedback.js` | 17 段声匣短音效，30 个交互＋4 个 BGM 使用点；语音/回听/录音优先，单个 SFX 通道按优先级和冷却间隔播放。默认录音启动无声、结束提示禁用。完整映射见 [声音设计](XIAOYA_SOUND_DESIGN.md)，来源见 [筛选记录](XIAOYA_SOUND_SELECTION.md) |
+| 引导与反馈 | `guidance-clock.js`：`createGuidanceClock`、`GUIDANCE_IDLE_MS`、`VISUAL_HINT_IDLE_MS`；`guidance-policy.js`：`createGuidancePolicy`；`experience.js`：`scheduleIdleHint`、`sound`；`paper.css` | 同一调度工具、独立视觉 30 秒和语音 60 秒实例；新手首会话每情境一次；提醒结束再计满；交互重置，弹窗/后台/GM 暂停，录音/忙碌不催促；按钮光圈仅唯一推荐动作时出现 |
+| 页面背景音乐 | `garden-music.js`：`createGardenMusic`、`gardenMusicSettings`、`gardenMusicGain`；`experience.js`：`syncGardenMusic`、`gmBridge.musicSettings/setMusicSettings/previewMusic` | 只保留 `bgm-garden`，仅 `page===garden` 自动播放原钢琴；总音量默认 50%，乘使用点音量后使用平方增益，语音压至 `min(0.12, gain*0.24)`。循环通道不随浇水或页面切换重建；正常导航、弹窗和 GM 进出用 600ms smoothstep 淡入淡出，从当前音量续接，淡出至零才暂停。GM 仅用户主动试听时可在非花园播放；录音/后台仍立即静音。旧首页/商店/盲盒绑定由设置归一化忽略，不改儿童存档。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json` |
+| 交互声音与配置 | `sound-catalog.js`：`SOUND_ASSETS`、`SOUND_EVENTS`；`sound-settings.js`：`createSoundSettingsStore`；`sound-player.js`：`createSoundPlayer`；`experience.js`、`feedback.js` | 17 段声匣短音效，30 个交互＋1 个 BGM 使用点；语音/回听/录音优先，单个 SFX 通道按优先级和冷却间隔播放。默认录音启动无声、结束提示禁用。完整映射见 [声音设计](XIAOYA_SOUND_DESIGN.md)，来源见 [筛选记录](XIAOYA_SOUND_SELECTION.md) |
 | GM 音效管理 | `gm-sounds.js`：`createSoundWorkbench`；`gm.js` | 按使用点查询、试听、禁用、解绑、替换、上传、恢复和导出；单文件 2 MiB、含 Base64 的总配置 5 MiB。修改不写学习或奖励，模拟模式只写内存；公开包排除管理面板，保留正常播放模块 |
 | GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 八页：课程速查、声音库、图片库、背景音乐、音效管理、花朵成长、数值与备份、流程测试；公开包物理排除、内存存档隔离、模拟标记、真实儿童记录不变 |
 | GM 花朵成长 | `gm-growth.js`、`growth-core.js`、`growth-motion.js`、`growth-settings.js`、`growth-catalog.js` | 审核目录有 50 花 × 5 阶段＋18 种子，其中 21 花已用于实际挑战，29 花仍为候选；审核默认 10 水、40/55/70/85/100%，逐滴插值；全画布根点 `(192,451)` 固定，不裁切。六项统一 motion 应用于实际花园，审核水数、阶段比例和单花覆盖仍只影响预览，不写儿童账本 |
@@ -61,7 +61,7 @@
 | `xiaoya-english:welcome-greetings:v1` | `welcome-greetings.js`，schema 1 的日期、当日语音 ID、剩余轮换列表；只影响欢迎语，不是奖励凭据。经 appStorage 隔离 GM；存储失败回退内存，不阻塞学习 |
 | `xiaoya-english:preferences:v1` | `experience.js`，麦克风许可意愿、引导、`audioControls:{music,reminders}`（均默认 true）及 `gardenMusic:{enabled,volume}`；缺失音乐偏好默认开启/0.5，数值夹到 0–1。GM 普通内测允许持久化此偏好，模拟模式通过 `appStorage` 只写内存，不覆盖真实设置 |
 | `xiaoya-english:guidance:v1` | `guidance-policy.js`，访问与已讲过的操作情境；旧学习/练习/商店记录识别回访，不改学习证据。首次会话各情境一次，之后只在闲置或主动求助时播放；通过 appStorage 隔离 |
-| `xiaoya-english:sounds:v1` | `sound-settings.js` 经 appStorage 保存音效总开关/音量、34 个使用点的素材绑定/开关/音量及上传音频；默认总音量 0.65，BGM 总音量仍在 preferences。单文件 2 MiB，UTF-8 序列化配置 5 MiB；失败保留最后有效设置。上传仅内嵌音频，不接受远程 URL；普通模式留当前浏览器，GM 沙盒刷新重置 |
+| `xiaoya-english:sounds:v1` | `sound-settings.js` 经 appStorage 保存音效总开关/音量、31 个使用点的素材绑定/开关/音量及上传音频；默认总音量 0.65，BGM 总音量仍在 preferences。单文件 2 MiB，UTF-8 序列化配置 5 MiB；失败保留最后有效设置。上传仅内嵌音频，不接受远程 URL；普通模式留当前浏览器，GM 沙盒刷新重置 |
 | `xiaoya-english:growth-settings:v1` | `growth-settings.js` 经 appStorage 保存；schema `xiaoya-growth-settings/v1`，releaseId `v09-growth-complete`，统一 defaults 与稳定花 ID 的 overrides；新增顶层 motion，旧 v1 设置自动补默认值。动效范围：duration 700–2400ms、sway 0–18°、flex 0–100%、bounce 0–24%、crossfade 120–600ms（最多总时长一半）、particles 0–100%。总水量 4–50、五阶段比例 15–150%；GM 沙盒只写内存。无效输入不保存，写失败明确提示并支持重试/导出；只读打开不覆盖损坏数据 |
 | `xiaoya-english:economy-settings:v1` | `economy-settings.js` 经 appStorage 保存 11 个平面数值：普通/首次/挑战的贝壳与水奖励、盲盒价、普通/巨型水数、巨型概率和倍率。奖励 0–1000 整数，盲盒价 1–1000 整数，水数 4–50 整数，概率 0–1，倍率 1–4；保存后派发 `economy-settings-changed` |
 | `xiaoya-english:garden-variant:v1` | 旧 A/B 偏好键，当前忽略且不再写入；旧 URL `garden=a` 也不能进入 A |
@@ -69,7 +69,7 @@
 
 ### 必须保留的不变量
 
-- **提示使用同一空闲时钟。** `schedule()` 不因 render 顺延，`activity()` 重新计时；后台/弹窗/GM 暂停，恢复给足 60 秒。异步提醒完成后重新计满，代际标记阻止已取消定时器恢复旧任务；按住指针、播放、录音及忙碌事务时不提示。操作语音的新手策略与手势显示分开，奖励二选一不替孩子指向其中一个。
+- **视觉与语音复用调度工具、分开计时。** `visualHintClock` 为 30 秒，`guidanceClock` 语音仍为 60 秒；`schedule()` 不因 render 顺延，交互对两者调用 `activity()`。后台/弹窗/GM 暂停，恢复后给足各自间隔；语音完成后视觉也重新等 30 秒。代际标记阻止已取消定时器恢复旧任务；按住指针、播放、录音及忙碌事务时不提示。操作语音的新手策略与光圈显示分开，奖励二选一不替孩子指向其中一个。光圈挂在按钮伪元素上，继承按钮圆角且不接收指针事件；不再生成 `.tap-cue`。
 - **声音偏好与配置分离。** `audioControls.music` 是 SFX/BGM 总门控，关闭时也取消延迟解码和 GM 音效预览；`reminders` 抑制自动人声，手动示范和帮助绕过。关闭后不擦除已调音量或音效绑定；个人偏好不在四类调参备份中。
 - **二选一直接领取。** `chooseReward` 校验当前页、弹窗、busy 与待领奖轮次后直接调用领取；先保存再展示到账，处理中不接受第二次或旧 DOM 点击。返回花园图标只负责导航，不能再充当确认。
 
@@ -159,7 +159,7 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`art-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。新产品模块清单包含 `garden-history.js`、`sound-catalog.js`、`sound-settings.js`、`sound-player.js`、`economy-settings.js`、`challenge-flowers.js`；`gm-sounds.js`、`gm-economy.js`、`tuning-backup.js` 等工作台模块仅在内测列表。不再打包旧 `garden.js` 与 `story-art.js`。`public/xiaoya/sfx/` 的 MP3 复制到输出 `sfx/` 并进入音频清单，`SOURCES.json` 同步复制但不算音频条目。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.25.0 的内测、公开构建指纹以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.25.1 的内测、公开构建指纹以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
@@ -214,7 +214,7 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-v0.25.0 的实际验证范围、结果和构建哈希以 [当前状态](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为准。挑战浏览器使用模拟识别与真实预制语音，不能代替实体麦克风和真实儿童验收。声音资产的来源、文件哈希、解码、时长和静态路径验证不等于人工听感验收；实体设备、扬声器音量和儿童使用时的舒适度仍待用户验收。
+v0.25.1 的实际验证范围、结果和构建哈希以 [当前状态](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为准。挑战浏览器使用模拟识别与真实预制语音，不能代替实体麦克风和真实儿童验收。声音资产的来源、文件哈希、解码、时长和静态路径验证不等于人工听感验收；实体设备、扬声器音量和儿童使用时的舒适度仍待用户验收。
 
 历史 v0.22.1：Node 全量单测 **786/786**；欢迎礼物浏览器 **14/14**、GM **10/10**、公开排除 **1/1**、[旧产品浏览器](UI_QA_xiaoya-v0221-legacy.md) **36/36**。两渠道构建通过，最终 dist 为内测。覆盖原生语音、单击领取、原地揭晓及自动淡出、背景不可操作、刷新/双标签防重、存储失败重试、后台取消、GM 沙盒隔离和桌面/320px/横屏布局；截图已查看。该轮未改启动器或媒体文件，未重跑 Python 启动器、完整离线下载、成长动效或独立 BGM 全套。这些不是 v0.23.0 重跑结果，详细证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
 

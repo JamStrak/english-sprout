@@ -25,7 +25,7 @@ import * as matcher from '../src/speech-match.js';
 import {prepareSamples} from '../xiaoya/speech-signal.js';
 import {PHRASE_PACK_V015_EVENT_IDS} from '../xiaoya/phrase-pack-v015.js';
 import {createWelcomeGreetings} from '../xiaoya/welcome-greetings.js';
-import {createGuidanceClock} from '../xiaoya/guidance-clock.js';
+import {createGuidanceClock,VISUAL_HINT_IDLE_MS} from '../xiaoya/guidance-clock.js';
 import {createGuidancePolicy,audioControls} from '../xiaoya/guidance-policy.js';
 
 const added = PHRASE_PACK_V015_EVENT_IDS.map(id => content.EVENTS.find(event => event.id === id));
@@ -73,7 +73,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     beginRecording:async () => true, finishRecording() {}, replayClip:async () => true};
   const soundPlayer = {play:async () => true,stop() {},setState() {},status:() => ({id:null}),resolve:() => null};
   const soundSettings = {subscribe:() => () => {},reload() {}};
-  const sandbox = {createGuidanceClock:options=>createGuidanceClock({...options,setTimer:(...args)=>sandbox.setTimeout(...args),clearTimer:id=>sandbox.clearTimeout(id)}),createGuidancePolicy,audioControls,getEconomySettings:()=>createEconomySettingsStore({storage:localStorage}).load(),ECONOMY_SETTINGS_KEY,soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
+  const sandbox = {VISUAL_HINT_IDLE_MS,createGuidanceClock:options=>createGuidanceClock({...options,setTimer:(...args)=>sandbox.setTimeout(...args),clearTimer:id=>sandbox.clearTimeout(id)}),createGuidancePolicy,audioControls,getEconomySettings:()=>createEconomySettingsStore({storage:localStorage}).load(),ECONOMY_SETTINGS_KEY,soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
