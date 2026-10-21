@@ -29,6 +29,7 @@
 | [花园 A/B 初始计划](../design/xiaoya-garden-plan.md) | 解释自由播种、巨型花、蝴蝶结设计起源；数值已迭代 |
 | [v0.12 经济方案](../design/xiaoya-economy-v012.md) | 商店与保留位来源；旧 5 水日奖已被后版替代 |
 | [v0.13 挑战方案](../design/xiaoya-challenges-v013.md) | 挑战规则与阶段奖励来源；原 24 句/6 组已扩为 84 句/21 组 |
+| [挑战目标花 r01](../design/xiaoya-challenge-flowers-r01.md) | 2026-10-21 新确认方向与 21 组候选花单；资源制作、奖励迁移待实现，不代表当前已上线 |
 | [告别漫画试验](../design/xiaoya-goodbye-comic/README.md) | 最早漫画表达试验；不要求新课程重复四格 |
 | [花园漫画包](../design/xiaoya-garden-comics/README.md) | 历史图包与接入依据 |
 | [纸艺 v0.9](../design/xiaoya-paper-v09/ART_DIRECTION.md) · [纸艺 v0.10](../design/xiaoya-paper-v010/ART_DIRECTION.md) | 已用素材风格来源与版本，按最新资源清单选择 |
