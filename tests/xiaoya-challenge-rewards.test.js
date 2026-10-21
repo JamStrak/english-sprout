@@ -31,7 +31,7 @@ function previousSave() {
 test('v2 migration preserves the exact wallet, positions, reservation and pending five-water entitlement',()=>{
   const source=freeze(previousSave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,3);
+  assert.equal(migrated.schemaVersion,4);
   for(const key of ['shells','water','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop'])
     assert.deepEqual(migrated[key],source[key],key);
   assert.equal(migrated.previousRoundCount,4);

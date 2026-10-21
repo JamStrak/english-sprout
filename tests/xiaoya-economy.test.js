@@ -27,7 +27,7 @@ function legacy() {
 test('schema1 migration preserves balances, planted positions, pending seed and consumed round IDs',()=>{
   const source=freeze(legacy()),before=clone(source);
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,3);
+  assert.equal(migrated.schemaVersion,4);
   assert.deepEqual([migrated.shells,migrated.water],[3,11]);
   assert.deepEqual(migrated.plants,source.plants);assert.deepEqual(migrated.pendingSeed,source.pendingSeed);
   assert.deepEqual(migrated.legacy,source);assert.notStrictEqual(migrated.legacy,source);
@@ -54,7 +54,7 @@ test('all model actions accept legacy state and return a migrated value without 
   const source=freeze(legacy());
   for(const next of [rewardRound(source,round('old-1')),claimReward(source,'old-1','water'),openSeedPack(source),
     plantSeed(source,{x:.3,y:.5}),waterPlant(source,'plant-1'),ensureShop(source,'2026-10-18',0),
-    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,3);
+    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,4);
   assert.deepEqual(source,legacy());
 });
 
@@ -62,7 +62,7 @@ test('an empty schema1 save still gets the complete first-participation daisy lo
   const empty=freeze({schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],
     seedPacksOpened:0,bag:[...oldCycle],pendingSeed:null,plants:[]});
   let state=validateMeadow(empty);
-  assert.equal(state.schemaVersion,3);assert.deepEqual(state.legacy,empty);
+  assert.equal(state.schemaVersion,4);assert.deepEqual(state.legacy,empty);
   state=rewardRound(freeze(state),round('first-real-participation'));
   assert.deepEqual([state.shells,state.water],[2,3]);
   assert.equal(state.rounds[0].starter,true);assert.equal(state.rounds[0].reward,'starter');

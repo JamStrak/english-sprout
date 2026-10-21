@@ -1,7 +1,7 @@
 import {EVENTS} from './content.js';
 import {CHALLENGE_UNITS} from './challenges.js';
 
-/** B meadow rewards record participation only, never language ability. */
+/** Meadow rewards record participation or welcome gifts, never language ability. */
 export const MEADOW_KEY = 'xiaoya-english:meadow:v1';
 export const FLOWERS = Object.freeze([
   {id:'daisy',name:'雏菊',color:'#fff8e7',shape:'daisy',waterNeeded:5,scale:1,giant:false},
@@ -83,10 +83,10 @@ const remainingBag = (opened) => SEED_CYCLE.slice(opened%SEED_CYCLE.length);
 
 export function createMeadow() {
   return {
-    schemaVersion:3,product:PRODUCT,shells:0,water:0,rounds:[],
+    schemaVersion:4,product:PRODUCT,shells:0,water:0,rounds:[],
     seedPacksOpened:0,pendingSeed:null,plants:[],purchases:[],legacy:null,
     shop:{date:null,offer:null,reserved:null,offers:[]},
-    previousRoundCount:0,challengeRewards:[],challengeSeeds:[],
+    previousRoundCount:0,challengeRewards:[],challengeSeeds:[],welcomeGifts:[],
   };
 }
 
@@ -155,8 +155,9 @@ function expectedRoundAmounts(version,starter) {
 }
 
 function validateEconomyState(state,modern) {
+  const hasWelcomeGifts=state.schemaVersion===4;
   fields(state,['schemaVersion','product','shells','water','rounds','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop',
-    ...(modern?['previousRoundCount','challengeRewards','challengeSeeds']:[])]);
+    ...(modern?['previousRoundCount','challengeRewards','challengeSeeds']:[]),...(hasWelcomeGifts?['welcomeGifts']:[])]);
   whole(state.shells,'贝壳');whole(state.water,'水');whole(state.seedPacksOpened,'种子包数量');
   if(!Array.isArray(state.rounds) || !Array.isArray(state.plants) || !Array.isArray(state.purchases)) fail('列表错误');
   if(state.legacy!==null) validateLegacy(state.legacy);
@@ -213,6 +214,17 @@ function validateEconomyState(state,modern) {
         if(milestoneSeeds.has(seed.seedId)) fail('挑战纪念种子重复领取');
         milestoneSeeds.set(seed.seedId,seed);
       }
+    }
+  }
+  if(hasWelcomeGifts) {
+    if(!Array.isArray(state.welcomeGifts)) fail('欢迎礼物列表错误');
+    let previousGiftDate=null;
+    for(const [index,gift] of state.welcomeGifts.entries()) {
+      fields(gift,['date','kind']);day(gift.date);
+      if(previousGiftDate!==null && gift.date<=previousGiftDate) fail('欢迎礼物日期重复或倒退');
+      if(gift.kind!==(index%2===0?'shells':'water')) fail('欢迎礼物种类与领取顺序不符');
+      if(gift.kind==='shells') earnedShells++;else earnedWater++;
+      previousGiftDate=gift.date;
     }
   }
   whole(earnedShells,'累计贝壳');whole(earnedWater,'累计水');
@@ -290,16 +302,37 @@ function validateEconomyState(state,modern) {
 
 /** Validate old ledgers before migration; no balance is recomputed at new rates. */
 export function validateMeadow(input) {
-  if(input?.product!==PRODUCT || ![1,2,3].includes(input?.schemaVersion)) fail('产品或版本不匹配');
+  if(input?.product!==PRODUCT || ![1,2,3,4].includes(input?.schemaVersion)) fail('产品或版本不匹配');
   if(input.schemaVersion===1) return validateEconomyState(migrateLegacy(input),true);
   if(input.schemaVersion===2) {
     validateEconomyState(input,false);
-    return validateEconomyState({...copy(input),schemaVersion:3,previousRoundCount:input.rounds.length,
+    return validateEconomyState({...copy(input),schemaVersion:4,previousRoundCount:input.rounds.length,
       rounds:input.rounds.map((round)=>({...round,rewardVersion:round.reward==='legacy'?1:2,
         amounts:expectedRoundAmounts(round.reward==='legacy'?1:2,round.starter)})),
-      challengeRewards:[],challengeSeeds:[]},true);
+      challengeRewards:[],challengeSeeds:[],welcomeGifts:[]},true);
+  }
+  if(input.schemaVersion===3) {
+    validateEconomyState(input,true);
+    return validateEconomyState({...copy(input),schemaVersion:4,welcomeGifts:[]},true);
   }
   return validateEconomyState(input,true);
+}
+
+/** The caller supplies its local calendar day. Opening this preview never pays. */
+export function welcomeGift(state,date) {
+  state=validateMeadow(state);day(date);
+  if(state.welcomeGifts.length && date<=state.welcomeGifts.at(-1).date) return null;
+  return {date,kind:state.welcomeGifts.length%2===0?'shells':'water',amount:1};
+}
+
+/** Save inside the shared garden transaction before revealing the little gift. */
+export function claimWelcomeGift(state,date) {
+  state=validateMeadow(state);
+  const gift=welcomeGift(state,date);
+  if(!gift) return state;
+  return validateMeadow({...state,shells:state.shells+(gift.kind==='shells'?1:0),
+    water:state.water+(gift.kind==='water'?1:0),
+    welcomeGifts:[...state.welcomeGifts,{date:gift.date,kind:gift.kind}]});
 }
 
 /** Caller supplies a completed story round; rewards never imply spoken mastery. */

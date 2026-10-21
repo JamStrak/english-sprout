@@ -184,7 +184,7 @@ test('next action prioritizes unclaimed rewards, pending seed, thirsty plant the
 test('validation rejects forged balances, purchases, plants and learning evidence everywhere',()=>{
   const valid=reward(planted(),'second');
   const mutations=[
-    (s)=>{s.schemaVersion=4;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
+    (s)=>{s.schemaVersion=5;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
     (s)=>{s.mastery=100;},(s)=>{s.shells++;},(s)=>{s.water++;},(s)=>{s.shells=-1;},
     (s)=>{s.water=Infinity;},(s)=>{s.seedPacksOpened=.5;},
     (s)=>{s.rounds.push({...s.rounds[0]});s.shells+=2;s.water+=5;},
