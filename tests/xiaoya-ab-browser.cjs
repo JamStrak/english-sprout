@@ -4,6 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/cod
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const {pathToFileURL}=require('node:url');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw new Error('Use an isolated loopback test server.');
 const out=path.resolve(process.env.XIAOYA_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-ab'));
@@ -49,15 +50,15 @@ async function parent(p){
 }
 async function snapshot(p){return p.evaluate(()=>Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)])));}
 async function seedA(p,{plants=3,rounds=4}={}){
-  const raw=await p.evaluate(async({key,plants,rounds})=>{
-    const m=await import(new URL('garden.js',document.querySelector('script[type="module"][src]').src));
-    let s=m.createGarden();
-    for(let i=0;i<rounds;i++){
-      s=m.rewardRound(s,{roundId:`qa-a-${i}`,eventId:['food-water','play-box','hello-goodbye'][i%3],date:'2026-10-17'});
-      if(i<plants){s=m.plantSeed(m.openSeedPack(s));const id=s.plants[s.plants.length-1].id;s=m.waterPlant(m.waterPlant(s,id),id);}
-    }
-    const raw=JSON.stringify(s);localStorage.setItem(key,raw);return raw;
-  },{key:A_KEY,plants,rounds});
+  // The retired A model is a migration fixture only; it is not publicly shipped.
+  const m=await import(pathToFileURL(path.join(__dirname,'../xiaoya/garden.js')).href);
+  let s=m.createGarden();
+  for(let i=0;i<rounds;i++){
+    s=m.rewardRound(s,{roundId:`qa-a-${i}`,eventId:['food-water','play-box','hello-goodbye'][i%3],date:'2026-10-17'});
+    if(i<plants){s=m.plantSeed(m.openSeedPack(s));const id=s.plants[s.plants.length-1].id;s=m.waterPlant(m.waterPlant(s,id),id);}
+  }
+  const raw=JSON.stringify(s);
+  await p.evaluate(({key,raw})=>localStorage.setItem(key,raw),{key:A_KEY,raw});
   await p.reload();await p.locator('main.home-view').waitFor();return raw;
 }
 async function openGarden(p,variant){
@@ -95,8 +96,19 @@ async function seedB(p,{rounds=1,plants=0,waterings={},pending=false}={}){
   await p.reload();await p.locator('main.home-view').waitFor();return value;
 }
 async function fieldPoint(p,x,y){const r=await p.locator('[data-meadow-field]').boundingBox();assert(r);return{x:r.x+r.width*x,y:r.y+r.height*y};}
-async function buyPack(p){await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();}
+async function buyPack(p){await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.blindbox-view[data-blindbox-phase="choose"]').waitFor();await p.locator('[data-mystery-bag="0"]').click();await p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();await click(p,'blindbox-plant');await p.locator('.meadow-view[data-tool="seed"]').waitFor();}
 async function tapField(p,x,y){const point=await fieldPoint(p,x,y);await p.mouse.click(point.x,point.y);}
+async function plantRootPoint(plant){
+  // The button canvas includes transparent sky; click the painted soil-level
+  // silhouette, whose hit path intentionally excludes that empty rectangle.
+  const hit=await plant.evaluate(e=>{
+    const svg=e.querySelector('svg[data-growth]'),anchor=svg.querySelector('[data-feedback-anchor]');
+    const point=new DOMPoint(Number(anchor.getAttribute('cx')),Number(anchor.getAttribute('cy'))-4).matrixTransform(svg.getScreenCTM());
+    return{x:point.x,y:point.y,id:e.dataset.meadowPlant,hit:document.elementFromPoint(point.x,point.y)?.closest('[data-meadow-plant]')?.dataset.meadowPlant};
+  });
+  assert.equal(hit.hit,hit.id,'The actual soil-level plant silhouette must receive the pointer');return{x:hit.x,y:hit.y};
+}
+async function tapPlantRoot(p,plant,clickCount=1){const point=await plantRootPoint(plant);await p.mouse.click(point.x,point.y,{clickCount});}
 async function selectedSeedTo(p,x,y){const count=await p.locator('[data-meadow-plant]').count();await click(p,'meadow-seed');await tapField(p,x,y);await p.waitForFunction(n=>document.querySelectorAll('[data-meadow-plant]').length===n,count+1);}
 async function untouchedLearning(p){assert.equal(await p.evaluate(key=>localStorage.getItem(key),STATE_KEY),null,'Participation is not evidence of language mastery');}
 async function childLayout(p){
@@ -104,8 +116,8 @@ async function childLayout(p){
   const b=await p.evaluate(()=>({width:innerWidth,height:innerHeight,scrollW:document.documentElement.scrollWidth,scrollH:document.documentElement.scrollHeight}));
   assert(b.scrollW<=b.width+1,`Horizontal overflow: ${JSON.stringify(b)}`);
   assert(b.scrollH<=b.height+1,`Main actions require page scrolling: ${JSON.stringify(b)}`);
-  assert(!/[a-zA-Z]/.test(await p.locator('#app').innerText()),'No visible English letters in the child flow');
-  const targets=await p.locator('button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,w:r.width,h:r.height};}));
+  assert(!/[a-zA-Z]/.test(await p.locator('#app main:visible').innerText()),'No visible English letters in child content; the header version badge and separate GM workbench are excluded');
+  const targets=await p.locator('#app button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,w:r.width,h:r.height};}));
   for(const r of targets){
     assert(r.w>=47&&r.h>=47,`Touch target under 48px: ${JSON.stringify(r)}`);
     assert(r.x>=-1&&r.y>=-1&&r.x+r.w<=b.width+1&&r.y+r.h<=b.height+1,`Hidden touch target: ${JSON.stringify(r)}`);
@@ -193,9 +205,9 @@ async function runCases(){
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),A_KEY),rawA);assert.deepEqual(await meadow(p),beforeB);await untouchedLearning(p);
   },{query:'?garden=b',reducedMotion:'reduce'});
   await test('B pending seed survives refresh without purchase or variety changes and preserves A',async({p})=>{
-    const rawA=await seedA(p);await seedB(p,{rounds:2});await openGarden(p,'b');
+    const rawA=await seedA(p),before=await seedB(p,{rounds:2});await openGarden(p,'b');
     await buyPack(p);const bought=await meadow(p);
-    assert.deepEqual([bought.shells,bought.water,bought.seedPacksOpened,bought.plants.length],[0,10,1,0]);
+    assert.deepEqual([bought.shells,bought.water,bought.seedPacksOpened,bought.plants.length],[before.shells-2,before.water,before.seedPacksOpened+1,before.plants.length]);
     assert.equal(bought.pendingSeed.id,'seed-1');
     await p.reload();await openGarden(p,'b');assert.deepEqual(await meadow(p),bought);
     await selectedSeedTo(p,.37,.73);const planted=await meadow(p);
@@ -208,7 +220,7 @@ async function runCases(){
   await test('Five explicit pours grow a normal flower; bare taps and mature taps spend no water',async({p})=>{
     await seedB(p,{rounds:2,pending:true});await openGarden(p,'b');await selectedSeedTo(p,.4,.72);
     const initial=await meadow(p);const plant=p.locator('[data-meadow-plant="plant-1"]');
-    await plant.click();assert.deepEqual(await meadow(p),initial,'A plant tap without a held watering tool cannot water');
+    await tapPlantRoot(p,plant);assert.deepEqual(await meadow(p),initial,'A plant tap without a held watering tool cannot water');
     await click(p,'meadow-can');const stages=[];
     for(let i=1;i<=5;i++){
       await p.locator('[data-water-plant="plant-1"]').click();await p.waitForFunction(({key,i})=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===i,{key:B_KEY,i});
@@ -217,7 +229,7 @@ async function runCases(){
       assert.equal(await plant.locator('svg[data-bloom]').getAttribute('data-bloom'),String(i===5));
     }
     assert.equal(new Set(stages).size,5,'Every watering has a distinct visible growth state');
-    const mature=await meadow(p);await plant.click();await plant.dblclick();assert.deepEqual(await meadow(p),mature);
+    const mature=await meadow(p);await tapPlantRoot(p,plant);await tapPlantRoot(p,plant,2);assert.deepEqual(await meadow(p),mature);
     await p.reload();await openGarden(p,'b');assert.deepEqual(await meadow(p),mature);await untouchedLearning(p);
     await p.screenshot({animations:'disabled',path:path.join(out,'normal-flower-five-pours.png'),fullPage:true});
   },{query:'?garden=b',reducedMotion:'reduce'});

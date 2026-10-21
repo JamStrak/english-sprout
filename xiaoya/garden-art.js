@@ -1,11 +1,31 @@
 import {paperLayer,paperPlantLayer} from './paper-art.js';
+import {seedAppearance} from './seed-appearance.js';
 
 const svg=(body,key)=>`<svg viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${key?paperLayer(key,body):body}</svg>`;
 export function shellArt(){return svg('<ellipse cx="80" cy="142" rx="48" ry="9" fill="#dbc79c" opacity=".25"/><path d="M80 130C60 127 24 105 22 75C20 54 38 44 51 49C50 27 72 24 80 38C93 20 112 32 111 49C134 41 147 65 132 91C118 114 97 129 80 130Z" fill="#f7d882" stroke="#c49045" stroke-width="5"/><path d="M80 118L52 60M80 118V50M80 118l28-58M80 118L35 80M80 118l45-38" stroke="#e2b15a" stroke-width="5" stroke-linecap="round"/><path d="M65 128h30l-4 12H69Z" fill="#ebbe69" stroke="#c49045" stroke-width="4"/>','shell');}
 export function dropArt(){return svg('<path d="M80 28C64 56 39 81 39 106a41 41 0 0082 0C121 81 96 56 80 28Z" fill="#8ecfd4" stroke="#509ca9" stroke-width="4"/><path d="M56 102q-2 20 15 23" stroke="#e5f8ee" stroke-width="8" stroke-linecap="round"/>','water-drop');}
 export function canArt(){return svg('<path d="M111 72q44-26 30 26l-29 15" stroke="#619c9c" stroke-width="13"/><path d="M51 89L26 65l-14 10 35 46" fill="#8ebebb" stroke="#619c9c" stroke-width="4"/><path d="M44 70h70l-4 66q-30 16-60 0Z" fill="#9dcebf" stroke="#619c9c" stroke-width="4"/><ellipse cx="79" cy="70" rx="35" ry="8" fill="#d8e9cf"/><path d="M69 105q13-22 25 0q-13 21-25 0" fill="#f5e7a8"/><path d="M14 91l-4 10m12-5-2 12" stroke="#8ecfd4" stroke-width="5" stroke-linecap="round"/>','watering-can');}
 export function packArt(){return svg('<ellipse cx="80" cy="159" rx="51" ry="8" fill="#c7b690" opacity=".2"/><path d="M38 60h84l10 82q-52 24-104 0Z" fill="#e9ba85" stroke="#b87f57" stroke-width="4"/><path d="M38 60l-9-28 30 9 20-14 20 14 31-9-8 28Z" fill="#f4d39b" stroke="#b87f57" stroke-width="4"/><path d="M38 60q44 14 84 0" stroke="#85a46d" stroke-width="9"/><path d="M80 124V91m0 17q-28 0-25-23 28-2 25 23m0-8q25 0 23-22-24 1-23 22" fill="#719b68" stroke="#568657" stroke-width="3"/><path d="M80 60q-35-30-32-7 8 15 32 7q34-28 33-6-9 14-33 6" fill="#8cae78" stroke="#63894e" stroke-width="3"/>','seed-pack');}
-export function seedArt(color='#dfaa71'){return svg(`<ellipse cx="80" cy="147" rx="35" ry="7" fill="#d4bc95" opacity=".25"/><path d="M102 44C61 47 38 76 46 111c9 39 61 31 68-3 4-23-5-49-12-64Z" fill="${color}" stroke="#ac8053" stroke-width="4"/><path d="M65 115q-8-26 23-53" stroke="#fff3cc" stroke-width="7" stroke-linecap="round"/>`,'seed');}
+let seedTintSerial=0;
+export function seedArt(color='#dfaa71') {
+  const paper=paperLayer('seed','');
+  if(typeof color!=='string'||!/^#[\da-f]{3}(?:[\da-f]{3})?$/i.test(color)||color.toLowerCase()==='#dfaa71')return svg(paper);
+  const hex=color.length===4?color.slice(1).split('').map(c=>c+c).join(''):color.slice(1);
+  const channels=[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255);
+  // Map the source paper's luminance onto a dark-to-light tint range. Alpha is
+  // unchanged, so its cut-paper edge, creases and bright seam stay visible.
+  const values=channels.flatMap(channel=>{
+    const dark=channel*.42,light=channel+(1-channel)*.58,range=light-dark;
+    return [.2126*range,.7152*range,.0722*range,0,dark];
+  }).concat([0,0,0,1,0]).map(n=>Number(n.toFixed(5))).join(' ');
+  const id=`seed-paper-tint-${++seedTintSerial}`;
+  return svg(`<defs><filter id="${id}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${values}"/></filter></defs><g filter="url(#${id})">${paper}</g>`);
+}
+
+export function seedArtForFlower(flower) {
+  const appearance=seedAppearance(flower);
+  return seedArt(appearance.color).replace(' fill="none"',` data-seed-color="${appearance.colorTag}" fill="none"`);
+}
 export function plantArt(flower,stage=2){
   const color=flower?.color||'#e8b5aa';let top='';
   if(stage>0)top='<path d="M80 121V76" stroke="#618c5c" stroke-width="6" stroke-linecap="round"/><path d="M78 108q-31 0-30-26 28 0 30 26m5-12q29 0 30-25-27 0-30 25" fill="#8eaf75"/>';

@@ -5,6 +5,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/cod
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const {pathToFileURL}=require('node:url');
 const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
 if(!['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname))throw Error('Use a loopback test server.');
 const out=path.resolve(process.env.XIAOYA_ECONOMY_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-economy'));
@@ -58,6 +59,14 @@ async function seed(p,{shellRounds=8,waterRounds=2,pendingRounds=0,shop=false,re
 }
 async function garden(p){await click(p,'garden');await p.locator('.meadow-view').waitFor();}
 async function shop(p){await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();}
+async function mystery(p){await click(p,'shop-pack');await p.locator('.blindbox-view[data-blindbox-phase="choose"]').waitFor();}
+async function pickMystery(p,index=0){await p.locator(`[data-mystery-bag="${index}"]`).tap();await p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();}
+async function buyMystery(p,index=0){await mystery(p);await pickMystery(p,index);await click(p,'blindbox-plant');await p.locator('.meadow-view[data-tool="seed"]').waitFor();}
+async function revealVoice(p,from=0){
+  await p.waitForFunction(from=>qaEconomy.audios.slice(from).some(x=>x.url.endsWith('/blindbox-reveal.mp3')&&x.ended),from);
+  const heard=await p.evaluate(from=>qaEconomy.audios.slice(from).filter(x=>/\/blindbox-(?:seed-daisy|reveal)\.mp3$/.test(x.url)).map(x=>({file:x.url.split('/').at(-1),ended:x.ended,error:x.error})),from);
+  assert.deepEqual(heard,[{file:'blindbox-seed-daisy.mp3',ended:true,error:false},{file:'blindbox-reveal.mp3',ended:true,error:false}],'A first reveal speaks the prepared seed name then planting guidance completely');
+}
 async function parent(p){await click(p,'parent');if(await p.locator('#parent-answer').count()){const n=(await p.locator('label[for="parent-answer"]').textContent()).match(/\d+/g).map(Number);await p.locator('#parent-answer').fill(String(n[0]+n[1]));await click(p,'gate-submit');}await p.locator('.parent-view').waitFor();}
 async function completeStory(p,id,{finish=true}={}){
   await parent(p);const target=p.locator(`[data-story="${id}"]`);
@@ -102,8 +111,8 @@ async function layout(p){
   await p.evaluate(async()=>Promise.all(document.getAnimations().filter(a=>Number.isFinite(a.effect?.getTiming().iterations)&&a.playState==='running').map(a=>a.finished.catch(()=>{}))));
   const bounds=await p.evaluate(()=>({w:innerWidth,h:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight}));
   assert(bounds.sw<=bounds.w+1,`Horizontal overflow ${JSON.stringify(bounds)}`);assert(bounds.sh<=bounds.h+1,`Child actions need page scrolling ${JSON.stringify(bounds)}`);
-  assert(!/[A-Za-z]/.test(await p.locator('#app').innerText()),'No English writing is required in the child economy');
-  for(const r of await p.locator('button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,w:r.width,h:r.height};}))){
+  assert(!/[A-Za-z]/.test(await p.locator('#app main:visible').innerText()),'No English writing is required in the child economy; the separate version badge and hidden GM panel are not child content');
+  for(const r of await p.locator('#app button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,w:r.width,h:r.height};}))){
     assert(r.w>=47&&r.h>=47,`Target smaller than 48px ${JSON.stringify(r)}`);assert(r.x>=-1&&r.y>=-1&&r.x+r.w<=bounds.w+1&&r.y+r.h<=bounds.h+1,`Target outside screen ${JSON.stringify(r)}`);
   }
   return bounds;
@@ -135,7 +144,7 @@ async function cases(){
     await completeStory(p,'hello-everyone');let s=await state(p);assert.deepEqual(balance(s),[2,3]);assert.equal(s.rounds[0].reward,'starter');assert.equal(s.rounds[0].starter,true);assert.equal(await p.locator('[data-reward-choice]').count(),0);
     assert.equal(await p.locator('[data-action="water-purpose"] b').textContent(),'+3');await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-starter-v13.mp3')));
     await receiptPurpose(p,'shell');await receiptPurpose(p,'water');
-    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();s=await state(p);assert.deepEqual(balance(s),[0,3]);assert.equal(s.pendingSeed.flowerId,'daisy','The first mystery seed is the familiar starter daisy');
+    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await buyMystery(p);s=await state(p);assert.deepEqual(balance(s),[0,3]);assert.equal(s.pendingSeed.flowerId,'daisy','The first mystery seed is the familiar starter daisy');
     await plantPending(p);await completeStory(p,'hello-morning');s=await state(p);assert.deepEqual(balance(s),[0,3]);assert.equal(pending(s).length,1);await choose(p,'shells');assert.deepEqual(balance(await state(p)),[2,3]);
     await completeStory(p,'family-love');assert.deepEqual(balance(await state(p)),[2,3]);await reload(p);await click(p,'garden');await p.locator('[data-reward-choice="water"]').waitFor();await choose(p,'water');s=await state(p);assert.deepEqual(balance(s),[2,5]);assert.equal(pending(s).length,0);assert.deepEqual(s.rounds.map(r=>r.reward),['starter','shells','water']);
     assert.equal(await p.evaluate(key=>localStorage.getItem(key),STATE),null,'Participation rewards never invent speech mastery');
@@ -177,7 +186,7 @@ async function cases(){
   await test('Insufficient shells leave a known offer unchanged and point back to learning',async({p})=>{
     await seed(p,{shellRounds:0,waterRounds:0,shop:true});await shop(p);const before=await state(p);assert(before.shop.offer.price>=3);
     await p.locator('[data-buy-offer][data-source="shop"]').tap();assert.deepEqual(await state(p),before);await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-short.mp3')));assert(await p.locator('[data-action="next-event"]').isVisible());
-    await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();await plantPending(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();const empty=await state(p);assert.equal(empty.shells,0);await click(p,'shop-pack');await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-shells-short.mp3')));assert.deepEqual(await state(p),empty);
+    await buyMystery(p);await plantPending(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();const empty=await state(p);assert.equal(empty.shells,0);await mystery(p);await p.locator('[data-mystery-bag="0"]').tap();await p.waitForFunction(()=>qaEconomy.plays.some(x=>x.endsWith('/economy-shells-short.mp3')));assert.deepEqual(await state(p),empty);
   });
   await test('Known seed price matches its type, purchase is exact and refill differs',async({p})=>{
     await seed(p,{shop:true});await shop(p);const before=await state(p),offer=before.shop.offer,price=offer.flowerId.startsWith('giant-')?8:offer.flowerId.startsWith('bow-')?6:3;
@@ -230,8 +239,53 @@ async function cases(){
     const after=await state(f.p);assert.equal(after.shells,before.shells-before.shop.offer.price);assert.equal(after.seedPacksOpened,before.seedPacksOpened+1);assert.equal(after.pendingSeed.flowerId,before.shop.offer.flowerId);
   });
   await test('Two tabs opening mystery packs create one pending seed and spend two shells once',async f=>{
-    await seed(f.p,{shop:true});await shop(f.p);const before=await state(f.p);await lockPair(f,shop,p=>click(p,'shop-pack'));const after=await state(f.p);assert.equal(after.shells,before.shells-2);assert.equal(after.seedPacksOpened,before.seedPacksOpened+1);assert(after.pendingSeed);
+    await seed(f.p,{shop:true});await shop(f.p);await mystery(f.p);const before=await state(f.p);await lockPair(f,async p=>{await shop(p);await mystery(p);},(p,i)=>p.locator(`[data-mystery-bag="${i}"]`).tap());const after=await state(f.p);assert.equal(after.shells,before.shells-2);assert.equal(after.seedPacksOpened,before.seedPacksOpened+1);assert(after.pendingSeed);
   });
+  await test('Blindbox shows six identical bags and returning without choosing spends nothing',async({p})=>{
+    await seed(p,{shop:true});await shop(p);const before=await state(p);await mystery(p);
+    assert.equal(await p.locator('[data-mystery-bag]:enabled').count(),6);
+    assert.deepEqual(await p.locator('[data-mystery-bag]').evaluateAll(es=>es.map(e=>e.dataset.mysteryBag)),['0','1','2','3','4','5']);
+    const art=await p.locator('.blindbox-bag-art').evaluateAll(es=>es.map(e=>e.innerHTML));assert.equal(new Set(art).size,1,'A bag must not visually reveal its contents or odds');
+    assert.equal(await p.locator('.blindbox-view [data-flower-id],.blindbox-view .seed-name-button').count(),0);assert.deepEqual(await state(p),before,'Opening the selector is free');
+    await click(p,'blindbox-back');await p.locator('.seed-shop-view').waitFor();assert.deepEqual(await state(p),before,'Leaving an unopened bag does not spend or draw a seed');
+  });
+  await test('Blindbox rapid duplicate selection pays once, speaks the new name and reveal, and survives reload',async({p})=>{
+    await seed(p,{shop:true});await shop(p);await mystery(p);const before=await state(p),from=await p.evaluate(()=>qaEconomy.audios.length);
+    // Two events on the same captured DOM target model a real rapid double tap,
+    // rather than waiting for the first event to replace the screen.
+    await p.locator('[data-mystery-bag="2"]').evaluate(b=>{b.click();b.click();});await p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();
+    const bought=await state(p);assert.deepEqual(balance(bought),[before.shells-2,before.water]);assert.equal(bought.seedPacksOpened,before.seedPacksOpened+1);assert.equal(bought.pendingSeed.flowerId,'daisy');assert.equal(await p.locator('[data-flower-id]').getAttribute('data-flower-id'),'daisy');await revealVoice(p,from);
+    await reload(p);assert.deepEqual(await state(p),bought,'Reload retains the exact persisted draw, including its seed identity');await garden(p);await click(p,'meadow-seed');await p.locator('.meadow-view[data-tool="seed"]').waitFor();await plantPending(p);const planted=await state(p);assert.equal(planted.plants.at(-1).seedId,bought.pendingSeed.id);assert.deepEqual(balance(planted),balance(bought));
+  });
+  await test('Blindbox failed save spends nothing and an enabled retry purchases exactly once',async({p})=>{
+    await seed(p,{shop:true});await shop(p);await mystery(p);const before=await state(p);
+    await p.evaluate(key=>{const old=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===key)throw new DOMException('QA quota','QuotaExceededError');return old.call(this,k,v);};qaEconomy.restoreStorage=()=>Storage.prototype.setItem=old;},B);
+    await p.locator('[data-mystery-bag="4"]').tap();await p.locator('.modal-card').waitFor();assert.deepEqual(await state(p),before);await p.evaluate(()=>qaEconomy.restoreStorage());await click(p,'close');await p.locator('[data-mystery-bag="4"]:enabled').waitFor();assert.equal(await p.locator('[data-mystery-bag]:enabled').count(),6);
+    await pickMystery(p,4);const bought=await state(p);assert.deepEqual(balance(bought),[before.shells-2,before.water]);assert.equal(bought.seedPacksOpened,before.seedPacksOpened+1);assert(bought.pendingSeed);await reload(p);assert.deepEqual(await state(p),bought);
+  });
+  for(const returnBeforeRelease of [true,false])await test(`Blindbox queued purchase restores its reveal silently when foreground ${returnBeforeRelease?'precedes':'follows'} lock completion`,async({p})=>{
+    await seed(p,{shop:true});await shop(p);await mystery(p);const before=await state(p);await holdEconomy(p);await p.locator('[data-mystery-bag="3"]').tap();await queuedEconomy(p);const silence=await background(p);
+    if(returnBeforeRelease){await foreground(p);assert.equal(await p.locator('[data-mystery-bag]:disabled').count(),6,'The outstanding transaction keeps all bags disabled');}
+    await releaseEconomy(p);await staysSilent(p,silence);if(!returnBeforeRelease)await foreground(p);
+    await p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();assert.equal(await p.locator('[data-mystery-bag]').count(),0,'Completion cannot strand a disabled chooser');assert(await p.locator('[data-action="blindbox-plant"]').isEnabled());await staysSilent(p,silence);
+    const bought=await state(p);assert.deepEqual(balance(bought),[before.shells-2,before.water]);assert.equal(bought.seedPacksOpened,before.seedPacksOpened+1);await click(p,'blindbox-plant');await p.locator('.meadow-view[data-tool="seed"]').waitFor();assert.deepEqual(await state(p),bought);
+  });
+  await test('Blindbox queued purchase persists without pulling the child back after leaving',async({p})=>{
+    await seed(p,{shop:true});await shop(p);await mystery(p);const before=await state(p);await holdEconomy(p);await p.locator('[data-mystery-bag="1"]').tap();await queuedEconomy(p);await click(p,'home');await p.locator('.home-view').waitFor();const silence=await p.evaluate(()=>({audios:qaEconomy.audios.length,plays:qaEconomy.plays.length}));
+    await releaseEconomy(p);await staysSilent(p,silence);assert(await p.locator('.home-view').isVisible());assert.equal(await p.locator('.blindbox-view').count(),0);const bought=await state(p);assert.deepEqual(balance(bought),[before.shells-2,before.water]);assert.equal(bought.seedPacksOpened,before.seedPacksOpened+1);assert(bought.pendingSeed);await garden(p);await click(p,'meadow-seed');await p.locator('.meadow-view[data-tool="seed"]').waitFor();assert.deepEqual(await state(p),bought);await plantPending(p);const planted=await state(p);assert.equal(planted.plants.at(-1).seedId,bought.pendingSeed.id);assert.deepEqual(balance(planted),balance(bought));
+  });
+  for(const [width,height]of[[320,568],[390,844],[768,1024],[844,390]])for(const motion of ['no-preference','reduce'])await test(`Blindbox six bags and reveal touch layout ${width}x${height} ${motion}`,async({p})=>{
+    await seed(p,{shop:true});await shop(p);await mystery(p);assert.equal(await p.locator('[data-mystery-bag]:enabled').count(),6);await layout(p);await p.screenshot({path:path.join(out,`blindbox-choose-${width}x${height}-${motion}.png`),animations:'disabled',fullPage:true});
+    await pickMystery(p,5);await layout(p);await p.screenshot({path:path.join(out,`blindbox-reveal-${width}x${height}-${motion}.png`),animations:'disabled',fullPage:true});assert(await p.locator('[data-action="blindbox-plant"]').isVisible());
+  },{width,height,motion});
+  await test('Blindbox first-ever reveal and prepared voices work in a cold offline page',async({c,p})=>{
+    await seed(p,{shop:true});const before=await state(p);await p.waitForFunction(()=>!!navigator.serviceWorker.controller,undefined,{timeout:30000});
+    await p.waitForFunction(async()=>{const m=await import(new URL('audio-pack.js',document.querySelector('script[type="module"][src]').src));return m.audioPackStatus().state==='ready'&&m.artPackStatus().state==='ready';},undefined,{timeout:120000});
+    assert(!await p.evaluate(()=>qaEconomy.plays.some(x=>/\/blindbox-/.test(x))),'This browser has never played blindbox audio before going offline');
+    await c.setOffline(true);const cold=await c.newPage();cold.setDefaultTimeout(20000);
+    try{await cold.goto(origin+'/xiaoya/?garden=b');await cold.locator('.home-view').waitFor();await shop(cold);await mystery(cold);const from=await cold.evaluate(()=>qaEconomy.audios.length);await pickMystery(cold,5);await revealVoice(cold,from);const bought=await state(cold);assert.deepEqual(balance(bought),[before.shells-2,before.water]);assert.equal(bought.pendingSeed.flowerId,'daisy');await layout(cold);await cold.screenshot({path:path.join(out,'blindbox-first-reveal-offline.png'),animations:'disabled',fullPage:true});await click(cold,'blindbox-plant');await cold.locator('.meadow-view[data-tool="seed"]').waitFor();await plantPending(cold);assert.deepEqual(await cold.evaluate(()=>qaEconomy.errors),[]);}
+    finally{await cold.close();}
+  },{serviceWorkers:'allow'});
   await test('A delayed shop opening never interrupts a newly started story',async({p})=>{
     await seed(p);await garden(p);await holdEconomy(p);await click(p,'shop');await queuedEconomy(p);await click(p,'next-event');await p.locator('.event-view').waitFor();const id=await p.locator('[data-event]').getAttribute('data-event'),plays=await p.evaluate(()=>qaEconomy.plays.length);
     await releaseEconomy(p);assert.equal(await p.locator('[data-event]').getAttribute('data-event'),id);assert.equal(await p.locator('.seed-shop-view').count(),0);assert((await state(p)).shop.offer,'The queued data transaction still completes');assert(!await p.evaluate(n=>qaEconomy.plays.slice(n).some(x=>x.endsWith('/economy-shop.mp3')),plays));
@@ -290,7 +344,10 @@ async function cases(){
   });
   await test('Legacy schema1 migrates in place, preserving old rewards, A data and plant IDs',async({p})=>{
     const legacy={schemaVersion:1,product:'xiaoya-english-meadow',shells:3,water:9,rounds:[0,1,2].map(i=>({roundId:`qa-legacy-${i}`,eventId:'food-water',date:'2026-10-17'})),seedPacksOpened:2,bag:['giant-daisy','bow-blue','tulip','bow-yellow','sunflower','bow-purple','bellflower','giant-sunflower','poppy','violet'],pendingSeed:null,plants:[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:5,x:.2,y:.7},{id:'plant-2',seedId:'seed-2',flowerId:'bow-pink',waterings:1,x:.7,y:.7}]};
-    const aRaw=await p.evaluate(async({a,b,legacy})=>{const m=await import(new URL('garden.js',document.querySelector('script[type="module"][src]').src));const aRaw=JSON.stringify(m.rewardRound(m.createGarden(),{roundId:'qa-a-original',eventId:'food-water',date:'2026-10-17'}));localStorage.setItem(a,aRaw);localStorage.setItem(b,JSON.stringify(legacy));return aRaw;},{a:A,b:B,legacy});
+    // Retired A stays in source for migration fixtures, not in the public build.
+    const oldGarden=await import(pathToFileURL(path.join(__dirname,'../xiaoya/garden.js')).href);
+    const aRaw=JSON.stringify(oldGarden.rewardRound(oldGarden.createGarden(),{roundId:'qa-a-original',eventId:'food-water',date:'2026-10-17'}));
+    await p.evaluate(({a,b,legacy,aRaw})=>{localStorage.setItem(a,aRaw);localStorage.setItem(b,JSON.stringify(legacy));},{a:A,b:B,legacy,aRaw});
     await reload(p);await garden(p);assert.equal(await p.locator('[data-meadow-plant]').count(),2);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-2"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[1].waterings===2,B);
     const migrated=await state(p);assert.equal(migrated.schemaVersion,4);assert.deepEqual(balance(migrated),[3,8]);assert.deepEqual(migrated.plants[0],legacy.plants[0]);assert.deepEqual(migrated.rounds.map(r=>r.roundId),legacy.rounds.map(r=>r.roundId));assert(migrated.rounds.every(r=>r.reward==='legacy'));assert.equal(pending(migrated).length,0);assert.equal(await p.evaluate(key=>localStorage.getItem(key),A),aRaw);
     await completeStory(p,'hello-everyone');const next=await state(p);assert.deepEqual(balance(next),balance(migrated));assert.equal(pending(next).length,1);assert.equal(next.rounds[next.rounds.length-1].starter,false,'Migrated users do not receive a second starter award');
@@ -298,7 +355,7 @@ async function cases(){
   await test('An empty schema1 save receives its first starter reward and complete daisy planting loop',async({p})=>{
     const empty={schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],seedPacksOpened:0,bag:['daisy','bow-pink','giant-daisy','bow-blue','tulip','bow-yellow','sunflower','bow-purple','bellflower','giant-sunflower','poppy','violet'],pendingSeed:null,plants:[]};
     await p.evaluate(({key,value})=>localStorage.setItem(key,JSON.stringify(value)),{key:B,value:empty});await reload(p);await completeStory(p,'hello-everyone');const first=await state(p);assert.equal(first.schemaVersion,4);assert.deepEqual(balance(first),[2,3]);assert.equal(first.rounds[0].reward,'starter');assert.equal(first.rounds[0].starter,true);assert.equal(pending(first).length,0);
-    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await click(p,'shop-pack');await p.locator('.meadow-view').waitFor();assert.equal((await state(p)).pendingSeed.flowerId,'daisy');await plantPending(p);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B);assert.deepEqual(balance(await state(p)),[0,2]);
+    await garden(p);await click(p,'shop');await p.locator('.seed-shop-view').waitFor();await buyMystery(p);assert.equal((await state(p)).pendingSeed.flowerId,'daisy');await plantPending(p);await click(p,'meadow-can');await p.locator('[data-water-plant="plant-1"]').tap();await p.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).plants[0].waterings===1,B);assert.deepEqual(balance(await state(p)),[0,2]);
   });
   for(const [width,height,motion]of[[320,568,'no-preference'],[320,568,'reduce'],[390,844,'reduce'],[768,1024,'no-preference']])await test(`Shop and resource choice touch layout ${width}x${height} ${motion}`,async({p})=>{
     await seed(p,{reserved:true});await shop(p);assert.equal(await p.locator('.seed-offer').count(),3);await layout(p);await p.screenshot({path:path.join(out,`shop-${width}-${motion}.png`),animations:'disabled',fullPage:true});

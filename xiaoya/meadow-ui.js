@@ -1,6 +1,6 @@
 import {ALL_FLOWERS,nextAction,pendingRewards} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
-import {shellArt,dropArt,canArt,packArt,seedArt} from './garden-art.js';
+import {shellArt,dropArt,canArt,packArt,seedArt,seedArtForFlower} from './garden-art.js';
 import {icon} from './art.js';
 
 const flowerFor=id=>ALL_FLOWERS.find(f=>f.id===id);
@@ -17,7 +17,7 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
       ${tool==='seed'?`<span class="meadow-landing" aria-hidden="true">${icon('tap',40)}<i></i></span>`:!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
     </div>
     <div class="meadow-tools">
-      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.special?flower.name:flower.giant?'巨型花':''}种子，放到草地上">${seedArt()}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:next==='challenge-seed'||specialPending?`<button class="meadow-tool seed-tool challenge-seed-tool inviting" data-action="challenge-seed" aria-label="领取挑战赢得的特别花种子">${seedArt()}<span class="giant-badge" aria-hidden="true">✦</span></button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}2+</span></button>`}
+      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.name}种子，放到草地上">${seedArtForFlower(flower)}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:next==='challenge-seed'||specialPending?`<button class="meadow-tool seed-tool challenge-seed-tool inviting" data-action="challenge-seed" aria-label="领取挑战赢得的特别花种子">${seedArt()}<span class="giant-badge" aria-hidden="true">✦</span></button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}2+</span></button>`}
       <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="点水壶，再点小苗进度条旁边的水滴浇水">${canArt()}<span class="meadow-cost">${dropArt()}${state.water}</span></button>
       <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，选择贝壳或水">${icon('play',40)}</button>
     </div>
@@ -137,7 +137,7 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
     if(!drag||drag.id!==event.pointerId||!active())return;
     if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;
     drag.moved=true;event.preventDefault();
-    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.innerHTML=drag.tool==='seed'?seedArt():canArt();document.body.append(ghost);}
+    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.innerHTML=drag.tool==='seed'?seedArtForFlower(flowerFor(read().state.pendingSeed?.flowerId)):canArt();document.body.append(ghost);}
     ghost.style.left=`${event.clientX}px`;ghost.style.top=`${event.clientY}px`;
   });
   root.addEventListener('pointerup',event=>{

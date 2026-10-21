@@ -141,7 +141,7 @@ async function main() {
     const voices=[];for(const voice of ['aiden','ryan','pip'])voices.push(await audition(f.p,`[data-gm-course="daily-peekaboo"] [data-gm-audio$="/${voice}.mp3"]`));
     assert.deepEqual(voices,['aiden','ryan','pip'].map(voice=>`xiaoya/audio/phrases-v015/daily-peekaboo/${voice}.mp3`));
     await press(f.p,'[data-gm-tab="voices"]');await f.p.locator('.gm-audio-row').first().waitFor();
-    const count=await f.p.locator('.gm-count').textContent();assert.match(count,/821 段/);assert.equal(await f.p.locator('.gm-audio-row').count(),36);
+    const count=await f.p.locator('.gm-count').textContent();assert.match(count,new RegExp(`\\b${expected.audio.count} 段`));assert.equal(await f.p.locator('.gm-audio-row').count(),36);
     await f.p.locator('[data-gm-search]').fill('daily-peekaboo');assert.equal(await f.p.locator('.gm-audio-row').count(),4);
     await f.p.locator('[data-gm-filter]').selectOption('pip');assert.equal(await f.p.locator('.gm-audio-row').count(),1);
     await audition(f.p,'.gm-audio-row [data-gm-audio]');
@@ -211,6 +211,8 @@ async function main() {
     await f.p.locator('.reward-view').waitFor();await press(f.p,'[data-action="garden"]');await f.p.locator('.meadow-view').waitFor();
     assert.equal(await f.p.locator('[data-shells]').textContent(),'2');assert.equal(await f.p.locator('[data-water]').textContent(),'3');
     await press(f.p,'[data-action="shop"]');await f.p.locator('.seed-shop-view').waitFor();await press(f.p,'[data-action="shop-pack"]');
+    await f.p.locator('.blindbox-view[data-blindbox-phase="choose"]').waitFor();await press(f.p,'[data-mystery-bag="0"]');
+    await f.p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();await press(f.p,'[data-action="blindbox-plant"]');
     await f.p.locator('.meadow-view[data-tool="seed"]').waitFor();
     const field=f.p.locator('[data-meadow-field]');await field.scrollIntoViewIfNeeded();const box=await field.boundingBox();await f.p.mouse.click(box.x+box.width*.48,box.y+box.height*.7);
     await f.p.locator('[data-meadow-plant][data-waterings="0"]').waitFor();await press(f.p,'[data-action="meadow-can"]');await press(f.p,'[data-water-plant]');

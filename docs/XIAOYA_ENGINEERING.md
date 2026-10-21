@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.18.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.19.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -27,6 +27,7 @@
 | 阶段挑战 | `challenges.js`：`CHALLENGE_UNITS`、`recordChallengeAttempt`、`recordChallengeHelp`、`getChallenges`、`invitationFor` | 已过步骤保留，帮助记录跨刷新保留；游戏通关不等于长期掌握 |
 | 旧花盆历史兼容 | `garden-history.js`：`readGardenHistory` | 只读旧轮次供学习兼容、保留原始归档供导出；不恢复 A 花园界面、余额交易或待发奖 |
 | 自由花园经济 | `garden-meadow.js`：`rewardRound`、`claimReward`、`rewardChallenge`、`redeemChallengeSeed`、`ensureShop`、`reserveOffer`、`buyOffer`、`waterPlant` | 奖励、购买、里程碑都需幂等；旧余额与未领取承诺保留 |
+| 六袋盲盒与种子配色 | `blindbox-ui.js`：`blindboxView`；`seed-appearance.js`：`seedAppearance`、`SEED_COLORS`；`experience.js`：`openBlindbox`、`buyMystery`、`blindboxVoice`、`plantBlindboxSeed` | 进入不扣费；选袋先持久化再动画；切页/后台/GM 取消迟到声音；色彩不改变花种身份或概率 |
 | 自由花园画面及触摸 | `meadow-ui.js`：`meadowView`、`bindMeadowInteractions`、`layoutMeadowWatering`；`meadow-art.js`、`meadow-hit-shapes.js`、`meadow.css` | 根点、透明像素命中、水滴与对应植物、逐滴成长；不是只改 CSS 视觉尺寸 |
 | 三种示范音色 | `voices.js`：`VOICES`、`readVoice`、`saveVoice`、`lessonAudio` | Aiden / Ryan / Pip 使用同一学习进度；切声音不能重复发奖 |
 | 播放、录音、评分 | `audio.js`：`playSound`、`prepareRecording`、`beginRecording`、`finishRecording`、`replayClip`、`recognize`；`speech-local.js`、`speech-worker.js` | 真正录音就绪后才提示开口；停止/取消生命周期与临时音频清理 |
@@ -61,6 +62,7 @@
 - **只有自由花园，历史不抹除。** 学习证据、练习安排、音色及既有自由花园存档继续使用原键。旧 A 轮次只用于学习历史兼容，原始归档可导出；不迁移 A 钱包、花朵或待发奖励到自由花园。历史 `rewardVariant` 保留，新奖励只写 `b`。
 - **奖励有凭据。** `experience.js` 的 `savePractice` / `restorePracticeRewards`、`challengeChange` / `restoreChallengeRewards`、`gardenChange` 管理落盘与断点恢复。奖励以轮次或挑战 ID 幂等，写入失败不能先展示领取成功；支持 Web Locks 的环境须在锁内重读最新值。
 - **欢迎小礼物不代表学习。** `garden-meadow.js` 的 `welcomeGift` / `claimWelcomeGift` 按显式本地日期判断资格；领取日期必须严格递增，倒退日期不重复发奖，按收据数交替送 1 贝壳 / 1 水。schema 1/2/3 先验证原账本再迁移到 4；余额校验包括礼物，不写学习证据、练习轮次或首次学习奖。`experience.js` 的 `claimWelcomeGift` 复用 `gardenChange` 的存储适配与 Web Lock，先保存再显示成功；`welcomePlay` 仅在声音自然播完且页面代际未改变时进入学习。GM `previewWelcome` 只操作内存花园。
+- **盲盒先保存再揭晓。** `buyMystery` 复用 `gardenChange` / `openSeedPack` 与 Web Lock；六袋只表示包装选择，不是六个预定品种或不放回奖池。待种种子阻止重复购买，存储失败不展示成功，刷新不重抽。`mysteryVoiceRun`、页面代际与 pendingSeed ID 防止退出/后台/GM 后播放旧结果。`seed-appearance.js` 只根据稳定 ID 或有效 `seedColor` 标签派生配色和花名，存档仍保存原 flowerId，不迁移 schema、不按颜色替换品种。
 - **数值变化要迁移。** 自由花园日常选择 2 贝壳或 2 水，首轮 2 贝壳＋3 水；普通花 5 次水、巨型花 10 次。挑战每组首次通关 4 贝壳＋6 水，完成 3/6 个不同组分别一次限定种子。旧奖励版本与承诺数量不能因新常量重算。
 - **存档不是宽松 JSON。** `validateState` / `validatePracticePlan` / `validateChallenges` / `validateMeadow` 校验字段、版本、已知 ID 与账本一致性。新增字段须同步创建、验证、迁移与测试，不能通过删 localStorage 避开迁移错误。
 - **儿童音频不落盘。** 录音 Blob、回听 URL、原始转写只在内存，不上传、不进学习日志、不作为生成素材；下载到设备的预制示范音频是另一个概念。
@@ -79,7 +81,7 @@
 
 | 资源 | 当前实现 | 什么情况下可离线 |
 | --- | --- | --- |
-| 英文示范、中文帮助和引导 | 826 段静态音频，15,025,230 字节；`audio-pack.js` 与 SW 校验字节数、SHA-256 | 当前构建完整声音包通过校验后；首次需从本站取得资源，运行时不生成 TTS |
+| 英文示范、中文帮助和引导 | 842 段静态音频，15,325,214 字节；`audio-pack.js` 与 SW 校验字节数、SHA-256 | 当前构建完整声音包通过校验后；首次需从本站取得资源，运行时不生成 TTS |
 | 课程与界面图片 | 223 张正式图片（195 故事＋28 纸艺），19,638,436 字节；`art-pack.json` 列出长度与 SHA-256 | 整包后台下载并校验后，包含从未浏览过的课程图；图片包与声音包分别显示状态 |
 | 语音识别 | 本机 Worker / WASM，Whisper tiny.en，`speech-assets.js` 的 10 项固定资源，总计 81,191,822 字节 | 单独下载并校验模型及运行时后；声音整包状态不代表模型就绪 |
 | 核心界面 | 按构建指纹缓存的 JS/CSS/入口资源 | 服务工作线程正确安装并控制当前页面后 |
@@ -127,7 +129,7 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`art-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。新产品模块清单包含 `garden-history.js`，不再打包旧 `garden.js` 与 `story-art.js`。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.18.0 核对值：内测 `c994c7ae1f44`，公开 `c48853997aa4`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.19.0 核对值：内测 `b72531f1ecd8`，公开 `e20144ac16f8`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
@@ -154,6 +156,7 @@ v0.18.0 核对值：内测 `c994c7ae1f44`，公开 `c48853997aa4`。构建指纹
 | 启动器、端口 | `python -m unittest tests.test_launcher tests.test_xiaoya_launcher` |
 | 旧 SW 升级、首次启动、离线入口 | `tests/xiaoya-startup-update-browser.cjs`、`tests/xiaoya-restart-art-browser.cjs`；独立服务与浏览器，覆盖旧 SW、旧指纹入口和未浏览图片的重启离线读取 |
 | 欢迎小礼物、存档迁移与交互 | `tests/xiaoya-welcome-gift.test.js`、`tests/xiaoya-welcome-browser.cjs`；每日幂等、双标签、写失败重试、语音取消、小屏与 GM 隔离 |
+| 六袋盲盒、颜色和结果语音 | `tests/xiaoya-seed-appearance.test.js`、`xiaoya-blindbox-voices.test.js`；`xiaoya-economy-browser.cjs` 覆盖购买、刷新、双标签、失败重试、后台取消、离线开袋和小屏/横屏；儿童布局选择器限定 `#app`，不将独立 GM 面板计入 |
 | 首页挑战/花园入口排列与显隐 | `tests/xiaoya-home-entry-browser.cjs`，桌面、窄屏、横屏及真实开放条件 |
 | 共用构建或共享模块 | 上述相关项＋旧产品 `tests/browser.cjs`；必要时旧产品领域单测 |
 
@@ -177,7 +180,7 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-v0.18.0 本轮 Node 单测 717/717、欢迎礼物浏览器 8/8、首页入口 7/7、旧产品浏览器 36/36，公开与内测构建通过。最后一处语音取消守卫修改后重跑欢迎礼物全套；其余上述检查在该局部修复前通过。本轮没有修改启动器，也未重跑完整 GM 或离线美术套件。完整命令、构建与范围见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
+v0.19.0：Node 单测 739/739、旧产品浏览器 36/36；最终内测 GM 9/9、种植与逐滴浇水定向 3/3；最终公开包盲盒布局 8/8。两渠道构建通过。经济浏览器最终分次验证及公开 GM 隔离范围见 [实施记录](XIAOYA_IMPLEMENTATION.md)；不能把定向补测写成单次全套重跑。单测、旧产品和公开 GM 检查在最后横屏 CSS 修复前通过，最终布局及内测回归在修复后执行。未改启动器，未重跑启动器或完整离线美术套件。
 
 历史 v0.16.1：Node 单测 689/689、GM 内测浏览器 9/9、公开隔离 1/1、旧产品浏览器 36/36、Python 启动器 30 项（29 通过、1 平台跳过）；最终包首页布局 7/7、旧 SW 升级 7/7、图片加载定向 4/4。完整命令、构建差异与实际范围见 [实施记录 v0.16.1](XIAOYA_IMPLEMENTATION.md) 和 [旧产品回归摘要](UI_QA_xiaoya-v0161-legacy.md)。
 

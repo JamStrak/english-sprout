@@ -172,7 +172,8 @@ test('late audio completion cannot resurrect a canceled garden reminder',async()
 
 test('the seed tool has no flower preview or duplicate planting pot',async()=>{
   const f=fixture(readySeed(3));f.enterGarden();
-  assert.equal(f.button('meadow-seed').body,gardenArt.seedArt());
+  assert.match(f.button('meadow-seed').body,/data-seed-color="white"/);
+  assert.match(f.button('meadow-seed').body,/seed\.webp/);
   assert.equal(f.button('seed-voice'),undefined);assert.equal(f.button('plant'),undefined);
   assert.doesNotMatch(f.html(),/empty-pot|seed-reveal|data-variant/);
   await f.click('meadow-seed');assert.match(f.html(),/data-tool="seed"/);

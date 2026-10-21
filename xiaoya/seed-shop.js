@@ -1,11 +1,11 @@
 import {FLOWERS,ECONOMY} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
-import {shellArt,packArt,seedArt} from './garden-art.js';
+import {shellArt,packArt,seedArtForFlower} from './garden-art.js';
 import {icon} from './art.js';
 
 const flowerFor=id=>FLOWERS.find(f=>f.id===id);
 function price(value,owned){return `<span class="seed-price" aria-hidden="true">${shellArt()}<b>${value}</b><span class="shell-progress">${Array.from({length:value},(_,i)=>`<i class="${i<owned?'filled':''}"></i>`).join('')}</span></span>`;}
-export function offerPicture(offer){const f=flowerFor(offer.flowerId);return `<span class="offer-picture" aria-hidden="true">${meadowPlantArt(f,f.waterNeeded)}<span class="offer-seed">${seedArt()}</span></span>`;}
+export function offerPicture(offer){const f=flowerFor(offer.flowerId);return `<span class="offer-picture" aria-hidden="true">${meadowPlantArt(f,f.waterNeeded)}<span class="offer-seed">${seedArtForFlower(f)}</span></span>`;}
 function offerCard(offer,state,source){
   if(!offer)return '';
   const f=flowerFor(offer.flowerId),kept=state.shop.reserved?.id===offer.id;
@@ -18,7 +18,7 @@ function offerCard(offer,state,source){
 }
 export function seedShopView({state,header,balance}){
   return `${header}<main class="seed-shop-view">${balance}<div class="seed-shop-shelf">
-    <section class="seed-offer mystery-offer"><button class="seed-purchase" data-action="shop-pack" aria-label="用两枚贝壳打开惊喜种子包"><span class="shop-card-label">惊喜种子</span><span class="mystery-picture" aria-hidden="true">${packArt()}<b>?</b></span>${price(ECONOMY.packPrice,state.shells)}</button></section>
+    <section class="seed-offer mystery-offer"><button class="seed-purchase" data-action="shop-pack" aria-label="进入盲盒，六个袋子选一个，每袋两枚贝壳"><span class="shop-card-label">惊喜种子</span><span class="mystery-picture" aria-hidden="true">${packArt()}<b>?</b></span>${price(ECONOMY.packPrice,state.shells)}</button></section>
     ${offerCard(state.shop.offer,state,'shop')}
     ${state.shop.reserved&&state.shop.reserved.id!==state.shop.offer?.id?offerCard(state.shop.reserved,state,'reserved'):''}
     </div><div class="shop-footer"><button class="icon-button" data-action="shop-back" aria-label="回到花园">${icon('house',32)}</button><button class="icon-button" data-action="next-event" aria-label="玩英语，收集贝壳或水">${icon('play',32)}</button></div></main>`;
