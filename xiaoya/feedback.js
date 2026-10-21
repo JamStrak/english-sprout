@@ -238,7 +238,7 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
   }
   function play(kind, options = {}) {
     if (destroyed || doc.hidden || !KINDS.has(kind)) return false;
-    visual(kind, options);
+    if (options.visual !== false) visual(kind, options);
     if (options.silent || kind === 'ready' || !allowed()) stopAudio();
     else sound(kind);
     return true;

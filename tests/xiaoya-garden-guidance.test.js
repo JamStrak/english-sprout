@@ -56,7 +56,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
       classList:{toggle(name,on){if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)},
       hasAttribute:name=>name in attrs,style:{setProperty(){}},focus(){}};
   });}
-  const root={addEventListener:register('app'),set innerHTML(value){html=value;nodes=parse(value);},get innerHTML(){return html;}};
+  const root={addEventListener:register('app'),querySelector:selector=>document.querySelector(selector),set innerHTML(value){html=value;nodes=parse(value);},get innerHTML(){return html;}};
   const modalRoot={set innerHTML(value){modalNodes=parse(value);}};
   const buttons=()=>[...nodes,...modalNodes];
   const document={baseURI:'http://127.0.0.1/xiaoya-garden-test/',hidden:false,activeElement:null,
@@ -85,7 +85,11 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},performance:{now:()=>clock},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:()=>({load(){},status:()=> 'ready'})});
+  Object.assign(sandbox,storyPictures,{createMeadowMotion:()=>({capture:()=>null,async play(){
+    // Observe the real controller's feedback while the visual effect owns it,
+    // then complete the animation. Geometry is covered in browser tests.
+    (calls.motions??=[]).push({...sandbox.ui.getFeedback()});return true;
+  },cancel(){}}),createWelcomeGreetings,createPictureLoader:()=>({load(){},status:()=> 'ready'})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
     getGarden:()=>meadowState,getFeedback:()=>feedback};`,sandbox);
   async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener(event);await flush();}
@@ -95,7 +99,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     async plantAt(point){await meadowActions.onPlant(point);await flush();},
     async water(id){await meadowActions.onWater(id);await flush();},
     guided:()=>buttons().filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action),
-    async click(action){const target=buttons().find(node=>node.dataset.action===action);assert.ok(target,`Missing target ${action}`);await emit('app','click',{target:{closest:()=>target}});},
+    async click(action){const target=buttons().find(node=>node.dataset.action===action);assert.ok(target,`Missing target ${action}`);await emit('app','click',{target:{closest:selector=>selector==='button'?target:null}});},
     activity:type=>emit('app',type),
     async finishSound(){assert.ok(sounds.length);sounds.at(-1).resolve(true);await flush();},
     async hidden(value){document.hidden=value;await emit('document','visibilitychange');},
@@ -124,7 +128,8 @@ test('first planting and bloom give spoken cues; every watering gives its own sh
   await f.click('meadow-can');const count=f.sounds.length,water=f.getGarden().water;
   for(let i=1;i<=5;i++){
     await f.water('plant-1');assert.equal(f.getGarden().plants[0].waterings,i);
-    assert.equal(f.getGarden().water,water-i);assert.equal(f.getFeedback().plantId,'plant-1');
+    assert.equal(f.getGarden().water,water-i);assert.equal(f.calls.motions.at(-1).plantId,'plant-1');
+    assert.equal(f.calls.motions.at(-1).motion,true);assert.equal(f.getFeedback(),null,'Completed motion releases its transient feedback');
   }
   await f.advance(340);assert.equal(f.sounds.length,count+1);
   assert.match(f.sounds.at(-1).file,/meadow-bloom\.mp3$/);

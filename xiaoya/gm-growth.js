@@ -21,7 +21,7 @@ export function createGrowthWorkbench() {
   const flower = ()=>GROWTH_FLOWER_BY_ID.get(selected);
   const current = ()=>effective(settings, selected);
   const editing = ()=>scope==='defaults' ? settings.defaults : current();
-  const statusText = ()=>status || (GM_SANDBOX ? '临时测试：参数只在本次会话生效，刷新重置。' : '修改自动保存在当前浏览器。可导出参数供后续接入。');
+  const statusText = ()=>status || (GM_SANDBOX ? '临时测试：参数只在本次会话生效，刷新重置。' : '动效修改自动保存，回到花园后下一滴水立即沿用。');
   const preview = ()=>target?.querySelector('[data-growth-preview]');
   function controls() {
     if(!preview())return;
@@ -252,7 +252,7 @@ export function createGrowthWorkbench() {
     if(!dirty)settings=store.load();
     const families=new Map();for(const f of GROWTH_FLOWERS){if(!families.has(f.familyId))families.set(f.familyId,[]);families.get(f.familyId).push(f);}
     target.innerHTML=`<div class="gm-section-heading"><div><h2>花朵成长实验台</h2><p>50 种花 · 每种 5 阶段 · 18 种共享种子外观</p></div><span class="gm-count">美术待验收</span></div>
-      <p class="gm-growth-note">这里调整新花的预览参数；当前孩子花园、商店和挑战奖励沿用已上线版本。测试浇水不消耗水滴，不添加种子，也不修改学习记录。</p>
+      <p class="gm-growth-note">下方动效参数用于花园里的所有花朵。这里的 50 种候选花、阶段大小和浇水次数只用于美术预览；正式花种与成长次数保持现行规则。测试浇水不修改学习记录。</p>
       <div class="gm-growth-picker"><button data-growth-action="previous" aria-label="上一朵花">←</button><label for="gm-growth-flower" class="gm-sr">选择花朵</label><select id="gm-growth-flower" data-growth-flower>${[...families.values()].map(group=>`<optgroup label="${esc(group[0].familyName)}">${group.map(f=>`<option value="${esc(f.id)}"${f.id===selected?' selected':''}>${esc(f.name)}</option>`).join('')}</optgroup>`).join('')}</select><button data-growth-action="next" aria-label="下一朵花">→</button></div>
       <div class="gm-growth-grid"><section class="gm-growth-card"><h3 data-growth-name></h3><code data-growth-id></code>
         <div class="gm-growth-preview" data-growth-preview data-motion-state="idle"><div class="gm-growth-ground"></div><i class="gm-growth-glow" data-growth-effect="glow" aria-hidden="true"></i><img data-growth-image alt=""><img data-growth-incoming alt="" aria-hidden="true"><i class="gm-growth-ripple" data-growth-effect="ripple" aria-hidden="true"></i><i class="gm-growth-drop" data-growth-effect="drop" aria-hidden="true"></i>${Array.from({length:12},(_,i)=>`<i class="gm-growth-particle ${i<6?'is-water':'is-star'}" data-growth-effect="particle" data-growth-particle="${i}" aria-hidden="true"></i>`).join('')}<span class="gm-growth-root" data-growth-root title="固定根点"></span><span class="gm-growth-phase" data-growth-phase role="status">准备浇水</span><button data-growth-action="reload" class="gm-growth-reload"><span data-growth-image-error></span></button></div>

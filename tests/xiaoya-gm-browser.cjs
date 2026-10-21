@@ -10,7 +10,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const root = path.resolve(__dirname, '..'), dist = path.join(root, 'dist');
+const root = path.resolve(__dirname, '..'), dist = path.resolve(root, process.env.XIAOYA_DIST_DIR || 'dist');
 const publicBuild = process.env.XIAOYA_EXPECT_PUBLIC === '1';
 const filter = process.env.XIAOYA_TEST_FILTER ? new RegExp(process.env.XIAOYA_TEST_FILTER) : null;
 const out = path.resolve(root, process.env.XIAOYA_GM_TEST_OUT || path.join('test-results', publicBuild ? 'xiaoya-v016-gm-public' : 'xiaoya-v016-gm'));
@@ -239,25 +239,25 @@ async function main() {
   await check('sandbox lesson reward shop planting watering reload and exit',async f=>{
     await sandbox(f.p);await simulate(f.p);await press(f.p,'[data-action="finish"]');
     await f.p.locator('.reward-view').waitFor();await press(f.p,'[data-action="garden"]');await f.p.locator('.meadow-view').waitFor();
-    assert.equal(await f.p.locator('[data-shells]').textContent(),'2');assert.equal(await f.p.locator('[data-water]').textContent(),'3');
+    assert.equal(await f.p.locator('[data-shells]').textContent(),'∞');assert.equal(await f.p.locator('[data-water]').textContent(),'∞');
     await press(f.p,'[data-action="shop"]');await f.p.locator('.seed-shop-view').waitFor();await press(f.p,'[data-action="shop-pack"]');
     await f.p.locator('.blindbox-view[data-blindbox-phase="choose"]').waitFor();await press(f.p,'[data-mystery-bag="0"]');
     await f.p.locator('.blindbox-view[data-blindbox-phase="revealed"]').waitFor();await press(f.p,'[data-action="blindbox-plant"]');
     await f.p.locator('.meadow-view[data-tool="seed"]').waitFor();
     const field=f.p.locator('[data-meadow-field]');await field.scrollIntoViewIfNeeded();const box=await field.boundingBox();await f.p.mouse.click(box.x+box.width*.48,box.y+box.height*.7);
     await f.p.locator('[data-meadow-plant][data-waterings="0"]').waitFor();await press(f.p,'[data-action="meadow-can"]');await press(f.p,'[data-water-plant]');
-    await f.p.locator('[data-meadow-plant][data-waterings="1"]').waitFor();assert.equal(await f.p.locator('[data-water]').textContent(),'2');
+    await f.p.locator('[data-meadow-plant][data-waterings="1"]').waitFor();assert.equal(await f.p.locator('[data-water]').textContent(),'∞');
     await clean(f);
     const before=await bridge(f.p,'inspect');await f.p.evaluate(()=>dispatchEvent(new StorageEvent('storage',{key:'xiaoya-english:meadow:v1',newValue:'invalid-other-tab-record'})));
     assert.deepEqual(await bridge(f.p,'inspect'),before,'Other tabs\' records leaked into the sandbox');
     await f.p.reload({waitUntil:'domcontentloaded'});await bridge(f.p,'navigate','garden');await f.p.locator('.meadow-view').waitFor();
-    assert.equal(await f.p.locator('[data-meadow-plant]').count(),0);assert.equal(await f.p.locator('[data-water]').textContent(),'0');
+    assert.equal(await f.p.locator('[data-meadow-plant]').count(),0);assert.equal(await f.p.locator('[data-water]').textContent(),'∞');
     await press(f.p,'[data-gm-action="exit"]');await f.p.locator('main.home-view').waitFor();
     return {steps:['simulate','reward','shop','open seed','plant','water','ignore storage event','reload resets','exit'],childRecordBytesUnchanged:true};
   });
   await check('workbench supply and page navigation stay inside disposable records',async f=>{
     await openWorkbench(f.p,'flows');await press(f.p,'[data-gm-action="supply"]');await f.p.locator('.seed-shop-view').waitFor();await f.p.locator('.gm-testbar').waitFor();
-    assert.deepEqual((await bridge(f.p,'inspect')).wallet,{shells:12,water:11});
+    assert.deepEqual((await bridge(f.p,'inspect')).wallet,{shells:0,water:0,unlimited:true});
     for(const [page,selector]of[['garden','.meadow-view'],['home','.home-view'],['shop','.seed-shop-view'],['challenges','[data-challenge-board]'],['parent','.parent-view']]){
       await openWorkbench(f.p,'flows');await press(f.p,`[data-gm-action="navigate"][data-gm-page="${page}"]`);await f.p.locator(selector).waitFor();assert.equal((await bridge(f.p,'inspect')).page,page);
     }
@@ -265,7 +265,7 @@ async function main() {
     await press(f.p,'[data-gm-action="lesson"][data-gm-event="daily-peekaboo"][data-gm-mode="review"]');await f.p.locator('main[data-event="daily-peekaboo"][data-phase="request"]').waitFor();
     assert.equal(await f.p.locator('main.event-view').getAttribute('data-practice-mode'),'review');
     await openWorkbench(f.p,'courses');await press(f.p,'[data-gm-action="lesson"][data-gm-event="daily-peekaboo"][data-gm-mode="checkup"]');await simulate(f.p);await press(f.p,'[data-action="finish"]');await f.p.locator('.parent-view').waitFor();
-    return {supply:{shells:12,water:11},pages:5,reviewAndCheckupViaUI:true};
+    return {supply:{shells:0,water:0,unlimited:true},pages:5,reviewAndCheckupViaUI:true};
   });
   await check('review checkup and challenge preserve normal semantics',async f=>{
     await sandbox(f.p,'gmEvent=daily-peekaboo&gmMode=checkup&gmVoice=ryan');
@@ -274,12 +274,14 @@ async function main() {
     for(let i=0;i<4;i++){await f.p.locator('main[data-challenge="challenge-1"][data-phase="request"]').waitFor();await simulate(f.p);await press(f.p,'[data-action="finish"]');}
     await f.p.locator('[data-challenge-complete="challenge-1"]').waitFor();await press(f.p,'[data-action="garden"]');await f.p.locator('.meadow-view').waitFor();
     const wallet={shells:await f.p.locator('[data-shells]').textContent(),water:await f.p.locator('[data-water]').textContent()};
-    assert.deepEqual(wallet,{shells:'4',water:'6'});
+    assert.deepEqual(wallet,{shells:'∞',water:'∞'});
+    const ledger=(await bridge(f.p,'inspect')).wallet;assert.deepEqual(ledger,{shells:4,water:6,unlimited:true});
     await bridge(f.p,'navigate','challenges');await press(f.p,'[data-challenge-unit="challenge-1"]');
     for(let i=0;i<4;i++){await f.p.locator('main[data-phase="request"]').waitFor();await simulate(f.p);await press(f.p,'[data-action="finish"]');}
     await bridge(f.p,'navigate','garden');
     assert.deepEqual({shells:await f.p.locator('[data-shells]').textContent(),water:await f.p.locator('[data-water]').textContent()},wallet,'Replaying a completed challenge issued its reward again');
-    return {challengeSteps:4,firstReward:wallet,repeatedReward:false};
+    assert.deepEqual((await bridge(f.p,'inspect')).wallet,ledger,'Unlimited resources must not hide duplicate rewards');
+    return {challengeSteps:4,firstReward:ledger,repeatedReward:false};
   });
 }
 main().catch(error=>{process.exitCode=1;report.checks.push({name:'suite setup',status:'FAIL',error:error.stack});console.error(error);}).finally(async()=>{

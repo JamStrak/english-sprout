@@ -82,7 +82,7 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
     location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},performance:{now:()=>now},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
+  Object.assign(sandbox,storyPictures,{createMeadowMotion:()=>({capture:()=>null,play:async()=>false,cancel(){}}),createWelcomeGreetings,createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
