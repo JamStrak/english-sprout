@@ -14,7 +14,8 @@ const dist = path.join(root,'dist');
 if (path.dirname(dist) !== root || path.basename(dist) !== 'dist') throw new Error('Unsafe build target');
 await fs.rm(dist,{recursive:true,force:true});
 await fs.mkdir(dist,{recursive:true});
-await fs.cp(path.join(root,'public'),dist,{recursive:true});
+// Candidate growth art belongs to the internal review build until accepted.
+await fs.cp(path.join(root,'public'),dist,{recursive:true,filter:source=>internal||source!==path.join(root,'public','xiaoya','growth')});
 await fs.cp(path.join(root,'src'),path.join(dist,'src'),{recursive:true});
 const template=await fs.readFile(path.join(root,'index.html'),'utf8');
 if(!template.includes('<!-- APP_CURRICULUM -->'))throw new Error('Missing inline curriculum marker');

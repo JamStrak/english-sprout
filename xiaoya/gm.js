@@ -8,12 +8,14 @@ import {CHALLENGE_UNITS} from './challenges.js';
 import {VOICES, lessonAudio} from './voices.js';
 import {playSound, stopSound} from './audio.js';
 import {GARDEN_MUSIC_FILE, GARDEN_MUSIC_VOLUME} from './garden-music.js';
+import {createGrowthWorkbench} from './gm-growth.js';
 
 // This module is included only in internal builds. The guard also keeps a
 // mistakenly imported source module from exposing tools on a public build.
 if (INTERNAL_BUILD) installWorkbench();
 
 function installWorkbench() {
+  const growthWorkbench = createGrowthWorkbench();
   const stylesheet = document.createElement('link'); stylesheet.rel = 'stylesheet';
   stylesheet.href = new URL('./gm.css', import.meta.url).href; document.head.append(stylesheet);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -45,7 +47,7 @@ function installWorkbench() {
   const build = document.querySelector('meta[name="xiaoya-build"]')?.content || '';
   const host = document.createElement('div'); host.id = 'xiaoya-gm';
   host.innerHTML = `${GM_SANDBOX ? `<aside class="gm-testbar" aria-label="GM 流程测试工具"><span class="gm-test-mark">GM · 模拟</span><button data-gm-action="open">测试台</button><label class="gm-score-label">下一次结果 <select data-gm-result aria-label="模拟下一次录音结果">${resultOptions()}</select></label><button data-gm-action="advance" title="跳过当前示范，直接测试说话步骤">跳过示范</button><button data-gm-action="exit">退出测试</button><span class="gm-test-hint">点击话筒即可模拟 · 不录音 · 刷新重置</span></aside>` : '<button class="gm-launcher" data-gm-action="open" aria-haspopup="dialog" aria-controls="gm-workbench">GM <span>内测</span></button>'}
-    <dialog id="gm-workbench" class="gm-dialog" aria-labelledby="gm-title"><div class="gm-dialog-shell"><header class="gm-header"><div><p class="gm-eyebrow">XIAOYA / INTERNAL</p><h1 id="gm-title">小芽测试台 <span>GM</span></h1><p class="gm-version">v${esc(version)} · ${esc(build)} · ${GM_SANDBOX?'模拟测试中':'开发内测版'}</p></div><button data-gm-action="close" class="gm-close" aria-label="关闭 GM 测试台">×</button></header><p class="gm-safety">${GM_SANDBOX?'这里的进度、贝壳、水滴只用于本次测试，刷新即重置。':'试听和看图不会修改学习记录。进入流程测试后，使用独立临时记录。'} 模拟星级不代表识别准确率。</p><nav class="gm-tabs" role="tablist" aria-label="测试台分类">${[['courses','课程速查'],['voices','声音库'],['images','图片库'],['music','背景音乐'],['flows','流程测试']].map(([id,title])=>`<button id="gm-tab-${id}" role="tab" aria-controls="gm-content" data-gm-tab="${id}" aria-selected="${id===activeTab}">${title}</button>`).join('')}</nav><div id="gm-filters" class="gm-filters"></div><main id="gm-content" class="gm-content" role="tabpanel" aria-labelledby="gm-tab-courses"></main><footer class="gm-player"><span class="gm-player-dot" aria-hidden="true"></span><p data-gm-playback role="status" aria-live="polite"></p><button data-gm-action="stop">停止声音</button></footer></div></dialog>
+    <dialog id="gm-workbench" class="gm-dialog" aria-labelledby="gm-title"><div class="gm-dialog-shell"><header class="gm-header"><div><p class="gm-eyebrow">XIAOYA / INTERNAL</p><h1 id="gm-title">小芽测试台 <span>GM</span></h1><p class="gm-version">v${esc(version)} · ${esc(build)} · ${GM_SANDBOX?'模拟测试中':'开发内测版'}</p></div><button data-gm-action="close" class="gm-close" aria-label="关闭 GM 测试台">×</button></header><p class="gm-safety">${GM_SANDBOX?'这里的进度、贝壳、水滴只用于本次测试，刷新即重置。':'试听和看图不会修改学习记录。进入流程测试后，使用独立临时记录。'} 模拟星级不代表识别准确率。</p><nav class="gm-tabs" role="tablist" aria-label="测试台分类">${[['courses','课程速查'],['voices','声音库'],['images','图片库'],['music','背景音乐'],['growth','花朵成长'],['flows','流程测试']].map(([id,title])=>`<button id="gm-tab-${id}" role="tab" aria-controls="gm-content" data-gm-tab="${id}" aria-selected="${id===activeTab}">${title}</button>`).join('')}</nav><div id="gm-filters" class="gm-filters"></div><main id="gm-content" class="gm-content" role="tabpanel" aria-labelledby="gm-tab-courses"></main><footer class="gm-player"><span class="gm-player-dot" aria-hidden="true"></span><p data-gm-playback role="status" aria-live="polite"></p><button data-gm-action="stop">停止声音</button></footer></div></dialog>
     <dialog id="gm-picture-preview" class="gm-preview" aria-labelledby="gm-picture-title"><header><div><h2 id="gm-picture-title">图片预览</h2><p data-gm-picture-info></p></div><button data-gm-action="close-preview" class="gm-close" aria-label="关闭图片预览">×</button></header><div class="gm-preview-canvas"><img alt="" data-gm-large-picture></div><p data-gm-picture-path class="gm-file-path"></p></dialog>`;
   document.body.append(host);
   if (GM_SANDBOX) document.body.classList.add('gm-sandbox');
@@ -120,7 +122,7 @@ function installWorkbench() {
   function render() {
     host.querySelectorAll('[data-gm-tab]').forEach(button => { const active = button.dataset.gmTab === activeTab; button.setAttribute('aria-selected',String(active)); button.tabIndex = active ? 0 : -1; });
     content.setAttribute('aria-labelledby',`gm-tab-${activeTab}`);
-    if (activeTab === 'music') filterBar.innerHTML = '';
+    if (activeTab === 'music' || activeTab === 'growth') filterBar.innerHTML = '';
     else if (activeTab === 'flows') filterBar.innerHTML = voicePicker();
     else {
       const placeholder = activeTab === 'courses' ? '搜英文、中文、课程 ID' : activeTab === 'voices' ? '搜句子、提示音或文件名' : '搜画面、句子或文件名';
@@ -138,6 +140,7 @@ function installWorkbench() {
     if (activeTab === 'courses') renderCourses();
     else if (activeTab === 'flows') renderFlows();
     else if (activeTab === 'music') renderMusic();
+    else if (activeTab === 'growth') growthWorkbench.render(content);
     else if (!catalog) {
       content.innerHTML = `<div class="gm-empty"><h2>${catalogError?'资源索引还未载入':'正在载入资源索引…'}</h2><p>${esc(catalogError || '只读取清单；音频按点击播放，图片分批显示。')}</p>${catalogError?'<button data-gm-action="retry-catalog">重新读取</button>':''}</div>`;
       if (!catalogError) void loadCatalog();
