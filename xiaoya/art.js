@@ -46,7 +46,7 @@ export function icon(name,size=32) {
     parent:`${dot(11,8,5,'currentColor')}${dot(24,15,4,'currentColor')}<path d="M2 28v-8a9 9 0 0118 0v8M17 29v-5a7 7 0 0114 0v5" fill="currentColor"/>`,
     check:line('M5 16l8 8L28 7','currentColor',4), next:line('M12 5l11 11-11 11','currentColor',4),
     lock:`${line('M9 13V9a7 7 0 0114 0v4','currentColor',3)}${rect(5,12,22,18,4,'currentColor')}${dot(16,20,2.5,'#fff8e7')}${rect(15,20,2,5,1,'#fff8e7')}`,
-    gift:`${rect(5,14,22,16,3,'currentColor')}${rect(3,10,26,6,2,'currentColor')}${line('M16 12v17','#fff8e7',3)}${line('M16 10C3 11 6-4 13 3L16 10C29 11 26-4 19 3Z','currentColor',2.5)}`,
+    gift:paperLayer('gift-box','',{width:34,height:34}),
     hand:`<path d="M10 17V7a2 2 0 014 0v9V4a2 2 0 014 0v12V7a2 2 0 014 0v11-6a2 2 0 014 0v10q0 9-10 9c-4 0-6-3-9-6l-4-5q-2-4 2-3l5 4" fill="currentColor"/>`,
     wave:`<path d="M11 18V8a2 2 0 014 0v8V5a2 2 0 014 0v12V8a2 2 0 014 0v11-6a2 2 0 014 0v9q0 9-9 9c-4 0-6-3-9-6l-4-5q-2-4 2-3l4 3" fill="currentColor"/>${line('M3 8l2 2M6 3l2 2M29 4l1-2','currentColor',2)}`,
     tap:`<path d="M13 18V6a3 3 0 016 0v10l7 1q5 1 4 6l-2 8H16l-8-9q-3-5 1-5l4 3Z" fill="#fff8e7" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/>${line('M7 7H4M10 2L8 0M25 5l3-2','currentColor',2)}`,

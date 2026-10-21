@@ -167,6 +167,20 @@ async function openGift(page) {
   await press(page, '[data-action="welcome-gift"]');
   await page.locator('main.welcome-gift-view[data-gift-phase="wrapped"]').waitFor();
 }
+async function paperGift(page, action) {
+  const selector = `[data-action="${action}"] [data-paper-art="gift-box"]`;
+  await page.locator(`${selector}[data-paper-state="ready"]`).waitFor();
+  const details = await page.locator(selector).evaluate(async element => {
+    const source = element.querySelector('image').href.baseVal;
+    const bitmap = new Image(); bitmap.src = source; await bitmap.decode();
+    const box = element.closest('svg').getBoundingClientRect();
+    return {source,width:bitmap.naturalWidth,height:bitmap.naturalHeight,visibleWidth:box.width,visibleHeight:box.height};
+  });
+  assert.match(details.source, /xiaoya\/paper\/v1\/gift-box\.webp$/);
+  assert.equal(details.width,512); assert.equal(details.height,512);
+  assert(details.visibleWidth >= 60 && details.visibleHeight >= 60, 'Paper gift is too small to identify');
+  return details;
+}
 async function claim(page, kind) {
   await press(page, '[data-action="open-welcome-gift"]');
   await page.locator(`main.welcome-gift-view[data-gift-phase="opened"][data-gift-kind="${kind}"]`).waitFor();
@@ -469,12 +483,15 @@ async function main() {
     return {wallet,retrySucceeded:true};
   });
 
-  for (const size of [{name:'small-phone',width:320,height:568},{name:'landscape',width:640,height:360}]) {
+  for (const size of [{name:'desktop',width:1180,height:900},{name:'small-phone',width:320,height:568},{name:'landscape',width:640,height:360}]) {
     await check(`layout-${size.name}-all-gift-controls`, async f => {
       const p = f.page, states = {};
       states.home = await layout(p, '.home-view .primary-wrap button,.home-view [data-action="welcome-gift"]');
+      states.homeGift = await paperGift(p,'welcome-gift');
+      await p.screenshot({path:path.join(out,`layout-${size.name}-home.png`),animations:'disabled'});
       await openGift(p);
       states.wrapped = await layout(p, 'main.welcome-gift-view button');
+      states.wrappedGift = await paperGift(p,'open-welcome-gift');
       await p.screenshot({path:path.join(out,`layout-${size.name}-wrapped.png`),animations:'disabled'});
       await claim(p,'shells');
       states.opened = await layout(p, 'main.welcome-gift-view button');

@@ -7,7 +7,7 @@ import {PAPER_ASSETS,paperLayer,paperPlantLayer,installPaperArt} from '../xiaoya
 import {shellArt,dropArt,canArt,packArt,seedArt,plantArt} from '../xiaoya/garden-art.js';
 import {meadowPlantArt} from '../xiaoya/meadow-art.js';
 import {FLOWERS,SPECIAL_FLOWERS,ALL_FLOWERS} from '../xiaoya/garden-meadow.js';
-import {voicePortrait} from '../xiaoya/art.js';
+import {icon,voicePortrait} from '../xiaoya/art.js';
 import {flagArt,challengeFlag,challengeBoard,challengePrize} from '../xiaoya/challenge-ui.js';
 
 const shippedSpecialFlowers=SPECIAL_FLOWERS.filter(f=>fs.existsSync(new URL(`../public/${PAPER_ASSETS[`flower-${f.id}`]}`,import.meta.url)));
@@ -52,14 +52,24 @@ test('plant hit outlines match the currently shipped art assets',()=>{
   }
 });
 
-test('paper map preserves the v1 art and adds exactly seven optional v2 assets with nested-host relative paths',()=>{
-  assert.equal(Object.keys(PAPER_ASSETS).length,28);
+test('paper map includes the welcome gift and seven optional v2 assets with nested-host relative paths',()=>{
+  assert.equal(Object.keys(PAPER_ASSETS).length,29);
   assert.ok(Object.isFrozen(PAPER_ASSETS));
   for(const stage of ['seed-in-soil','sprout','bud'])assert.equal(PAPER_ASSETS[stage],`xiaoya/paper/v1/${stage}.webp`);
   for(const flower of FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v1/flowers/${flower.id}.webp`);
   for(const flower of SPECIAL_FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v2/flowers/${flower.id}.webp`);
   for(const key of ['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'])assert.equal(PAPER_ASSETS[key],`xiaoya/paper/v2/${key}.webp`);
   for(const path of Object.values(PAPER_ASSETS))assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);
+});
+
+test('every shared gift icon uses the delivered paper box without the old vector gift',()=>{
+  const art=icon('gift',72);
+  assert.equal(PAPER_ASSETS['gift-box'],'xiaoya/paper/v1/gift-box.webp');
+  assert.match(art,/data-paper-art="gift-box"/);
+  assert.match(art,/href="xiaoya\/paper\/v1\/gift-box.webp"/);
+  assert.doesNotMatch(art,/<path|<rect/);
+  const hash=createHash('sha256').update(fs.readFileSync(new URL(`../public/${PAPER_ASSETS['gift-box']}`,import.meta.url))).digest('hex');
+  assert.equal(hash,'f808beb497b4d462bb6c5b88ba62d02eb8664be220816f80ecfee1a294010701');
 });
 
 test('mapped art has a neutral placeholder and fixed bounds, never the old illustration',()=>{

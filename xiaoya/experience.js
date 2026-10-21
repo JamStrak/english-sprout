@@ -246,7 +246,7 @@ function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback()
 function homeView(){
   const progress=allRounds().length>0,task=activeNext(),resume=progress&&task!=='learn',choice=nextPractice(),story=storyFor(choice.eventId);
   const shortcuts=`${challengeFlag(challengeSummary())}${progress&&!resume?`<button class="garden-shortcut" data-action="garden" aria-label="打开我的小花园">${plantArt(meadow.FLOWERS[0],2)}${icon('house',24)}</button>`:''}`;
-  const gift=meadow.welcomeGift(meadowState,today())?`<button class="welcome-gift-entry" data-action="welcome-gift" aria-label="小芽送你一份小礼物，点开看看"><span aria-hidden="true">${icon('gift',40)}</span><small>送给你</small></button>`:'';
+  const gift=meadow.welcomeGift(meadowState,today())?`<button class="welcome-gift-entry" data-action="welcome-gift" aria-label="小芽送你一份小礼物，点开看看"><span aria-hidden="true">${icon('gift',72)}</span></button>`:'';
   return `${header()}<main class="home-view home-welcome" data-next-event="${choice.eventId}" data-next-mode="${choice.mode}"><div class="home-glade"><i class="home-leaf" aria-hidden="true"></i><div class="home-companion" aria-hidden="true">${buddy('happy')}</div><i class="home-leaf" aria-hidden="true"></i>${gift}</div>${primary(resume?'garden':'next-event',resume?'去花园照顾小种子':`${choice.mode==='review'?'再见老朋友':'出发'}：${story.event.title}`,resume?canArt():icon('play',48))}<div class="reward-preview" aria-label="${hasRewardChoice()?'玩英语，选择两枚贝壳或两滴水':'第一份学习礼物，两枚贝壳和三滴水'}">${rewardPreview()}</div>${shortcuts?`<div class="home-shortcuts">${shortcuts}</div>`:''}</main>`;
 }
 
