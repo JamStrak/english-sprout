@@ -117,6 +117,10 @@ async function gardenChange(change){
 }
 function savePrefs(next){try{appStorage.setItem(PREFS,JSON.stringify(next));prefs=next;soundPlayer.play('settings-save');return true;}catch{return showError('设置没有保存，请检查浏览器存储权限。'),false;}}
 function challengeSummary(){return challenge.getChallenges(challenges,{practicePlan:practiceToday(),date:today()});}
+function challengeProgress(s){
+  const attempts=challenges.attempts.filter(a=>a.unitId===s.challengeUnitId&&canonicalEventId(a.eventId)===canonicalEventId(s.event.id));
+  return challenge.challengeStepProgress(attempts,{afterAttemptId:s.challengeReplay?s.challengeAttemptStartId:null});
+}
 function hasPendingChallengeRecovery(){return challenges.attempts.some(a=>!practice.entries.some(r=>r.roundId===`challenge:${a.attemptId}`))||challengeSummary().receipts.some(r=>!meadowState.challengeRewards.some(p=>p.unitId===r.unitId));}
 async function challengeChange(change){
   const commit=()=>{if(storageProblem)return false;try{const raw=appStorage.getItem(challenge.CHALLENGE_KEY),latest=raw?challenge.validateChallenges(JSON.parse(raw)):challenge.createChallenges(),next=change(latest);challenge.validateChallenges(next);appStorage.setItem(challenge.CHALLENGE_KEY,JSON.stringify(next));challenges=next;return true;}catch{return showError('挑战进度还没有保存，请重试。这次已完成的小步不会清空。'),false;}};
@@ -137,13 +141,13 @@ async function restoreChallengeRewards(){
   if(changed&&!modal&&['home','garden','parent','challenges'].includes(page))render();
   return receipts.every(r=>meadowState.challengeRewards.some(p=>p.unitId===r.unitId));
 }
-async function saveChallengeResult(s,{result,source,helped}){
+async function saveChallengeResult(s,{result,source,helped,stars}){
   if(!s.attemptId)return false;
   // Navigation may release the live recording while the cross-tab lock waits.
   // Save the completed result from a snapshot, not the mutable session object.
   const attemptId=s.attemptId,eventId=s.event.id,unitId=s.challengeUnitId,retryAfterAttemptId=s.retryAfterAttemptId||null;
   const evidence=effectiveEvidence(state).find(e=>e.attemptId===attemptId),date=evidence?.date||today();
-  const saved=await challengeChange(latest=>challenge.recordChallengeAttempt(latest,{id:`attempt:${attemptId}`,unitId,eventId,date,attemptId,result,source,helped:!!helped,retryAfterAttemptId}));
+  const saved=await challengeChange(latest=>challenge.recordChallengeAttempt(latest,{id:`attempt:${attemptId}`,unitId,eventId,date,attemptId,result,source,helped:!!helped,retryAfterAttemptId,...(stars===undefined?{}:{stars})}));
   if(!saved)return false;
   const practiceSaved=await savePractice({practiceRecord:{roundId:`challenge:${attemptId}`,eventId,date,attemptId,mode:'review',rewardVariant:null}});
   if(!practiceSaved)return false;
@@ -166,13 +170,11 @@ function startChallenge(unitId){
 }
 function retryChallengeStep(){
   const s=session;if(!s?.challengeUnitId)return;
-  startEvent(s.event,false,{challengeUnitId:s.challengeUnitId,challengeReplay:s.challengeReplay,challengeReplayIndex:s.challengeReplayIndex,retryAfterAttemptId:s.attemptId||s.retryAfterAttemptId||null});
+  startEvent(s.event,false,{challengeUnitId:s.challengeUnitId,challengeReplay:s.challengeReplay,challengeReplayIndex:s.challengeReplayIndex,challengeAttemptStartId:s.challengeAttemptStartId,retryAfterAttemptId:s.attemptId||s.retryAfterAttemptId||null});
 }
 async function finishChallengeStep(){
   const s=session;if(!s||s.phase!=='resolved'||s.finishing)return;
-  if(!s.attemptId||s.helped)return retryChallengeStep();
-  const entry=challenges.attempts.find(a=>a.attemptId===s.attemptId);
-  if(!entry||entry.result!=='independent'||entry.helped){s.phase='request';s.recallReady=true;render();return sound(voice('challenge-practice'),['sample','record']);}
+  if(!s.attemptId||!challengeProgress(s).passed)return retryChallengeStep();
   s.finishing=true;const generation=uiGeneration;render();
   const saved=await restoreChallengeRewards();s.finishing=false;
   if(!saved||session!==s||generation!==uiGeneration||modal||document.hidden)return;
@@ -200,7 +202,7 @@ async function inviteChallenge(){
 }
 function challengeParentPanel(){
 
-  const summary=challengeSummary();return `<section class="parent-card"><h2>花园挑战 · ${summary.completedCount} / ${summary.units.length} 组</h2><p>每组四句，完成的小步永久保留。孩子可以主动挑战；系统只会在至少隔天、且四句中三句已有独立表达候选时轻声邀请，每组一次，两次邀请至少间隔三天。</p>${summary.units.map(u=>`<div class="challenge-parent-row"><span>${esc(u.title)} · ${u.completedCount} / 4${u.items.some(i=>i.passEvidence==='after-practice')?' · 含练习后完成':''}</span><button data-challenge-unit="${u.id}">${u.available?'去挑战':'先学习'}</button></div>`).join('')}<p>挑战过关是游戏进度。当天听过示范再答出来记作练习后完成，不等于稳定掌握；复习仍会隔天检验。机器匹配不是发音评分，设备问题和没听清均不扣进度。</p></section>`;
+  const summary=challengeSummary();return `<section class="parent-card"><h2>花园挑战 · ${summary.completedCount} / ${summary.units.length} 组</h2><p>每组四句，三颗星一次通过；同一句两颗星累计两次通过，一颗星继续练习。完成的小步和已攒的一次两颗星都会保留。孩子可以主动挑战；系统只会在至少隔天、且四句中三句已有独立表达候选时轻声邀请，每组一次，两次邀请至少间隔三天。</p>${summary.units.map(u=>`<div class="challenge-parent-row"><span>${esc(u.title)} · ${u.completedCount} / 4${u.items.some(i=>i.passEvidence==='after-practice')?' · 含练习后完成':''}</span><button data-challenge-unit="${u.id}">${u.available?'去挑战':'先学习'}</button></div>`).join('')}<p>挑战过关是游戏进度。当天听过示范再答出来记作练习后完成，不等于稳定掌握；复习仍会隔天检验。机器匹配不是发音评分，设备问题和没听清均不扣进度。</p></section>`;
 }
 function toast(message){clearTimeout(toastTimer);document.querySelector('.toast')?.remove();const el=document.createElement('div');el.className='toast';el.role='status';el.textContent=message;document.body.append(el);toastTimer=setTimeout(()=>el.remove(),5000);}
 function showError(message){openModal({type:'error',message});}
@@ -400,7 +402,7 @@ function picture(story,frame,moving=false,{alternate=false,phase='request',conte
 function cancelStory(s){s.storyGeneration++;clearTimeout(s.storyTimer);s.storyDelayFinish?.(false);s.storyDelayFinish=null;s.storyRunning=false;}
 function currentStory(s,g){return session===s&&s.storyGeneration===g&&s.phase==='story'&&!modal&&!document.hidden;}
 function delay(s,g,ms){return new Promise(resolve=>{if(!currentStory(s,g))return resolve(false);s.storyDelayFinish=resolve;s.storyTimer=setTimeout(()=>{s.storyDelayFinish=null;resolve(currentStory(s,g));},ms);});}
-function startEvent(event=null,assessment=false,challengeOptions=null,practiceOverride=null){const choice=practiceOverride||(event?{eventId:event.id,mode:assessment?'review':practiceToday().unseenIds.includes(event.id)?'new':'free'}:nextPractice());event??=storyFor(choice.eventId).event;stopSession();const story=storyFor(event.id),recall=!!challengeOptions||assessment||choice.mode==='review';const priorChallengeHelp=challengeSummary().units.some(u=>u.items.some(i=>i.canonicalEventId===canonicalEventId(event.id)&&i.helpedToday));session={...challengeOptions,id:uid(),event,story,practiceMode:challengeOptions?'review':choice.mode,recallMode:recall,recallReady:recall,context:assessment?phraseCheckupContext(state,event.id):event.contexts[0],phase:recall?'request':'story',assessmentMode:assessment,helped:!recall,priorChallengeHelp,storyGeneration:0,speechGeneration:0,frame:story.teachingFrames[0],storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null};page='event';modal=null;render();if(!recall){playStory();effects.prepare();soundPlayer.play('lesson-enter');}else{soundPlayer.play(challengeOptions?'challenge-step':'lesson-enter');afterCue(()=>sound(voice(challengeOptions?'challenge-question':'flow-review-v13'),['sample','record']));prepareMicrophone();}}
+function startEvent(event=null,assessment=false,challengeOptions=null,practiceOverride=null){const choice=practiceOverride||(event?{eventId:event.id,mode:assessment?'review':practiceToday().unseenIds.includes(event.id)?'new':'free'}:nextPractice());event??=storyFor(choice.eventId).event;if(challengeOptions?.challengeReplay&&!Object.hasOwn(challengeOptions,'challengeAttemptStartId')){const last=challenges.attempts.filter(a=>a.unitId===challengeOptions.challengeUnitId&&canonicalEventId(a.eventId)===canonicalEventId(event.id)).at(-1);challengeOptions={...challengeOptions,challengeAttemptStartId:last?.attemptId||null};}stopSession();const story=storyFor(event.id),recall=!!challengeOptions||assessment||choice.mode==='review';const priorChallengeHelp=challengeSummary().units.some(u=>u.items.some(i=>i.canonicalEventId===canonicalEventId(event.id)&&i.helpedToday));session={...challengeOptions,id:uid(),event,story,practiceMode:challengeOptions?'review':choice.mode,recallMode:recall,recallReady:recall,context:assessment?phraseCheckupContext(state,event.id):event.contexts[0],phase:recall?'request':'story',assessmentMode:assessment,helped:!recall,priorChallengeHelp,storyGeneration:0,speechGeneration:0,frame:story.teachingFrames[0],storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null};page='event';modal=null;render();if(!recall){playStory();effects.prepare();soundPlayer.play('lesson-enter');}else{soundPlayer.play(challengeOptions?'challenge-step':'lesson-enter');afterCue(()=>sound(voice(challengeOptions?'challenge-question':'flow-review-v13'),['sample','record']));prepareMicrophone();}}
 // A short scene establishes meaning once. Completed teaching replays only the phrase.
 async function playStory(){const s=session;if(!s)return;cancelStory(s);cancelAttempt(s);stopSpeech();s.teaching=false;s.helped=true;s.context=s.event.contexts[0];s.phase='story';s.frame=s.story.teachingFrames[0];s.storyReady=false;s.storyError=false;s.storyRunning=true;const g=s.storyGeneration;render();
   if(!currentStory(s,g))return;
@@ -423,9 +425,9 @@ async function playStory(){const s=session;if(!s)return;cancelStory(s);cancelAtt
 }
 function replayStory(){return session?.phase==='story'&&!session.storyReady?playStory():sample();}
 function storyContinue(){if(!session?.storyReady)return;session.phase='request';return record();}
-function assessmentView(s){const a=s.assessment;if(!a)return '';const copy={preparing:'小耳朵准备中',assessing:'小芽在认真听',matched:'我听懂啦',retry:'再听一遍，一起试试',silence:'等话筒亮起来再说',unavailable:'小耳朵没有准备好，可以先听先说'};return `<section class="speech-feedback" data-assessment data-status="${a.status}" data-stars="${a.stars||0}"><button data-action="assessment-voice" aria-label="听小芽的提示：${copy[a.status]}">${['matched','retry','silence'].includes(a.status)?[1,2,3].map(i=>`<span class="${i<=a.stars?'lit':''}">${icon('star',25)}</span>`).join(''):'<i class="listening-dot"></i>'}${icon('sound',24)}</button>${a.status==='unavailable'&&s.pendingClip?button('retry-assessment','重试自动语音反馈','again'):''}<p class="sr-only" role="status">${copy[a.status]}</p></section>`;}
-function speechFeedback(kind){if(session?.challengeUnitId&&kind==='pass')return session.helped?sound(voice('challenge-practice'),['challenge-retry']):sound(voice('challenge-step'),['finish']);return kind==='pass'?sound(voice('flow-pass'),['finish']):narrate(`speech-${kind}`);}
-function assessmentVoice(){const a=session?.assessment;if(!a||session.recording||session.waiting)return;speechFeedback(a.status==='matched'?(session.assessmentMode?'saved':'pass'):a.status==='silence'?'silent':a.status==='retry'?'retry':'wait');}
+function assessmentView(s){const a=s.assessment;if(!a)return '';const progress=s.challengeUnitId?challengeProgress(s):null;const partial=progress?.twoStarCount>0&&progress.passRule!=='three-stars'?`<div class="challenge-two-star-progress" data-challenge-two-stars="${progress.twoStarCount}" role="img" aria-label="这句两颗星已收好 ${progress.twoStarCount} 次，共需两次${progress.passed?'，已经通过':''}">${[1,2].map(i=>`<i class="${i<=progress.twoStarCount?'done':''}">${i<=progress.twoStarCount?icon('check',18):''}</i>`).join('')}</div>`:'';const copy={preparing:'小耳朵准备中',assessing:'小芽在认真听',matched:'我听懂啦',retry:'再听一遍，一起试试',silence:'等话筒亮起来再说',unavailable:'小耳朵没有准备好，可以先听先说'};return `<section class="speech-feedback" data-assessment data-status="${a.status}" data-stars="${a.stars||0}"><button data-action="assessment-voice" aria-label="听小芽的提示：${copy[a.status]}">${['matched','retry','silence'].includes(a.status)?[1,2,3].map(i=>`<span class="${i<=a.stars?'lit':''}">${icon('star',25)}</span>`).join(''):'<i class="listening-dot"></i>'}${icon('sound',24)}</button>${a.status==='unavailable'&&s.pendingClip?button('retry-assessment','重试自动语音反馈','again'):''}${partial}<p class="sr-only" role="status">${copy[a.status]}</p></section>`;}
+function speechFeedback(kind){if(session?.challengeUnitId&&kind==='pass')return challengeProgress(session).passed?sound(voice('challenge-step'),['finish']):narrate('speech-partial');return kind==='pass'?sound(voice('flow-pass'),['finish']):narrate(`speech-${kind}`);}
+function assessmentVoice(){const a=session?.assessment;if(!a||session.recording||session.waiting)return;speechFeedback(a.status==='matched'?(session.assessmentMode?'saved':'pass'):a.status==='silence'?'silent':a.status==='retry'?(a.stars===2?'partial':'retry'):'wait');}
 function requestControls(s){
   if(s.recallReady)return `<div class="recall-options" data-recall-ready><button class="recall-option" data-action="sample" aria-label="听英语示范">${icon('ear',44)}<span>听一遍</span></button><button class="recall-option" data-action="record" aria-label="我会说，开始录音">${icon('mic',44)}<span>我会说</span></button></div>${button('context-help','小芽教我说','help')}`;
   return `${button('sample','听英语示范','ear')}${primary('record',s.recording?'说完了，结束录音':s.waiting?'麦克风准备中':'点亮话筒，开始说话',`${icon(s.recording?'stop':'mic',48)}${s.waiting?'<span class="mic-start-ring" aria-hidden="true"></span>':''}`,`${s.waiting?'disabled':''} aria-busy="${!!s.waiting}"`)}${button('context-help','小芽教我说','help')}`;
@@ -433,7 +435,7 @@ function requestControls(s){
 function eventView(){
   const s=session;if(!s)return homeView();if(s.phase==='reward')return rewardView();
   const story=s.phase==='story',unit=s.challengeUnitId?challengeSummary().units.find(u=>u.id===s.challengeUnitId):null;
-  const passed=unit&&challenges.attempts.some(a=>a.attemptId===s.attemptId&&a.result==='independent'&&!a.helped);
+  const passed=unit&&challengeProgress(s).passed;
   const goal=unit?(unit.completed?'':`${shellArt()}<span>4</span><span>＋</span>${dropArt()}<span>6</span>`):rewardPreview();
   const resolved=unit?(passed?primary('finish','这一小步完成，继续挑战',icon('check',48),s.finishing?'disabled aria-busy="true"':''):`<button class="challenge-practice-button" data-action="challenge-retry" aria-label="练过啦，再自己试一次">${icon('again',30)}<span>再试一次</span></button>`):primary('finish',s.assessmentMode?'保存这次练习':'打开这次小礼物',s.assessmentMode?icon('check',48):icon('gift',48),s.finishing?'disabled aria-busy="true"':'');
   return `${header()}<main class="event-view" ${unit?'data-challenge="'+unit.id+'"':''} data-phase="${s.phase}" data-event="${s.event.id}" data-context="${s.context.id}" data-practice-mode="${s.practiceMode||'free'}">
@@ -462,17 +464,19 @@ async function assessClip(s,url,g){const current=()=>session===s&&s.speechGenera
 async function applySpeechResult(s,recognized,g){
   const current=()=>session===s&&s.speechGeneration===g&&s.phase==='request';
   s.assessment={status:recognized.matched?'matched':'retry',stars:recognized.stars};
-  if(recognized.heard?.trim()){const attemptId=uid();if(!save(recordEvidence(state,{attemptId,eventId:s.event.id,contextId:s.context.id,kind:'speech',result:recognized.matched?(s.helped||s.retryAfterAttemptId||s.priorChallengeHelp?'supported':'independent'):'unclear',source:'machine',helped:!!(s.helped||s.retryAfterAttemptId||s.priorChallengeHelp),date:today()})))return;s.attemptId=attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result:recognized.matched?(s.helped?'supported':'independent'):'unclear',source:'machine',helped:s.helped}))return;}
+  if(recognized.heard?.trim()){const attemptId=uid();if(!save(recordEvidence(state,{attemptId,eventId:s.event.id,contextId:s.context.id,kind:'speech',result:recognized.matched?(s.helped||s.retryAfterAttemptId||s.priorChallengeHelp?'supported':'independent'):'unclear',source:'machine',helped:!!(s.helped||s.retryAfterAttemptId||s.priorChallengeHelp),date:today()})))return;s.attemptId=attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result:recognized.matched?(s.helped?'supported':'independent'):'unclear',source:'machine',helped:!!(s.helped||s.retryAfterAttemptId||s.priorChallengeHelp),stars:recognized.stars}))return;}
   if(!current())return;
-  if(recognized.matched)s.phase='resolved';render();if(!recognized.matched)prepareMicrophone();
-  const cue=recognized.matched?(s.assessmentMode?'saved':'pass'):recognized.stars===2?'partial':'retry';
-  if(recognized.matched&&recognized.stars===3){
+  const passed=s.challengeUnitId?!!s.attemptId&&challengeProgress(s).passed:recognized.matched;
+  s.assessment.status=passed?'matched':'retry';
+  if(passed)s.phase='resolved';render();if(!passed)prepareMicrophone();
+  const cue=passed?(s.assessmentMode?'saved':'pass'):recognized.stars===2?'partial':'retry';
+  if(passed&&recognized.stars===3){
     const generation=uiGeneration;
     effects.play('three-stars',{target:document.querySelector('[data-action="assessment-voice"]')});
     // Leave room for the short chime, including the output device's startup budget.
     // This never locks input; any next action cancels the pending spoken praise.
     feedbackVoice(()=>{if(generation===uiGeneration&&session===s&&s.speechGeneration===g&&s.phase==='resolved'&&!modal&&!document.hidden)speechFeedback(cue);},760);
-  }else{soundPlayer.play('retry');afterCue(()=>{if(session===s&&s.speechGeneration===g)speechFeedback(cue);},260);}
+  }else{soundPlayer.play(passed&&s.challengeUnitId?'challenge-step':'retry');afterCue(()=>{if(session===s&&s.speechGeneration===g)speechFeedback(cue);},260);}
 }
 let gmResult='three';
 async function simulateRecording(){

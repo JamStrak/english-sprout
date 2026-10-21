@@ -264,22 +264,22 @@ test('unit 21 uses real new phrase recognition, awards one first clear and resto
   assert.equal(restored.getPractice().entries.length, f.getPractice().entries.length);
 });
 
-test('new unit help persists across refresh: fresh retry clears game progress but remains after-practice evidence', async () => {
+test('three stars after help clear the step and survive refresh without becoming independent evidence', async () => {
   const unit = challenge.CHALLENGE_UNITS[6];
   const events = unit.eventIds.map(id => content.EVENTS.find(event => event.id === id));
   const stored = studiedStore(events), f = controllerFixture({stored}); await flush();
   f.startChallenge(unit.id); await f.teach();
   const supported = f.getSession(); await f.assessClip(supported, 'blob:fixture-only', supported.speechGeneration);
-  assert.equal(f.challengeSummary().units[6].completedCount, 0);
+  assert.equal(f.challengeSummary().units[6].completedCount, 1);
+  assert.equal(supported.phase, 'resolved');
   assert.deepEqual([f.getMeadow().shells, f.getMeadow().water], [0,0]);
   const refreshed = controllerFixture({stored}); await flush(); refreshed.startChallenge(unit.id);
-  const retry = refreshed.getSession(); assert.equal(retry.helped, false); assert.equal(retry.priorChallengeHelp, true);
-  assert.equal(retry.retryAfterAttemptId, supported.attemptId);
-  await refreshed.assessClip(retry, 'blob:fixture-only', retry.speechGeneration);
+  assert.equal(refreshed.getSession().event.id, events[1].id, 'Resume continues with the next phrase');
   const item = refreshed.challengeSummary().units[6].items[0];
   assert.equal(item.passed, true); assert.equal(item.passEvidence, 'after-practice');
+  assert.equal(item.passRule, 'three-stars');
   assert.equal(refreshed.getState().evidence.at(-1).result, 'supported');
-  assert.equal(learning.phraseStatus(refreshed.getState(), retry.event.id).retained, false);
+  assert.equal(learning.phraseStatus(refreshed.getState(), supported.event.id).retained, false);
   assert.deepEqual([refreshed.getMeadow().shells, refreshed.getMeadow().water], [0,0]);
 });
 

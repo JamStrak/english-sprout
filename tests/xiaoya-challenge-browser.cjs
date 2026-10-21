@@ -36,7 +36,12 @@ async function fixture(){
     };window.Audio.prototype=NativeAudio.prototype;
   },{origin});
   const p=await c.newPage();p.setDefaultTimeout(20000);
-  try{await p.goto(origin+'/xiaoya/?garden=b');await p.locator('main.home-view').waitFor();return{c,p,requests,errors};}
+  try{
+    await p.goto(origin+'/xiaoya/?garden=b');await p.locator('main.home-view').waitFor();
+    const gift=p.locator('[data-action="open-welcome-gift"]');
+    if(await gift.isVisible()){await gift.click();await p.locator('.welcome-gift-overlay[open]').waitFor({state:'hidden',timeout:12000});}
+    return{c,p,requests,errors};
+  }
   catch(error){await c.close();throw error;}
 }
 const click=(p,action)=>p.locator(`[data-action="${action}"]`).first().click();
@@ -71,7 +76,7 @@ async function seed(p,{studied=4,completed=0,partial=0,pendingOrdinary=false}={}
   const info=await p.evaluate(async({studied,completed,partial,pendingOrdinary})=>{
     const base=document.querySelector('script[type="module"][src]').src;
     const [ch,pr,meadow,learning,stories]=await Promise.all(['challenges.js','practice-plan.js','garden-meadow.js','learning.js','stories.js'].map(file=>import(new URL(file,base))));
-    let plan=pr.createPracticePlan(),progress=ch.createChallenges(),garden=meadow.createMeadow();
+    let plan=pr.createPracticePlan(),progress=ch.createChallenges(),garden=meadow.claimWelcomeGift(meadow.createMeadow(),'2026-10-19');
     const all=ch.CHALLENGE_UNITS.flatMap(unit=>unit.eventIds);
     for(const [i,eventId]of all.slice(0,studied).entries())plan=pr.recordPractice(plan,{roundId:`qa-study-${i}`,eventId,date:'2026-10-18',attemptId:null,mode:'new',rewardVariant:null});
     for(const [ui,unit]of ch.CHALLENGE_UNITS.entries())for(const [ei,eventId]of unit.eventIds.entries()){
@@ -93,11 +98,12 @@ async function layout(p){
   await p.evaluate(async()=>Promise.all(document.getAnimations().filter(a=>Number.isFinite(a.effect?.getTiming().iterations)&&a.playState==='running').map(a=>a.finished.catch(()=>{}))));
   const b=await p.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,scrollHeight:document.documentElement.scrollHeight}));
   assert(b.scrollWidth<=b.width+1,`Horizontal overflow: ${JSON.stringify(b)}`);
-  assert(b.scrollHeight<=b.height+1,`Child flow needs scrolling: ${JSON.stringify(b)}`);
-  assert(!/[A-Za-z]/.test(await p.locator('#app').innerText()),'Child challenge screens have no English letters');
-  for(const r of await p.locator('button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,width:r.width,height:r.height};}))){
+  const isBoard=await p.locator('[data-challenge-board]').count()>0;
+  if(!isBoard)assert(b.scrollHeight<=b.height+1,`Child flow needs scrolling: ${JSON.stringify(b)}`);
+  assert(!/[A-Za-z]/.test(await p.locator('#app main').innerText()),'Child challenge screens have no English letters');
+  for(const r of await p.locator('#app button:visible').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{label:e.getAttribute('aria-label'),x:r.x,y:r.y,width:r.width,height:r.height};}))){
     assert(r.width>=47&&r.height>=47,`Small touch target: ${JSON.stringify(r)}`);
-    assert(r.x>=-1&&r.y>=-1&&r.x+r.width<=b.width+1&&r.y+r.height<=b.height+1,`Target outside screen: ${JSON.stringify(r)}`);
+    assert(r.x>=-1&&r.y>=-1&&r.x+r.width<=b.width+1&&r.y+r.height<=(isBoard?b.scrollHeight:b.height)+1,`Target outside screen: ${JSON.stringify(r)}`);
   }
 }
 async function diagnostic(p){return p.evaluate(()=>({version:document.querySelector('meta[name="xiaoya-version"]')?.content,build:document.querySelector('meta[name="xiaoya-build"]')?.content,main:document.querySelector('main')?.outerHTML,storage:Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('xiaoya')).map(k=>[k,localStorage.getItem(k)])),qa})).catch(error=>({error:error.message}));}
@@ -126,12 +132,13 @@ async function run(){
     await seed(p,{studied:3});assert.equal(await p.locator('[data-action="challenges"]').count(),0,'Three expressions cannot advertise a ready four-expression unit');
     const info=await seed(p);assert.equal(await p.locator('[data-action="challenges"]').count(),1);
     const unit=(await summary(p)).units[0];assert.equal(unit.available,true);assert.equal(unit.ready,false,'Learning alone does not trigger an automatic test invitation');
-    await board(p);await layout(p);assert.equal(await p.locator('[data-challenge-unit]').count(),6);
+    await board(p);await layout(p);assert.equal(await p.locator('[data-challenge-unit]').count(),info.units.length);
+    assert.equal((await p.locator('.challenge-prize-preview').innerText()).replace(/\s/g,''),'4＋6');
     await p.screenshot({animations:'disabled',path:path.join(out,'challenge-board-390.png'),fullPage:true});
     await start(p);const story=info.stories.find(s=>s.id===unit.items[0].eventId);
-    assert.equal((await p.locator('.round-goal').innerText()).replace(/\s/g,''),'4＋6');
+    assert.equal(await p.locator('.round-goal').isVisible(),false,'The prompt stays focused; rewards are previewed on the board');
     assert.equal(await p.locator('.round-goal').getAttribute('aria-label'),'整组首次完成可获得四枚贝壳和六滴水');
-    assert.equal(await p.locator('main').getAttribute('data-event'),story.id);assert.equal(await p.locator('main').getAttribute('data-context'),story.contextId);
+    assert.equal(await p.locator('#app main').getAttribute('data-event'),story.id);assert.equal(await p.locator('#app main').getAttribute('data-context'),story.contextId);
     await p.waitForFunction(()=>qa.plays.some(x=>x.url.endsWith('/challenge-question.mp3')));
     await p.waitForFunction(()=>qa.audios.some(x=>x.url.endsWith('/challenge-question.mp3')&&x.ended));
     assert.equal(await p.evaluate(lesson=>qa.plays.filter(x=>x.url.endsWith(`/${lesson}.mp3`)).length,story.lessonId),0,'A challenge never supplies its target answer automatically');
@@ -145,16 +152,16 @@ async function run(){
     assert.equal((await summary(p)).units[0].completedCount,1);await reload(p);await board(p);
     assert.equal(await p.locator('[data-challenge-unit="challenge-1"] .done').count(),1);await start(p);
     for(let i=1;i<4;i++){
-      assert.equal(await p.locator('main').getAttribute('data-event'),info.units[0].eventIds[i]);await observe(p);await click(p,'finish');
+      assert.equal(await p.locator('#app main').getAttribute('data-event'),info.units[0].eventIds[i]);await observe(p);await click(p,'finish');
       await p.locator(i===3?'[data-challenge-complete="challenge-1"]':'[data-phase="request"]').waitFor();
     }
-    const first=await saved(p,B);assert.equal(first.shells,4);assert.equal(first.water,6);assert.equal(first.rounds.length,0);assert.equal(first.challengeRewards.length,1);
+    const first=await saved(p,B);assert.equal(first.shells,5);assert.equal(first.water,6);assert.equal(first.rounds.length,0);assert.equal(first.challengeRewards.length,1);
     assert.equal((await summary(p)).units[0].completedCount,4);const layoutFailure=await layout(p).then(()=>null,error=>error);
     await p.screenshot({animations:'disabled',path:path.join(out,'challenge-first-clear-390.png'),fullPage:true});
     await reload(p);assert.deepEqual(await saved(p,B),first);await start(p);
     assert.equal(await p.locator('.round-goal').innerText(),'','Replays do not preview rewards that cannot be earned again');
     for(let i=0;i<4;i++){
-      assert.equal(await p.locator('main').getAttribute('data-event'),info.units[0].eventIds[i]);await observe(p);await click(p,'finish');
+      assert.equal(await p.locator('#app main').getAttribute('data-event'),info.units[0].eventIds[i]);await observe(p);await click(p,'finish');
       await p.locator(i===3?'[data-challenge-board]':'[data-phase="request"]').waitFor();
     }
     assert.deepEqual(await saved(p,B),first,'Replaying all four expressions neither creates gifts nor duplicates the receipt');
@@ -172,9 +179,9 @@ async function run(){
     const retry=await observe(p);assert.equal(retry.result,'supported','Learning evidence retains the preceding help even when this new game attempt is independent');assert.equal(retry.helped,true);
     const attempts=(await saved(p,CHALLENGE)).attempts;assert.equal(attempts.length,2);assert.equal(attempts[1].result,'independent');assert.equal(attempts[1].helped,false);assert.equal(attempts[1].retryAfterAttemptId,firstAttempt.attemptId);
     progress=await summary(p);assert.equal(progress.units[0].completedCount,1);assert.equal(progress.units[0].items[0].passEvidence,'after-practice');assert.equal(progress.units[0].items[0].priorHelp,true);
-    assert.equal((await saved(p,B)).shells,0);assert.equal((await saved(p,B)).water,0);await reload(p);
+    assert.equal((await saved(p,B)).shells,1);assert.equal((await saved(p,B)).water,0);await reload(p);
     progress=await summary(p);assert.equal(progress.units[0].items[0].passEvidence,'after-practice');assert.equal(progress.units[0].completedCount,1);
-    await start(p);assert.equal(await p.locator('main').getAttribute('data-event'),info.units[0].eventIds[1],'Only unfinished expressions are retried after refresh');
+    await start(p);assert.equal(await p.locator('#app main').getAttribute('data-event'),info.units[0].eventIds[1],'Only unfinished expressions are retried after refresh');
   });
   for(const refresh of [false,true])await test(`A sample followed by leaving without speaking${refresh?' and refreshing':''} keeps same-day help for the fresh challenge`,async({p})=>{
     const info=await seed(p);await start(p);const eventId=info.units[0].eventIds[0],lesson=info.stories.find(s=>s.id===eventId).lessonId;
@@ -183,7 +190,7 @@ async function run(){
     assert.equal(heard.attempts.length,0,'Requesting help is not a pretend speech attempt');assert.equal((await saved(p,STATE)).evidence.length,0);
     await click(p,'home');await p.locator('main.home-view').waitFor();if(refresh)await reload(p);
     let item=(await summary(p)).units[0].items[0];assert.equal(item.helpedToday,true);assert.equal(item.passed,false);assert.equal(item.attemptCount,0);
-    await start(p);assert.equal(await p.locator('main').getAttribute('data-event'),eventId);
+    await start(p);assert.equal(await p.locator('#app main').getAttribute('data-event'),eventId);
     const evidence=await observe(p);assert.equal(evidence.result,'supported','Learning cannot lose the earlier help when a child leaves before recording');assert.equal(evidence.helped,true);
     const log=await saved(p,CHALLENGE);assert.equal(log.helps.length,1);assert.equal(log.attempts.length,1);assert.equal(log.attempts[0].result,'independent');assert.equal(log.attempts[0].helped,false);assert.equal(log.attempts[0].retryAfterAttemptId,null);
     item=(await summary(p)).units[0].items[0];assert.equal(item.passed,true,'A fresh independent answer can still clear the game');assert.equal(item.priorHelp,true);assert.equal(item.helpedToday,true);assert.equal(item.passEvidence,'after-practice');
@@ -192,7 +199,7 @@ async function run(){
   });
   await test('A persisted clear with a missing wallet receipt recovers on reload exactly once',async({p})=>{
     await seed(p,{completed:1});const restored=await saved(p,B);
-    assert.equal(restored.shells,4);assert.equal(restored.water,6);assert.equal(restored.challengeRewards.length,1);
+    assert.equal(restored.shells,5);assert.equal(restored.water,6);assert.equal(restored.challengeRewards.length,1);
     assert.equal(restored.challengeRewards[0].id,'challenge:first-clear:challenge-1');assert.equal(restored.challengeSeeds.length,0);
     const log=await saved(p,CHALLENGE),practice=await saved(p,PLAN);
     assert.equal(practice.entries.length,8,'Four existing studies and four interrupted challenge review writes are preserved');
@@ -204,7 +211,7 @@ async function run(){
     const info=await seed(p,{studied:24,completed:count-1,partial:3,pendingOrdinary:true});
     const held=info.originalGarden.pendingSeed;await start(p,`challenge-${count}`);await observe(p);await click(p,'finish');
     await p.locator(`[data-challenge-complete="challenge-${count}"]`).waitFor();
-    let wallet=await saved(p,B);assert.equal(wallet.challengeRewards.length,count);assert.equal(wallet.shells,count*4);assert.equal(wallet.water,3+count*6);
+    let wallet=await saved(p,B);assert.equal(wallet.challengeRewards.length,count);assert.equal(wallet.shells,1+count*4);assert.equal(wallet.water,3+count*6);
     assert.deepEqual(wallet.pendingSeed,held,'Milestone entitlements cannot replace a seed the child already holds');
     const flowers=count===3?['bow-rainbow']:['bow-rainbow','bow-starlight'];assert.deepEqual(wallet.challengeSeeds.map(x=>x.flowerId),flowers);assert(wallet.challengeSeeds.every(x=>x.seedId===null));
     assert.equal(await p.locator('.challenge-seed-earned').count(),1);const layoutFailure=await layout(p).then(()=>null,error=>error);
@@ -217,7 +224,7 @@ async function run(){
       await p.locator('[data-action="challenge-seed"]').waitFor();await click(p,'challenge-seed');
       await p.waitForFunction(({key,id})=>JSON.parse(localStorage.getItem(key)||'null')?.pendingSeed?.flowerId===id,{key:B,id:flowerId});
       wallet=await saved(p,B);const special=wallet.pendingSeed;assert.equal(wallet.challengeSeeds[i].seedId,special.id);
-      assert.equal(wallet.shells,count*4,'Claiming an earned seed costs no shells');
+      assert.equal(wallet.shells,1+count*4,'Claiming an earned seed costs no shells');
       await reload(p);assert.deepEqual((await saved(p,B)).pendingSeed,special,'The exact claimed seed persists across refresh');
       await click(p,'garden');await p.locator('main.meadow-view').waitFor();await plantPending(p,{x:180+i*70,y:230});
     }

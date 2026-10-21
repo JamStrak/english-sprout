@@ -6,7 +6,7 @@ import {createPracticePlan, recordPractice, getPracticePlan} from '../xiaoya/pra
 import {
   CHALLENGE_KEY, CHALLENGE_UNITS, CHALLENGE_RESULTS, CHALLENGE_MILESTONES,
   createChallenges, validateChallenges, recordChallengeAttempt, recordChallengeHelp, getChallenges,
-  recordInvitation, deferInvitation, invitationFor,
+  recordInvitation, deferInvitation, invitationFor, challengeStepProgress,
 } from '../xiaoya/challenges.js';
 
 const today = '2026-10-19';
@@ -65,7 +65,7 @@ test('attempt metadata is immutable, serialized, idempotent and contains no chil
   for (const patch of [{result: 'supported'}, {date: '2026-10-20'}, {source: 'parent'}, {id: 'other'}, {attemptId: 'other'}]) {
     assert.throws(() => recordChallengeAttempt(next, {...value, ...patch}), /不能覆盖/);
   }
-  for (const extra of [{transcript: 'private'}, {audio: 'private'}, {stars: 3}]) {
+  for (const extra of [{transcript: 'private'}, {audio: 'private'}]) {
     assert.throws(() => recordChallengeAttempt(before, {...value, ...extra}), /未知字段/);
   }
 });
@@ -450,4 +450,146 @@ test('last new unit is independently reachable without clearing earlier units or
   assert.deepEqual(after.milestones.map(item => [item.count, item.reached]), [[3, false], [6, false]]);
   const replayed = passUnit(state, unit, '2026-10-20', 'last-replay');
   assert.deepEqual(getChallenges(replayed, {date: '2026-10-20'}).receipts, after.receipts);
+});
+
+test('three stars clear once even after help without changing supported learning evidence', () => {
+  let state = recordChallengeHelp(createChallenges(), helpInput());
+  const value = input('helped-three', {stars: 3, helped: true});
+  state = recordChallengeAttempt(state, value);
+  const item = getChallenges(validateChallenges(clone(state)), {date: today}).units[0].items[0];
+  assert.equal(item.passed, true);
+  assert.equal(item.passRule, 'three-stars');
+  assert.equal(item.passAttemptId, value.attemptId);
+  assert.equal(item.twoStarCount, 0);
+  assert.equal(item.priorHelp, true);
+  assert.equal(item.passEvidence, 'after-practice');
+  assert.equal(state.attempts[0].result, 'supported');
+  assert.equal(state.attempts[0].helped, true);
+  assert.equal(state.attempts[0].stars, 3);
+  assert.equal(recordChallengeAttempt(state, value), state);
+  assert.equal(Object.hasOwn(state, 'mastered'), false);
+});
+
+test('two stars on two distinct attempts accumulate across reloads and dates; lesser results never erase progress', () => {
+  let state = recordChallengeAttempt(createChallenges(), input('partial-one', {date: yesterday, stars: 2, result: 'unclear'}));
+  assert.equal(getChallenges(state, {date: yesterday}).units[0].items[0].twoStarCount, 1);
+  assert.equal(getChallenges(state, {date: yesterday}).units[0].items[0].passed, false);
+  state = validateChallenges(freeze(clone(state)));
+  for (const [id, stars, result] of [['one-star', 1, 'unclear'], ['silent', 0, 'unclear'], ['unavailable', 0, 'device_error']]) {
+    state = recordChallengeAttempt(state, input(id, {stars, result}));
+    const item = getChallenges(state, {date: today}).units[0].items[0];
+    assert.equal(item.passed, false);
+    assert.equal(item.twoStarCount, 1);
+  }
+  state = recordChallengeAttempt(state, input('partial-two', {stars: 2, result: 'unclear'}));
+  const item = getChallenges(validateChallenges(clone(state)), {date: today}).units[0].items[0];
+  assert.equal(item.passed, true);
+  assert.equal(item.twoStarCount, 2);
+  assert.equal(item.passRule, 'two-stars-twice');
+  assert.equal(item.passAttemptId, 'speech-partial-two');
+  assert.equal(item.passEvidence, 'after-practice');
+  assert.equal(state.attempts.at(-1).result, 'unclear', 'game progress cannot rewrite partial matching evidence');
+  assert.equal(getChallenges(state, {date: yesterday}).units[0].items[0].passed, false, 'as-of queries cannot borrow future stars');
+  state = recordChallengeAttempt(state, input('later-failed', {stars: 1, result: 'unclear'}));
+  assert.equal(getChallenges(state, {date: today}).units[0].items[0].passAttemptId, 'speech-partial-two');
+});
+
+test('duplicate two-star callbacks cannot pass and ratings cannot overwrite an existing observation', () => {
+  const value = input('partial', {stars: 2, result: 'unclear'});
+  const state = recordChallengeAttempt(createChallenges(), value);
+  assert.equal(recordChallengeAttempt(state, value), state);
+  assert.equal(getChallenges(state, {date: today}).units[0].items[0].passed, false);
+  assert.equal(challengeStepProgress([...state.attempts, ...state.attempts]).twoStarCount, 1);
+  assert.equal(challengeStepProgress([...state.attempts, ...state.attempts]).passed, false);
+  assert.throws(() => recordChallengeAttempt(state, {...value, stars: 3}), /不能覆盖/);
+  assert.throws(() => recordChallengeAttempt(state, {...value, id: 'different-record'}), /不能覆盖/);
+});
+
+test('star progress belongs to its expression, and an explicit low rating cannot inherit independent status', () => {
+  let state = createChallenges();
+  for (const stars of [0, 1, 1, 2]) state = recordChallengeAttempt(state, input(`rating-${state.attempts.length}`, {stars}));
+  state = recordChallengeAttempt(state, input('other-expression', {eventId: first.eventIds[1], stars: 2}));
+  const items = getChallenges(state, {date: today}).units[0].items;
+  assert.equal(items[0].passed, false);
+  assert.equal(items[0].twoStarCount, 1);
+  assert.equal(items[1].passed, false);
+  assert.equal(items[1].twoStarCount, 1);
+  assert.ok(items.slice(2).every(item => item.twoStarCount === 0 && !item.passed));
+});
+
+test('device errors never contribute star progress and invalid or parent-authored numeric ratings are rejected', () => {
+  for (const stars of [-1, 4, 1.5, '2', false, undefined, NaN, Infinity]) {
+    assert.throws(() => recordChallengeAttempt(createChallenges(), input('invalid', {stars})), /星级/);
+  }
+  assert.throws(() => recordChallengeAttempt(createChallenges(), input('parent-stars', {stars: 3, source: 'parent'})), /星级/);
+  let state = createChallenges();
+  for (const stars of [2, 2, 3]) state = recordChallengeAttempt(state, input(`device-${state.attempts.length}`, {stars, result: 'device_error'}));
+  const item = getChallenges(state, {date: today}).units[0].items[0];
+  assert.equal(item.passed, false);
+  assert.equal(item.twoStarCount, 0);
+});
+
+test('unrated old and parent observations retain their original pass rules without invented two-star history', () => {
+  for (const source of ['machine', 'parent']) {
+    let state = recordChallengeAttempt(createChallenges(), input(`legacy-${source}`, {result: 'unclear', source}));
+    state = recordChallengeAttempt(state, input(`legacy-partial-${source}`, {result: 'unclear', source, stars: null}));
+    assert.equal(getChallenges(state, {date: today}).units[0].items[0].twoStarCount, 0);
+    assert.equal(getChallenges(state, {date: today}).units[0].items[0].passed, false);
+    state = recordChallengeAttempt(state, input(`legacy-helped-${source}`, {source, helped: true}));
+    assert.equal(getChallenges(state, {date: today}).units[0].items[0].passed, false);
+    state = recordChallengeAttempt(state, input(`legacy-clear-${source}`, {source, stars: null}));
+    assert.equal(getChallenges(state, {date: today}).units[0].items[0].passRule, 'legacy-independent');
+    assert.equal(getChallenges(state, {date: today}).units[0].items[0].passed, true);
+    assert.deepEqual(validateChallenges(clone(state)), state);
+    assert.equal(Object.hasOwn(state.attempts[0], 'stars'), false);
+  }
+});
+
+test('replay progress excludes old passes and old partial stars but keeps the new retry pair', () => {
+  let state = recordChallengeAttempt(createChallenges(), input('old-three', {stars: 3}));
+  state = recordChallengeAttempt(state, input('old-two', {stars: 2, result: 'unclear'}));
+  const options = {afterAttemptId: 'speech-old-two'};
+  assert.equal(challengeStepProgress(state.attempts).passed, true);
+  assert.deepEqual(challengeStepProgress(state.attempts, options), {passed: false, pass: null, passAttemptId: null, twoStarCount: 0, passRule: null});
+  state = recordChallengeAttempt(state, input('replay-one', {stars: 1, result: 'unclear'}));
+  assert.equal(challengeStepProgress(state.attempts, options).passed, false);
+  state = recordChallengeAttempt(state, input('replay-two-a', {stars: 2, result: 'unclear'}));
+  assert.equal(challengeStepProgress(state.attempts, options).twoStarCount, 1);
+  assert.equal(challengeStepProgress(state.attempts, options).passed, false);
+  state = recordChallengeAttempt(state, input('replay-two-b', {stars: 2, result: 'unclear'}));
+  const progress = challengeStepProgress(state.attempts, options);
+  assert.equal(progress.passed, true);
+  assert.equal(progress.passAttemptId, 'speech-replay-two-b');
+  assert.equal(progress.passRule, 'two-stars-twice');
+  assert.equal(challengeStepProgress(state.attempts, {afterAttemptId: 'missing'}).passed, false);
+  assert.equal(challengeStepProgress(state.attempts, {afterAttemptId: 'missing'}).twoStarCount, 0);
+});
+
+test('a two-star pair keeps assistance visible across dates while not upgrading either observation', () => {
+  let state = recordChallengeHelp(createChallenges(), helpInput('yesterday-help', {date: yesterday}));
+  state = recordChallengeAttempt(state, input('helped-partial', {date: yesterday, stars: 2, result: 'unclear', helped: true}));
+  state = recordChallengeAttempt(state, input('today-partial', {stars: 2, result: 'unclear'}));
+  const item = getChallenges(state, {date: today}).units[0].items[0];
+  assert.equal(item.passed, true);
+  assert.equal(item.priorHelp, true);
+  assert.equal(item.helpedToday, false);
+  assert.equal(item.passEvidence, 'after-practice');
+  assert.ok(state.attempts.every(attempt => attempt.result === 'unclear'));
+});
+
+test('mixed star clears retain stable first-clear receipts and do not mint rewards on replay', () => {
+  let state = createChallenges();
+  for (const [index, eventId] of first.eventIds.entries()) {
+    const stars = index % 2 ? 2 : 3;
+    for (let attempt = 0; attempt < (stars === 2 ? 2 : 1); attempt++) {
+      state = recordChallengeAttempt(state, input(`clear-${index}-${attempt}`, {eventId, stars, result: stars === 2 ? 'unclear' : 'supported', helped: stars === 3}));
+    }
+  }
+  const before = getChallenges(state, {date: today});
+  assert.equal(before.units[0].completedCount, 4);
+  assert.deepEqual(before.receipts, [{id: 'challenge:first-clear:challenge-1', unitId: first.id, date: today}]);
+  state = recordChallengeAttempt(state, input('extra-three', {date: '2026-10-20', stars: 3}));
+  const after = getChallenges(validateChallenges(clone(state)), {date: '2026-10-20'});
+  assert.deepEqual(after.receipts, before.receipts);
+  assert.deepEqual(after.milestones, before.milestones);
 });

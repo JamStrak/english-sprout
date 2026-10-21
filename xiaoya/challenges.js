@@ -52,11 +52,13 @@ function canonicalFor(unitId, eventId) {
 
 function normalizeAttempt(input) {
   const value = {source: 'machine', retryAfterAttemptId: null, ...input};
-  fields(value, ['id', 'unitId', 'eventId', 'date', 'attemptId', 'result', 'helped', 'source', 'retryAfterAttemptId']);
+  fields(value, ['id', 'unitId', 'eventId', 'date', 'attemptId', 'result', 'helped', 'source', 'retryAfterAttemptId', ...(own(value, 'stars') ? ['stars'] : [])]);
   identifier(value.id); identifier(value.attemptId);
   canonicalFor(value.unitId, value.eventId); day(value.date);
   if (!resultSet.has(value.result) || typeof value.helped !== 'boolean' || !['machine', 'parent'].includes(value.source)) fail('挑战观察错误');
   if (value.retryAfterAttemptId !== null) identifier(value.retryAfterAttemptId);
+  // Omitted/null stars are genuine legacy/parent observations, never inferred ratings.
+  if (own(value, 'stars') && value.stars !== null && (value.source !== 'machine' || !Number.isInteger(value.stars) || value.stars < 0 || value.stars > 3)) fail('挑战星级错误');
   return {...value, result: value.helped && value.result === 'independent' ? 'supported' : value.result};
 }
 
@@ -139,9 +141,10 @@ export function validateChallenges(state) {
  * replay is idempotent. The caller checks availability against the practice plan;
  * neither this log nor a game pass creates evidence of long-term mastery.
  *
- * A targeted retry may pass after practice when it is a new unprompted attempt.
- * Link retryAfterAttemptId to keep its help history visible. A response with the
- * answer currently supplied (helped=true) remains supported and cannot pass.
+ * Stars govern game progress only: one three-star or two two-star attempts pass.
+ * A prompted answer remains supported evidence even when it clears the game.
+ * Keep retryAfterAttemptId so help history remains visible across later attempts.
+ * Legacy/parent observations without stars retain independent, unhelped passing.
  */
 export function recordChallengeAttempt(state, input) {
   state = validateChallenges(state);
@@ -155,6 +158,39 @@ export function recordChallengeAttempt(state, input) {
   const next = {...state, attempts: [...state.attempts, value]};
   validateChallenges(next);
   return next;
+}
+
+/** Derive one expression's game progress from its ordered attempt log. A replay
+ * may use an exclusive attempt boundary so historic clears cannot pass a new
+ * failed try. Callers pass a single phrase's records; duplicate attempt IDs never
+ * count twice. This does not produce or upgrade language mastery evidence. */
+export function challengeStepProgress(attempts, {afterAttemptId = null} = {}) {
+  if (!Array.isArray(attempts)) fail('挑战观察列表错误');
+  let start = 0;
+  if (afterAttemptId !== null) {
+    identifier(afterAttemptId);
+    const boundary = attempts.findIndex(item => item.attemptId === afterAttemptId);
+    // A stale/unknown replay boundary must not fall back to an earlier clear.
+    start = boundary < 0 ? attempts.length : boundary + 1;
+  }
+  const seen = new Set();
+  let pass = null; let twoStarCount = 0; let passRule = null;
+  for (const item of attempts.slice(start)) {
+    if (seen.has(item.attemptId)) continue;
+    seen.add(item.attemptId);
+    if (item.result === 'device_error') continue;
+    if (item.stars === undefined || item.stars === null) {
+      if (item.result === 'independent' && !item.helped) passRule = 'legacy-independent';
+    } else if (item.source === 'machine') {
+      if (item.stars === 3) passRule = 'three-stars';
+      if (item.stars === 2) {
+        twoStarCount = Math.min(2, twoStarCount + 1);
+        if (twoStarCount === 2) passRule = 'two-stars-twice';
+      }
+    }
+    if (passRule) { pass = item; break; }
+  }
+  return {passed: !!pass, pass, passAttemptId: pass?.attemptId ?? null, twoStarCount, passRule};
 }
 
 /** Persist before supplying an answer, including when no speech attempt follows.
@@ -237,16 +273,18 @@ export function getChallenges(state, {practicePlan = null, date = localDay()} = 
       const phrase = phraseFor(canonicalEventId);
       const card = cards.get(phrase);
       const attempts = records.filter(item => phraseFor(item.eventId) === phrase);
-      const pass = attempts.find(item => item.result === 'independent' && !item.helped);
+      const progress = challengeStepProgress(attempts);
+      const pass = progress.pass;
       // Even a caller that omits a retry link cannot erase same-day help.
-      const priorHelp = !!pass && (helpBefore(pass) || linkedHelp(pass) || attempts.some(item => item.index < pass.index && item.date === pass.date && (item.helped || item.result === 'supported')));
+      const priorHelp = !!pass && (pass.helped || pass.result === 'supported' || helpBefore(pass) || linkedHelp(pass) || attempts.some(item => item.index < pass.index && (item.date === pass.date || progress.passRule === 'two-stars-twice' && item.stars === 2) && (item.helped || item.result === 'supported' || helpBefore(item) || linkedHelp(item))));
       const helpedToday = firstHelpPosition.has(helpKey({unitId: unit.id, eventId: canonicalEventId, date})) || attempts.some(item => item.date === date && (item.helped || item.result === 'supported'));
       const linkedRetry = !!pass?.retryAfterAttemptId;
       return {
         canonicalEventId, eventId: card?.eventId ?? canonicalEventId,
         studied: !!card, passed: !!pass, passedOn: pass?.date ?? null,
         passAttemptId: pass?.attemptId ?? null,
-        passEvidence: !pass ? null : priorHelp || linkedRetry ? 'after-practice' : pass.source === 'parent' ? 'parent-independent' : 'machine-candidate',
+        passEvidence: !pass ? null : priorHelp || linkedRetry || progress.passRule === 'two-stars-twice' ? 'after-practice' : pass.source === 'parent' ? 'parent-independent' : 'machine-candidate',
+        twoStarCount: progress.twoStarCount, passRule: progress.passRule,
         priorHelp, helpedToday, latestResult: attempts.at(-1)?.result ?? null,
         attemptCount: attempts.length,
       };

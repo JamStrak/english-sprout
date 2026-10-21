@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.23.0。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.23.1。分支、构建指纹和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -24,7 +24,7 @@
 | 故事和情境图 | `stories.js`：`STORIES`、`storyFor`；`story-pictures.js`：`pictureFor`、`pictureSequence`、`createPictureLoader`；`story-assets.js`、`phrase-assets-v015.js` | 熟悉图用于复习；图片晚到只替换画面，不重置会话。资源生产详见 [内容流水线](XIAOYA_CONTENT_PIPELINE.md) |
 | 学习证据 | `learning.js`：`recordEvidence`、`correctEvidence`、`effectiveEvidence`、`phraseStatus`、`phraseCheckupContext` | 参与、机器候选、家长确认分别记录，不能用奖励或星级推出掌握 |
 | 日历复习与新学选择 | `practice-plan.js`：`recordPractice`、`getPracticePlan`、`addPracticeDays` | 使用本地日历；同日重复不跳完记忆间隔；帮助与独立尝试不同 |
-| 阶段挑战 | `challenges.js`：`CHALLENGE_UNITS`、`recordChallengeAttempt`、`recordChallengeHelp`、`getChallenges`、`invitationFor` | 已过步骤保留，帮助记录跨刷新保留；游戏通关不等于长期掌握 |
+| 阶段挑战 | `challenges.js`：`CHALLENGE_UNITS`、`recordChallengeAttempt`、`recordChallengeHelp`、`challengeStepProgress`、`getChallenges`、`invitationFor` | 同一句三颗星一次或两颗星累计两次通过；一颗星不通过。已过步骤与第一次两星保留；游戏通关不等于长期掌握 |
 | 旧花盆历史兼容 | `garden-history.js`：`readGardenHistory` | 只读旧轮次供学习兼容、保留原始归档供导出；不恢复 A 花园界面、余额交易或待发奖 |
 | 自由花园经济 | `garden-meadow.js`：`rewardRound`、`claimReward`、`rewardChallenge`、`redeemChallengeSeed`、`ensureShop`、`reserveOffer`、`buyOffer`、`waterPlant` | 奖励、购买、里程碑都需幂等；旧余额与未领取承诺保留 |
 | 每日轮换问候 | `welcome-greetings.js`：`nextWelcomeGreeting`、`createWelcomeGreetings`；`experience.js`：`scheduleWelcomeGreeting`、`dailyWelcomeId`、`welcomeVoice` | 六句洗牌、同日稳定；只影响外观偏好。离开首页/弹窗/后台取消，浏览器手势限制不能弹错误提示 |
@@ -52,7 +52,7 @@
 | --- | --- |
 | `xiaoya-english:state:v1` | `learning.js`，学习证据与更正 |
 | `xiaoya-english:practice-plan:v1` | `practice-plan.js`，新学/复习/自由练习参与日志 |
-| `xiaoya-english:challenges:v1` | `challenges.js`，挑战尝试、帮助、邀请、推迟记录 |
+| `xiaoya-english:challenges:v1` | `challenges.js`，挑战尝试、帮助、邀请、推迟记录；schema 2 新增可选 `stars`，旧记录不推断星级，继续按原结果兼容 |
 | `xiaoya-english:garden:v1` | `garden-history.js` 只读旧 A 花盆归档；不删历史数据，也不再开放操作 |
 | `xiaoya-english:meadow:v1` | `garden-meadow.js`，自由花园经济、购买、种植、挑战奖；当前对象 `schemaVersion: 4`，新增 `welcomeGifts: [{date, kind}]` 每日欢迎礼物账本，键名仍是 v1 |
 | `xiaoya-english:welcome-greetings:v1` | `welcome-greetings.js`，schema 1 的日期、当日语音 ID、剩余轮换列表；只影响欢迎语，不是奖励凭据。经 appStorage 隔离 GM；存储失败回退内存，不阻塞学习 |
@@ -66,6 +66,7 @@
 
 - **身份稳定。** 115 个兼容事件归并为 113 个表达，84 句核心课程。旧事件不是可随意删除的重复数据；要用 canonical 映射归并。`CHALLENGE_UNITS` 当前按核心数组每 4 项切片组成 21 组，直接重排核心数组会改变同一挑战 ID 的含义；扩展或重组须显式处理迁移。
 - **证据与参与分开。** `recordEvidence` 的 `attemptId` 去重，结果分 `independent` / `supported` / `not_yet` / `unclear` / `device_error`。来源、是否帮助、家长更正均有语义。家长更正追加记录，不抹掉原始事实；机器星级不等于语音学发音准确率。
+- **星级与挑战通关一致。** `challengeStepProgress` 同时供界面和挑战汇总使用；三颗星一次通过，求助后也可通关，两颗星同一句累计两次通过。一颗星、无声和设备失败不清空已得的第一次两星。重玩按尝试边界重新累计，不能用历史通关自动通过；求助或两星累积通关不写独立掌握。
 - **日期是本地日历。** `localDay` 与 `addPracticeDays` 管理 YYYY-MM-DD，不用 UTC 日期截断代替本地天数。复习间隔 `REVIEW_INTERVALS = [1, 3, 7, 14, 30]`，同日重复不快速晋级。
 - **只有自由花园，历史不抹除。** 学习证据、练习安排、音色及既有自由花园存档继续使用原键。旧 A 轮次只用于学习历史兼容，原始归档可导出；不迁移 A 钱包、花朵或待发奖励到自由花园。历史 `rewardVariant` 保留，新奖励只写 `b`。
 - **奖励有凭据。** `experience.js` 的 `savePractice` / `restorePracticeRewards`、`challengeChange` / `restoreChallengeRewards`、`gardenChange` 管理落盘与断点恢复。奖励以轮次或挑战 ID 幂等，写入失败不能先展示领取成功；支持 Web Locks 的环境须在锁内重读最新值。
@@ -142,7 +143,7 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`art-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。新产品模块清单包含 `garden-history.js`、`sound-catalog.js`、`sound-settings.js`、`sound-player.js`，`gm-sounds.js` 仅在内测列表；不再打包旧 `garden.js` 与 `story-art.js`。`public/xiaoya/sfx/` 的 MP3 复制到输出 `sfx/` 并进入音频清单，`SOURCES.json` 同步复制但不算音频条目。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.23.0 的内测、公开构建指纹以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.23.1 的内测、公开构建指纹以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
@@ -166,7 +167,7 @@ v0.23.0 的内测、公开构建指纹以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.m
 | 花园命中、根部、浇水 | `tests/xiaoya-meadow-hit-browser.cjs`、`xiaoya-meadow-anchor-browser.cjs`、`xiaoya-watering-browser.cjs`；`xiaoya-watering-layout.test.js`、`xiaoya-watering-gesture.test.js` |
 | 图片/配音/内容包 | `tests/xiaoya-phrase-pack.test.js`、`xiaoya-phrase-delivery.test.js`、`xiaoya-phrase-art.test.js`；`xiaoya-phrase-pack-browser.cjs`、`xiaoya-art-completion-browser.cjs`、`xiaoya-offline-audio-browser.cjs` |
 | 识别与下载完整性 | `tests/xiaoya-speech-signal.test.js`、`speech-match.test.js`、`speech-download.test.js`、`speech-download-recovery.test.js`；`xiaoya-speech-quality.cjs`、`xiaoya-speech.cjs` |
-| GM 隔离、构建渠道 | `tests/xiaoya-build.test.js`、`xiaoya-runtime.test.js`；内测/公开两种构建分别运行 `tests/xiaoya-gm-browser.cjs` |
+| GM 隔离、构建渠道 | `tests/xiaoya-build.test.js`、`xiaoya-runtime.test.js`；内测/公开两种构建分别运行 `tests/xiaoya-gm-browser.cjs`，内测同时覆盖求助后三星通过、两星累积/中断恢复/重玩及奖励防重 |
 | 无限资源与真实花园动效 | `tests/xiaoya-gm-economy.test.js`、`tests/xiaoya-meadow-motion-browser.cjs`；隔离账本、保存参数下一滴生效、全部 14 种花根点稳定与导航取消 |
 | GM 花朵成长 | `tests/xiaoya-growth.test.js`、`xiaoya-growth-motion.test.js`、`xiaoya-growth-assets.test.js`、`xiaoya-growth-browser.cjs`；真实 RAF 帧、逐滴变化、根点、淡化时长、减少动态效果、停止/切换/后台取消、保存/导出/失败重试、沙盒与儿童账本隔离、268 图解码及窄屏全画布。候选资源同时受构建渠道排除测试约束 |
 | 启动器、端口 | `python -m unittest tests.test_launcher tests.test_xiaoya_launcher` |
@@ -196,7 +197,7 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-v0.23.0 的实际验证范围、结果和构建哈希以 [当前状态](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为准。声音资产的来源、文件哈希、解码、时长和静态路径验证不等于人工听感验收；实体设备、扬声器音量和儿童使用时的舒适度仍待用户验收。
+v0.23.1 的实际验证范围、结果和构建哈希以 [当前状态](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为准。挑战浏览器使用模拟识别与真实预制语音，不能代替实体麦克风和真实儿童验收。声音资产的来源、文件哈希、解码、时长和静态路径验证不等于人工听感验收；实体设备、扬声器音量和儿童使用时的舒适度仍待用户验收。
 
 历史 v0.22.1：Node 全量单测 **786/786**；欢迎礼物浏览器 **14/14**、GM **10/10**、公开排除 **1/1**、[旧产品浏览器](UI_QA_xiaoya-v0221-legacy.md) **36/36**。两渠道构建通过，最终 dist 为内测。覆盖原生语音、单击领取、原地揭晓及自动淡出、背景不可操作、刷新/双标签防重、存储失败重试、后台取消、GM 沙盒隔离和桌面/320px/横屏布局；截图已查看。该轮未改启动器或媒体文件，未重跑 Python 启动器、完整离线下载、成长动效或独立 BGM 全套。这些不是 v0.23.0 重跑结果，详细证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
 

@@ -63,7 +63,9 @@ async function fixture(width = 1180) {
     addEventListener('unhandledrejection',event=>qa.errors.push(String(event.reason)));
   },{origin});
   const p = await c.newPage(); p.setDefaultTimeout(18000); p.on('pageerror',e=>errors.push(e.message));
-  await p.goto(`${origin}/xiaoya/?garden=b`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
+  await p.goto(`${origin}/xiaoya/?garden=b`,{waitUntil:'domcontentloaded'});
+  try { await p.locator('main.home-view').waitFor(); }
+  catch (error) { console.error('Fixture diagnostics',JSON.stringify({errors,body:await p.locator('body').innerText(),failed:requests.filter(url=>forbidden.test(url))})); await c.close(); throw error; }
   assert.equal(await p.locator('meta[name="xiaoya-build"]').getAttribute('content'),expected.build);
   // Finish the real daily welcome in this disposable profile before comparing
   // records across GM actions. Native modal correctly blocks the GM launcher.
@@ -267,6 +269,55 @@ async function main() {
     await openWorkbench(f.p,'courses');await press(f.p,'[data-gm-action="lesson"][data-gm-event="daily-peekaboo"][data-gm-mode="checkup"]');await simulate(f.p);await press(f.p,'[data-action="finish"]');await f.p.locator('.parent-view').waitFor();
     return {supply:{shells:0,water:0,unlimited:true},pages:5,reviewAndCheckupViaUI:true};
   });
+  await check('challenge three stars pass after help with matching success voice',async f=>{
+    await sandbox(f.p);await bridge(f.p,'prepareChallenge','challenge-1');
+    await f.p.locator('main[data-challenge="challenge-1"][data-phase="request"]').waitFor();
+    const event=await f.p.locator('main.event-view').getAttribute('data-event');
+    await press(f.p,'[data-action="sample"]');
+    await f.p.locator('[data-action="record"]:enabled').waitFor();
+    await simulate(f.p,'three');await f.p.locator('main[data-phase="resolved"]').waitFor();
+    assert.equal(await f.p.locator('[data-action="challenge-retry"]').count(),0);
+    assert.equal(await f.p.locator('[data-assessment]').getAttribute('data-status'),'matched');
+    const index=await f.p.evaluate(()=>qaGM.play.length);
+    await press(f.p,'[data-action="assessment-voice"]');
+    await f.p.waitForFunction(index=>qaGM.play.slice(index).some(x=>x.url.endsWith('/challenge-step.mp3')&&x.playing),index);
+    assert(!await f.p.evaluate(index=>qaGM.play.slice(index).some(x=>x.url.endsWith('/challenge-practice.mp3')),index));
+    await press(f.p,'[data-action="finish"]');
+    await f.p.waitForFunction(event=>document.querySelector('main.event-view')?.dataset.event!==event,event);
+    return {helpedThreeStarsPass:true,successVoice:true,advancedToNextPhrase:true};
+  });
+  await check('challenge two stars accumulate across interruptions and replay starts fresh',async f=>{
+    await sandbox(f.p);await bridge(f.p,'prepareChallenge','challenge-1');
+    const first=await f.p.locator('main.event-view').getAttribute('data-event');
+    await simulate(f.p,'two');await f.p.locator('[data-challenge-two-stars="1"]').waitFor();
+    assert.equal(await f.p.locator('main.event-view').getAttribute('data-phase'),'request');
+    assert.equal(await f.p.locator('[data-action="finish"]').count(),0);
+    await bridge(f.p,'navigate','challenges');await press(f.p,'[data-challenge-unit="challenge-1"]');
+    assert.equal(await f.p.locator('main.event-view').getAttribute('data-event'),first);
+    await simulate(f.p,'one');await f.p.locator('[data-challenge-two-stars="1"]').waitFor();
+    await simulate(f.p,'silence');await f.p.locator('[data-challenge-two-stars="1"]').waitFor();
+    await simulate(f.p,'unavailable');await f.p.locator('[data-challenge-two-stars="1"]').waitFor();
+    assert.equal((await bridge(f.p,'inspect')).challengeAttempts,2,'Empty/unavailable recordings must not count');
+    await simulate(f.p,'two');await f.p.locator('main[data-phase="resolved"] [data-assessment][data-status="matched"][data-stars="2"]').waitFor();
+    await f.p.locator('[data-challenge-two-stars="2"]').waitFor();
+    assert.equal(await f.p.locator('[data-action="challenge-retry"]').count(),0);
+    const index=await f.p.evaluate(()=>qaGM.play.length);await press(f.p,'[data-action="assessment-voice"]');
+    await f.p.waitForFunction(index=>qaGM.play.slice(index).some(x=>x.url.endsWith('/challenge-step.mp3')&&x.playing),index);
+    await f.p.screenshot({path:path.join(out,'challenge-two-stars-passed.png'),fullPage:true});
+    await press(f.p,'[data-action="finish"]');
+    for(let i=0;i<3;i++){
+      await f.p.locator('main[data-challenge="challenge-1"][data-phase="request"]').waitFor();
+      await simulate(f.p,'three');await f.p.locator('main[data-phase="resolved"]').waitFor();await press(f.p,'[data-action="finish"]');
+    }
+    await f.p.locator('[data-challenge-complete="challenge-1"]').waitFor();
+    const wallet=(await bridge(f.p,'inspect')).wallet;assert.deepEqual(wallet,{shells:4,water:6,unlimited:true});
+    await bridge(f.p,'navigate','challenges');await press(f.p,'[data-challenge-unit="challenge-1"]');
+    await simulate(f.p,'two');await f.p.locator('[data-challenge-two-stars="1"]').waitFor();
+    assert.equal(await f.p.locator('main.event-view').getAttribute('data-phase'),'request','Old passes must not complete this replay attempt');
+    await simulate(f.p,'two');await f.p.locator('main[data-phase="resolved"]').waitFor();
+    assert.deepEqual((await bridge(f.p,'inspect')).wallet,wallet,'Replay must not issue a duplicate reward');
+    return {twoStars:2,oneStarDidNotEraseProgress:true,emptyAttemptsExcluded:true,resumed:true,replayRequiresFreshAttempts:true,successVoice:true,firstReward:wallet};
+  },390);
   await check('review checkup and challenge preserve normal semantics',async f=>{
     await sandbox(f.p,'gmEvent=daily-peekaboo&gmMode=checkup&gmVoice=ryan');
     await f.p.locator('main[data-event="daily-peekaboo"][data-phase="request"]').waitFor();await simulate(f.p);await press(f.p,'[data-action="finish"]');await f.p.locator('.parent-view').waitFor();
