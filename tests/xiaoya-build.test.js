@@ -122,8 +122,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语·自由花园版 v0\.20\.2<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.20\.2/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.20\.3<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.20\.3/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);

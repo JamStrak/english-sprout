@@ -149,6 +149,29 @@ async function main() {
     assert.equal(await f.p.evaluate(()=>document.activeElement?.dataset.gmAction),'open');
     return {courses:115,newPhrases:60,voices,nativeCatalogCount:count,escapeRestoresFocus:true};
   });
+  await check('music sandbox settings are disposable and all controls fit narrow screens',async f=>{
+    await sandbox(f.p,'gmPage=home');await openWorkbench(f.p,'music');
+    const slider=f.p.locator('[data-gm-music-volume]');
+    assert.equal(await slider.inputValue(),'50');
+    await slider.focus();await slider.press('Home');await slider.press('PageUp');await slider.press('PageUp');
+    assert.equal(await slider.inputValue(),'20');
+    assert.match(await f.p.locator('[data-gm-music-saved]').textContent(),/临时测试/);
+    await press(f.p,'[data-gm-action="music-preview"]');
+    await f.p.waitForFunction(()=>qaGM.play.some(item=>item.url.endsWith('/garden-piano.mp3')&&item.playing));
+    assert.equal((await bridge(f.p,'musicSettings')).preview,true);
+    await press(f.p,'[data-gm-music-enabled]');
+    assert.equal((await bridge(f.p,'musicSettings')).preview,false);
+    assert(await f.p.locator('[data-gm-action="music-preview"]').isDisabled());
+    const layout=await f.p.locator('#gm-workbench').evaluate(e=>({width:e.clientWidth,scroll:e.scrollWidth}));
+    assert(layout.scroll<=layout.width+1);
+    for(const tab of await f.p.locator('[data-gm-tab]').all()) {
+      const box=await tab.boundingBox();assert(box.x>=0&&box.x+box.width<=320);
+    }
+    await f.p.screenshot({path:path.join(out,'music-320.png'),fullPage:true});
+    await f.p.reload();await f.p.locator('main.home-view').waitFor();await openWorkbench(f.p,'music');
+    assert.equal(await slider.inputValue(),'50');assert(await f.p.locator('[data-gm-music-enabled]').isChecked());
+    return {temporaryVolume:20,afterReload:50,width:320,layout};
+  },320);
   await check('image catalog pagination search native decode and preview focus',async f=>{
     await openWorkbench(f.p,'images');await f.p.locator('.gm-image-card').first().waitFor();
     const total=Number((await f.p.locator('.gm-count').textContent()).match(/\d+/)[0]);assert(total>100);

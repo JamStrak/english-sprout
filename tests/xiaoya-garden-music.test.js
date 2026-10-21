@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGardenMusic} from '../xiaoya/garden-music.js';
+import {createGardenMusic, gardenMusicSettings} from '../xiaoya/garden-music.js';
 
 const flush = async () => { for (let i=0;i<4;i++) await Promise.resolve(); };
 function fixture({reject=false,wait=false}={}) {
@@ -50,4 +50,29 @@ test('late play completion cannot resurrect music after leaving the garden',asyn
   const f=fixture({wait:true});f.music.setState({active:true});f.advance(320);
   f.music.setState({active:false,immediate:true});f.resolve();await flush();
   assert.equal(f.player.paused,true);assert.equal(f.player.volume,0);
+});
+
+test('music preferences default safely and clamp corrupt or older saved values',()=>{
+  for(const value of [undefined,null,{}, {volume:'50'}, {volume:NaN}, {volume:Infinity}]) {
+    assert.deepEqual(gardenMusicSettings(value),{enabled:true,volume:.5});
+  }
+  assert.deepEqual(gardenMusicSettings({enabled:false,volume:-1}),{enabled:false,volume:0});
+  assert.deepEqual(gardenMusicSettings({volume:2}),{enabled:true,volume:1});
+});
+test('live volume changes use one player; narration never increases a quiet setting',async()=>{
+  const f=fixture();f.music.setState({active:true,volume:1});await flush();f.advance(320);
+  assert.equal(f.player.volume,1);assert.equal(f.music.status().playing,true);
+  f.music.setState({active:true,volume:.2});f.advance(320);assert.equal(f.player.volume,.2);
+  f.music.setState({active:true,volume:.2,ducked:true});f.advance(128);assert.equal(f.player.volume,.048);
+  f.music.setState({active:true,volume:.2});f.advance(320);assert.equal(f.player.volume,.2);
+  assert.equal(f.created,1);assert.equal(f.player.plays,1);assert.equal(f.player.currentTime,12);
+});
+test('off and zero volume pause and suppress retries; re-enabling restores chosen volume',async()=>{
+  const f=fixture();f.music.setState({active:true,enabled:false});f.music.retry();assert.equal(f.created,0);
+  f.music.setState({active:true,volume:.3});await flush();f.advance(320);
+  f.music.setState({active:true,volume:0,immediate:true});f.music.retry();
+  assert.equal(f.player.paused,true);assert.equal(f.player.plays,1);
+  f.music.setState({active:true,enabled:false,volume:.3,immediate:true});f.music.retry();assert.equal(f.player.plays,1);
+  f.music.setState({active:true,volume:.3,immediate:true});await flush();
+  assert.equal(f.player.volume,.3);assert.equal(f.player.paused,false);assert.equal(f.player.plays,2);
 });

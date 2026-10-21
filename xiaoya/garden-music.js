@@ -1,6 +1,10 @@
 // A separate channel keeps the looping garden track out of narration and mic sessions.
 export const GARDEN_MUSIC_VOLUME = 0.5;
 export const GARDEN_MUSIC_FILE = 'xiaoya/audio/v3/garden-piano.mp3';
+export function gardenMusicSettings(value) {
+  return {enabled: value?.enabled !== false, volume: typeof value?.volume === 'number' && Number.isFinite(value.volume)
+    ? Math.max(0, Math.min(1, value.volume)) : GARDEN_MUSIC_VOLUME};
+}
 export function createGardenMusic({
   createAudio = () => new Audio(new URL(GARDEN_MUSIC_FILE, document.baseURI).href),
   now = () => performance.now(), setTimer = setTimeout, clearTimer = clearTimeout,
@@ -24,26 +28,29 @@ export function createGardenMusic({
       });
     } catch { pending = false; blocked = true; }
   }
-  function ramp(volume, immediate) {
+  function ramp(volume, immediate, ducked) {
     if (!player) return;
     if (target === volume && !immediate) return;
     clearTimer(timer); timer = null; target = volume;
-    const from = player.volume, start = now(), duration = immediate ? 0 : volume === 0.12 ? 120 : 300;
+    const from = player.volume, start = now(), duration = immediate ? 0 : ducked ? 120 : 300;
     function step() {
       const progress = duration ? Math.min(1, (now() - start) / duration) : 1;
-      player.volume = Math.max(0, Math.min(GARDEN_MUSIC_VOLUME, from + (volume - from) * progress));
+      player.volume = progress === 1 ? volume : Math.max(0, Math.min(1, from + (volume - from) * progress));
       if (progress < 1) timer = setTimer(step, 16);
       else { timer = null; if (!active && volume === 0) player.pause(); }
     }
     step();
   }
   return {
-    setState({active: next, ducked = false, immediate = false}) {
+    setState({active: next, ducked = false, immediate = false, volume = GARDEN_MUSIC_VOLUME, enabled = true}) {
+      const settings = gardenMusicSettings({volume, enabled});
+      next = Boolean(next && settings.enabled && settings.volume > 0);
       if (next && !active) blocked = false;
       active = Boolean(next);
       if (active) play();
-      ramp(active ? ducked ? 0.12 : GARDEN_MUSIC_VOLUME : 0, immediate);
+      ramp(active ? ducked ? Math.min(0.12, settings.volume * 0.24) : settings.volume : 0, immediate, ducked);
     },
     retry() { if (active) { blocked = false; play(); } },
+    status() { return {playing: Boolean(player && !player.paused && !pending), blocked}; },
   };
 }

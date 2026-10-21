@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.20.2。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.20.3。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -33,7 +33,7 @@
 | 三种示范音色 | `voices.js`：`VOICES`、`readVoice`、`saveVoice`、`lessonAudio` | Aiden / Ryan / Pip 使用同一学习进度；切声音不能重复发奖 |
 | 播放、录音、评分 | `audio.js`：`playSound`、`prepareRecording`、`beginRecording`、`finishRecording`、`replayClip`、`recognize`；`speech-local.js`、`speech-worker.js` | 真正录音就绪后才提示开口；停止/取消生命周期与临时音频清理 |
 | 引导与反馈 | `experience.js` 的 `scheduleIdleHint`、`sound`；`feedback.js`；`feedback.css`、`paper.css`、`style.css` | 指引手仅闲置后出现；录音期间、后台与关弹窗时不能留下音效/提示 |
-| 花园背景音乐 | `garden-music.js`：`createGardenMusic`；`experience.js`：`syncGardenMusic` | 独立循环通道，50% 上限、语音 12%；离场淡出、后台/GM 立即暂停，不随浇水重建。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json`；离线清单由构建自动纳入 |
+| 花园背景音乐 | `garden-music.js`：`createGardenMusic`、`gardenMusicSettings`；`experience.js`：`syncGardenMusic`、`gmBridge.musicSettings/setMusicSettings/previewMusic` | 默认 50%，可设 0–100% 和关闭；语音压至 `min(0.12, volume*0.24)`。GM 试听与花园共用一个循环通道，切页/关台/后台停止试听，不随浇水重建。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json`；离线清单由构建自动纳入 |
 | GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 公开包物理排除、内存存档隔离、模拟标记、真实儿童记录不变 |
 | 静态发布与离线 | `scripts/build.mjs`、`scripts/build-xiaoya.mjs`、`xiaoya/audio-pack.js`、`xiaoya/sw.template.js` | 两产品、渠道、完整声音/图片清单、后台 SHA-256 校验、版本更新需一起核对 |
 
@@ -53,7 +53,7 @@
 | `xiaoya-english:garden:v1` | `garden-history.js` 只读旧 A 花盆归档；不删历史数据，也不再开放操作 |
 | `xiaoya-english:meadow:v1` | `garden-meadow.js`，自由花园经济、购买、种植、挑战奖；当前对象 `schemaVersion: 4`，新增 `welcomeGifts: [{date, kind}]` 每日欢迎礼物账本，键名仍是 v1 |
 | `xiaoya-english:welcome-greetings:v1` | `welcome-greetings.js`，schema 1 的日期、当日语音 ID、剩余轮换列表；只影响欢迎语，不是奖励凭据。经 appStorage 隔离 GM；存储失败回退内存，不阻塞学习 |
-| `xiaoya-english:preferences:v1` | `experience.js`，麦克风许可意愿、引导等偏好 |
+| `xiaoya-english:preferences:v1` | `experience.js`，麦克风许可意愿、引导及 `gardenMusic:{enabled,volume}`；缺失音乐偏好默认开启/0.5，数值夹到 0–1。GM 普通内测允许持久化此偏好，模拟模式通过 `appStorage` 只写内存，不覆盖真实设置 |
 | `xiaoya-english:garden-variant:v1` | 旧 A/B 偏好键，当前忽略且不再写入；旧 URL `garden=a` 也不能进入 A |
 | `xiaoya-english:voice:v1` | `voices.js`，示范声音选择 |
 

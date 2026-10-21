@@ -22,7 +22,7 @@
 #xiaoya-gm .gm-version{font-size:11px;color:var(--gm-muted);margin-top:3px}
 #xiaoya-gm .gm-close{width:42px;height:42px;padding:0;font-size:26px;border-radius:50%;flex-shrink:0}
 #xiaoya-gm .gm-safety{padding:11px 28px;background:#efeee0;color:#687354;font-size:12px;border-top:1px solid #e5e4d7;border-bottom:1px solid #e5e4d7}
-#xiaoya-gm .gm-tabs{display:flex;gap:6px;padding:13px 28px 0;flex-shrink:0;border-bottom:1px solid var(--gm-border)}
+#xiaoya-gm .gm-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:13px 28px 0;flex-shrink:0;border-bottom:1px solid var(--gm-border)}
 #xiaoya-gm .gm-tabs button{background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:10px 17px;color:var(--gm-muted);white-space:nowrap}
 #xiaoya-gm .gm-tabs button[aria-selected="true"]{border-bottom-color:var(--gm-green);color:var(--gm-ink);font-weight:700;background:#eff2e5}
 #xiaoya-gm .gm-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:16px 28px 10px;flex-shrink:0}
@@ -100,3 +100,14 @@ body.gm-sandbox{padding-top:56px}
 @media(max-width:850px){#xiaoya-gm .gm-course-grid{grid-template-columns:1fr}#xiaoya-gm .gm-course-picture{width:30%}#xiaoya-gm .gm-course-picture img{max-height:220px}#xiaoya-gm .gm-image-grid{grid-template-columns:repeat(3,minmax(0,1fr))}#xiaoya-gm .gm-test-hint{display:none}}
 @media(max-width:560px){#xiaoya-gm .gm-dialog{width:calc(100vw - 12px);height:calc(100dvh - 12px);max-height:calc(100dvh - 12px);border-radius:13px}#xiaoya-gm .gm-header{padding:15px 15px 11px}#xiaoya-gm h1{font-size:23px}#xiaoya-gm .gm-safety{padding:9px 15px;font-size:10px}#xiaoya-gm .gm-tabs{padding:7px 10px 0;gap:0;justify-content:space-between}#xiaoya-gm .gm-tabs button{font-size:12px;padding:9px 10px}#xiaoya-gm .gm-filters{padding:12px 14px 8px;gap:7px}#xiaoya-gm .gm-search-label{min-width:100%;flex-basis:100%}#xiaoya-gm .gm-filters label{font-size:11px}#xiaoya-gm .gm-filters select{font-size:11px;min-height:36px;padding:6px 7px}#xiaoya-gm .gm-content{padding:10px 14px 20px}#xiaoya-gm .gm-section-heading h2{font-size:16px}#xiaoya-gm .gm-section-heading p{font-size:10px}#xiaoya-gm .gm-course{display:block}#xiaoya-gm .gm-course-picture{width:100%;height:135px;min-height:0}#xiaoya-gm .gm-course-picture img{max-height:135px}#xiaoya-gm .gm-course-body{padding:13px}#xiaoya-gm .gm-course h3{font-size:22px}#xiaoya-gm .gm-voice-buttons button{font-size:11px;min-height:36px}#xiaoya-gm .gm-course-actions button{font-size:12px;min-height:38px}#xiaoya-gm .gm-image-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#xiaoya-gm .gm-image-card>button{padding:7px}#xiaoya-gm .gm-image-card>div{padding:8px}#xiaoya-gm .gm-image-card h3{font-size:10px}#xiaoya-gm .gm-audio-row{padding:11px;gap:8px}#xiaoya-gm .gm-audio-size{display:none}#xiaoya-gm .gm-audio-row h3{font-size:12px}#xiaoya-gm .gm-audio-row>button{min-height:40px;font-size:11px;padding:8px}#xiaoya-gm .gm-pagination{gap:12px;font-size:11px}#xiaoya-gm .gm-pagination button{font-size:11px}#xiaoya-gm .gm-player{padding:10px 14px;font-size:10px}#xiaoya-gm .gm-flow-grid{grid-template-columns:1fr}#xiaoya-gm .gm-flow-card{padding:17px}#xiaoya-gm .gm-preview{padding:14px}#xiaoya-gm .gm-preview h2{font-size:13px}#xiaoya-gm .gm-testbar{gap:6px;padding:7px 8px;min-height:82px}#xiaoya-gm .gm-testbar .gm-score-label{order:2;width:100%;justify-content:center}#xiaoya-gm .gm-testbar button{font-size:10px;padding:5px 8px}#xiaoya-gm .gm-test-mark{margin-right:auto}body.gm-sandbox{padding-top:88px}}
 @media(prefers-reduced-motion:reduce){#xiaoya-gm .is-playing .gm-player-dot{animation:none}}
+
+/* The BGM panel controls the same player as the garden. */
+#xiaoya-gm .gm-music-card{max-width:680px}
+#xiaoya-gm .gm-music-card label{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 10px;font-size:15px}
+#xiaoya-gm .gm-music-card .gm-music-toggle{justify-content:flex-start;cursor:pointer}
+#xiaoya-gm .gm-music-toggle input{width:22px;height:22px;min-height:22px;accent-color:var(--gm-green)}
+#xiaoya-gm .gm-music-card output{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gm-green)}
+#xiaoya-gm .gm-music-card input[type="range"]{width:100%;min-height:44px;margin:0;accent-color:var(--gm-green);cursor:pointer}
+#xiaoya-gm .gm-music-card .gm-flow-buttons{display:flex;flex-wrap:wrap;gap:10px}
+#xiaoya-gm .gm-music-card button:disabled{opacity:.5;cursor:not-allowed}
+#xiaoya-gm .gm-music-card [data-gm-music-saved]{min-height:1.6em}

@@ -1,5 +1,24 @@
 # 小芽英语 · 实施记录
 
+## v0.20.3 · GM 背景音乐控制（2026-10-21）
+
+在 GM 内测台新增“背景音乐”页，复用 v0.20.2 花园钢琴播放器，没有新增音频、依赖或服务。
+
+- 提供音乐开关、0–100% 音量、试听/停止、恢复默认 50%。试听、声音库 `garden-piano` 和实际花园共用一个播放器与音量；调节立即生效，不叠播。
+- `gardenMusicSettings` 统一校验 `prefs.gardenMusic = { enabled, volume }`，缺省为开启、0.5。经 appStorage 保存，普通内测刷新保留；免录音沙盒只改内存，刷新重置、退出恢复正式设置。没有改变学习与奖励记录。
+- 语音播放时压到 `min(0.12, volume × 0.24)`，结束恢复用户选定音量；0% 或关闭时停止。GM 换页、关闭、试听其他音频、进入后台均结束音乐试听，避免离开后仍响。
+- 基于 `7a73ff4`，分支 `codex/xiaoya-garden-ab`；内测 **0.20.3 / 8c1887705264**，公开 **dc2ffc4065b3**；旧产品仍 **1.8.1 / c4bccf69eebc**。最终 dist 为内测，未部署。交付提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询。
+
+验证（最终运行代码）：
+
+- `npm test` **766/766**，包含设置校验、音量切换与语音压低、零音量与重新开启。日志 `test-results/gm-music-unit.log`。
+- `node tests/xiaoya-garden-music-browser.cjs` **10/10**：原生 Edge MP3、滑块与试听共用播放器、30% 花园音量及 7.2% 语音压低、刷新保存、关闭/恢复默认、声音库复用、小屏布局；同时覆盖循环、离场、后台、缓存哈希核对后的断网播放。报告 `test-results/xiaoya-garden-music/report.json`。
+- `node tests/xiaoya-gm-browser.cjs` 内测 **10/10**，含 320px 音乐页、沙盒 20%/开关/试听、刷新回到默认且正式存档不变、不调用麦克风或识别。报告 `test-results/xiaoya-v0203-gm/results.json`。公开构建以 `XIAOYA_EXPECT_PUBLIC=1` 检查 **1/1**，报告 `test-results/xiaoya-v0203-gm-public/results.json`。
+- 旧产品 `tests/browser.cjs` 首次 **35/36**，下载缓存竞态用例在点击可见家长按钮时超时，尚不能确认原因；没有改动代码，单独复核 **36/36**。保留 [首次报告](UI_QA_xiaoya-v0203-legacy.md) 与 [复核报告](UI_QA_xiaoya-v0203-legacy-recheck.md)，原始记录位于相应 `test-results/xiaoya-v0203-legacy*/browser-results.json`。
+- `npm run build`、`npm run build:dev` 均通过；日志 `test-results/gm-music-public-build.log` 与 `test-results/gm-music-internal-build.log`。390px 和 320px 截图已检查，控件可见、无横向溢出。
+
+限制：自动化验证音频播放与混音数值，不代表物理扬声器、实体手机或主观听感验收；后台事件含模拟。本轮未改启动器或媒体，未重跑 Python 启动器、完整离线美术或欢迎礼物全套。此页只调背景音乐，教学语音和交互音效音量不变。
+
 ## v0.20.2 · 花园钢琴背景音乐（2026-10-21）
 
 接入用户提供、由用户通过 MiniMax 生成的 `garden_piano.mp3`。原始文件位于 `E:\AI新项目\其他实验\英语小芽-无声版\voice_tryouts\garden_piano.mp3`，原字节复制到 `public/xiaoya/audio/garden-piano.mp3`；656,810 字节 / 40.97 秒，来源与 SHA-256 记录于同目录 `garden-piano-source.json`。本次只按用户指定用在应用花园，未附独立许可文档。

@@ -19,7 +19,7 @@ import * as audio from './audio.js';
 import {startAudioPack,retryAudioPack,audioPackMessage,onAudioPackChange,retryArtPack,artPackMessage,onArtPackChange} from './audio-pack.js';
 import {PRACTICE_KEY,createPracticePlan,validatePracticePlan,recordPractice,getPracticePlan} from './practice-plan.js';
 import {createFeedback} from './feedback.js';
-import {createGardenMusic} from './garden-music.js';
+import {createGardenMusic,gardenMusicSettings} from './garden-music.js';
 import * as challenge from './challenges.js';
 import {flagArt,challengeFlag,challengeSteps,challengeBoard,challengePrize} from './challenge-ui.js';
 
@@ -44,7 +44,8 @@ const chooseWelcomeGreeting=createWelcomeGreetings(appStorage);
 let welcomeGreetingTimer=null,welcomeAttemptDay=null;
 const effects=createFeedback({canSound:()=>!document.hidden&&!speaking&&!session?.waiting&&!session?.recording&&!['preparing','assessing'].includes(session?.assessment?.status)});
 const gardenMusic=createGardenMusic();
-function syncGardenMusic(){gardenMusic.setState({active:page==='garden'&&!modal&&!gmWorkbenchOpen&&!document.hidden,ducked:speaking,immediate:document.hidden||gmWorkbenchOpen});}
+let gmMusicPreview=false;
+function syncGardenMusic(){gardenMusic.setState({...gardenMusicSettings(prefs.gardenMusic),active:!document.hidden&&(gmWorkbenchOpen?gmMusicPreview:page==='garden'&&!modal),ducked:speaking,immediate:document.hidden||gmWorkbenchOpen});}
 const directStory=new URLSearchParams(location.search).get('story');
 // Old garden URL parameters and preferences cannot select a retired screen.
 let meadowState=meadow.createMeadow(),meadowTool=null,meadowBusy=false;
@@ -631,12 +632,13 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();e
 window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
 const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
 
-// Internal controls use the real screens and transaction models. Mutations are
-// allowed only in a fresh in-memory sandbox, never in a child's persisted save.
+// Internal controls use the real screens and transaction models. Learning and
+// economy mutations require the sandbox; music preferences use appStorage so
+// real mode remembers the setting while sandbox edits remain in memory.
 function requireGmSandbox(){if(!GM_SANDBOX)throw new Error('请先进入免录音测试，再修改测试状态。');}
 export const gmBridge=INTERNAL_BUILD?Object.freeze({
   pause(){
-    gmWorkbenchOpen=true;uiGeneration++;cancelIdleHint();cancelGardenReminder();cancelFeedbackVoice();
+    gmMusicPreview=false;gmWorkbenchOpen=true;uiGeneration++;cancelIdleHint();cancelGardenReminder();cancelFeedbackVoice();
     stopSpeech();effects.cancel();cancelMeadowDrag?.();audio.releaseAudioSession();
     if(session){
       cancelStory(session);
@@ -645,7 +647,15 @@ export const gmBridge=INTERNAL_BUILD?Object.freeze({
       session.teaching=false;session.hasClip=false;
     }
   },
-  resume(){gmWorkbenchOpen=false;render();scheduleGardenReminder();},
+  resume(){gmMusicPreview=false;gmWorkbenchOpen=false;render();scheduleGardenReminder();},
+  musicSettings(){return {...gardenMusicSettings(prefs.gardenMusic),preview:gmMusicPreview,...gardenMusic.status()};},
+  setMusicSettings(change){
+    const next=gardenMusicSettings({...gardenMusicSettings(prefs.gardenMusic),...change});
+    if(!savePrefs({...prefs,gardenMusic:next}))return false;
+    if(!next.enabled||!next.volume)gmMusicPreview=false;
+    syncGardenMusic();return true;
+  },
+  previewMusic(active){const settings=gardenMusicSettings(prefs.gardenMusic);gmMusicPreview=Boolean(active&&gmWorkbenchOpen&&settings.enabled&&settings.volume);syncGardenMusic();if(gmMusicPreview)gardenMusic.retry();},
   inspect(){const wallet=activeGarden();return {
     page,eventId:session?.event.id??null,phase:session?.phase??null,voice:selectedVoice,gardenVariant:'b',
     simulationResult:gmResult,wallet:{shells:wallet.shells,water:wallet.water},plants:wallet.plants.length,

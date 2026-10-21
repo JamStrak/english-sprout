@@ -1,3 +1,4 @@
+import {gardenMusicSettings} from '../xiaoya/garden-music.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -68,7 +69,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
-    createGardenMusic:()=>({setState(){},retry(){}}),createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
+    gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
     startAudioPack() {}, retryAudioPack() {}, onAudioPackChange() {}, audioPackMessage:() => '',
     retryArtPack() {}, onArtPackChange() {}, artPackMessage:() => '',
     recordEvidence:(state, input) => learning.recordEvidence(state, copy(input)),
