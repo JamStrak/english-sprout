@@ -12,7 +12,10 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .primary-orb:before{inset:-9px;border:1px solid #74998666;border-radius:41%;animation:paper-breathe 3s ease-in-out infinite}
 .primary-orb:has(>svg:not(.ui-icon)),.primary-orb:has(>[data-icon="gift"]){padding:7px;background:var(--surface);box-shadow:0 6px 0 #92A58C66,0 0 0 1px #AAB8A2}
 .primary-orb:active:not(:disabled){box-shadow:0 1px 0 #233A334D,0 0 0 1px #688273}
-.tap-cue{right:-15px;bottom:-15px;width:42px;height:44px;color:#8D624A;filter:drop-shadow(0 2px 0 var(--sheet))}
+/* Keep the 256px hand canvas: fingertip anchor is (96,18). */
+.tap-cue,.has-story-card .tap-cue{right:auto;bottom:auto;left:calc(50% - .5px);top:calc(100% - 23.34px);width:76px;height:76px;filter:drop-shadow(0 2px 2px #344B4526);transform-origin:37.5% 7.03125%;animation:paper-hand-tap 3.2s ease-in-out infinite}
+.home-view .primary-wrap > .tap-cue{left:calc(100% - 36px);top:calc(50% - 5px)}
+@keyframes paper-hand-tap{0%,12%,58%,100%{transform:translateY(3px) rotate(5deg)}23%,41%{transform:translateY(-3px) rotate(-2deg) scale(.94)}31%,49%{transform:translateY(2px) rotate(3deg) scale(1.02)}}
 .icon-button.is-guided,.primary-orb.is-guided{outline-color:var(--clay);outline-offset:5px}
 .icon-button.is-guided{color:var(--ink);background:#E2CEB9}
 .home-view.home-welcome{min-height:560px;max-height:none;justify-content:center;padding:12px 0 112px;gap:0}
@@ -115,6 +118,15 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .modal-emblem{display:grid;place-items:center;width:54px;height:54px;margin-bottom:16px;background:#D8E0CC;border-radius:20px 22px 19px 21px;transform:rotate(-4deg);color:#506B58}
 .modal-emblem>.ui-icon{width:28px;height:28px;transform:rotate(4deg)}
 .modal-card h2{font-size:23px}.modal-card p{color:#647366}
+.audio-controls{display:grid;gap:14px;margin:24px 0}
+.modal-card .audio-switch{display:flex;align-items:center;justify-content:space-between;gap:18px;text-align:left;min-height:86px;padding:16px;background:#F7F3EB;border:1px solid #CFD4C5;border-radius:19px}
+.audio-switch strong{display:block;font-size:17px;font-weight:600}
+.audio-switch small{display:block;font-size:12px;line-height:1.5;color:#647366;margin-top:4px}
+.switch-track{display:block;position:relative;flex:none;width:48px;height:28px;background:#B9BDB1;border:1px solid #A8ADA1;border-radius:18px;transition:background .2s}
+.switch-track i{display:block;position:absolute;left:3px;top:3px;width:20px;height:20px;background:#FFFCF5;border-radius:50%;box-shadow:0 1px 3px #344B4526;transition:transform .2s}
+.audio-switch[aria-checked=true] .switch-track{background:#547464;border-color:#547464}
+.audio-switch[aria-checked=true] .switch-track i{transform:translateX(20px)}
+.audio-note{font-size:13px;line-height:1.6}
 .modal-card input:not([type=checkbox]){background:#FFFCF5;border-color:#A8B99D;border-radius:13px}
 .toast{background:var(--ink);color:var(--paper);border-radius:19px 22px 17px 20px}
 @keyframes paper-breathe{50%{opacity:.2;transform:scale(1.05)}}
@@ -177,3 +189,10 @@ body.welcome-gift-active{overflow:hidden}
 @keyframes welcome-box-open{0%{transform:scale(1);opacity:1}35%{transform:scale(.94) rotate(-3deg);opacity:1}65%{transform:scale(1.07) rotate(2deg);opacity:1}100%{transform:translateY(-12px) scale(.9);opacity:0}}
 @keyframes welcome-halo-open{from{transform:scale(1);opacity:.7}to{transform:scale(1.2);opacity:.55}}
 @keyframes welcome-reveal{from{opacity:0;transform:translateY(14px) scale(.85)}to{opacity:1;transform:none}}
+
+/* Four header actions remain reachable on narrow phones. */
+@media(max-width:420px){
+ .app-shell{padding-left:12px;padding-right:12px}.topbar{gap:7px}.topbar>div{gap:5px}
+ .topbar .icon-button{width:44px;min-width:44px;height:44px;padding:10px}
+ .brand{min-width:0;font-size:11px;letter-spacing:.5px}.brand .edition-label{font-size:9px;letter-spacing:0}
+}

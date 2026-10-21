@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createMemoryStorage, INTERNAL_BUILD, GM_SANDBOX, appStorage} from '../xiaoya/runtime.js';
+import {createMemoryStorage, createSandboxStorage, INTERNAL_BUILD, GM_SANDBOX, appStorage} from '../xiaoya/runtime.js';
 
 test('GM memory records are independent from both their input and other test sessions', () => {
   const child = {voice: 'ryan', progress: '{"rounds":7}'};
@@ -34,4 +34,28 @@ test('unbuilt source is public by default and access to real storage remains laz
   Object.defineProperty(globalThis, 'localStorage', {configurable: true, get() { throw denied; }});
   try { assert.throws(() => appStorage.getItem('state'), error => error === denied); }
   finally { if (original) Object.defineProperty(globalThis, 'localStorage', original); else delete globalThis.localStorage; }
+});
+
+test('GM inherits boolean audio controls alongside music tuning, without child or novice state', () => {
+  const key='xiaoya-english:preferences:v1';
+  const saved={audioControls:{music:false,reminders:false,extra:'omit'},gardenMusic:{enabled:true,volume:.03},mic:true,
+    welcome:true,shopSeen:true,guidance:{seen:['reward','garden']}};
+  const real=createMemoryStorage({[key]:JSON.stringify(saved),'xiaoya-english:learning:v1':'private progress'});
+  const memory=createSandboxStorage(()=>real);
+  assert.deepEqual(JSON.parse(memory.getItem(key)),{gardenMusic:{enabled:true,volume:.03},audioControls:{music:false,reminders:false}});
+  assert.equal(memory.getItem('xiaoya-english:learning:v1'),null);
+  memory.setItem(key,JSON.stringify({audioControls:{music:true,reminders:true}}));
+  assert.deepEqual(JSON.parse(real.getItem(key)),saved,'Sandbox toggles cannot change the real controls');
+});
+
+test('GM audio control inheritance rejects arrays and nonboolean values but preserves valid partial settings', () => {
+  const key='xiaoya-english:preferences:v1';
+  for(const audioControls of [null,[],true,'off',{music:'false',reminders:0},{unknown:true}]) {
+    const real=createMemoryStorage({[key]:JSON.stringify({audioControls,mic:true,welcome:true})});
+    assert.equal(createSandboxStorage(()=>real).getItem(key),null);
+  }
+  for(const audioControls of [{music:true},{reminders:false},{music:false,reminders:true}]) {
+    const real=createMemoryStorage({[key]:JSON.stringify({audioControls})});
+    assert.deepEqual(JSON.parse(createSandboxStorage(()=>real).getItem(key)),{audioControls});
+  }
 });

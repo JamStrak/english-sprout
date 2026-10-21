@@ -69,8 +69,8 @@ test('BGM bindings remain independent from the effect master switch and volume',
   assert.equal(f.players.length,0);
 });
 
-test('speech, microphone, hidden document, and suspended gameplay cancel current cues without deferred replay',async()=>{
-  for(const flag of ['speech','recording','hidden','suspended']){
+test('speech, microphone, hidden document, suspended gameplay and mute cancel current cues without deferred replay',async()=>{
+  for(const flag of ['speech','recording','hidden','suspended','muted']){
     const f=fixture(),result=f.player.play('reward'),audio=f.players[0];
     f.player.setState({[flag]:true});assert.equal(await result,false);assert.equal(audio.paused,true);
     assert.equal(await f.player.play('tap'),false);assert.equal(f.players.length,1);
@@ -82,13 +82,33 @@ test('speech, microphone, hidden document, and suspended gameplay cancel current
   f.hide(false);assert.equal(f.player.status().hidden,false);assert.equal(f.players.length,1);
 });
 
-test('an explicit GM preview works while gameplay is suspended but never over speech or recording',async()=>{
+test('an explicit GM preview works while gameplay is suspended but never over speech, recording or mute',async()=>{
   const f=fixture();f.player.setState({suspended:true});f.settings.events.tap.enabled=false;
   const preview=f.player.play('tap',{preview:true});assert.equal(f.player.status().preview,true);f.players[0].end();assert.equal(await preview,true);
-  for(const flag of ['speech','recording','hidden']){
+  for(const flag of ['speech','recording','hidden','muted']){
     f.player.setState({[flag]:true});assert.equal(await f.player.play('tap',{preview:true}),false);f.player.setState({[flag]:false});
   }
   assert.equal(f.players.length,1);
+});
+
+test('mute stops a pending preview, preserves tuning, and never revives its late playback',async()=>{
+  const f=fixture({deferred:true});
+  f.settings.events.tap.volume=.25;
+  const saved=structuredClone(f.settings),binding=f.player.resolve('tap');
+  const result=f.player.play('tap',{preview:true}),audio=f.players[0],stalePlaying=audio.onplaying;
+  f.player.setState({muted:true});
+  assert.equal(await result,false);assert.equal(f.player.status().muted,true);
+  assert.equal(f.player.status().playing,false);assert.equal(audio.paused,true);
+  assert.equal(await f.player.play('tap',{preview:true}),false);
+  assert.equal(await f.player.play('bgm',{preview:true}),false);
+  assert.deepEqual(f.player.resolve('tap'),binding);assert.deepEqual(f.settings,saved);
+  audio.finishLoading();stalePlaying();await flush();
+  assert.equal(audio.paused,true);assert.equal(f.timers.size,0);
+  f.player.setState({muted:false});f.advance(2000);
+  assert.equal(f.players.length,1,'Unmuting must not replay the stopped preview');
+  const next=f.player.play('tap',{preview:true});
+  assert.equal(f.players.length,2);assert.equal(f.players[1].volume,.15);
+  f.players[1].finishLoading();f.players[1].end();assert.equal(await next,true);
 });
 
 test('rapid clicks are dropped and low priority feedback cannot interrupt a reward',async()=>{

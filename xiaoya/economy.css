@@ -92,7 +92,7 @@
 }
 @media(prefers-reduced-motion:reduce){.reward-choice.is-guided,.short-on-shells{animation:none}.seed-purchase:active{transform:none}}
 
-/* Let children listen to each resource before committing the pending gift. */
+/* One tap claims the chosen resource; the receipt alone links to the garden. */
 .reward-view[data-choice=true]{gap:22px;padding:12px 12px 28px}
 .reward-choice{position:relative;padding:12px;gap:6px;min-height:166px}
 .reward-choice-resource{display:flex;align-items:center;gap:5px}
@@ -100,13 +100,6 @@
 .reward-purpose{display:flex;align-items:center;gap:9px;opacity:.9;pointer-events:none}
 .reward-purpose>span{font-size:23px}
 .reward-purpose>svg{width:58px;height:58px}
-.reward-choice[aria-pressed=true]{border:3px solid #6b8764;box-shadow:0 6px 0 #6b8764,0 0 0 5px #b9c9a945}
-.reward-selected{position:absolute;top:-12px;right:-8px;background:#6b8764;color:#fff;border-radius:50%;padding:5px;display:flex}
-.reward-selected>svg{width:24px;height:24px}
-.reward-confirm-slot{min-height:112px;display:grid;place-items:center}
-.reward-confirm-slot .primary-orb{position:relative}
-.confirm-resource{position:absolute;bottom:-3px;right:-7px;width:34px;height:34px;border-radius:50%;background:#fff8e8;box-shadow:0 2px 0 #cabd9e;padding:4px}
-.confirm-resource>svg{width:100%;height:100%}
 .reward-treasure .reward-resource{display:flex;align-items:center;gap:6px;min-height:72px;padding:8px 12px;border:2px solid #dbc9a6;border-radius:22px;background:#fff6e2;color:inherit;font:inherit;cursor:pointer;box-shadow:0 3px 0 #cbb998}
 .reward-resource[data-action=water-purpose]{border-color:#b7ccc0;background:#e9f1e8;box-shadow:0 3px 0 #a9bcb2}
 .reward-resource:active{transform:translateY(2px)}
@@ -125,7 +118,6 @@
  .reward-choice{min-height:144px;padding:9px}
  .reward-choice-resource>svg{width:56px;height:56px}
  .reward-purpose>svg{width:47px;height:47px}
- .reward-confirm-slot{min-height:104px}
 }
 @media(prefers-reduced-motion:reduce){.recall-option.is-guided,.reward-resource.is-guided{animation:none}}
 

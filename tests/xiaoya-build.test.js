@@ -25,7 +25,7 @@ async function fixture(t,{phrasePack=false,soundPack=false,internal=false}={}) {
   };
   for (const name of ['garden-music.js', 'phrase-pack-v015.js', 'phrase-assets-v015.js', 'story-assets.js', 'story-pictures.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'meadow-hit-shapes.js', 'economy.css', 'seed-shop.js', 'paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
-  for (const name of ['sound-catalog.js', 'sound-settings.js', 'sound-player.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* shared sound module */');
+  for (const name of ['sound-catalog.js', 'sound-settings.js', 'sound-player.js', 'guidance-clock.js', 'guidance-policy.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* shared sound and guidance module */');
   for (const name of ['challenge-flowers.js', 'economy-settings.js', 'meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* public garden motion */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
@@ -140,8 +140,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语启蒙正式版 v0\.24\.1<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /小芽英语启蒙正式版 v0\.24\.1/);
+  assert.match(html, /<title>小芽英语启蒙正式版 v0\.25\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /小芽英语启蒙正式版 v0\.25\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);

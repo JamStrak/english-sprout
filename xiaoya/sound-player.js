@@ -7,7 +7,7 @@ const nativeAudio=url=>new Audio(new URL(url,document.baseURI).href);
 export function createSoundPlayer({store=soundSettings,events=SOUND_EVENTS,assets=SOUND_ASSETS,
   createAudio=nativeAudio,preload=createAudio===nativeAudio&&typeof globalThis.Audio==='function'&&!!globalThis.document,
   now=()=>performance.now(),setTimer=setTimeout,clearTimer=clearTimeout,document:doc=globalThis.document}={}) {
-  const state={speech:false,recording:false,hidden:false,suspended:false};
+  const state={speech:false,recording:false,hidden:false,suspended:false,muted:false};
   const last=new Map(),pool=new Map();let current=null,destroyed=false;
   const poolURLs=new Set(preload?events.filter(event=>event.kind==='sfx').map(event=>assets.find(asset=>asset.id===event.assetId))
     .filter(asset=>asset&&asset.kind!=='bgm'&&typeof asset.url==='string'&&!/^(?:data|blob):/i.test(asset.url)).map(asset=>asset.url):[]);
@@ -27,7 +27,7 @@ export function createSoundPlayer({store=soundSettings,events=SOUND_EVENTS,asset
     return {event,asset,enabled:(music||settings.enabled)&&binding.enabled!==false&&!!asset,
       volume:Math.max(0,Math.min(1,(music?1:settings.volume)*binding.volume)),eventVolume:binding.volume};
   }
-  const allowed=preview=>!destroyed&&!state.hidden&&!doc?.hidden&&!state.speech&&!state.recording&&(!state.suspended||preview);
+  const allowed=preview=>!destroyed&&!state.muted&&!state.hidden&&!doc?.hidden&&!state.speech&&!state.recording&&(!state.suspended||preview);
   function stop(){if(current)current.finish(false);}
   function play(id,{preview=false,volume:previewVolume}={}){
     const entry=resolve(id),volume=preview&&Number.isFinite(previewVolume)?Math.max(0,Math.min(1,previewVolume)):entry?.volume;

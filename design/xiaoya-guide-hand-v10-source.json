@@ -1,0 +1,53 @@
+{
+  "schema": "xiaoya-art-import/v1",
+  "releaseId": "v10-guide-hand",
+  "status": "integrated-pending-user-visual-review",
+  "userApproved": false,
+  "source": {
+    "laboratoryRelative": "studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v10-guide-hand",
+    "manifestSHA256": "9e9043a9b239d0086f506cbee5a3a4cad7ddd82e7b1fc55b50723a92d9bd5b40",
+    "prompt": "prompt.txt",
+    "original": "source/guide-hand-generated.png",
+    "generationTool": "image_gen.imagegen",
+    "modelVersion": "not-exposed",
+    "transparentBackground": true,
+    "style": "273 Hand-Torn Paper Collage Illustration",
+    "palette": "09 雾林茶奶",
+    "rights": "AI-generated project asset; third-party style reference is not included in delivery, and its rights remain with the original source."
+  },
+  "runtime": {
+    "path": "public/xiaoya/paper/v2/guide-hand.webp",
+    "bytes": 28002,
+    "sha256": "d8648c4392e184fd12ba1e0169fd77d29eb64c4ea34b0f8472a0d3f38b7cd98a",
+    "canvas": [
+      256,
+      256
+    ],
+    "fingertipPixels": [
+      96,
+      18
+    ],
+    "fingertipNormalized": [
+      0.375,
+      0.0703125
+    ],
+    "displayCssPixels": 76,
+    "fullCanvasPreserved": true,
+    "format": "lossless RGBA WebP",
+    "identicalToLaboratoryRuntime": true
+  },
+  "integration": {
+    "version": "0.25.0",
+    "browserChecks": "test-results/xiaoya-idle-hint/results.json",
+    "widths": [
+      320,
+      390
+    ],
+    "animation": "soft double tap and rebound, 3.2s cycle; reduced-motion supported",
+    "trigger": "60s idle and one unambiguous recommended action; hidden on interaction"
+  },
+  "limitations": [
+    "Browser checks and source transparency checks do not equal final user art approval.",
+    "Source generation model version was not exposed."
+  ]
+}

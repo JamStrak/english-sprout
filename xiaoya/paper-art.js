@@ -9,7 +9,7 @@ const FLOWER_IDS=['daisy','tulip','sunflower','bellflower','poppy','violet','bow
 export const PAPER_ASSETS=Object.freeze(Object.fromEntries([
   ...['buddy-welcome','gift-box','seed-pack','seed','watering-can','shell','water-drop','seed-in-soil','sprout','bud'].map(key=>[key,`${ROOT}${key}.webp`]),
   ...FLOWER_IDS.map(id=>[`flower-${id}`,`${ROOT}flowers/${id}.webp`]),
-  ...['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'].map(key=>[key,`${NEXT_ROOT}${key}.webp`]),
+  ...['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag','guide-hand'].map(key=>[key,`${NEXT_ROOT}${key}.webp`]),
   ...['bow-rainbow','bow-starlight'].map(id=>[`flower-${id}`,`${NEXT_ROOT}flowers/${id}.webp`]),
   ...Object.entries(CHALLENGE_GROWTH_ASSETS),
 ]));

@@ -54,12 +54,12 @@ test('plant hit outlines match the currently shipped art assets',()=>{
 });
 
 test('paper map includes shared art and the 21 promoted five-stage flowers with nested-host relative paths',()=>{
-  assert.equal(Object.keys(PAPER_ASSETS).length,29+21*5);
+  assert.equal(Object.keys(PAPER_ASSETS).length,30+21*5);
   assert.ok(Object.isFrozen(PAPER_ASSETS));
   for(const stage of ['seed-in-soil','sprout','bud'])assert.equal(PAPER_ASSETS[stage],`xiaoya/paper/v1/${stage}.webp`);
   for(const flower of FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v1/flowers/${flower.id}.webp`);
   for(const flower of SPECIAL_FLOWERS)assert.equal(PAPER_ASSETS[`flower-${flower.id}`],`xiaoya/paper/v2/flowers/${flower.id}.webp`);
-  for(const key of ['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag'])assert.equal(PAPER_ASSETS[key],`xiaoya/paper/v2/${key}.webp`);
+  for(const key of ['voice-aiden','voice-ryan','voice-pip','pot-front','challenge-flag','guide-hand'])assert.equal(PAPER_ASSETS[key],`xiaoya/paper/v2/${key}.webp`);
   for(const [key,path] of Object.entries(PAPER_ASSETS)) {
     if(key in CHALLENGE_GROWTH_ASSETS)assert.equal(path,CHALLENGE_GROWTH_ASSETS[key]);
     else assert.match(path,/^xiaoya\/paper\/v[12]\/(?:flowers\/)?[a-z-]+\.webp$/);

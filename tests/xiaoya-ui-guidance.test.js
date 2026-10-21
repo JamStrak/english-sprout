@@ -23,6 +23,8 @@ import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
 import { createWelcomeGreetings, WELCOME_GREETINGS_KEY } from '../xiaoya/welcome-greetings.js';
+import { createGuidanceClock, GUIDANCE_IDLE_MS } from '../xiaoya/guidance-clock.js';
+import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/guidance-policy.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. Button visibility is explicit; physical layout stays in browser tests.
@@ -39,6 +41,12 @@ async function finishHomeWelcome(f){
   assert.deepEqual(f.hinted(),[],'The gift remains the only action until its reveal finishes');
   f.sounds.at(-1).resolve(true);await flush();
   f.advance(2040);f.advance(420);
+  f.dispatch('click');
+}
+async function finishIdleReminder(f){
+  await flush();
+  f.sounds.at(-1)?.resolve(true);
+  await flush();
 }
 function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWrite=()=>false,manualFade=false,cueDurations={}}={}){
   let nodes=[],primaryWraps=[],html='',timerId=0,renders=0,now=0;
@@ -65,7 +73,9 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
     createElement(){return {dataset:{},innerHTML:'',open:false,setAttribute(){},addEventListener(){},focus(){},remove(){},
       get firstElementChild(){return this.innerHTML?{}:null;},showModal(){this.open=true;},close(){this.open=false;},
       querySelector(selector){return selector==='button'&&this.innerHTML.includes('<button')?{setAttribute(){},addEventListener(){},focus(){}}:null;}};}};
-  const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');writes.push({key,value});stored?.set(key,value);}};
+  // Familiarity markers are covered by guidance-policy tests. Here writes tracks
+  // learning, wallet and preference mutations so playback cannot masquerade as progress.
+  const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');if(key!==GUIDANCE_KEY)writes.push({key,value});stored?.set(key,value);}};
   const audio={onAudioActivity(listener){listener({playing:false,recording:false});return ()=>{};},playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
     fadeOutSound(){const pending=deferred();fades.push(pending);if(!manualFade)pending.resolve();return pending.promise;},
     cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
@@ -89,15 +99,18 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
     location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},performance:{now:()=>now},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createMeadowMotion,createWelcomeGreetings,createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
+  Object.assign(sandbox,storyPictures,{createMeadowMotion,createWelcomeGreetings,audioControls,createGuidancePolicy,GUIDANCE_KEY,GUIDANCE_IDLE_MS,
+    createGuidanceClock:options=>createGuidanceClock({...options,now:()=>now,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
+    createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
     setPage(value){cancelWelcomeGift();page=value;session=null;modal=null;render();},
     setGarden(value){cancelWelcomeGift();meadowState=value;page='garden';session=null;modal=null;render();},
-    setMeadowReward(value){cancelWelcomeGift();meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
+    setMeadowReward(value){cancelWelcomeGift();meadowState=value;page='reward';session=null;modal=null;render();},
     setSession(overrides={}){cancelWelcomeGift();const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
   return {...sandbox.ui,document,documentListeners,sounds,fades,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
+    setMeadowReward(value){stored.set(meadow.MEADOW_KEY,JSON.stringify(value));sandbox.ui.setMeadowReward(value);},
     primaryWraps:()=>primaryWraps,
     hinted:()=>primaryWraps.filter(wrap=>wrap.classList.contains('is-idle-hint')).map(wrap=>wrap.querySelector('[data-primary]').dataset.action),
     dispatch(type,extra={}){for(const {callback} of documentListeners.get(type)||[])callback({type,...extra});},
@@ -344,7 +357,7 @@ test('old audio completion cannot erase a newer cue; navigation, modal and backg
   f.sounds[0].resolve(false);await old;assert.deepEqual(f.guided(),['sample']);
   f.sounds[1].resolve(true);await latest;assert.deepEqual(f.guided(),[]);
   for(const cancel of [()=>f.navigate('home'),()=>f.openModal({type:'error',message:'test'}),()=>f.suspend()]){
-    f.setSession();const pending=f.narrate('speak');assert.ok(f.guided().length);cancel();assert.deepEqual(f.guided(),[]);
+    f.setSession();const pending=f.narrate('speak',{manual:true});assert.ok(f.guided().length);cancel();assert.deepEqual(f.guided(),[]);
     f.sounds.at(-1).resolve(true);await pending;assert.deepEqual(f.guided(),[]);
   }
 });
@@ -593,97 +606,102 @@ test('assessment completion uses a gift while parent checkups keep their save ch
   f.setSession({phase:'resolved',assessmentMode:true});assert.match(f.button('finish').body,/data-icon="check"/);
 });
 
-test('the hand waits a full 15 seconds before pointing at the sole available primary action',async()=>{
+test('the hand waits 60 idle seconds and the contextual reminder before pointing at the sole primary action',async()=>{
   for(const [state,action] of [[null,'next-event'],[{},'record'],[{phase:'story',storyReady:true},'story-continue'],[{phase:'resolved'},'finish']]){
     const f=fixture();await finishHomeWelcome(f);if(state)f.setSession(state);
     assert.equal(f.primaryWraps().length,1);assert.equal(f.idleHintTarget(),f.primaryWraps()[0]);
-    assert.deepEqual(f.hinted(),[]);f.advance(14999);assert.deepEqual(f.hinted(),[],action);
-    f.advance(1);assert.deepEqual(f.hinted(),[action]);
+    f.dispatch('click');assert.deepEqual(f.hinted(),[]);f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],action);
+    f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),[action]);
   }
 });
 
 test('document activity removes a visible hand and restarts its full idle interval',async()=>{
   for(const type of ['pointerup','pointercancel','keydown','scroll','click']){
-    const f=fixture();await finishHomeWelcome(f);f.advance(15000);assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
     const registered=f.documentListeners.get(type).find(entry=>entry.callback===f.idleHintActivity);
     assert.ok(registered,`${type} is observed`);assert.equal(registered.options.capture,true);assert.equal(registered.options.passive,true);
     f.dispatch(type);assert.deepEqual(f.hinted(),[],type);
-    f.advance(14999);assert.deepEqual(f.hinted(),[],type);f.advance(1);assert.deepEqual(f.hinted(),['next-event'],type);
+    f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],type);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event'],type);
   }
 });
 
 test('a held pointer suppresses the hand across repaint until release or cancellation',async()=>{
   for(const release of ['pointerup','pointercancel']){
-    const f=fixture();await finishHomeWelcome(f);f.advance(15000);f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
-    assert.equal(f.idleHintTarget(),null);f.render();f.advance(30000);assert.deepEqual(f.hinted(),[]);
-    f.dispatch(release);f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
+    assert.equal(f.idleHintTarget(),null);f.render();f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
+    f.dispatch(release);f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
   }
 });
 
 test('playback cancels the hand and starts a new idle interval only after the voice ends',async()=>{
-  const f=fixture();f.setSession();f.advance(15000);assert.deepEqual(f.hinted(),['record']);
-  const pending=f.narrate('speak');assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
-  f.render();f.advance(30000);assert.deepEqual(f.hinted(),[]);assert.equal([...f.timers.values()].some(timer=>timer.delay===15000),false);
-  f.sounds[0].resolve(true);await pending;assert.deepEqual(f.hinted(),[]);
-  f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['record']);
+  const f=fixture();f.setSession();f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['record']);
+  const pending=f.narrate('speak',{manual:true});assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
+  f.render();f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);
+  f.sounds.at(-1).resolve(true);await pending;assert.deepEqual(f.hinted(),[]);
+  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['record']);
 });
 
 test('the hand stays quiet during recording, recognition, teaching and unresolved attempts',()=>{
   for(const state of [{waiting:true},{recording:true},{teaching:true},{storyRunning:true},{phase:'resolved',finishing:true},
     ...['preparing','assessing','retry','silence','unavailable'].map(status=>({assessment:{status,stars:0}}))]){
     const f=fixture();f.setSession(state);
-    assert.equal(f.idleHintTarget(),null,JSON.stringify(state));f.advance(30000);assert.deepEqual(f.hinted(),[],JSON.stringify(state));
+    assert.equal(f.idleHintTarget(),null,JSON.stringify(state));f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],JSON.stringify(state));
   }
 });
 
 test('modal and background transitions cancel the hand; returning starts a fresh interval',async()=>{
-  const f=fixture();await finishHomeWelcome(f);f.advance(15000);f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
-  f.advance(30000);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
+  const f=fixture();await finishHomeWelcome(f);f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
+  f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
   f.document.hidden=true;f.dispatch('visibilitychange');assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
-  f.advance(30000);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
-  f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
-  for(const page of ['parent','shop']){f.setPage(page);f.advance(30000);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[],page);}
+  f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
+  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
+  for(const page of ['parent','shop']){f.setPage(page);f.advance(GUIDANCE_IDLE_MS*2);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[],page);}
 });
 
-test('recall and unselected reward choices never gain a hand that favors one option',async()=>{
+test('recall and reward choices never favor an option; one tap collects the chosen resource',async()=>{
   const recall=fixture();recall.setSession({recallReady:true});
   assert.ok(recall.button('sample'));assert.ok(recall.button('record'));assert.equal(recall.primaryWraps().length,0);
-  recall.advance(30000);assert.equal(recall.idleHintTarget(),null);assert.deepEqual(recall.hinted(),[]);
+  recall.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(recall);assert.equal(recall.idleHintTarget(),null);assert.deepEqual(recall.hinted(),[]);
   let garden=meadow.createMeadow();
   for(const roundId of ['starter','choice'])garden=meadow.rewardRound(garden,{roundId,eventId:stories.STORIES[0].id,date:'2026-10-18'});
   for(const choice of ['shells','water']){
     const f=fixture();f.setMeadowReward(garden);assert.ok(f.button('choose-shells'));assert.ok(f.button('choose-water'));
-    f.advance(30000);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
-    f.actions[`choose-${choice}`]();assert.equal(f.button('confirm-reward').hasAttribute('data-primary'),true);await flush();
-    f.advance(30000);await flush();assert.deepEqual(f.hinted(),[],'The choice explanation is still playing');
-    f.sounds.at(-1).resolve(true);await flush();f.advance(14999);assert.deepEqual(f.hinted(),[]);
-    f.advance(1);assert.deepEqual(f.hinted(),['confirm-reward'],'Only the explicitly selected gift is a primary target');
+    f.advance(GUIDANCE_IDLE_MS);await finishIdleReminder(f);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
+    const before=f.getMeadow(),round=meadow.pendingRewards(before)[0],amount=meadow.roundReward(before,round.roundId)[choice];
+    await f.actions[`choose-${choice}`]();await flush();
+    assert.equal(f.button('confirm-reward'),undefined,'There is no second confirmation');
+    assert.equal(meadow.pendingRewards(f.getMeadow()).length,0);
+    assert.equal(f.getMeadow()[choice],before[choice]+amount);
+    assert.equal(f.getMeadow()[choice==='water'?'shells':'water'],before[choice==='water'?'shells':'water']);
   }
 });
 
-test('reward selection responds during the fade and only the latest choice can speak',async()=>{
+test('rapid competing reward taps grant only the first choice once',async()=>{
   const f=fixture({manualFade:true});let garden=meadow.createMeadow();
   for(const roundId of ['starter','choice'])garden=meadow.rewardRound(garden,{roundId,eventId:stories.STORIES[0].id,date:'2026-10-18'});
-  f.setMeadowReward(garden);const before=f.sounds.length;
-  f.actions['choose-shells']();assert.equal(f.button('confirm-reward').disabled,false);f.advance(320);
-  f.actions['choose-water']();assert.equal(f.button('choose-water').getAttribute('aria-pressed'),'true');
-  f.advance(319);assert.equal(f.sounds.length,before);f.advance(1);
-  assert.equal(f.sounds.length,before,'No replacement voice overlaps the outgoing explanation');
+  f.setMeadowReward(garden);const before=f.getMeadow(),round=meadow.pendingRewards(before)[0],amount=meadow.roundReward(before,round.roundId).shells;
+  const first=f.actions['choose-shells'](),second=f.actions['choose-water']();
+  await Promise.all([first,second]);await flush();
+  assert.equal(f.getMeadow().shells,before.shells+amount);assert.equal(f.getMeadow().water,before.water);
+  assert.equal(meadow.pendingRewards(f.getMeadow()).length,0);
+  assert.equal(f.writes.filter(write=>write.key===meadow.MEADOW_KEY).length,1);
+  assert.equal(f.button('confirm-reward'),undefined);
   for(const fade of f.fades)fade.resolve();await flush();
-  assert.equal(f.sounds.length,before+1);assert.match(f.sounds.at(-1).file,/flow-water-choice-v13\.mp3$/);
-  assert.equal(meadow.pendingRewards(f.getMeadow()).length,1,'Preview does not spend or grant resources');
+  assert.ok(!f.sounds.some(sound=>/flow-(?:shells|water-choice-v13)\.mp3$/.test(sound.file)));
 });
 
-test('leaving, backgrounding or confirming during the fade cannot resurrect preview speech',async()=>{
-  for(const action of ['home','parent','background','confirm-reward']){
+test('leaving or backgrounding after a one-tap claim cannot resurrect its old reward explanation',async()=>{
+  for(const action of ['home','parent','background']){
     const f=fixture({manualFade:true});let garden=meadow.createMeadow();
     for(const roundId of ['starter','choice'])garden=meadow.rewardRound(garden,{roundId,eventId:stories.STORIES[0].id,date:'2026-10-18'});
-    f.setMeadowReward(garden);f.actions['choose-shells']();f.advance(320);assert.equal(f.fades.length,1);const before=f.sounds.length;
+    f.setMeadowReward(garden);const explanation=f.actions['reward-voice']();await flush();const old=f.sounds.at(-1);
+    await f.actions['choose-shells']();await flush();const before=f.sounds.length;
     if(action==='background'){f.document.hidden=true;f.suspend();}else f.actions[action]();
     const afterAction=f.sounds.length;
-    for(const fade of f.fades)fade.resolve();await flush();
-    assert.equal(f.sounds.length,afterAction,action);assert.ok(!f.sounds.slice(before).some(x=>/flow-shells\.mp3$/.test(x.file)),action);
-    assert.equal(meadow.pendingRewards(f.getMeadow()).length,action==='confirm-reward'?0:1,action);
+    for(const fade of f.fades)fade.resolve();old?.resolve(false);await explanation;await flush();f.advance(1000);await flush();
+    assert.ok(!f.sounds.slice(before).some(x=>/flow-(?:choice|shells)\.mp3$/.test(x.file)),action);
+    if(action!=='home')assert.equal(f.sounds.length,afterAction,action);
+    assert.equal(meadow.pendingRewards(f.getMeadow()).length,0,action);
   }
 });
 
@@ -694,30 +712,30 @@ test('disabled, busy, hidden or competing primary buttons cannot receive an idle
     if(unavailable==='busy')button.attrs['aria-busy']='true';
     if(unavailable==='hidden')button.visible=false;
     if(unavailable==='competing')f.primaryWraps().push({...f.primaryWraps()[0]});
-    f.scheduleIdleHint();assert.equal(f.idleHintTarget(),null,unavailable);f.advance(30000);assert.deepEqual(f.hinted(),[],unavailable);
+    f.scheduleIdleHint();assert.equal(f.idleHintTarget(),null,unavailable);f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],unavailable);
   }
 });
 
 test('a cancelled timer cannot shorten the new interval even when its target is unchanged',async()=>{
   const f=fixture();await finishHomeWelcome(f);
-  const old=[...f.timers.values()].find(timer=>timer.delay===15000);assert.ok(old);
+  const old=[...f.timers.values()].find(timer=>timer.delay===GUIDANCE_IDLE_MS);assert.ok(old);
   f.advance(5000);f.dispatch('keydown');old.fn();assert.deepEqual(f.hinted(),[]);
-  f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
+  f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[]);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),['next-event']);
 });
 
 test('late timers cannot reveal a hand on an old screen or contaminate a replacement screen',async()=>{
   for(const change of ['repaint','navigate','modal','hidden','recording']){
     const f=fixture();await finishHomeWelcome(f);
-    const s=f.setSession(),oldWrap=f.primaryWraps()[0],old=[...f.timers.values()].find(timer=>timer.delay===15000);
-    assert.ok(old);
+    const s=f.setSession(),oldWrap=f.primaryWraps()[0],oldEntry=[...f.timers].find(([,timer])=>timer.delay===GUIDANCE_IDLE_MS);
+    assert.ok(oldEntry);const [oldId,old]=oldEntry;
     if(change==='repaint')f.render();
     if(change==='navigate')f.navigate('home');
     if(change==='modal')f.openModal({type:'mic'});
     if(change==='hidden')f.document.hidden=true;
     if(change==='recording')s.recording=true;
-    old.fn();assert.equal(oldWrap.classList.contains('is-idle-hint'),false,change);assert.deepEqual(f.hinted(),[],change);
+    f.timers.delete(oldId);old.fn();assert.equal(oldWrap.classList.contains('is-idle-hint'),false,change);assert.deepEqual(f.hinted(),[],change);
     if(['repaint','navigate'].includes(change)){
-      f.advance(14999);assert.deepEqual(f.hinted(),[],change);f.advance(1);assert.deepEqual(f.hinted(),[change==='navigate'?'next-event':'record']);
-    }else{f.advance(30000);assert.deepEqual(f.hinted(),[],change);}
+      f.advance(GUIDANCE_IDLE_MS-1);assert.deepEqual(f.hinted(),[],change);f.advance(1);await finishIdleReminder(f);assert.deepEqual(f.hinted(),[change==='navigate'?'next-event':'record']);
+    }else{f.advance(GUIDANCE_IDLE_MS*2);assert.deepEqual(f.hinted(),[],change);}
   }
 });

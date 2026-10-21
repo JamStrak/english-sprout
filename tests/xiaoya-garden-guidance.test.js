@@ -21,6 +21,8 @@ import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { createWelcomeGreetings } from '../xiaoya/welcome-greetings.js';
+import { createGuidanceClock, GUIDANCE_IDLE_MS } from '../xiaoya/guidance-clock.js';
+import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/guidance-policy.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
@@ -45,7 +47,7 @@ function grown(count){
   return state;
 }
 function readySeed(count=0){return meadow.openSeedPack(funded(grown(count)),0,.5);}
-function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
+function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[],firstSession=false}={}){
   let html='',nodes=[],modalNodes=[],clock=0,timerId=0;
   const timers=new Map(),sounds=[],writes=[],calls={chimes:0},events={app:{},document:{},window:{},body:{}};
   const storage=new Map([[meadow.MEADOW_KEY,JSON.stringify(initial)],...extraStorage]);
@@ -86,25 +88,30 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     ...content,...learning,...stories,...gardenHistory,...seedShop,...voices,...art,...gardenArt,...meadowArt,...meadowUI,
     layoutMeadowWatering(){/* Geometry has separate browser tests. */},
     bindMeadowInteractions(root,actions){meadowActions=actions;return ()=>{};},meadow,audio,document,JSON,Event,
-    localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
+    // Keep the assertions below focused on wallet and learning mutations;
+    // separate policy tests cover the onboarding familiarity marker.
+    localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){if(key!==GUIDANCE_KEY)writes.push({key,value});storage.set(key,value);}},
     location:{search},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},performance:{now:()=>clock},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
   Object.assign(sandbox,storyPictures,{createMeadowMotion:()=>({capture:()=>null,async play(){
     // Observe the real controller's feedback while the visual effect owns it,
     // then complete the animation. Geometry is covered in browser tests.
     (calls.motions??=[]).push({...sandbox.ui.getFeedback()});return true;
-  },cancel(){}}),createWelcomeGreetings,createPictureLoader:()=>({load(){},status:()=> 'ready'})});
+  },cancel(){}}),createWelcomeGreetings,audioControls,
+    createGuidancePolicy:options=>createGuidancePolicy({...options,...(firstSession?{returning:false}:{})}),GUIDANCE_KEY,GUIDANCE_IDLE_MS,
+    createGuidanceClock:options=>createGuidanceClock({...options,now:()=>clock,setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout}),
+    createPictureLoader:()=>({load(){},status:()=> 'ready'})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
     getGarden:()=>meadowState,getFeedback:()=>feedback};`,sandbox);
-  async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener(event);await flush();}
+  async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener({type,...event});await flush();}
   return {...sandbox.ui,sounds,calls,writes,document,buttons,html:()=>html,storage,
     button:action=>buttons().find(node=>node.dataset.action===action),
     plant:id=>buttons().find(node=>node.dataset.meadowPlant===id),
     async plantAt(point){await meadowActions.onPlant(point);await flush();},
     async water(id){await meadowActions.onWater(id);await flush();},
     guided:()=>buttons().filter(node=>node.classList.contains('is-guided')).map(node=>node.dataset.action),
-    async click(action){const target=buttons().find(node=>node.dataset.action===action);assert.ok(target,`Missing target ${action}`);await emit('app','click',{target:{closest:selector=>selector==='button'?target:null}});},
-    activity:type=>emit('app',type),
+    async click(action){const target=buttons().find(node=>node.dataset.action===action);assert.ok(target,`Missing target ${action}`);const event={target:{closest:selector=>selector==='button'?target:null}};await emit('document','click',event);await emit('app','click',event);},
+    activity:async type=>{const event={target:{closest:()=>null}};await emit('document',type,event);await emit('app',type,event);},
     async finishSound(){assert.ok(sounds.length);sounds.at(-1).resolve(true);await flush();},
     async hidden(value){document.hidden=value;await emit('document','visibilitychange');},
     pagehide:()=>emit('window','pagehide'),
@@ -115,7 +122,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
 }
 
 test('new gardeners get next-step speech; the third planted seed ends automatic speech',async()=>{
-  const f=fixture(readySeed(2));f.enterGarden();assert.match(f.html(),/data-guidance="new"/);
+  const f=fixture(readySeed(2),{firstSession:true});f.enterGarden();assert.match(f.html(),/data-guidance="new"/);
   assert.equal(f.sounds.length,0);await f.advance(319);assert.equal(f.sounds.length,0);await f.advance(1);
   assert.match(f.sounds.at(-1).file,/meadow-seed\.mp3$/);await f.finishSound();
   const before=f.sounds.length;await f.click('meadow-seed');await f.plantAt({x:.7,y:.7});
@@ -128,7 +135,7 @@ test('new gardeners get next-step speech; the third planted seed ends automatic 
 });
 
 test('first planting and bloom give spoken cues; every watering gives its own short effect',async()=>{
-  const f=fixture(readySeed());f.enterGarden();await f.advance(320);await f.finishSound();
+  const f=fixture(readySeed(),{firstSession:true});f.enterGarden();await f.advance(320);await f.finishSound();
   await f.click('meadow-seed');await f.plantAt({x:.4,y:.65});await f.advance(340);
   assert.match(f.sounds.at(-1).file,/meadow-water-beside\.mp3$/);await f.finishSound();
   await f.click('meadow-can');const count=f.sounds.length,water=f.getGarden().water;
@@ -153,37 +160,39 @@ test('experienced gardeners keep feedback without repeated speech or changes to 
   assert.deepEqual(f.guided(),['next-event']);await f.finishSound();assert.deepEqual(f.guided(),[]);
 });
 
-test('15-second idle guidance is one-shot and responds to current state after real activity',async()=>{
-  const f=fixture(readySeed(3));f.enterGarden();await f.advance(320);
-  await f.advance(14999);assert.equal(f.sounds.length,0);await f.advance(1);
+test('60-second idle guidance repeats after a full quiet interval and follows the current garden state',async()=>{
+  const f=fixture(readySeed(3));f.enterGarden();await f.activity('click');
+  await f.advance(GUIDANCE_IDLE_MS-1);assert.equal(f.sounds.length,0);await f.advance(1);
   assert.equal(f.sounds.length,1);assert.match(f.sounds[0].file,/meadow-seed\.mp3$/);
-  assert.deepEqual(f.guided(),['meadow-seed']);await f.finishSound();await f.advance(60000);
-  assert.equal(f.sounds.length,1,'Finishing a reminder must not create a reminder loop');
-  await f.click('meadow-seed');await f.plantAt({x:.75,y:.8});await f.advance(14000);
-  await f.activity('keydown');await f.advance(14000);assert.equal(f.sounds.length,1);
-  await f.activity('scroll');await f.advance(14999);assert.equal(f.sounds.length,1);
-  await f.advance(1);assert.equal(f.sounds.length,2);assert.match(f.sounds.at(-1).file,/meadow-water-beside\.mp3$/);
-  assert.deepEqual(f.guided(),['meadow-can']);await f.finishSound();await f.advance(45000);assert.equal(f.sounds.length,2);
-  await f.activity('pointerdown');await f.advance(15000);assert.equal(f.sounds.length,3);
+  assert.deepEqual(f.guided(),['meadow-seed']);await f.advance(GUIDANCE_IDLE_MS);
+  assert.equal(f.sounds.length,1,'A still-playing reminder cannot overlap another reminder');
+  await f.finishSound();await f.advance(GUIDANCE_IDLE_MS-1);assert.equal(f.sounds.length,1);
+  await f.advance(1);assert.equal(f.sounds.length,2);await f.finishSound();
+  await f.click('meadow-seed');await f.plantAt({x:.75,y:.8});await f.advance(30000);
+  await f.activity('keydown');await f.advance(30000);assert.equal(f.sounds.length,2);
+  await f.activity('scroll');await f.advance(GUIDANCE_IDLE_MS-1);assert.equal(f.sounds.length,2);
+  await f.advance(1);assert.equal(f.sounds.length,3);assert.match(f.sounds.at(-1).file,/meadow-water-beside\.mp3$/);
+  assert.deepEqual(f.guided(),['meadow-can']);await f.finishSound();
+  assert.ok(f.writes.every(write=>write.key===meadow.MEADOW_KEY),'Guidance never writes learning evidence');
 });
 
-test('navigation, modal, background and pagehide cancel idle guidance; return waits a fresh 15 seconds',async()=>{
+test('navigation, modal, background and pagehide cancel idle guidance; return waits a fresh 60 seconds',async()=>{
   for(const exit of ['navigate','modal','hidden','pagehide']){
-    const f=fixture(readySeed(3));f.enterGarden();await f.advance(320);await f.advance(14000);
+    const f=fixture(readySeed(3));f.enterGarden();await f.activity('click');await f.advance(GUIDANCE_IDLE_MS-1000);
     const gardenSounds=()=>f.sounds.filter(sound=>!sound.file.includes('/welcome-'));
     if(exit==='navigate')f.navigate('home');else if(exit==='modal')f.openModal({type:'error',message:'test'});
     else if(exit==='hidden')await f.hidden(true);else await f.pagehide();
-    await f.advance(60000);assert.equal(gardenSounds().length,0,exit);
+    await f.advance(GUIDANCE_IDLE_MS);assert.equal(gardenSounds().length,0,exit);
     if(exit==='modal')f.closeModal();else if(exit==='hidden')await f.hidden(false);
-    else if(exit==='pagehide')await f.pageshow();else{f.enterGarden();await f.advance(320);}
-    await f.advance(14999);assert.equal(gardenSounds().length,0,exit);await f.advance(1);assert.equal(gardenSounds().length,1,exit);
+    else if(exit==='pagehide')await f.pageshow();else f.enterGarden();
+    await f.advance(GUIDANCE_IDLE_MS-1);assert.equal(gardenSounds().length,0,exit);await f.advance(1);assert.equal(gardenSounds().length,1,exit);
   }
 });
 
 test('late audio completion cannot resurrect a canceled garden reminder',async()=>{
   for(const exit of [f=>f.navigate('home'),f=>f.openModal({type:'error',message:'test'}),f=>f.hidden(true),f=>f.pagehide()]){
-    const f=fixture(readySeed());f.enterGarden();await f.advance(320);assert.equal(f.sounds.length,1);
-    const old=f.sounds[0];await exit(f);old.resolve(true);await flush();await f.advance(60000);
+    const f=fixture(readySeed(),{firstSession:true});f.enterGarden();await f.advance(320);assert.equal(f.sounds.length,1);
+    const old=f.sounds[0];await exit(f);old.resolve(true);await flush();await f.advance(GUIDANCE_IDLE_MS-1);
     assert.equal(f.sounds.filter(sound=>!sound.file.includes('/welcome-')).length,1);
   }
 });
@@ -204,9 +213,10 @@ test('tapping a grown flower gives visual and sound feedback without spending or
   assert.equal(f.getFeedback().plantId,'plant-2');assert.equal(f.getFeedback().kind,'bloom');
   assert.ok(f.plant('plant-2').classList.contains('just-watered'));assert.match(f.html(),/meadow-splash/);
   assert.deepEqual(f.calls.effects,['bloom']);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);
-  assert.equal(JSON.stringify(f.getGarden()),before);await f.advance(3200);
+  assert.equal(JSON.stringify(f.getGarden()),before);await f.activity('click');await f.advance(3200);
   assert.equal(f.getFeedback(),null);assert.equal(f.sounds.length,0);
-  await f.advance(11800);assert.equal(f.sounds.length,1);await f.finishSound();await f.advance(30000);assert.equal(f.sounds.length,1);
+  await f.advance(GUIDANCE_IDLE_MS-3200-1);assert.equal(f.sounds.length,0);
+  await f.advance(1);assert.equal(f.sounds.length,1);await f.finishSound();await f.advance(GUIDANCE_IDLE_MS-1);assert.equal(f.sounds.length,1);
 });
 
 test('old garden URL and saved A preference cannot select a retired garden or overwrite its archive',async()=>{

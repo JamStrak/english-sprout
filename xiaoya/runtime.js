@@ -22,13 +22,24 @@ export function createSandboxStorage(readRealStorage = () => globalThis.localSto
   try { source = readRealStorage(); } catch { return memory; }
   const preferencesKey = 'xiaoya-english:preferences:v1';
   try {
-    const value = JSON.parse(source?.getItem(preferencesKey) || 'null')?.gardenMusic;
+    const saved = JSON.parse(source?.getItem(preferencesKey) || 'null');
+    const preferences = {};
+    const value = saved?.gardenMusic;
     if (value && typeof value === 'object' && !Array.isArray(value)) {
       const gardenMusic = {};
       if (typeof value.enabled === 'boolean') gardenMusic.enabled = value.enabled;
       if (typeof value.volume === 'number' && Number.isFinite(value.volume)) gardenMusic.volume = Math.max(0, Math.min(1, value.volume));
-      if (Object.keys(gardenMusic).length) memory.setItem(preferencesKey, JSON.stringify({gardenMusic}));
+      if (Object.keys(gardenMusic).length) preferences.gardenMusic = gardenMusic;
     }
+    const controls = saved?.audioControls;
+    if (controls && typeof controls === 'object' && !Array.isArray(controls)) {
+      const audioControls = {};
+      for (const key of ['music', 'reminders']) {
+        if (typeof controls[key] === 'boolean') audioControls[key] = controls[key];
+      }
+      if (Object.keys(audioControls).length) preferences.audioControls = audioControls;
+    }
+    if (Object.keys(preferences).length) memory.setItem(preferencesKey, JSON.stringify(preferences));
   } catch { /* A broken preference must not block a disposable test session. */ }
   // Only explicit tuning keys are inherited, never the player's progress or wallet.
   for (const key of ['xiaoya-english:growth-settings:v1','xiaoya-english:economy-settings:v1','xiaoya-english:sounds:v1']) {
