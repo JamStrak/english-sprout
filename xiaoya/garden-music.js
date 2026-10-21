@@ -5,7 +5,6 @@ export function gardenMusicSettings(value) {
   return {enabled: value?.enabled !== false, volume: typeof value?.volume === 'number' && Number.isFinite(value.volume)
     ? Math.max(0, Math.min(1, value.volume)) : GARDEN_MUSIC_VOLUME};
 }
-
 // Slider percentages describe listening level, not raw waveform amplitude. A
 // quadratic curve gives the low end useful range with this near-full-scale MP3:
 // 5% -> .0025 (-52 dB), 50% -> .25 (-12 dB), 100% -> original amplitude.
@@ -15,23 +14,26 @@ export function gardenMusicGain(volume) {
   return level * level;
 }
 export function createGardenMusic({
-  createAudio = () => new Audio(new URL(GARDEN_MUSIC_FILE, document.baseURI).href),
+  createAudio = file => new Audio(new URL(file, document.baseURI).href),
   now = () => performance.now(), setTimer = setTimeout, clearTimer = clearTimeout,
 } = {}) {
   let player = null, active = false, target = 0, timer = null, pending = false, blocked = false;
+  let file = GARDEN_MUSIC_FILE;
   function play() {
     if (!active || pending || blocked) return;
     try {
       if (!player) {
-        player = createAudio(); player.loop = true; player.preload = 'auto'; player.volume = 0;
+        player = createAudio(file); player.loop = true; player.preload = 'auto'; player.volume = 0;
       }
       if (!player.paused) return;
       pending = true;
-      Promise.resolve(player.play()).catch(() => {
+      const current = player;
+      Promise.resolve(current.play()).catch(() => {
         // Autoplay can be blocked after a restart. The next real gesture retries;
         // optional background music must not show a voice-playback error toast.
-        blocked = true;
+        if (current === player) blocked = true;
       }).finally(() => {
+        if (current !== player) { current.pause(); return; }
         pending = false;
         if (!active && player.volume === 0) player.pause();
       });
@@ -51,13 +53,18 @@ export function createGardenMusic({
     step();
   }
   return {
-    setState({active: next, ducked = false, immediate = false, volume = GARDEN_MUSIC_VOLUME, enabled = true}) {
+    setState({active: next, ducked = false, immediate = false, volume = GARDEN_MUSIC_VOLUME, enabled = true, file: nextFile = file}) {
+      if (nextFile !== file) {
+        clearTimer(timer); timer = null; target = 0;
+        if (player) { player.pause();player.removeAttribute?.('src');player.load?.(); }
+        player = null;pending = false;blocked = false;file = nextFile;
+      }
       const settings = gardenMusicSettings({volume, enabled});
       next = Boolean(next && settings.enabled && settings.volume > 0);
       if (next && !active) blocked = false;
       active = Boolean(next);
       if (active) play();
-    const gain = gardenMusicGain(settings.volume);
+      const gain = gardenMusicGain(settings.volume);
       ramp(active ? ducked ? Math.min(0.12, gain * 0.24) : gain : 0, immediate, ducked);
     },
     retry() { if (active) { blocked = false; play(); } },

@@ -1,6 +1,6 @@
 # 小芽英语 · 文档索引
 
-更新：2026-10-19。先看当前事实，再按任务进入资料；“所有文档更新”指当前入口和适用范围清楚，不把历史报告重写成今天的验收。产品当前版本与代码位置只以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。
+更新：2026-10-21，当前声音功能说明对应 v0.23.0。先看当前事实，再按任务进入资料；“所有文档更新”指当前入口和适用范围清楚，不把历史报告重写成今天的验收。产品当前版本、构建哈希与代码位置只以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。
 
 ## 当前资料
 
@@ -13,6 +13,9 @@
 | 修改学习与游戏设计 | [设计约定](XIAOYA_DESIGN.md) | 已实现、保留意图、已淘汰方案、尚待验证的假设 |
 | 试玩、审核资源与流程 | [使用说明](XIAOYA_USE.md) | 当前按钮、复习/挑战、花园数值、GM 与离线体验 |
 | 改代码、存档、构建或测试 | [技术地图](XIAOYA_ENGINEERING.md) | 模块、状态、运行链路、环境和可执行验证方法 |
+| 调整全流程声音与 GM 音效配置 | [声音设计与配置](XIAOYA_SOUND_DESIGN.md) | 17 个短音效、34 个配置点（30 个音效与 4 个 BGM 位置）、默认绑定、声音避让及 GM 操作 |
+| 核对声匣选音、来源与授权 | [声音筛选记录](XIAOYA_SOUND_SELECTION.md) · [机器可读清单](../design/xiaoya-sound-selection.json) | 候选与选择理由、17 个 CC0 短音效的来源和实测；原有 BGM 的授权边界与未人工听感验收说明 |
+| 核对声音交付验证与边界 | [声音验收](XIAOYA_SOUND_QA.md) | 最终构建、真实播放与 GM 浏览器检查、离线专项的精确范围及未验收项 |
 | 增加表达、图片与配音 | [内容流水线](XIAOYA_CONTENT_PIPELINE.md) · [美术入口](../xiaoya/art-README.md) | 制作→校验→接入→缓存，许可与可移植性 |
 | 查某次实现和验证依据 | [实施记录](XIAOYA_IMPLEMENTATION.md) | 按版本追加；每条测试只对该次实际版本负责 |
 
@@ -122,6 +125,7 @@
 | 新用户流程、按钮、奖励数值或 GM 用法 | XIAOYA_USE；若改变产品约束，同步 XIAOYA_DESIGN |
 | 模块、存档、缓存、启动、测试命令 | XIAOYA_ENGINEERING；相关规则变更再更新 AGENTS |
 | 新句、资源、制作或接入方式 | XIAOYA_CONTENT_PIPELINE / art-README / 对应批次交付清单 |
+| 声音触发点、默认绑定、GM 配置或选音来源 | XIAOYA_SOUND_DESIGN / XIAOYA_SOUND_SELECTION；用户操作与运行接口变化再同步 XIAOYA_USE / XIAOYA_ENGINEERING |
 | 跨 AI 暂停、并行分工、异地返回 | 使用任务交接模板，给出起点与交付 SHA；不另建重复任务系统 |
 | 仅问答、只读检查或无行为变化的小修改 | 不制造新发布或大篇交接；留下必要事实即可 |
 

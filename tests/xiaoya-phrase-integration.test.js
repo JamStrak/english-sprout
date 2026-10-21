@@ -62,18 +62,19 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
       get firstElementChild() {return this.innerHTML?{}:null;},showModal() {this.open=true;},close() {this.open=false;},
       querySelector(selector) {return selector==='button'&&this.innerHTML.includes('<button')?{setAttribute() {},addEventListener() {},focus() {}}:null;}})};
   const localStorage = {getItem:key => stored.get(key) ?? null, setItem(key, value) {stored.set(key, value); writes.push({key, value});}};
-  const audio = {playSound: async file => {sounds.push(file); return play(file);}, stopSound() {},
+  const audio = {onAudioActivity(listener) {listener({playing:false,recording:false}); return () => {};}, playSound: async file => {sounds.push(file); return play(file);}, stopSound() {},
     cancelRecording() {}, cancelRecognition() {}, releaseAudioSession() {},
     prepareRecording:async () => true, speechReady:() => true, prepareRecognition:async () => true,
     recognize:async (url, accepted) => {recognitionCalls.push({url, accepted:[...accepted]});
       return recognized ?? {matched:true, stars:3, heard:accepted[0]};},
     beginRecording:async () => true, finishRecording() {}, replayClip:async () => true};
-  const sandbox = {createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
+  const soundPlayer = {play:async () => true,stop() {},setState() {},status:() => ({id:null}),resolve:() => null};
+  const soundSettings = {subscribe:() => () => {},reload() {}};
+  const sandbox = {soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},
-    gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),createMeadowMotion:()=>({capture:()=>null,play:async()=>false,cancel(){}}),
-    createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
+    gardenMusicSettings,createMeadowMotion:()=>({capture:()=>null,play:async()=>false,cancel(){}}),createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),createFeedback:() => ({prepare() {}, tap() {}, play() {}, setSilent() {}, cancel() {}}),
     startAudioPack() {}, retryAudioPack() {}, onAudioPackChange() {}, audioPackMessage:() => '',
     retryArtPack() {}, onArtPackChange() {}, artPackMessage:() => '',
     recordEvidence:(state, input) => learning.recordEvidence(state, copy(input)),
@@ -93,6 +94,8 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
   vm.runInNewContext(`${controllerSource}\nglobalThis.api={startEvent,storyContinue,teach,sample,assessClip,finish,startChallenge,retryChallengeStep,restoreChallengeRewards,practiceToday,navigate,
     actions,getSession:()=>session,getState:()=>state,getPractice:()=>practice,getMeadow:()=>meadowState,getChallenges:()=>challenges,challengeSummary,getModal:()=>modal};`, sandbox);
   return {...sandbox.api, sounds, recognitionCalls, stored, writes, images, html:() => html,
+    async cueDelay() {const entry=[...timers].find(([,timer])=>timer.delay===320);
+      assert.ok(entry,'Review speech should wait for its entry cue');timers.delete(entry[0]);entry[1].fn();await flush();},
     async storyDelay() {await flush(); const id = sandbox.api.getSession().storyTimer, timer = timers.get(id);
       assert.ok(timer, 'The active story frame should have a delay'); timers.delete(id); timer.fn(); await flush();}};
 }
@@ -155,6 +158,7 @@ test('all new review screens stay in their real single scene and do not reveal t
     const session = f.getSession();
     assert.equal(session.phase, 'request'); assert.equal(session.context, event.contexts[0]);
     assert.equal(session.helped, false); assert.equal(session.recallReady, true);
+    assert.deepEqual(f.sounds, []);await f.cueDelay();
     assert.deepEqual(f.sounds, ['xiaoya/audio/v3/flow-review-v13.mp3']);
     assert.doesNotMatch(f.html(), /data-alternate="true"/);
   }

@@ -158,3 +158,42 @@ body.gm-sandbox{padding-top:56px}
 @media(max-width:850px){#xiaoya-gm .gm-growth-grid{grid-template-columns:minmax(0,1fr)}#xiaoya-gm .gm-growth-preview{--art-width:200px;height:430px}}
 @media(max-width:400px){#xiaoya-gm .gm-growth-card{padding:12px}#xiaoya-gm .gm-growth-preview{--art-width:min(170px,66.666%);height:380px}}
 @media(prefers-reduced-motion:reduce){#xiaoya-gm [data-growth-image]{transition:none}}
+
+/* Sound preferences share runtime storage, but previews never advance learning. */
+#xiaoya-gm .gm-sound-master{display:grid;grid-template-columns:auto minmax(180px,1fr) auto;gap:14px 20px;align-items:center;padding:16px;border:1px solid var(--gm-border);border-radius:12px;background:#edf1e3}
+#xiaoya-gm .gm-sound-master>p{grid-column:1/-1;font-size:11px;line-height:1.8;color:var(--gm-muted)}
+#xiaoya-gm .gm-sound-master-volume{min-width:0}
+#xiaoya-gm .gm-sound-master-volume label,#xiaoya-gm .gm-sound-volume-label{justify-content:space-between}
+#xiaoya-gm .gm-sound-toggle{white-space:nowrap;cursor:pointer}
+#xiaoya-gm .gm-sound-toggle input{width:19px;height:19px;min-height:19px;margin:0;accent-color:var(--gm-green)}
+#xiaoya-gm .gm-sound-master input[type="range"],#xiaoya-gm .gm-sound-card input[type="range"]{width:100%;min-height:36px;padding:0;margin:0;border:0;background:transparent;accent-color:var(--gm-green);cursor:pointer}
+#xiaoya-gm .gm-sound-master output,#xiaoya-gm .gm-sound-card output{font-weight:700;font-variant-numeric:tabular-nums;color:var(--gm-green)}
+#xiaoya-gm .gm-sound-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 12px}
+#xiaoya-gm .gm-sound-status{font-size:12px;line-height:1.8;color:var(--gm-green);min-height:23px;margin-bottom:14px;overflow-wrap:anywhere}
+#xiaoya-gm .gm-sound-status.is-error{color:#a9432e}
+#xiaoya-gm .gm-sound-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#xiaoya-gm .gm-sound-card{min-width:0;border:1px solid var(--gm-border);border-radius:12px;padding:16px;background:#fffef9}
+#xiaoya-gm .gm-sound-card.is-unbound{background:#f2f1e9;border-style:dashed}
+#xiaoya-gm .gm-sound-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#xiaoya-gm .gm-sound-card header>div{min-width:0}
+#xiaoya-gm .gm-sound-card h3{font-size:15px;margin:4px 0}
+#xiaoya-gm .gm-sound-card header p{font-size:11px;line-height:1.7;color:var(--gm-muted);overflow-wrap:anywhere}
+#xiaoya-gm .gm-sound-current{min-height:91px;margin:12px 0;padding:10px;border-radius:7px;background:#f3f5eb;overflow-wrap:anywhere}
+#xiaoya-gm .gm-sound-current strong{font-size:12px;font-weight:600}
+#xiaoya-gm .gm-sound-current .gm-file-path{margin-top:5px}
+#xiaoya-gm .gm-sound-source{font-size:10px;line-height:1.6;color:var(--gm-muted);margin-top:5px}
+#xiaoya-gm .gm-sound-replace{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+#xiaoya-gm .gm-sound-replace select{width:100%;min-width:0;font-size:11px;text-overflow:ellipsis}
+#xiaoya-gm .gm-sound-volume-label{margin-top:13px}
+#xiaoya-gm .gm-sound-actions{display:flex;gap:7px;flex-wrap:wrap}
+#xiaoya-gm .gm-sound-actions button{font-size:11px;min-height:36px;padding:7px 10px}
+#xiaoya-gm .gm-sound-state{font-size:10px;line-height:1.7;color:var(--gm-muted);margin-top:10px}
+#xiaoya-gm .gm-sound-library{margin-top:20px;padding:14px;border:1px solid var(--gm-border);border-radius:12px;background:#fffef9}
+#xiaoya-gm .gm-sound-library summary{cursor:pointer;font-size:13px;font-weight:600}
+#xiaoya-gm .gm-sound-library>p{font-size:11px;line-height:1.8;color:var(--gm-muted);margin:8px 0}
+#xiaoya-gm .gm-sound-library-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--gm-border)}
+#xiaoya-gm .gm-sound-library-row>span{min-width:0;font-size:12px;overflow-wrap:anywhere}
+#xiaoya-gm .gm-sound-library-row small{display:block;margin-top:4px;color:var(--gm-muted)}
+#xiaoya-gm .gm-sound-library-row button{flex-shrink:0;font-size:11px}
+@media(max-width:850px){#xiaoya-gm .gm-sound-master{grid-template-columns:auto minmax(0,1fr)}#xiaoya-gm .gm-sound-master>.gm-sound-actions{grid-column:1/-1}#xiaoya-gm .gm-sound-list{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){#xiaoya-gm .gm-sound-master{padding:12px;gap:12px}#xiaoya-gm .gm-sound-master label{font-size:11px}#xiaoya-gm .gm-sound-card{padding:12px}#xiaoya-gm .gm-sound-filters select{width:100%}#xiaoya-gm .gm-sound-actions button{min-height:40px}#xiaoya-gm [data-sound-workbench]>.gm-section-heading{align-items:flex-start;flex-wrap:wrap}}

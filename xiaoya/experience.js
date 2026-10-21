@@ -21,6 +21,8 @@ import {PRACTICE_KEY,createPracticePlan,validatePracticePlan,recordPractice,getP
 import {createFeedback} from './feedback.js';
 import {createGardenMusic,gardenMusicSettings} from './garden-music.js';
 import {createMeadowMotion} from './meadow-motion.js';
+import {soundPlayer} from './sound-player.js';
+import {soundSettings,SOUND_SETTINGS_KEY} from './sound-settings.js';
 import * as challenge from './challenges.js';
 import {flagArt,challengeFlag,challengeSteps,challengeBoard,challengePrize} from './challenge-ui.js';
 
@@ -54,11 +56,22 @@ welcomeOverlay.addEventListener('cancel',event=>event.preventDefault());
 welcomeOverlay.addEventListener('click',event=>{if(event.target.closest('[data-action="open-welcome-gift"]'))claimWelcomeGift();});
 const chooseWelcomeGreeting=createWelcomeGreetings(appStorage);
 let welcomeGreetingTimer=null,welcomeAttemptDay=null;
-const effects=createFeedback({canSound:()=>!document.hidden&&!speaking&&!session?.waiting&&!session?.recording&&!['preparing','assessing'].includes(session?.assessment?.status)});
+const effects=createFeedback({soundBackend:soundPlayer,canSound:()=>!document.hidden&&!speaking&&!session?.waiting&&!session?.recording&&!['preparing','assessing'].includes(session?.assessment?.status)});
 const gardenMusic=createGardenMusic();
 const meadowMotion=createMeadowMotion();
 let gmMusicPreview=false;
-function syncGardenMusic(){gardenMusic.setState({...gardenMusicSettings(prefs.gardenMusic),active:!document.hidden&&(gmWorkbenchOpen?gmMusicPreview:page==='garden'&&!modal),ducked:speaking,immediate:document.hidden||gmWorkbenchOpen});}
+let audioActivity={playing:false,recording:false},pageSuspended=false;
+function syncGardenMusic(){
+  const recording=audioActivity.recording||!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status);
+  soundPlayer.setState({speech:speaking||audioActivity.playing,recording,hidden:document.hidden||pageSuspended,suspended:gmWorkbenchOpen});
+  const scene=gmWorkbenchOpen?'bgm-garden':`bgm-${page}`,binding=soundPlayer.resolve(scene),settings=gardenMusicSettings(prefs.gardenMusic);
+  gardenMusic.setState({...settings,file:binding?.asset?.url,volume:settings.volume*(binding?.volume||0),
+    enabled:settings.enabled&&!!binding?.enabled,active:!pageSuspended&&!document.hidden&&!recording&&(gmWorkbenchOpen?gmMusicPreview:!!binding&&!modal&&!welcomePhase),
+    ducked:speaking||audioActivity.playing,immediate:pageSuspended||document.hidden||gmWorkbenchOpen||recording});
+}
+// Cue narration is cancellable with the same navigation generation as the view.
+function afterCue(callback,delay=320){const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&!gmWorkbenchOpen)callback();},delay);}
+soundSettings.subscribe(()=>syncGardenMusic());
 const directStory=new URLSearchParams(location.search).get('story');
 // Old garden URL parameters and preferences cannot select a retired screen.
 let meadowState=meadow.createMeadow(),meadowTool=null,meadowBusy=false;
@@ -102,7 +115,7 @@ async function gardenChange(change){
 }catch{return showError('花园没有保存，贝壳和水没有扣除。请检查存储后重试。'),false;}};
   return !GM_SANDBOX&&navigator.locks?.request?navigator.locks.request(key,commit):commit();
 }
-function savePrefs(next){try{appStorage.setItem(PREFS,JSON.stringify(next));prefs=next;return true;}catch{return showError('设置没有保存，请检查浏览器存储权限。'),false;}}
+function savePrefs(next){try{appStorage.setItem(PREFS,JSON.stringify(next));prefs=next;soundPlayer.play('settings-save');return true;}catch{return showError('设置没有保存，请检查浏览器存储权限。'),false;}}
 function challengeSummary(){return challenge.getChallenges(challenges,{practicePlan:practiceToday(),date:today()});}
 function hasPendingChallengeRecovery(){return challenges.attempts.some(a=>!practice.entries.some(r=>r.roundId===`challenge:${a.attemptId}`))||challengeSummary().receipts.some(r=>!meadowState.challengeRewards.some(p=>p.unitId===r.unitId));}
 async function challengeChange(change){
@@ -142,7 +155,7 @@ async function saveChallengeHelp(s){
   if(saved)s.priorChallengeHelp=true;
   return saved;
 }
-function openChallenges(){challengeReceipt=null;navigate('challenges');sound(voice('challenge-intro'),['challenge-guide']);}
+function openChallenges(){challengeReceipt=null;navigate('challenges');afterCue(()=>sound(voice('challenge-intro'),['challenge-guide']));}
 function startChallenge(unitId){
   const unit=challengeSummary().units.find(u=>u.id===unitId);if(!unit)return;
   if(!unit.available){const item=unit.items.find(i=>!i.studied);startEvent(storyFor(item.eventId).event);return;}
@@ -224,8 +237,9 @@ function idleHintActivity(event){
 }
 function applyGuide(){for(const button of document.querySelectorAll('[data-action]'))button.classList.toggle('is-guided',!modal&&!button.disabled&&(guideActions.includes(button.dataset.action)||guideActions.includes('primary')&&button.hasAttribute('data-primary')));}
 function cancelFeedbackVoice(){clearTimeout(feedbackVoiceTimer);feedbackVoiceTimer=null;}
-function stopSpeech({fade=false}={}){soundGeneration++;if(fade)void audio.fadeOutSound();else audio.stopSound();speaking=false;effects.setSilent(false);syncGardenMusic();}
-function feedbackVoice(callback,delay=340){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},delay);}
+function stopSpeech({fade=false}={}){cancelFeedbackVoice();soundGeneration++;if(fade)void audio.fadeOutSound();else audio.stopSound();speaking=false;effects.setSilent(false);syncGardenMusic();}
+function cueDelay(id,minimum=0){const entry=soundPlayer.resolve(id);return entry?.enabled&&entry.volume>0?Math.max(minimum,Math.min(2,entry.asset.duration||2)*1000+80):minimum;}
+function feedbackVoice(callback,delay=340){const wait=cueDelay(soundPlayer.status().id,delay);cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},wait);}
 function clearGuide(){guideGeneration++;guideActions=[];applyGuide();}
 async function sound(file,targets=[],{automatic=false,fadePrevious=false}={}){
   const generation=++guideGeneration,playback=++soundGeneration,ui=uiGeneration;
@@ -252,9 +266,9 @@ function balance(){const garden=activeGarden(),unlimited=meadow.hasUnlimitedReso
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
 function nextStory(){return storyFor(nextPractice().eventId);}
 function stopSession(){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
-function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);}
-function openModal(value){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;renderModal();setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
-function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();restoreFocus?.focus?.();}
+function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);soundPlayer.play(next==='shop'?'shop-open':next==='challenges'?'challenge-start':'navigate');}
+function openModal(value){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;renderModal();soundPlayer.play(value.type==='collection'?'collection':value.type==='error'?'blocked':'panel-open');setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
+function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();restoreFocus?.focus?.();soundPlayer.play('panel-close');}
 function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback();openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function homeView(){
   const progress=allRounds().length>0,task=activeNext(),resume=progress&&task!=='learn',choice=nextPractice(),story=storyFor(choice.eventId);
@@ -320,7 +334,7 @@ function closeWelcomeGift(run){
 async function claimWelcomeGift(){
   if(welcomeBusy||page!=='home'||welcomePhase!=='wrapped')return;
   cancelWelcomeGreeting();cancelFeedbackVoice();stopSpeech();effects.prepare();
-  welcomeBusy=true;welcomePhase='opening';const run=welcomeRun,date=today(),started=performance.now();syncWelcomeGift();
+  soundPlayer.play('gift-open');welcomeBusy=true;welcomePhase='opening';const run=welcomeRun,date=today(),started=performance.now();syncWelcomeGift();
   let claimed=null,changed=false;
   try{
     changed=await gardenChange(latest=>{
@@ -331,7 +345,7 @@ async function claimWelcomeGift(){
   // Saving is authoritative. Animation, navigation and visibility never grant.
   if(run!==welcomeRun||page!=='home'||modal||document.hidden)return;
   if(!changed){cancelWelcomeGift();render();return;}
-  const delay=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.max(0,500-(performance.now()-started));
+  const delay=Math.max(0,cueDelay('gift-open',matchMedia('(prefers-reduced-motion: reduce)').matches?0:500)-(performance.now()-started));
   welcomeLater(()=>{
     if(run!==welcomeRun)return;
     welcomeReceipt=claimed;welcomePhase='opened';render();
@@ -342,7 +356,7 @@ async function claimWelcomeGift(){
     welcomeLater(()=>closeWelcomeGift(run),7000);
     welcomeLater(()=>{if(run!==welcomeRun)return;welcomeVoice().finally(()=>{
       if(run===welcomeRun)welcomeLater(()=>closeWelcomeGift(run),Math.max(0,2400-(performance.now()-revealed)));
-    });},360);
+    });},cueDelay('reward',360));
   },delay);
 }
 
@@ -386,14 +400,14 @@ function picture(story,frame,moving=false,{alternate=false,phase='request',conte
 function cancelStory(s){s.storyGeneration++;clearTimeout(s.storyTimer);s.storyDelayFinish?.(false);s.storyDelayFinish=null;s.storyRunning=false;}
 function currentStory(s,g){return session===s&&s.storyGeneration===g&&s.phase==='story'&&!modal&&!document.hidden;}
 function delay(s,g,ms){return new Promise(resolve=>{if(!currentStory(s,g))return resolve(false);s.storyDelayFinish=resolve;s.storyTimer=setTimeout(()=>{s.storyDelayFinish=null;resolve(currentStory(s,g));},ms);});}
-function startEvent(event=null,assessment=false,challengeOptions=null,practiceOverride=null){const choice=practiceOverride||(event?{eventId:event.id,mode:assessment?'review':practiceToday().unseenIds.includes(event.id)?'new':'free'}:nextPractice());event??=storyFor(choice.eventId).event;stopSession();const story=storyFor(event.id),recall=!!challengeOptions||assessment||choice.mode==='review';const priorChallengeHelp=challengeSummary().units.some(u=>u.items.some(i=>i.canonicalEventId===canonicalEventId(event.id)&&i.helpedToday));session={...challengeOptions,id:uid(),event,story,practiceMode:challengeOptions?'review':choice.mode,recallMode:recall,recallReady:recall,context:assessment?phraseCheckupContext(state,event.id):event.contexts[0],phase:recall?'request':'story',assessmentMode:assessment,helped:!recall,priorChallengeHelp,storyGeneration:0,speechGeneration:0,frame:story.teachingFrames[0],storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null};page='event';modal=null;render();if(!recall){playStory();effects.prepare();}else{sound(voice(challengeOptions?'challenge-question':'flow-review-v13'),['sample','record']);prepareMicrophone();}}
+function startEvent(event=null,assessment=false,challengeOptions=null,practiceOverride=null){const choice=practiceOverride||(event?{eventId:event.id,mode:assessment?'review':practiceToday().unseenIds.includes(event.id)?'new':'free'}:nextPractice());event??=storyFor(choice.eventId).event;stopSession();const story=storyFor(event.id),recall=!!challengeOptions||assessment||choice.mode==='review';const priorChallengeHelp=challengeSummary().units.some(u=>u.items.some(i=>i.canonicalEventId===canonicalEventId(event.id)&&i.helpedToday));session={...challengeOptions,id:uid(),event,story,practiceMode:challengeOptions?'review':choice.mode,recallMode:recall,recallReady:recall,context:assessment?phraseCheckupContext(state,event.id):event.contexts[0],phase:recall?'request':'story',assessmentMode:assessment,helped:!recall,priorChallengeHelp,storyGeneration:0,speechGeneration:0,frame:story.teachingFrames[0],storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null};page='event';modal=null;render();if(!recall){playStory();effects.prepare();soundPlayer.play('lesson-enter');}else{soundPlayer.play(challengeOptions?'challenge-step':'lesson-enter');afterCue(()=>sound(voice(challengeOptions?'challenge-question':'flow-review-v13'),['sample','record']));prepareMicrophone();}}
 // A short scene establishes meaning once. Completed teaching replays only the phrase.
 async function playStory(){const s=session;if(!s)return;cancelStory(s);cancelAttempt(s);stopSpeech();s.teaching=false;s.helped=true;s.context=s.event.contexts[0];s.phase='story';s.frame=s.story.teachingFrames[0];s.storyReady=false;s.storyError=false;s.storyRunning=true;const g=s.storyGeneration;render();
   if(!currentStory(s,g))return;
   const frames=s.story.teachingFrames;
   for(let i=0;i<frames.length;i++){
-    s.frame=frames[i];render();
-    if(!await delay(s,g,i<frames.length-1?650:180))return;
+    s.frame=frames[i];render();if(i>0)soundPlayer.play('story-page');
+    if(!await delay(s,g,cueDelay(soundPlayer.status().id,i<frames.length-1?650:180)))return;
   }
   const asset=pictureFor(s.story,{frame:s.frame},document.baseURI);
   if(s.storyHintPending||s.event.hintAudio&&(!asset||pictures.status(asset.url)!=='ready')){
@@ -438,7 +452,7 @@ async function record(){const s=session;if(!s||s.phase!=='request'||s.waiting)re
   try{const started=await audio.beginRecording({onReady:()=>{if(current()){s.waiting=false;s.recording=true;render();effects.play('ready',{target:document.querySelector('[data-action="record"]')});}},onLevel:level=>{if(current())document.querySelector('[data-action="record"]')?.style.setProperty('--voice',level);},onFinish:result=>{if(current())recorded(s,result);}});if(current()&&!started){s.waiting=false;s.recording=false;render();}}
   catch(error){if(!current())return;s.waiting=false;s.recording=false;s.assessment={status:'unavailable',stars:0};render();toast(error.name==='NotAllowedError'?'麦克风未获允许，可以先听伙伴说，或在浏览器设置中开启。':error.message);}
 }
-function recorded(s,result){if(session!==s)return;s.recording=false;s.waiting=false;s.hasClip=!!result.url;if(result.error){s.assessment={status:'unavailable',stars:0};render();return toast(result.error);}if(!result.url||(!result.hasVoice&&result.voiceActivityAvailable!==false)){s.assessment={status:'silence',stars:0};render();prepareMicrophone();speechFeedback('silent');return;}s.pendingClip=result.url;assessClip(s,result.url,s.speechGeneration);}
+async function recorded(s,result){if(session!==s)return;s.recording=false;s.waiting=false;s.hasClip=!!result.url;if(result.error){s.assessment={status:'unavailable',stars:0};render();return toast(result.error);}if(!result.url||(!result.hasVoice&&result.voiceActivityAvailable!==false)){s.assessment={status:'silence',stars:0};render();prepareMicrophone();speechFeedback('silent');return;}s.pendingClip=result.url;const generation=s.speechGeneration;if(soundPlayer.resolve('record-stop')?.enabled){render();await soundPlayer.play('record-stop');if(session!==s||s.speechGeneration!==generation||modal||document.hidden)return;}assessClip(s,result.url,generation);}
 async function assessClip(s,url,g){const current=()=>session===s&&s.speechGeneration===g&&s.phase==='request';s.assessment={status:audio.speechReady()?'assessing':'preparing',stars:0};render();try{
   const prepared=audio.speechReady()||await(s.preparation||prepareFor(s).then(()=>true,()=>false));if(!current())return;if(!prepared)throw new Error('model unavailable');s.assessment={status:'assessing',stars:0};render();const recognized=await audio.recognize(url,s.event.accepted);if(!current())return;if(!recognized)throw new Error('no assessment');
   await applySpeechResult(s,recognized,g);
@@ -458,7 +472,7 @@ async function applySpeechResult(s,recognized,g){
     // Leave room for the short chime, including the output device's startup budget.
     // This never locks input; any next action cancels the pending spoken praise.
     feedbackVoice(()=>{if(generation===uiGeneration&&session===s&&s.speechGeneration===g&&s.phase==='resolved'&&!modal&&!document.hidden)speechFeedback(cue);},760);
-  }else speechFeedback(cue);
+  }else{soundPlayer.play('retry');afterCue(()=>{if(session===s&&s.speechGeneration===g)speechFeedback(cue);},260);}
 }
 let gmResult='three';
 async function simulateRecording(){
@@ -508,7 +522,7 @@ function rewardView(){
 function previewReward(choice){
   if(rewardBusy||modal||!(page==='reward'||session?.phase==='reward'))return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||!['shells','water'].includes(choice))return;
-  cancelFeedbackVoice();rewardSelection={roundId:round.roundId,choice};render();rewardVoice({fadePrevious:true});
+  cancelFeedbackVoice();stopSpeech();rewardSelection={roundId:round.roundId,choice};render();soundPlayer.play('select');afterCue(()=>rewardVoice({fadePrevious:true}));
 }
 function confirmReward(){
   const selected=rewardSelection,round=meadow.pendingRewards(meadowState)[0];
@@ -519,10 +533,10 @@ async function collectReward(choice,roundId){
   if(rewardBusy)return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||round.roundId!==roundId)return;
   rewardBusy=true;cancelFeedbackVoice();stopSpeech({fade:true});render();const generation=uiGeneration;
-  try{const saved=await gardenChange(latest=>meadow.claimReward(latest,round.roundId,choice));if(!saved||modal||generation!==uiGeneration)return;rewardSelection=null;rewardReceipt=round.roundId;render();effects.play('reward',{target:document.querySelector('.reward-treasure')});feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&(page==='reward'||session?.phase==='reward'))rewardVoice();});}
+  try{const saved=await gardenChange(latest=>meadow.claimReward(latest,round.roundId,choice));if(!saved||modal||generation!==uiGeneration)return;rewardSelection=null;rewardReceipt=round.roundId;render();effects.play('reward',{target:document.querySelector('.reward-treasure'),soundId:choice==='water'?'reward-water':'reward-shell'});feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&(page==='reward'||session?.phase==='reward'))rewardVoice();});}
   finally{rewardBusy=false;if(!modal&&(page==='reward'||session?.phase==='reward'))render();}
 }
-function showPendingReward(){rewardReceipt=null;navigate('reward');rewardVoice();}
+function showPendingReward(){rewardReceipt=null;navigate('reward');afterCue(rewardVoice);}
 function gardenView(){const background=pictureFor(meadowPicture,{},document.baseURI);pictures.load(background.url);return meadowView({state:meadowState,header:header(),balance:balance(),challengeEntry:challengeFlag(challengeSummary(),{invite:!!challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})}),specialPending:meadow.pendingChallengeSeeds(meadowState).length>0,feedback,tool:meadowTool,backgroundUrl:pictures.status(background.url)==='ready'?background.url:null});}
 function gardenIsActive(){return page==='garden'&&!modal&&!document.hidden;}
 function cancelGardenReminder(){clearTimeout(gardenIdleTimer);gardenIdleTimer=null;gardenIdleGeneration++;}
@@ -532,26 +546,26 @@ async function gardenGuide({automatic=false,reminder=false,cue}={}){cancelGarden
   // A reminder is one-shot. Only a new interaction starts another idle period.
   if(!reminder&&generation===gardenIdleGeneration&&gardenIsActive())scheduleGardenReminder();
 }
-function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(!meadowState.pendingSeed&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){inviteChallenge().catch(()=>{});scheduleGardenReminder();}else gardenGuide({automatic:true});}
-function gardenFeedback(kind,plantId,{motion=false}={}){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId,motion};render();const target=plantId?document.querySelector(`[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-tool');effects.play(kind==='planted'?'plant':kind,{target,visual:!motion});if(!motion)feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
+function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(!meadowState.pendingSeed&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){afterCue(()=>inviteChallenge().catch(()=>{}));scheduleGardenReminder();}else afterCue(()=>gardenGuide({automatic:true}));}
+function gardenFeedback(kind,plantId,soundId,{motion=false}={}){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId,motion};render();const target=plantId?document.querySelector(`[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-tool');effects.play(kind==='planted'?'plant':kind,{target,soundId,visual:!motion});if(!motion)feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
 function feedbackGuide(cue){if(activeGarden().plants.length>=3)return gardenGuide({automatic:true,cue});const expected=feedback;feedbackVoice(()=>{if(feedback===expected&&gardenIsActive())gardenGuide({automatic:true,cue});});}
 
 function rewardVoice(options={}){const pending=meadow.pendingRewards(meadowState)[0];if(pending){const choice=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);return sound(voice(choice==='water'&&amounts.water===2?'flow-water-choice-v13':choice?`flow-${choice}`:'flow-choice'),choice?['confirm-reward']:['choose-shells','choose-water'],options);}const round=meadowState.rounds.find(r=>r.roundId===rewardReceipt)||(session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1)),receipt=round?.reward,newReward=round?.rewardVersion===3;return sound(voice(`economy-${receipt==='shells'?'shells':receipt==='water'?newReward?'water-v13':'water':newReward?'starter-v13':'starter'}`),['garden'],options);}
-function selectMeadowTool(tool){if(!gardenIsActive()||meadowBusy)return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();if(tool==='can'&&!meadow.hasUnlimitedResources(meadowState)&&!meadowState.water)sound(voice('economy-water-short'),['next-event']);effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`));}
+function selectMeadowTool(tool){if(!gardenIsActive()||meadowBusy)return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`),{soundId:tool==='seed'?'tool-seed':'tool-water'});if(tool==='can'&&!meadow.hasUnlimitedResources(meadowState)&&!meadowState.water)afterCue(()=>sound(voice('economy-water-short'),['next-event']));}
 function meadowGuide(cue){const action=meadow.nextAction(meadowState);if(cue==='bloom')return sound(voice('meadow-bloom'));if(cue==='giant')return sound(voice('meadow-giant'),['meadow-seed']);if(action==='challenge-seed')return sound(voice('challenge-seed'),['challenge-seed']);if(action==='reward')return sound(voice('economy-earned'),['collect-reward']);if(action==='pack')return sound(voice('economy-shop-ready'),['shop']);if(action==='learn')return meadowState.plants.some(p=>p.waterings<meadow.ALL_FLOWERS.find(f=>f.id===p.flowerId).waterNeeded)?sound(voice('economy-water-short'),['next-event']):narrate('next');return sound(voice(action==='plant'?'meadow-seed':'meadow-water-beside'),[action==='plant'?'meadow-seed':'meadow-can']);}
 async function openShop(){
   if(shopBusy)return;
   if(meadowState.pendingSeed||meadow.pendingRewards(meadowState).length)return enterGarden();
   shopBusy=true;const generation=uiGeneration;
-  try{await gardenChange(latest=>meadow.ensureShop(latest,today()));if(generation!==uiGeneration||modal)return;navigate('shop');effects.prepare();if(!prefs.shopSeen){sound(voice('economy-shop'));savePrefs({...prefs,shopSeen:true});}}
+  try{await gardenChange(latest=>meadow.ensureShop(latest,today()));if(generation!==uiGeneration||modal)return;navigate('shop');effects.prepare();if(!prefs.shopSeen){savePrefs({...prefs,shopSeen:true});afterCue(()=>sound(voice('economy-shop')));}}
   finally{shopBusy=false;}
 }
-function shortOnShells(canReserve=false){const wallet=document.querySelector('.wallet');wallet?.classList.remove('short-on-shells');if(wallet)void wallet.offsetWidth;wallet?.classList.add('short-on-shells');sound(voice(canReserve?'economy-short':'economy-shells-short'),[canReserve?'reserve-offer':'next-event']);}
+function shortOnShells(canReserve=false){const wallet=document.querySelector('.wallet');wallet?.classList.remove('short-on-shells');if(wallet)void wallet.offsetWidth;wallet?.classList.add('short-on-shells');soundPlayer.play('blocked');afterCue(()=>sound(voice(canReserve?'economy-short':'economy-shells-short'),[canReserve?'reserve-offer':'next-event']));}
 function revealPurchasedSeed(generation){if(generation!==uiGeneration||modal||page!=='shop')return;navigate('garden');meadowTool='seed';gardenFeedback('seed');feedbackGuide(meadow.ALL_FLOWERS.find(f=>f.id===meadowState.pendingSeed.flowerId).giant?'giant':'seed');}
 function openBlindbox(){
   if(shopBusy||page!=='shop')return;
   if(meadowState.pendingSeed)return enterGarden();
-  mysterySelection=null;navigate('blindbox');effects.prepare();blindboxVoice();
+  mysterySelection=null;navigate('blindbox');effects.prepare();afterCue(blindboxVoice);
 }
 async function blindboxVoice(){
   if(page!=='blindbox'||modal||document.hidden||gmWorkbenchOpen)return;
@@ -570,16 +584,15 @@ async function buyMystery(index){
   if(!meadow.hasUnlimitedResources(meadowState)&&meadowState.shells<meadow.ECONOMY.packPrice)return shortOnShells();
   shopBusy=true;mysterySelection={index,animate:false};const generation=uiGeneration;
   cancelFeedbackVoice();mysteryVoiceRun++;stopSpeech();render();
-  effects.play('seed',{target:app.querySelector(`[data-mystery-bag="${index}"]`)});
   try{
     const bought=await gardenChange(latest=>meadow.openSeedPack(latest));
     if(generation!==uiGeneration||document.hidden||modal||page!=='blindbox')return;
     if(bought){
-      mysterySelection={index,animate:true};render();
+      mysterySelection={index,animate:true};render();effects.play('seed',{target:app.querySelector('.seed-reveal-art'),soundId:'bag-open'});
       // The purchase is already saved. Animation/audio never decide its result.
       feedbackVoice(()=>{
         if(generation!==uiGeneration||page!=='blindbox'||modal||document.hidden||gmWorkbenchOpen)return;
-        effects.play('reward',{target:app.querySelector('.seed-reveal-art')});
+        effects.play('reward',{target:app.querySelector('.seed-reveal-art'),soundId:'seed'});
         feedbackVoice(()=>{if(generation===uiGeneration)blindboxVoice();},360);
       },650);
     }else{
@@ -603,23 +616,23 @@ async function reserveSeed(id,replace=false){
   if(shopBusy||page!=='shop')return;
   const offer=meadowState.shop.offer;if(!offer||offer.id!==id){if(modal?.type==='replace-seed')closeModal();return;}
   if(meadowState.shop.reserved&&meadowState.shop.reserved.id!==id&&!replace){openModal({type:'replace-seed',offerId:id});sound(voice('economy-replace'));return;}
-  shopBusy=true;const generation=uiGeneration;try{const saved=await gardenChange(latest=>meadow.reserveOffer(latest,id,{replace}));if(generation!==uiGeneration||modal?.type==='error')return;modal=null;render();if(saved)effects.play('seed',{target:document.querySelector('.reserve-seed')});sound(voice('economy-reserve'));}finally{shopBusy=false;}
+  shopBusy=true;const generation=uiGeneration;try{const saved=await gardenChange(latest=>meadow.reserveOffer(latest,id,{replace}));if(generation!==uiGeneration||modal?.type==='error')return;modal=null;render();if(saved){effects.play('seed',{target:document.querySelector('.reserve-seed'),soundId:'reserve'});afterCue(()=>sound(voice('economy-reserve')));}}finally{shopBusy=false;}
 }
 async function meadowPlant(point){if(meadowBusy||!meadowState.pendingSeed||!gardenIsActive())return;meadowBusy=true;try{if(await gardenChange(latest=>meadow.plantSeed(latest,point))){if(!gardenIsActive())return;meadowTool=null;gardenFeedback('planted',meadowState.plants[meadowState.plants.length-1].id);feedbackGuide('water');}}finally{meadowBusy=false;}}
 async function meadowWater(id){
   if(meadowBusy||!gardenIsActive())return;
   const plant=meadowState.plants.find(p=>p.id===id);if(!plant)return;
   const flower=meadow.ALL_FLOWERS.find(f=>f.id===plant.flowerId);
-  if(plant.waterings===flower.waterNeeded){gardenFeedback('bloom',id);return;}
+  if(plant.waterings===flower.waterNeeded){gardenFeedback('bloom',id,'flower-touch');return;}
   if(meadowTool!=='can'){sound(voice('meadow-water-beside'),['meadow-can']);return;}
-  if(!meadow.hasUnlimitedResources(meadowState)&&!meadowState.water){sound(voice('economy-water-short'),['next-event']);return;}
+  if(!meadow.hasUnlimitedResources(meadowState)&&!meadowState.water){soundPlayer.play('blocked');afterCue(()=>sound(voice('economy-water-short'),['next-event']));return;}
   meadowBusy=true;const generation=uiGeneration;
   const before=meadowMotion.capture(app.querySelector(`[data-meadow-plant="${id}"]`));
   try{
     if(!await gardenChange(latest=>meadow.waterPlant(latest,id)))return;
     if(generation!==uiGeneration||document.hidden||modal||!gardenIsActive())return;
     const p=meadowState.plants.find(p=>p.id===id),bloom=p.waterings===flower.waterNeeded;
-    gardenFeedback(bloom?'bloom':'water',id,{motion:true});
+    gardenFeedback(bloom?'bloom':'water',id,undefined,{motion:true});
     const completed=await meadowMotion.play(app.querySelector(`[data-meadow-plant="${id}"]`),before);
     if(generation!==uiGeneration||document.hidden||modal||!gardenIsActive())return;
     feedback=null;
@@ -645,7 +658,7 @@ function parentView(){const garden=activeGarden(),rounds=allRounds();const recor
 function observation(attemptId=null){requireParent(()=>{const existing=attemptId?effectiveEvidence(state).find(r=>r.attemptId===attemptId):null;openModal({type:'observe',attemptId,existing,event:existing?EVENTS.find(e=>e.id===existing.eventId):session?.event,helped:existing?existing.helped:!!session?.helped,helpedLocked:!attemptId&&!!session?.helped});});}
 async function submitObservation(result){const m=modal,s=session;if(m?.type!=='observe'||!m.event||m.saving)return;m.saving=true;const helped=m.helpedLocked||!!document.querySelector('#observed-help')?.checked,exact=!!document.querySelector('#exact-phrase')?.checked,phraseId=exact&&['independent','supported'].includes(result)?m.event.lessonId:null;
   const evidenceHelped=!!(helped||s?.retryAfterAttemptId||s?.priorChallengeHelp),evidenceResult=evidenceHelped&&result==='independent'?'supported':result;
-  const next=m.attemptId?correctEvidence(state,m.attemptId,{correctionId:uid(),result,helped,phraseId,date:today()}):recordEvidence(state,{attemptId:uid(),eventId:m.event.id,contextId:s.context.id,kind:'speech',result:evidenceResult,source:'parent',helped:evidenceHelped,phraseId,date:today()});if(!save(next)){m.saving=false;return;}if(s&&!m.attemptId){s.attemptId=next.evidence[next.evidence.length-1].attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result,source:'parent',helped})){m.saving=false;return;}s.helped=helped;s.phase='resolved';}if(modal===m)modal=null;render();}
+  const next=m.attemptId?correctEvidence(state,m.attemptId,{correctionId:uid(),result,helped,phraseId,date:today()}):recordEvidence(state,{attemptId:uid(),eventId:m.event.id,contextId:s.context.id,kind:'speech',result:evidenceResult,source:'parent',helped:evidenceHelped,phraseId,date:today()});if(!save(next)){m.saving=false;return;}if(s&&!m.attemptId){s.attemptId=next.evidence[next.evidence.length-1].attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result,source:'parent',helped})){m.saving=false;return;}s.helped=helped;s.phase='resolved';}if(modal===m)modal=null;render();soundPlayer.play('settings-save');}
 function render(){meadowMotion.cancel();syncGardenMusic();cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='event'?eventView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),hasSeed:meadow.pendingChallengeSeeds(meadowState).length>0,primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='blindbox'?blindboxView({state:meadowState,header:header(),balance:balance(),selection:mysterySelection,busy:shopBusy}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;if(page==='blindbox'&&mysterySelection)mysterySelection.animate=false;renderModal();applyGuide();syncWelcomeGift();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();scheduleWelcomeGreeting();}
 function renderModal(){syncGardenMusic();const root=document.querySelector('#modal-root');if(!root)return;if(!modal){root.innerHTML='';return;}const m=modal;let html='';
   if(m.type==='gate')html=`<h2>请交给陪伴的大人</h2><label for="parent-answer">${m.a} + ${m.b} =</label><input id="parent-answer" inputmode="numeric" autocomplete="off" aria-label="计算结果"><button class="primary-button" data-action="gate-submit">进入</button><button data-action="close">回到孩子的世界</button>`;
@@ -658,11 +671,16 @@ function renderModal(){syncGardenMusic();const root=document.querySelector('#mod
 }
 function exportState(){const content=storageProblem?{problem:storageProblem,rawState:appStorage.getItem(STORAGE_KEY),rawGarden:appStorage.getItem(LEGACY_GARDEN_KEY),rawMeadow:appStorage.getItem(meadow.MEADOW_KEY),rawPractice:appStorage.getItem(PRACTICE_KEY),rawChallenges:appStorage.getItem(challenge.CHALLENGE_KEY)}:{product:'xiaoya-english',exported:today(),state,garden:gardenHistory.archive,rawGarden,meadow:meadowState,practice,challenges,gardenVariant:'b',preferences:prefs,voice:selectedVoice};if(GM_SANDBOX)content.testing={mode:'gm-simulation',realLearningEvidence:false};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${GM_SANDBOX?'GM模拟记录-':'小芽英语-'}${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 async function recognition(){if(GM_SANDBOX)return toast('免录音测试不会下载识别模型；退出 GM 后可测试真实识别。');const target=document.querySelector('#model-status');if(target)target.textContent='准备本机识别资源，可以继续浏览，请保持本页打开。';try{await audio.prepareRecognition(value=>{const el=document.querySelector('#model-status');if(el)el.textContent=typeof value==='string'?value:'正在准备…';});toast('本机识别已准备好。');if(page==='parent')render();}catch{toast('识别资源没有准备完成，可以重试。');}}
-const actions={'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro')),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome')),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':blindboxVoice,'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>previewReward('shells'),'choose-water':()=>previewReward('water'),'confirm-reward':confirmReward,'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose']),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose']),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':gardenGuide,'reward-voice':rewardVoice,'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});sound(voice('meadow-collection'));},'assessment-voice':assessmentVoice,'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>page==='challenges'?sound(voice('challenge-intro')):page==='challenge-prize'?sound(voice('challenge-clear')):page==='blindbox'?blindboxVoice():page==='shop'?sound(voice('economy-shop')):page==='reward'?rewardVoice():page==='garden'?gardenGuide():session?session.phase==='story'?teach():session.phase==='reward'?rewardVoice():teach():narrate('welcome'),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
+const actions={'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro')),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome')),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':blindboxVoice,'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>previewReward('shells'),'choose-water':()=>previewReward('water'),'confirm-reward':confirmReward,'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose']),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose']),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>startEvent(),'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':gardenGuide,'reward-voice':rewardVoice,'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&modal?.type==='collection'&&!document.hidden)sound(voice('meadow-collection'));});},'assessment-voice':assessmentVoice,'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;syncGardenMusic();scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>page==='challenges'?sound(voice('challenge-intro')):page==='challenge-prize'?sound(voice('challenge-clear')):page==='blindbox'?blindboxVoice():page==='shop'?sound(voice('economy-shop')):page==='reward'?rewardVoice():page==='garden'?gardenGuide():session?session.phase==='story'?teach():session.phase==='reward'?rewardVoice():teach():narrate('welcome'),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
   'gate-submit':()=>{if(modal?.type!=='gate')return;if(Number(document.querySelector('#parent-answer')?.value)===modal.a+modal.b){const callback=modal.callback;parentUnlocked=true;closeModal({keepMicIntent:true});callback();}else toast('请由陪伴的大人填写计算结果。');},'mic-settings':()=>openModal({type:'mic'}),'allow-mic':()=>{if(savePrefs({...prefs,mic:true})){const s=session,resume=s?.pendingMicIntent;closeModal();if(resume&&session===s&&s.phase==='request')return record();}},'disable-mic':()=>{if(savePrefs({...prefs,mic:false})){if(session){session.pendingMicIntent=false;cancelAttempt(session);}closeModal();}},recognition,export:exportState};
-app.addEventListener('click',event=>{const b=event.target.closest('button');if(!b||b.disabled)return;try{
+app.addEventListener('click',event=>{const summary=event.target.closest('summary');if(summary){soundPlayer.play(summary.parentElement?.open?'panel-close':'panel-open');return;}const b=event.target.closest('button');if(!b||b.disabled)return;try{
   cancelFeedbackVoice();if(gardenIsActive()){clearGuide();stopSpeech();scheduleGardenReminder();}
-  if(!['meadow-seed','meadow-can'].includes(b.dataset.action))effects.tap(b,{silent:page==='event'||['help','parent','allow-mic','replay','mic-settings'].includes(b.dataset.action)||!!b.dataset.previewVoice});
+  if(!['meadow-seed','meadow-can'].includes(b.dataset.action))effects.tap(b,{silent:true});
+  // Dedicated actions emit after their successful state change. Voice buttons
+  // use the requested voice as feedback; mic preparation is intentionally silent.
+  const dedicated=new Set(['home','garden','parent','close','challenges','shop','shop-back','shop-pack','blindbox-back','blindbox-plant','meadow-seed','meadow-can','meadow-collection','next-event','new-event','record','story-continue','finish','confirm-reward','choose-shells','choose-water','challenge-seed','collect-reward','replace-reservation','open-welcome-gift','mic-settings','allow-mic','disable-mic']);
+  const voiceAction=new Set(['sample','help','story-replay','story-help','context-help','replay','watch','garden-guide','reward-voice','assessment-voice','challenge-guide','challenge-practice','learning-mode','blindbox-voice','shell-purpose','water-purpose']);
+  if(b.dataset.action&&!dedicated.has(b.dataset.action)&&!voiceAction.has(b.dataset.action))queueMicrotask(()=>soundPlayer.play('tap'));
   if(b.dataset.challengeUnit)startChallenge(b.dataset.challengeUnit);
   else if(b.dataset.mysteryBag!==undefined)buyMystery(Number(b.dataset.mysteryBag)).catch(error=>showError(error.message));
   else if(b.dataset.buyOffer)buySeed(b.dataset.buyOffer,b.dataset.source).catch(error=>showError(error.message));
@@ -679,8 +697,9 @@ document.addEventListener('keydown',event=>{if(gmWorkbenchOpen||!modal)return;if
 for(const type of ['pointerdown','keydown'])document.addEventListener(type,()=>gardenMusic.retry(),{capture:true,passive:true});
 for(const type of ['pointerdown','pointerup','pointercancel','keydown','scroll','click'])document.addEventListener(type,idleHintActivity,{capture:true,passive:true});
 for(const type of ['pointerdown','keydown','scroll'])app.addEventListener(type,()=>{if(gardenIsActive()){cancelFeedbackVoice();scheduleGardenReminder();}},{capture:true,passive:true});
-function suspend(){meadowMotion.cancel();cancelWelcomeGift();gardenMusic.setState({active:false,immediate:true});cancelWelcomeGreeting();cancelIdleHint();pointerHeld=false;uiGeneration++;rewardSelection=null;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
+function suspend(){meadowMotion.cancel();pageSuspended=true;soundPlayer.setState({hidden:true});cancelWelcomeGift();gardenMusic.setState({active:false,immediate:true});cancelWelcomeGreeting();cancelIdleHint();pointerHeld=false;uiGeneration++;rewardSelection=null;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
 function resume(){
+  pageSuspended=false;syncGardenMusic();
   if(gmWorkbenchOpen)return;
   if(!modal){
     if(page==='shop'&&meadowState.pendingSeed){navigate('garden');meadowTool='seed';render();}
@@ -689,9 +708,12 @@ function resume(){
   }
   scheduleGardenReminder();
 }
-document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else resume();});window.addEventListener('pagehide',suspend);
-window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();else resume();});window.addEventListener('pagehide',suspend);window.addEventListener('pageshow',event=>{if(event.persisted)resume();});
+window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(event.key===SOUND_SETTINGS_KEY||event.key===null){soundSettings.reload();if(event.key===SOUND_SETTINGS_KEY)return;}if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
 const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{if(meadowBusy)return;cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event&&!(meadowTool==='can'&&target?.closest?.('[data-meadow-plant],[data-water-plant]'))){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
+
+audio.onAudioActivity(value=>{audioActivity=value;syncGardenMusic();});
+app.addEventListener('change',event=>{if(event.target.matches('input[type=checkbox]'))soundPlayer.play('select');});
 
 // Internal controls use the real screens and transaction models. Learning and
 // economy mutations require the sandbox; music preferences use appStorage so

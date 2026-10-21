@@ -9,7 +9,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const http = require('node:http');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const root = path.resolve(__dirname, '..'), dist = path.join(root, 'dist');
+const root = path.resolve(__dirname, '..'), dist = path.resolve(root, process.env.XIAOYA_DIST_DIR || 'dist');
 const out = path.join(root, 'test-results', 'xiaoya-welcome-browser');
 const filter = process.env.XIAOYA_TEST_FILTER ? new RegExp(process.env.XIAOYA_TEST_FILTER) : null;
 const MEADOW_KEY = 'xiaoya-english:meadow:v1';
@@ -510,7 +510,8 @@ async function main() {
     assert.equal(await p.evaluate(() => qaWelcome.failedWrites), 1);
     assert.equal(await savedMeadow(p), null, 'Failed storage left a partial wallet or receipt');
     assert.equal(await p.locator('.welcome-gift-overlay[data-gift-phase="opened"]').count(), 0, 'Unsaved gift was announced as collected');
-    assert.deepEqual((await noLearning(f)).wallet, {shells:0,water:0});
+    const emptyWallet = (await noLearning(f)).wallet;
+    assert.deepEqual({shells:emptyWallet.shells,water:emptyWallet.water}, {shells:0,water:0});
     await p.evaluate(() => { qaWelcome.failWrites = false; });
     await press(p, '#modal-root [role="dialog"] [data-action="close"]');
     await claim(p,'shells');

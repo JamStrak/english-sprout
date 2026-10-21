@@ -28,7 +28,7 @@ const finite = value => typeof value === 'number' && Number.isFinite(value);
  * Anchors accept an Element or viewport coordinates {x,y}; reward additionally
  * accepts shellTo/waterTo. cancel() clears a departing view; destroy() disposes it.
  */
-export function createFeedback({root = globalThis.document?.body, canSound = () => true} = {}) {
+export function createFeedback({root = globalThis.document?.body, canSound = () => true, soundBackend = null} = {}) {
   if (!root?.ownerDocument) throw new TypeError('Feedback needs a document root.');
   const doc = root.ownerDocument;
   const win = doc.defaultView || globalThis;
@@ -66,6 +66,7 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
   function stopAudio() {
     soundGeneration++; clear(soundTimer); soundTimer = null;
     for (const voice of [...voices]) stopVoice(voice);
+    soundBackend?.stop();
   }
   function stopPreparation() {
     prepareGeneration++;
@@ -83,6 +84,7 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
     return null;
   }
   function prepare() {
+    if (soundBackend) return !destroyed && !muted && !doc.hidden;
     if (destroyed || muted || doc.hidden || !(win.AudioContext || win.webkitAudioContext)) return false;
     if (context?.state === 'closed') context = null;
     if (context) { resumeContext(context); return true; }
@@ -106,7 +108,9 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
     return true;
   }
   function sound(kind) {
-    if (!NOTES[kind] || !allowed()) return;
+    if (!allowed()) return;
+    if (soundBackend) { soundBackend.play(kind); return; }
+    if (!NOTES[kind]) return;
     // One sound at a time. Defer optional device setup so visual feedback is applied
     // first; an immediately following guide or mic request can cancel it altogether.
     stopAudio();
@@ -240,7 +244,7 @@ export function createFeedback({root = globalThis.document?.body, canSound = () 
     if (destroyed || doc.hidden || !KINDS.has(kind)) return false;
     if (options.visual !== false) visual(kind, options);
     if (options.silent || kind === 'ready' || !allowed()) stopAudio();
-    else sound(kind);
+    else sound(options.soundId || kind);
     return true;
   }
   function cancel() {

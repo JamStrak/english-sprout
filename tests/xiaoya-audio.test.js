@@ -75,7 +75,7 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
     clearInterval(id){intervals.delete(id);},
     loadSpeech:()=>Promise.resolve(speech),loadMatcher:()=>Promise.resolve({scoreSpeech,speechWords})
   };
-  vm.runInNewContext(source+`;globalThis.api={prepareRecording:typeof prepareRecording==='function'?prepareRecording:undefined,beginRecording,finishRecording,cancelRecording,releaseAudioSession,hasClip,prepareRecognition,speechReady,recognize,cancelRecognition};`,sandbox);
+  vm.runInNewContext(source+`;globalThis.api={prepareRecording:typeof prepareRecording==='function'?prepareRecording:undefined,beginRecording,finishRecording,cancelRecording,releaseAudioSession,hasClip,prepareRecognition,speechReady,recognize,cancelRecognition,onAudioActivity};`,sandbox);
   return {
     ...sandbox.api, permission,recorders,contexts,streams,timers,intervals,frames,urls,revoked,microphoneRequests,permissionQueries,
     grant(index=Math.max(0,microphoneRequests.length-1)) {
@@ -98,6 +98,20 @@ function fixture({webAudio=true, resume=Promise.resolve(), decode, meterByte=128
     async start(options) { const pending=sandbox.api.beginRecording(options); this.grant(); await flush(); recorders.at(-1).emitStart(); assert.equal(await pending,true); this.paintFrame(); await this.advanceTimers(0); return recorders.at(-1); }
   };
 }
+
+test('audio activity holds sound suppression until capture tracks are closed, including cancellation', async () => {
+  for (const exit of ['cancel','finish']) {
+    const f=fixture(), observations=[];
+    const unsubscribe=f.onAudioActivity(activity=>observations.push({...activity,tracksClosed:f.streams.every(s=>s.track.readyState==='ended')}));
+    assert.equal(observations.at(-1).recording,false);
+    await f.start();
+    assert.equal(observations.at(-1).recording,true);
+    exit==='cancel'?f.cancelRecording():f.finishRecording();await flush();
+    const last=observations.at(-1);
+    assert.equal(last.recording,false);assert.equal(last.tracksClosed,true);
+    unsubscribe();const count=observations.length;f.releaseAudioSession();assert.equal(observations.length,count);
+  }
+});
 
 test('granted microphone preparation is shared, creates no recorder or clip, and is claimed without a second request', async () => {
   const f=fixture();

@@ -2,6 +2,9 @@ import {prepareSamples} from './speech-signal.js';
 // Audio is local to this session. Recordings never enter storage or a request.
 let playback = null;
 let capture = null;
+const activityListeners = new Set();
+const reportActivity = () => { for (const listener of activityListeners) { try { listener({playing:!!playback,recording:!!capture}); } catch {} } };
+export function onAudioActivity(listener) { activityListeners.add(listener);listener({playing:!!playback,recording:!!capture});return ()=>activityListeners.delete(listener); }
 let captureGeneration = 0;
 let preparedCapture = null;
 let clip = null;
@@ -52,6 +55,7 @@ export function playSound(file, onState = () => {}) {
       clearTimeout(timer); clearTimeout(fadeTimer); audio.onended = audio.onerror = audio.onplaying = audio.ontimeupdate = null;
       audio.pause(); audio.removeAttribute('src'); audio.load();
       if (playback === current) playback = null;
+      reportActivity();
       resolveFade?.();
       onState(error ? 'error' : 'idle'); error ? reject(error) : resolve(ok);
     }, fadeOut(duration) {
@@ -70,6 +74,7 @@ export function playSound(file, onState = () => {}) {
       return fadePromise;
     }};
     playback = current;
+    reportActivity();
     onState('loading');
     const watchProgress = () => {
       clearTimeout(timer);
@@ -154,6 +159,7 @@ export function cancelRecording({keepPrepared = false} = {}) {
     old.settleReady(false);
     closeCapture(old);
   }
+  reportActivity();
 }
 
 export function finishRecording() {
@@ -258,6 +264,7 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
     };
   });
   capture = current;
+  reportActivity();
   const failed = error => {
     if (capture !== current || generation !== captureGeneration) return;
     current.settleReady(false, error);
@@ -294,7 +301,7 @@ export function beginRecording({onReady = () => {}, onLevel = () => {}, onFinish
       const duration = (performance.now()-current.start)/1000;
       const voice = await recordedVoice(current, blob);
       if (capture !== current || generation !== captureGeneration) return;
-      capture = null; closeCapture(current);
+      capture = null; closeCapture(current); reportActivity();
       if (blob.size) clip = URL.createObjectURL(blob);
       // Voice activity is only capture feedback, never a correctness decision.
       onFinish({url:clip,...voice,duration});

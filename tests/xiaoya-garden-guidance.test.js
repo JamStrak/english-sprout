@@ -72,11 +72,14 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     createOscillator(){return {frequency:{},connect(){},start(){calls.chimes++;},stop(){}};}
     createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}};}
   }
-  const audio={playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
+  const audio={onAudioActivity(listener){listener({playing:false,recording:false});return ()=>{};},playSound(file){let resolve;const promise=new Promise(done=>{resolve=done;});sounds.push({file,resolve});return promise;},
     stopSound(){for(const sound of sounds)sound.resolve(false);},cancelRecording(){},cancelRecognition(){},prepareRecording(){return Promise.resolve(true);},
     releaseAudioSession(){audio.stopSound();},speechReady(){return false;}};
   let meadowActions;
-  const sandbox={startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},
+  // Keep controller scheduling deterministic; native cue playback has its own tests.
+  const soundPlayer={play(id){(calls.cues??=[]).push(id);return Promise.resolve(true);},stop(){},setState(){},status:()=>({id:null}),resolve:()=>null};
+  const soundSettings={subscribe:()=>()=>{},reload(){}};
+  const sandbox={soundPlayer,soundSettings,SOUND_SETTINGS_KEY:'xiaoya-english:sounds:v1',queueMicrotask,startAudioPack(){},retryAudioPack(){},audioPackMessage:()=> '全部内置声音已准备好',onAudioPackChange(){},
     retryArtPack(){},artPackMessage:()=> '全部插画已准备好',onArtPackChange(){},installPaperArt(){},
     ...practicePlan,...curriculum,challenge,...challengeUI,gardenMusicSettings,createGardenMusic:()=>({setState(){},retry(){},status(){return {playing:false,blocked:false};}}),createFeedback:()=>({prepare(){},tap(){},play(kind){(calls.effects??=[]).push(kind);},setSilent(){},cancel(){}}),
     ...content,...learning,...stories,...gardenHistory,...seedShop,...voices,...art,...gardenArt,...meadowArt,...meadowUI,
@@ -104,6 +107,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     async finishSound(){assert.ok(sounds.length);sounds.at(-1).resolve(true);await flush();},
     async hidden(value){document.hidden=value;await emit('document','visibilitychange');},
     pagehide:()=>emit('window','pagehide'),
+    pageshow:()=>emit('window','pageshow',{persisted:true}),
     storageEvent:key=>emit('window','storage',{key}),
     async advance(ms){const end=clock+ms;await flush();for(;;){const next=[...timers].filter(([,timer])=>timer.due<=end).sort((a,b)=>a[1].due-b[1].due)[0];if(!next)break;clock=next[1].due;timers.delete(next[0]);next[1].fn();await flush();}clock=end;},
   };
@@ -111,6 +115,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
 
 test('new gardeners get next-step speech; the third planted seed ends automatic speech',async()=>{
   const f=fixture(readySeed(2));f.enterGarden();assert.match(f.html(),/data-guidance="new"/);
+  assert.equal(f.sounds.length,0);await f.advance(319);assert.equal(f.sounds.length,0);await f.advance(1);
   assert.match(f.sounds.at(-1).file,/meadow-seed\.mp3$/);await f.finishSound();
   const before=f.sounds.length;await f.click('meadow-seed');await f.plantAt({x:.7,y:.7});
   assert.equal(f.getGarden().plants.length,3);assert.match(f.html(),/data-guidance="quiet"/);
@@ -122,7 +127,7 @@ test('new gardeners get next-step speech; the third planted seed ends automatic 
 });
 
 test('first planting and bloom give spoken cues; every watering gives its own short effect',async()=>{
-  const f=fixture(readySeed());f.enterGarden();await f.finishSound();
+  const f=fixture(readySeed());f.enterGarden();await f.advance(320);await f.finishSound();
   await f.click('meadow-seed');await f.plantAt({x:.4,y:.65});await f.advance(340);
   assert.match(f.sounds.at(-1).file,/meadow-water-beside\.mp3$/);await f.finishSound();
   await f.click('meadow-can');const count=f.sounds.length,water=f.getGarden().water;
@@ -148,7 +153,7 @@ test('experienced gardeners keep feedback without repeated speech or changes to 
 });
 
 test('15-second idle guidance is one-shot and responds to current state after real activity',async()=>{
-  const f=fixture(readySeed(3));f.enterGarden();
+  const f=fixture(readySeed(3));f.enterGarden();await f.advance(320);
   await f.advance(14999);assert.equal(f.sounds.length,0);await f.advance(1);
   assert.equal(f.sounds.length,1);assert.match(f.sounds[0].file,/meadow-seed\.mp3$/);
   assert.deepEqual(f.guided(),['meadow-seed']);await f.finishSound();await f.advance(60000);
@@ -163,19 +168,20 @@ test('15-second idle guidance is one-shot and responds to current state after re
 
 test('navigation, modal, background and pagehide cancel idle guidance; return waits a fresh 15 seconds',async()=>{
   for(const exit of ['navigate','modal','hidden','pagehide']){
-    const f=fixture(readySeed(3));f.enterGarden();await f.advance(14000);
+    const f=fixture(readySeed(3));f.enterGarden();await f.advance(320);await f.advance(14000);
     const gardenSounds=()=>f.sounds.filter(sound=>!sound.file.includes('/welcome-'));
     if(exit==='navigate')f.navigate('home');else if(exit==='modal')f.openModal({type:'error',message:'test'});
     else if(exit==='hidden')await f.hidden(true);else await f.pagehide();
     await f.advance(60000);assert.equal(gardenSounds().length,0,exit);
-    if(exit==='modal')f.closeModal();else if(exit==='hidden')await f.hidden(false);else f.enterGarden();
+    if(exit==='modal')f.closeModal();else if(exit==='hidden')await f.hidden(false);
+    else if(exit==='pagehide')await f.pageshow();else{f.enterGarden();await f.advance(320);}
     await f.advance(14999);assert.equal(gardenSounds().length,0,exit);await f.advance(1);assert.equal(gardenSounds().length,1,exit);
   }
 });
 
 test('late audio completion cannot resurrect a canceled garden reminder',async()=>{
   for(const exit of [f=>f.navigate('home'),f=>f.openModal({type:'error',message:'test'}),f=>f.hidden(true),f=>f.pagehide()]){
-    const f=fixture(readySeed());f.enterGarden();assert.equal(f.sounds.length,1);
+    const f=fixture(readySeed());f.enterGarden();await f.advance(320);assert.equal(f.sounds.length,1);
     const old=f.sounds[0];await exit(f);old.resolve(true);await flush();await f.advance(60000);
     assert.equal(f.sounds.filter(sound=>!sound.file.includes('/welcome-')).length,1);
   }
@@ -193,7 +199,7 @@ test('the seed tool has no flower preview or duplicate planting pot',async()=>{
 });
 
 test('tapping a grown flower gives visual and sound feedback without spending or claiming mastery',async()=>{
-  const f=fixture(grown(3));f.enterGarden();const before=JSON.stringify(f.getGarden());await f.water('plant-2');
+  const f=fixture(grown(3));f.enterGarden();await f.advance(320);const before=JSON.stringify(f.getGarden());await f.water('plant-2');
   assert.equal(f.getFeedback().plantId,'plant-2');assert.equal(f.getFeedback().kind,'bloom');
   assert.ok(f.plant('plant-2').classList.contains('just-watered'));assert.match(f.html(),/meadow-splash/);
   assert.deepEqual(f.calls.effects,['bloom']);assert.equal(f.sounds.length,0);assert.equal(f.writes.length,0);

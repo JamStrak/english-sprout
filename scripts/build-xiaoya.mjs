@@ -2,15 +2,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-export const XIAOYA_VERSION = '0.22.2';
+export const XIAOYA_VERSION = '0.23.0';
 export const XIAOYA_NAME = '小芽英语·自由花园版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 MODULES.push('blindbox-ui.js', 'seed-appearance.js', 'seed-shop.js', 'economy.css', 'meadow-hit-shapes.js', 'audio-pack.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'story-assets.js', 'story-pictures.js');
 MODULES.push('phrase-pack-v015.js', 'phrase-assets-v015.js');
 MODULES.push('runtime.js', 'garden-history.js', 'welcome-greetings.js', 'garden-music.js');
+MODULES.push('sound-catalog.js', 'sound-settings.js', 'sound-player.js');
 MODULES.push('meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js');
-const INTERNAL_MODULES = ['gm.js', 'gm.css', 'gm-growth.js', 'growth-catalog.js'];
+const INTERNAL_MODULES = ['gm.js', 'gm.css', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -50,7 +51,8 @@ async function gmCatalog(root, audio) {
   }
   return JSON.stringify({images, audio:audio.map(entry => {
     const url = new URL(entry.url, 'https://catalog.invalid/xiaoya/').pathname.slice(1);
-    const voice = url.includes('/phrases-v015/') ? path.posix.basename(url, '.mp3')
+    const voice = url.startsWith('xiaoya/sfx/') ? 'sfx'
+      : url.includes('/phrases-v015/') ? path.posix.basename(url, '.mp3')
       : url.startsWith('xiaoya/audio/') ? 'guide'
       : url.includes('/characters/pip/') ? 'pip' : url.includes('/ryan/') ? 'ryan' : 'aiden';
     return {...entry, url, name:path.posix.basename(url), category:voice};
@@ -76,10 +78,10 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist'), interna
   for (const name of SHARED) files.set(`shared/${name}`, await fs.readFile(path.join(root, 'src', name), 'utf8'));
   const icons = new Map();
   for (const name of ICONS) icons.set(name, await fs.readFile(path.join(root, 'public/xiaoya/icons', name)));
-  // Prepare every shipped voice, including all three English partners. Models
-  // and artwork stay separate; this pack contains only public static MP3s.
+  // Prepare every shipped voice and interaction sound. Models and artwork
+  // stay separate; this pack contains only public static MP3s.
   const audio = [];
-  for (const [directory, url, recursive] of [['public/xiaoya/audio', './audio/v3/', false], ['public/audio', '../audio/', true], ['public/xiaoya/audio/phrases-v015', './audio/phrases-v015/', true]]) {
+  for (const [directory, url, recursive] of [['public/xiaoya/audio', './audio/v3/', false], ['public/audio', '../audio/', true], ['public/xiaoya/audio/phrases-v015', './audio/phrases-v015/', true], ['public/xiaoya/sfx', './sfx/', true]]) {
     for (const name of await soundFiles(path.join(root, directory))) {
       if (!recursive && name.includes('/')) continue;
       const bytes = await fs.readFile(path.join(root, directory, name));
@@ -137,6 +139,21 @@ export async function buildXiaoya({root, dist = path.join(root, 'dist'), interna
     const target = path.join(output, 'audio/phrases-v015', name);
     await fs.mkdir(path.dirname(target), {recursive:true});
     await fs.copyFile(path.join(publicAudio, 'phrases-v015', name), target);
+  }
+  // SFX are also copied when this builder runs without the legacy wrapper.
+  // Only the reviewed public provenance accompanies them, never cache/log files.
+  const publicSfx = path.join(root, 'public/xiaoya/sfx');
+  for (const name of await soundFiles(publicSfx)) {
+    const target = path.join(output, 'sfx', name);
+    await fs.mkdir(path.dirname(target), {recursive:true});
+    await fs.copyFile(path.join(publicSfx, name), target);
+  }
+  const soundSources = await fs.readFile(path.join(publicSfx, 'SOURCES.json')).catch(error => {
+    if (error.code === 'ENOENT') return null; throw error;
+  });
+  if (soundSources) {
+    await fs.mkdir(path.join(output, 'sfx'), {recursive:true});
+    await fs.writeFile(path.join(output, 'sfx/SOURCES.json'), soundSources);
   }
   await fs.mkdir(path.join(output, release, 'shared'), {recursive:true});
   for (const [name, bytes] of files) await fs.writeFile(path.join(output, release, name), bytes);

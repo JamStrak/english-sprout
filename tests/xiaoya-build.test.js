@@ -7,7 +7,7 @@ import {webcrypto} from 'node:crypto';
 import {buildXiaoya} from '../scripts/build-xiaoya.mjs';
 
 const project = path.resolve(import.meta.dirname, '..');
-async function fixture(t,{phrasePack=false,internal=false}={}) {
+async function fixture(t,{phrasePack=false,soundPack=false,internal=false}={}) {
   const scratch = path.join(project, 'test-results', 'tmp');
   await fs.mkdir(scratch, {recursive:true});
   const root = await fs.mkdtemp(path.join(scratch, 'xiaoya-build-'));
@@ -23,8 +23,9 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
     'speech-local.js':"import './speech-assets.js'; import './speech-signal.js'; import '../src/speech-download.js'; export const worker=new URL('./speech-worker.js',import.meta.url);"
   };
   for (const name of ['garden-music.js', 'phrase-pack-v015.js', 'phrase-assets-v015.js', 'story-assets.js', 'story-pictures.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'meadow-hit-shapes.js', 'economy.css', 'seed-shop.js', 'paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'story-art.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden.js', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css']) await fs.writeFile(path.join(root, 'xiaoya', name), modules[name] || '/* public module */');
-  for (const name of ['meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* public garden motion */');
   for (const name of ['speech-match.js', 'speech-download.js']) await fs.writeFile(path.join(root, 'src', name), '/* shared module */');
+  for (const name of ['sound-catalog.js', 'sound-settings.js', 'sound-player.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* shared sound module */');
+  for (const name of ['meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* public garden motion */');
   await fs.writeFile(path.join(root, 'src/speech-local.js'), '/* legacy Vosk: not part of Xiaoya */');
   await fs.writeFile(path.join(root, 'xiaoya', 'private.log'), 'not-public');
   await fs.writeFile(path.join(root, 'xiaoya', 'audio-pack.js'), '/* audio preparation */');
@@ -34,7 +35,7 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
   await fs.writeFile(path.join(root, 'xiaoya', 'welcome-greetings.js'), '/* local welcome rotation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
-  for (const name of ['gm-growth.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal growth workbench */');
+  for (const name of ['gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* internal workbench */');
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/guide-hello.mp3'), new Uint8Array([1,2,3,4,5,6]));
   for (const directory of ['', 'ryan', 'characters/pip']) {
@@ -42,6 +43,13 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
     await fs.writeFile(path.join(root, 'public/audio', directory, 'hello-01.mp3'), new Uint8Array([1,2,3,4,5,6]));
   }
   await fs.writeFile(path.join(root, 'public/xiaoya/audio/private.log'), 'not-public');
+  if (soundPack) {
+    const directory = path.join(root, 'public/xiaoya/sfx');
+    await fs.mkdir(path.join(directory, 'rewards'), {recursive:true});
+    for (const file of ['tap.mp3', 'rewards/coin.mp3']) await fs.writeFile(path.join(directory, file), new Uint8Array([1,2,3,4,5,6]));
+    await fs.writeFile(path.join(directory, 'SOURCES.json'), JSON.stringify({license:'CC0', assets:['tap.mp3','rewards/coin.mp3']}));
+    await fs.writeFile(path.join(directory, 'private.log'), 'not-public');
+  }
   if(phrasePack){
     const directory=path.join(root,'public/xiaoya/audio/phrases-v015/daily-peekaboo');
     await fs.mkdir(directory,{recursive:true});
@@ -126,8 +134,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语·自由花园版 v0\.22\.2<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.22\.2/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.23\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.23\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);
@@ -146,6 +154,7 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/shared/speech-local.js`)), {code:'ENOENT'});
   for (const retired of ['garden.js', 'story-art.js']) await assert.rejects(fs.stat(path.join(built.output, `releases/${built.build}/${retired}`)), {code:'ENOENT'});
   assert.ok(built.core.includes(`./releases/${built.build}/garden-history.js`));
+  for (const name of ['sound-catalog.js', 'sound-settings.js', 'sound-player.js']) assert.ok(built.core.includes(`./releases/${built.build}/${name}`));
   assert.ok(built.core.every(file => !/model-en-us|vosk-0\.0\.8|whisper-tiny-en-v1|\.(mp3|webp|onnx|wasm)$/.test(file)));
   assert.deepEqual([...await fs.readFile(path.join(built.output, 'audio/v3/guide-hello.mp3'))], [1,2,3,4,5,6]);
   await assert.rejects(fs.stat(path.join(built.output, 'audio/v3/private.log')), {code:'ENOENT'});
@@ -163,30 +172,31 @@ test('public is the default and contains no GM entry, workbench, stylesheet or a
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = false/);
   assert.doesNotMatch(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /gm\.js/);
   assert.ok(!built.core.some(file => /\/gm[.-]/.test(file)));
-  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-growth.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
-  await assert.rejects(fs.stat(path.join(built.output, 'growth')), {code:'ENOENT'});
+  for (const file of ['gm.js', 'gm.css', 'gm-catalog.json', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js']) await assert.rejects(fs.stat(path.join(release, file)), {code:'ENOENT'});
   for (const file of ['meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
+  await assert.rejects(fs.stat(path.join(built.output, 'growth')), {code:'ENOENT'});
   assert.ok(built.core.includes(`./releases/${built.build}/runtime.js`));
   assert.ok(built.core.includes(`./releases/${built.build}/build-config.js`));
 });
 
 test('explicit internal builds fingerprint their channel and catalogue all static artwork and shipped audio', async t => {
-  const built = await fixture(t, {phrasePack:true,internal:true});
+  const built = await fixture(t, {phrasePack:true,soundPack:true,internal:true});
   const release = path.join(built.output, 'releases', built.build);
   assert.equal(built.channel, 'internal');
   assert.equal(JSON.parse(await fs.readFile(path.join(built.output, 'version.json'), 'utf8')).channel, 'internal');
   assert.match(await fs.readFile(path.join(release, 'app.js'), 'utf8'), /import '\.\/gm\.js'/);
   assert.match(await fs.readFile(path.join(release, 'build-config.js'), 'utf8'), /INTERNAL_BUILD = true/);
-  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-growth.js','growth-core.js', 'growth-motion.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
+  for (const file of ['gm.js','gm.css','gm-catalog.json','gm-sounds.js','gm-growth.js','growth-core.js', 'growth-motion.js','growth-settings.js','growth-catalog.js']) assert.ok(built.core.includes(`./releases/${built.build}/${file}`));
   const catalogue = JSON.parse(await fs.readFile(path.join(release, 'gm-catalog.json'), 'utf8'));
   assert.equal(catalogue.images.length, 7);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/growth/v09/flower.webp'));
-  assert.equal(catalogue.audio.length, 8);
+  assert.equal(catalogue.audio.length, 10);
   assert.ok(catalogue.images.some(entry => entry.url === 'xiaoya/stories/goodbye-v2.webp' && entry.category === 'stories'));
   assert.ok(!catalogue.images.some(entry => entry.url.endsWith('.svg')), 'The workbench does not offer retired SVG fallbacks');
   assert.ok(catalogue.audio.some(entry => entry.url === 'audio/characters/pip/hello-01.mp3' && entry.category === 'pip'));
   assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/phrases-v015/daily-peekaboo/hint.mp3' && entry.category === 'hint'));
   assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/audio/v3/guide-hello.mp3' && entry.category === 'guide'));
+  assert.ok(catalogue.audio.some(entry => entry.url === 'xiaoya/sfx/tap.mp3' && entry.category === 'sfx'));
   for (const entry of [...catalogue.images,...catalogue.audio]) {
     assert.ok(entry.bytes > 0 && entry.name && /^[a-f0-9]{64}$/.test(entry.sha256));
     assert.ok(!entry.url.startsWith('/') && !entry.url.includes('..') && !entry.url.includes('private'));
@@ -265,6 +275,33 @@ test('new phrase voices are copied, fingerprinted and ready for first playback o
   await assert.rejects(fs.stat(path.join(built.output,'audio/phrases-v015/daily-peekaboo/private.log')),{code:'ENOENT'});
   await fs.appendFile(path.join(built.root,'public/xiaoya/audio/phrases-v015/daily-peekaboo/pip.mp3'),'changed');
   assert.notEqual((await buildXiaoya({root:built.root})).build,built.build);
+});
+
+test('SFX ship independently with provenance, fingerprint the pack and support first playback offline', async t => {
+  for (const internal of [false, true]) {
+    const built = await fixture(t, {soundPack:true,internal}), sw = await worker(built);
+    const manifest = JSON.parse(await fs.readFile(path.join(built.output, `releases/${built.build}/audio-pack.json`), 'utf8'));
+    const sounds = manifest.filter(entry => entry.url.startsWith('./sfx/'));
+    assert.deepEqual(sounds.map(entry => entry.url), ['./sfx/rewards/coin.mp3', './sfx/tap.mp3']);
+    assert.ok(sounds.every(entry => entry.bytes === 6 && /^[a-f0-9]{64}$/.test(entry.sha256)));
+    assert.ok(!manifest.some(entry => entry.url.includes('SOURCES.json') || entry.url.includes('private.log')));
+    assert.deepEqual(await fs.readFile(path.join(built.output, 'sfx/SOURCES.json')), await fs.readFile(path.join(built.root, 'public/xiaoya/sfx/SOURCES.json')));
+    await assert.rejects(fs.stat(path.join(built.output, 'sfx/private.log')), {code:'ENOENT'});
+    await sw.lifecycle('install');
+    const requests = sw.fetched.length;
+    sw.setOnline(false);
+    for (const sound of sounds) {
+      assert.deepEqual([...await fs.readFile(path.join(built.output, sound.url))], [1,2,3,4,5,6]);
+      const response = await sw.fetchRequest(new Request(new URL(sound.url, sw.scope), {headers:{Range:'bytes=1-3'}}));
+      assert.equal(response.status, 206, `${sound.url} must work before its first online playback`);
+      assert.deepEqual([...new Uint8Array(await response.arrayBuffer())], [2,3,4]);
+    }
+    assert.equal(sw.fetched.length, requests, 'First offline SFX playback must not request the network');
+    await fs.appendFile(path.join(built.root, 'public/xiaoya/sfx/tap.mp3'), 'updated sound');
+    assert.notEqual((await buildXiaoya({root:built.root,internal})).build, built.build, 'Changed SFX bytes invalidate the release');
+    await fs.writeFile(path.join(built.root, 'public/xiaoya/sfx/tap.mp3'), '');
+    await assert.rejects(buildXiaoya({root:built.root,internal}), /Empty built-in voice/);
+  }
 });
 
 test('corrupt voices block activation and retry resumes from the verified partial pack', async t => {
