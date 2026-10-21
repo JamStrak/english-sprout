@@ -32,13 +32,19 @@ async function finishHomeWelcome(f){
   f.advance(400);assert.match(f.sounds.at(-1).file,/welcome-.*\.mp3$/);
   assert.deepEqual(f.hinted(),[],'No hand should interrupt the welcome voice');
   f.sounds.at(-1).resolve(true);await flush();
+  await f.actions['open-welcome-gift']();
+  f.advance(500);f.advance(360);
+  assert.match(f.sounds.at(-1).file,/welcome-gift-(?:shell|water)\.mp3$/);
+  assert.deepEqual(f.hinted(),[],'The gift remains the only action until its reveal finishes');
+  f.sounds.at(-1).resolve(true);await flush();
+  f.advance(2040);f.advance(420);
 }
-function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false,manualFade=false}={}){
+function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWrite=()=>false,manualFade=false}={}){
   let nodes=[],primaryWraps=[],html='',timerId=0,renders=0,now=0;
   const images=[];
   const documentListeners=new Map();
   const timers=new Map(),sounds=[],fades=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
-  const classList=initial=>{const classes=new Set(initial.split(/\s+/));return {toggle(name,on){if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)};};
+  const classList=initial=>{const classes=new Set(initial.split(/\s+/));return {add:name=>classes.add(name),remove:name=>classes.delete(name),toggle(name,on){if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)};};
   function parse(markup){return [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map(match=>{
     const [,attributes,body]=match;
     const attrs=Object.fromEntries([...attributes.matchAll(/([\w-]+)(?:="([^"]*)")?/g)].map(([,name,value])=>[name,value??'']));
@@ -53,7 +59,11 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
       const pictureId=selector.match(/^\[data-picture-id="([^"]+)"\]$/)?.[1];if(pictureId)return html.includes(`data-picture-id="${pictureId}"`)?{}:null;
       const action=selector.match(/^\[data-action="([^"]+)"\]$/)?.[1];return action?nodes.find(node=>node.dataset.action===action):null;},
     querySelectorAll(selector){return selector==='.primary-wrap'?primaryWraps:selector==='[data-action]'?nodes.filter(node=>node.dataset.action):[];},
-    addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},body:{append(){},addEventListener(){},dispatchEvent(){}},createElement(){return {dataset:{},setAttribute(){},querySelector(){return {addEventListener(){}};},remove(){}};}};
+    addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},
+    body:{append(){},addEventListener(){},dispatchEvent(){},classList:classList('')},
+    createElement(){return {dataset:{},innerHTML:'',open:false,setAttribute(){},addEventListener(){},focus(){},remove(){},
+      get firstElementChild(){return this.innerHTML?{}:null;},showModal(){this.open=true;},close(){this.open=false;},
+      querySelector(selector){return selector==='button'&&this.innerHTML.includes('<button')?{setAttribute(){},addEventListener(){},focus(){}}:null;}};}};
   const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');writes.push({key,value});stored?.set(key,value);}};
   const audio={playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
     fadeOutSound(){const pending=deferred();fades.push(pending);if(!manualFade)pending.resolve();return pending.promise;},
@@ -70,16 +80,16 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
     challenge:{...challenge,
       recordChallengeAttempt:(state,input)=>challenge.recordChallengeAttempt(state,JSON.parse(JSON.stringify(input))),
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
-    location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
+    location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},performance:{now:()=>now},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
   Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
-    setPage(value){page=value;session=null;modal=null;render();},
-    setGarden(value){meadowState=value;page='garden';session=null;modal=null;render();},
-    setMeadowReward(value){meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
-    setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
+    setPage(value){cancelWelcomeGift();page=value;session=null;modal=null;render();},
+    setGarden(value){cancelWelcomeGift();meadowState=value;page='garden';session=null;modal=null;render();},
+    setMeadowReward(value){cancelWelcomeGift();meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
+    setSession(overrides={}){cancelWelcomeGift();const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
   return {...sandbox.ui,document,documentListeners,sounds,fades,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
     primaryWraps:()=>primaryWraps,
     hinted:()=>primaryWraps.filter(wrap=>wrap.classList.contains('is-idle-hint')).map(wrap=>wrap.querySelector('[data-primary]').dataset.action),
@@ -584,8 +594,8 @@ test('the hand stays quiet during recording, recognition, teaching and unresolve
   }
 });
 
-test('modal and background transitions cancel the hand; returning starts a fresh interval',()=>{
-  const f=fixture();f.advance(15000);f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
+test('modal and background transitions cancel the hand; returning starts a fresh interval',async()=>{
+  const f=fixture();await finishHomeWelcome(f);f.advance(15000);f.openModal({type:'mic'});assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
   f.advance(30000);assert.deepEqual(f.hinted(),[]);f.actions.close();f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
   f.document.hidden=true;f.dispatch('visibilitychange');assert.deepEqual(f.hinted(),[]);assert.equal(f.idleHintTarget(),null);
   f.advance(30000);assert.deepEqual(f.hinted(),[]);f.document.hidden=false;f.dispatch('visibilitychange');
@@ -634,9 +644,9 @@ test('leaving, backgrounding or confirming during the fade cannot resurrect prev
   }
 });
 
-test('disabled, busy, hidden or competing primary buttons cannot receive an idle hand',()=>{
+test('disabled, busy, hidden or competing primary buttons cannot receive an idle hand',async()=>{
   for(const unavailable of ['disabled','busy','hidden','competing']){
-    const f=fixture(),button=f.button('next-event');
+    const f=fixture();await finishHomeWelcome(f);const button=f.button('next-event');
     if(unavailable==='disabled')button.disabled=true;
     if(unavailable==='busy')button.attrs['aria-busy']='true';
     if(unavailable==='hidden')button.visible=false;

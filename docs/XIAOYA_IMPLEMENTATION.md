@@ -1,5 +1,23 @@
 # 小芽英语 · 实施记录
 
+## v0.22.1 · 居中单击拆开每日礼物（2026-10-21）
+
+接续 `ad4bb7e`，分支 `codex/xiaoya-garden-ab`。按用户指定的实验室 [gifts-v08 原型](http://127.0.0.1:24861/api/studies/610f2d54d7e6/prototype/gifts-v08.html) 复用纸艺礼盒和浮动、光环、拆开、揭晓动效，适配正式每日领取逻辑。来源记录见 `design/xiaoya-gift-v08-source.json`；没有新增媒体、依赖或服务。
+
+- 礼物位于视口中心，黑色 48% 半透明衬底，只有礼物可操作。点一次原地拆开，展示到账资源、播放用途语音，收好后自动淡出回首页；删除独立领取页及第二次确认。原生 dialog 配合背景 inert，阻止误点和键盘焦点漏到首页；同时修复 GM 延迟挂载时漏设 inert 的竞争问题。
+- 先原子保存再揭晓；每天数量及贝壳/水滴轮替不变。同日刷新、双标签、重复点击仍防重。保存失败保留可重试机会；导航、后台、打开 GM 会取消旧计时器与语音。揭晓至少停留 2.4 秒，语音结束后关闭，7 秒兜底；减少动态效果时不强行播放缩放摇动。
+- GM 流程预览沿用免录音沙盒，不写儿童存档。侧栏交付链接带 `gm=test&gmWelcome=shells`，即使今天已领，也能重新查看礼物；刷新可重测，退出测试回真实记录。
+- 内测 **0.22.1 / 3ba7adc6793b**，公开 **0.22.1 / 793ed70a71e0**。最终 dist 为内测，未部署。声音仍为 849 段 / 16,178,128 字节，内测图片 492 张 / 33,120,438 字节。
+
+验证：
+
+- `npm test` **786/786**（`test-results/welcome-v0221-unit-fixed.log`）。相关界面假 DOM 更新为原生 dialog，并让非礼物测试先完成欢迎前置，不放松账本断言。
+- 欢迎礼物浏览器 **14/14**（`test-results/xiaoya-welcome-browser/report.json`），覆盖实际预制问候/用途 MP3、单击领取、五阶段、桌面/320px/横屏、刷新/时钟回退/重复/双标签防重、存储失败重试、后台取消及 GM 隔离。已目视检查桌面待拆和窄屏到账截图。
+- GM **10/10**（`test-results/xiaoya-v0221-gm/results.json`），公开排除 **1/1**（`test-results/xiaoya-v0221-public/results.json`），[旧产品浏览器 **36/36**](UI_QA_xiaoya-v0221-legacy.md)。`npm run build` 与 `npm run build:dev` 均通过，最终日志 `test-results/welcome-v0221-final-internal-build.log`。
+- 本机 24756 健康身份、HTTP 版本及构建专属入口已核对，见 `test-results/welcome-v0221-final-http.json`。侧栏实开 v0.22.1 礼物沙盒，只暴露一个“打开小芽送的小礼物”按钮；留在待拆状态供用户验收，截图 `test-results/welcome-v0221-sidebar.png`。
+
+本轮未重跑 Python 启动器、完整离线下载、成长动效及独立 BGM 全套；实体触控、真实扬声器听感和最终动效观感待用户验收。交付提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询。
+
 ## v0.22.0 · GM 花朵成长动效调试（2026-10-21）
 
 接续 `53619c9`，分支 `codex/xiaoya-garden-ab`。用户希望逐滴浇水有柔性左右摆动、淡化换阶段与弹动长大的反馈。本次复用现有 50 花 / 268 图的 GM 成长审核，不新增素材依赖；候选花尚未进入儿童花园、商店或挑战，动效参数目前只控制审核预览。

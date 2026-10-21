@@ -51,7 +51,7 @@ async function serve() {
 }
 
 async function fixture(width = 1180, height = 900, options = {}) {
-  const context = await browser.newContext({viewport:{width,height}, timezoneId:'Asia/Shanghai', serviceWorkers:'block', reducedMotion:'reduce', hasTouch:width<600, isMobile:width<600});
+  const context = await browser.newContext({viewport:{width,height}, timezoneId:'Asia/Shanghai', serviceWorkers:'block', reducedMotion:options.motion ? 'no-preference' : 'reduce', hasTouch:width<600, isMobile:width<600});
   const f = {context, pages:[], requests:[], errors:[], microphone:0, width, height};
   await context.exposeBinding('qaWelcomeMicAccess', () => { f.microphone++; });
   context.on('request', request => f.requests.push(request.url()));
@@ -164,8 +164,40 @@ async function press(page, selector) {
   else await page.mouse.click(point.x,point.y);
 }
 async function openGift(page) {
-  await press(page, '[data-action="welcome-gift"]');
-  await page.locator('main.welcome-gift-view[data-gift-phase="wrapped"]').waitFor();
+  // The daily gift is already in front of home: do not click an entry or
+  // navigate to a second page just to expose the actual opening action.
+  await page.locator('.welcome-gift-overlay[role="dialog"][data-gift-phase="wrapped"]').waitFor();
+  assert.equal(await page.locator('main.welcome-gift-view,[data-action="welcome-play"]').count(), 0);
+}
+async function giftGone(page) {
+  await page.locator('.welcome-gift-overlay').waitFor({state:'hidden',timeout:11000});
+  await page.locator('main.home-view').waitFor();
+  assert.equal(await page.locator('.app-shell').evaluate(element => element.inert), false);
+}
+async function purposeAudio(page, kind) {
+  const filename = kind === 'shells' ? 'welcome-gift-shell.mp3' : 'welcome-gift-water.mp3';
+  await page.waitForFunction(filename => qaWelcome.play.some(item => item.url.includes(filename) && item.playing && item.ended), filename);
+  return page.evaluate(filename => qaWelcome.play.find(item => item.url.includes(filename) && item.playing && item.ended), filename);
+}
+async function overlayGeometry(page) {
+  const result = await page.locator('.welcome-gift-overlay').evaluate(element => {
+    const button = element.querySelector('[data-action="open-welcome-gift"]');
+    const box = element.getBoundingClientRect(), gift = button?.getBoundingClientRect();
+    const colors = [getComputedStyle(element).backgroundColor, getComputedStyle(element,'::before').backgroundColor, getComputedStyle(element,'::backdrop').backgroundColor];
+    const blocked = [...document.querySelectorAll('.app-shell,.gm-launcher,.gm-testbar')].every(node => node.inert || Boolean(node.closest('[inert]')));
+    const actionable = [...document.querySelectorAll('button,a[href],input,select,textarea,[tabindex]')].filter(node =>
+      node.getClientRects().length && !node.disabled && node.tabIndex >= 0 && !node.closest('[inert]') && !node.closest('dialog:not([open])')).map(node => node.dataset.action || node.dataset.gmAction || node.tagName);
+    return {width:innerWidth,height:innerHeight,box:{left:box.left,top:box.top,width:box.width,height:box.height},
+      gift:gift && {centerX:gift.x+gift.width/2,centerY:gift.y+gift.height/2,width:gift.width,height:gift.height},
+      colors,blocked,actionable,ariaModal:element.getAttribute('aria-modal')};
+  });
+  assert.equal(result.ariaModal,'true');
+  assert(result.blocked, 'The gift did not make the home and GM controls inert');
+  assert.deepEqual(result.actionable,['open-welcome-gift'], 'The gift should be the only actionable control');
+  assert(Math.abs(result.box.left) < 2 && Math.abs(result.box.top) < 2 && result.box.width >= result.width-2 && result.box.height >= result.height-2, 'Gift scrim does not cover the viewport');
+  assert(Math.abs(result.gift.centerX-result.width/2) < 8 && Math.abs(result.gift.centerY-result.height/2) < 28, `Gift is not centered: ${JSON.stringify(result.gift)}`);
+  assert(result.colors.some(color => /^rgba\(0, 0, 0, 0\.[3-8]\d*\)$/.test(color)), `Expected a black translucent scrim, found ${result.colors}`);
+  return result;
 }
 async function paperGift(page, action) {
   const selector = `[data-action="${action}"] [data-paper-art="gift-box"]`;
@@ -183,7 +215,7 @@ async function paperGift(page, action) {
 }
 async function claim(page, kind) {
   await press(page, '[data-action="open-welcome-gift"]');
-  await page.locator(`main.welcome-gift-view[data-gift-phase="opened"][data-gift-kind="${kind}"]`).waitFor();
+  await page.locator(`.welcome-gift-overlay[data-gift-phase="opened"][data-gift-kind="${kind}"]`).waitFor();
 }
 async function noLearning(f, page = f.page) {
   assert.deepEqual(await learningSnapshot(page), f.learning, 'A welcome gift changed learning, review, or challenge records');
@@ -260,58 +292,34 @@ async function main() {
   origin = await serve();
   browser = await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--autoplay-policy=no-user-gesture-required']});
 
-  await check('automatic-welcome-once-cancels-and-returns-next-day', async f => {
+  await check('automatic-centered-gift-one-operation-and-native-greeting', async f => {
     const p = f.page;
+    await openGift(p);
     const first = await greetingAudio(p, {ended:false});
     assert.equal(greetingId(first), 'welcome-gift-first', 'A new child received a returning-child greeting');
-    assert.equal(await p.locator('main.welcome-gift-view,[role="dialog"]').count(), 0, 'The automatic hello forced a popup');
-    assert.equal(await savedMeadow(p), null, 'The automatic hello gave an unclaimed reward');
-    assert.equal(await p.evaluate(() => qaWelcome.activeGreetings()), 1);
-    await press(p, 'header [data-action="parent"]');
-    await p.locator('[role="dialog"]').waitFor();
-    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
-    assert.equal((await p.evaluate(() => qaWelcome.play[0])).ended, false, 'The parent dialog did not interrupt a live greeting');
-    await press(p, '[role="dialog"] [data-action="close"]');
-    const afterDialog = await greetingCount(p);
-    await p.waitForTimeout(800);
-    assert.equal(await greetingCount(p), afterDialog, 'Closing the parent dialog repeated the automatic welcome');
-
-    // A gift tap is an intentional replay; going home cancels that replay and
-    // must not create another automatic greeting in the same page session.
-    const replayFrom = await p.evaluate(() => qaWelcome.play.length);
+    assert.equal(await savedMeadow(p), null, 'Showing a gift granted it before a click');
+    const geometry = await overlayGeometry(p);
+    // Native dialogs may allow Tab to reach browser chrome; they must never focus a background control.
+    for (const key of ['Tab','Shift+Tab']) {
+      await p.keyboard.press(key);
+      const focus = await p.evaluate(() => ({focused:document.hasFocus(),tag:document.activeElement?.tagName,
+        action:document.activeElement?.dataset.action,inside:!!document.activeElement?.closest('.welcome-gift-overlay')}));
+      assert(focus.inside || !focus.focused, `${key} focused background content: ${JSON.stringify(focus)}`);
+    }
+    await p.keyboard.press('Escape');
+    await p.mouse.click(8,8);
     await openGift(p);
-    await greetingAudio(p, {from:replayFrom,ended:false});
-    await press(p, 'header [data-action="home"]');
-    await p.locator('main.home-view').waitFor();
+    assert.equal(await savedMeadow(p), null, 'A backdrop click collected or dismissed the gift');
+    await claim(p,'shells');
     await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
-    const afterHome = await greetingCount(p);
+    const nativePurpose = await purposeAudio(p,'shells');
+    await giftGone(p);
+    assert.equal((await bridge(p,'inspect')).page,'home', 'Collecting automatically navigated away from home');
+    const afterGift = await greetingCount(p);
     await p.waitForTimeout(800);
-    assert.equal(await greetingCount(p), afterHome, 'Returning home repeated a same-session hello');
-
-    // Reload represents a fresh open. Starting the lesson must immediately
-    // cancel its welcome, with no recording permission or learned evidence.
-    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
-    await greetingAudio(p, {ended:false});
-    await press(p, '.home-view [data-action="next-event"]');
-    await p.locator('main.event-view').waitFor();
-    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
-    await press(p, 'header [data-action="home"]');
-    await p.locator('main.home-view').waitFor();
-    const beforeNewDay = await greetingCount(p);
-    await p.waitForTimeout(800);
-    assert.equal(await greetingCount(p), beforeNewDay);
-    const newDayFrom = await p.evaluate(() => qaWelcome.play.length);
-    await p.evaluate(day => { qaWelcome.setDay(day); qaWelcome.setHidden(false); }, SECOND_DAY);
-    const nextDay = await greetingAudio(p, {from:newDayFrom,ended:false});
-    assert.equal(await greetingCount(p), beforeNewDay+1, 'Returning on another local day did not greet once');
-    await p.evaluate(() => qaWelcome.setHidden(true));
-    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
-    await p.evaluate(() => qaWelcome.setHidden(false));
-    await p.waitForTimeout(800);
-    assert.equal(await greetingCount(p), beforeNewDay+1, 'A same-day foreground event repeated the welcome');
-    assert.equal(await savedMeadow(p), null);
+    assert.equal(await greetingCount(p),afterGift,'Gift closure repeated the greeting');
     await noLearning(f);
-    return {first,nextDay,parentDialogCancels:true,lessonCancels:true,simulatedBackgroundCancelsNativeMedia:true,sameSessionRepeat:false};
+    return {geometry,first,nativePurpose,oneClick:true,backgroundBlocked:true,autoClosed:true};
   }, undefined,undefined,{slowWelcome:true});
 
   await check('returning-welcome-six-day-shuffle-refresh-stability', async f => {
@@ -321,71 +329,57 @@ async function main() {
     for (let day = 22; day <= 27; day++) {
       const date = `2026-10-${day}`;
       await p.evaluate(date => qaWelcome.setDay(date), date);
-      await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+      await p.reload({waitUntil:'domcontentloaded'}); await openGift(p);
       const audio = await greetingAudio(p), chosen = await savedGreeting(p);
       assert.match(greetingId(audio), /^welcome-hello-0[1-6]$/, 'Returning greetings did not use a prepared variant MP3');
       assert.equal(chosen.id, greetingId(audio));
       assert.equal(chosen.date, date);
       choices.push({date,id:chosen.id,nativeAudio:audio});
-      await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+      await p.reload({waitUntil:'domcontentloaded'}); await openGift(p);
       const refreshed = await greetingAudio(p);
       assert.equal(greetingId(refreshed), chosen.id, 'Refreshing rerolled today\'s greeting');
       assert.deepEqual(await savedGreeting(p), chosen, 'Refresh consumed another greeting from the rotation');
-      if (day === 22) {
-        const from = await p.evaluate(() => qaWelcome.play.length);
-        await openGift(p);
-        const explicitReplay = await greetingAudio(p, {from});
-        assert.equal(greetingId(explicitReplay), chosen.id, 'Gift entry did not replay the same daily welcome');
-        assert.deepEqual(await savedGreeting(p), chosen);
-      }
     }
     assert.equal(new Set(choices.map(choice => choice.id)).size, 6, 'A greeting repeated before all six variants were heard');
     await p.evaluate(() => qaWelcome.setDay('2026-10-28'));
-    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+    await p.reload({waitUntil:'domcontentloaded'}); await openGift(p);
     const nextCycle = await greetingAudio(p);
-    assert.notEqual(greetingId(nextCycle), choices.at(-1).id, 'The two shuffle cycles repeated the same greeting on adjacent days');
+    assert.notEqual(greetingId(nextCycle), choices.at(-1).id, 'Adjacent shuffle cycles repeated the same greeting');
     await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
     await noLearning(f);
     return {choices,nextCycle:greetingId(nextCycle),sameDayStable:true,allSixNativeFilesDecoded:true};
   });
 
-  await check('autoplay-denial-silent-gift-tap-recovers-native-audio', async f => {
+  await check('autoplay-denial-does-not-block-single-click-reward-audio', async f => {
     const p = f.page;
+    await openGift(p);
     await p.waitForFunction(() => qaWelcome.play.some(item => item.rejected === 'NotAllowedError'));
     const denied = await p.evaluate(() => qaWelcome.play.find(item => item.rejected === 'NotAllowedError'));
     assert.equal(denied.playing, false);
     await p.waitForTimeout(650);
-    assert.equal(await p.locator('.toast,[role="dialog"]').count(), 0, 'Expected autoplay denial displayed an error or a gate');
+    assert.equal(await p.locator('.toast,#modal-root [role="dialog"]').count(), 0, 'Expected autoplay denial displayed an error');
     assert.equal(await greetingCount(p), 1, 'Blocked autoplay retried without a child gesture');
-    const choice = await savedGreeting(p), from = await p.evaluate(() => qaWelcome.play.length);
-    await openGift(p);
-    const recovered = await greetingAudio(p, {from});
-    assert.equal(greetingId(recovered), greetingId(denied), 'A retry changed the selected greeting');
-    assert.deepEqual(await savedGreeting(p), choice);
-    assert.equal(recovered.rejected, null, 'The recovery did not use native media playback');
+    await claim(p,'shells');
+    const recovered = await purposeAudio(p,'shells');
+    assert.equal(recovered.rejected, null, 'A gift click failed to unlock native reward playback');
     assert.equal(await p.locator('.toast').count(), 0);
-    assert.equal(await savedMeadow(p), null);
-    await noLearning(f);
-    return {denied,recovered,errorToast:false,syntheticFailureCount:1,nativeGestureRecovery:true};
+    await giftGone(p); await noLearning(f);
+    return {denied,recovered,syntheticFailureCount:1,nativeGestureRecovery:true};
   }, undefined,undefined,{blockWelcomeOnce:true});
 
-  await check('optional-gift-persistent-idempotent-no-learning', async f => {
+  await check('single-click-persistent-idempotent-no-learning', async f => {
     const p = f.page;
-    assert.equal(await p.locator('main.welcome-gift-view,[role="dialog"]').count(), 0, 'Home must not force a welcome popup');
-    assert.equal(await p.locator('.home-view .primary-wrap').count(), 1, 'The learning primary action remains singular');
-    assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 1);
-    assert.equal(await savedMeadow(p), null, 'Showing home must not give a reward');
     await openGift(p);
-    assert.equal(await savedMeadow(p), null, 'Looking at an unopened gift must not claim it');
-    await claim(p, 'shells');
+    assert.equal(await p.locator('.home-view .primary-wrap').count(), 1);
+    assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 0, 'Obsolete side entry remains');
+    assert.equal(await savedMeadow(p), null);
+    await claim(p,'shells');
     const wallet = await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
     assert.equal((await noLearning(f)).welcomeGifts, 1);
-    await press(p, '[data-action="welcome-gift-voice"]');
-    await p.waitForFunction(() => qaWelcome.play.some(item => /welcome-gift-shell\.mp3(?:\?|$)/.test(item.url) && item.playing && item.ended));
-    const shellAudio = await p.evaluate(() => qaWelcome.play.find(item => /welcome-gift-shell\.mp3(?:\?|$)/.test(item.url) && item.playing && item.ended));
-    await p.reload({waitUntil:'domcontentloaded'});
-    await p.locator('main.home-view').waitFor();
-    assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 0, 'A same-day gift reappeared after refresh');
+    const shellAudio = await purposeAudio(p,'shells');
+    await giftGone(p);
+    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+    assert.equal(await p.locator('.welcome-gift-overlay:visible').count(), 0, 'Same-day gift reappeared after refresh');
     await p.waitForTimeout(650);
     assert.equal(await greetingCount(p), 0, 'A claimed daily gift announced another surprise after refresh');
     await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
@@ -397,46 +391,88 @@ async function main() {
     const p = f.page;
     await openGift(p); await claim(p,'shells');
     await p.evaluate(day => qaWelcome.setDay(day), SECOND_DAY);
-    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
-    await openGift(p); await claim(p,'water');
+    await p.reload({waitUntil:'domcontentloaded'}); await openGift(p); await claim(p,'water');
     const expected = {shells:1,water:1,gifts:[{date:FIRST_DAY,kind:'shells'},{date:SECOND_DAY,kind:'water'}]};
     const wallet = await verifyGift(p, expected);
-    await press(p, '[data-action="welcome-gift-voice"]');
-    await p.waitForFunction(() => qaWelcome.play.some(item => /welcome-gift-water\.mp3(?:\?|$)/.test(item.url) && item.playing && item.ended));
-    await press(p, 'main.welcome-gift-view [data-action="garden"]');
-    await p.locator('main.meadow-view').waitFor();
+    const waterAudio = await purposeAudio(p,'water');
+    await giftGone(p);
     await noLearning(f);
     await p.evaluate(day => qaWelcome.setDay(day), FIRST_DAY);
     await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
-    assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 0, 'Turning the clock back allowed another gift');
+    assert.equal(await p.locator('.welcome-gift-overlay:visible').count(), 0, 'Turning the clock back allowed another gift');
     await verifyGift(p, expected); await noLearning(f);
-    return {wallet,waterPurposeAudioDecoded:true,gardenEntryWorks:true,clockRollbackReward:false};
+    return {wallet,waterAudio,homeAfterGift:true,clockRollbackReward:false};
   });
 
-  await check('purpose-audio-cancels-pending-lesson-navigation', async f => {
+  await check('rapid-clicks-reveal-once-and-auto-close-without-lesson', async f => {
     const p = f.page;
-    await openGift(p); await claim(p,'shells');
-    const firstPlay = await p.evaluate(() => qaWelcome.play.length);
-    await press(p, '[data-action="welcome-play"]');
-    await p.waitForFunction(from => qaWelcome.play.slice(from).some(item => /welcome-gift-play\.mp3(?:\?|$)/.test(item.url) && item.playing && !item.ended), firstPlay);
-    const purposePlay = await p.evaluate(() => qaWelcome.play.length);
-    await press(p, '[data-action="welcome-gift-voice"]');
-    await p.waitForFunction(from => qaWelcome.play.slice(from).some(item => /welcome-gift-shell\.mp3(?:\?|$)/.test(item.url) && item.playing && !item.ended), purposePlay);
-    assert.equal((await bridge(p,'inspect')).page, 'welcome-gift', 'Cancelled continue audio navigated away while gift-purpose audio was playing');
-    await p.waitForFunction(from => qaWelcome.play.slice(from).some(item => /welcome-gift-shell\.mp3(?:\?|$)/.test(item.url) && item.playing && item.ended), purposePlay);
-    assert.equal((await bridge(p,'inspect')).page, 'welcome-gift', 'Hearing the gift purpose unexpectedly started a lesson');
-    const cancelledContinue = await p.evaluate(from => qaWelcome.play.slice(from).find(item => /welcome-gift-play\.mp3(?:\?|$)/.test(item.url)), firstPlay);
-    assert.equal(cancelledContinue.ended, false, 'The test did not cancel an active continue narration');
+    await openGift(p);
+    const target = await p.locator('[data-action="open-welcome-gift"]').boundingBox();
+    await p.mouse.click(target.x+target.width/2,target.y+target.height/2,{clickCount:3,delay:30});
+    await p.locator('.welcome-gift-overlay[data-gift-phase="opened"]').waitFor();
+    await verifyGift(p,{shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
+    await purposeAudio(p,'shells');
+    await giftGone(p);
+    assert.equal((await bridge(p,'inspect')).page,'home');
+    assert.equal(await p.locator('main.event-view').count(),0,'Gift closure started a lesson without its own click');
+    await press(p,'.home-view [data-action="next-event"]');
+    await p.locator('main.event-view').waitFor();
     await noLearning(f);
-    const retryPlay = await p.evaluate(() => qaWelcome.play.length);
-    await press(p, '[data-action="welcome-play"]');
-    await p.locator('main.event-view').waitFor({timeout:30000});
-    const completedContinue = await p.evaluate(from => qaWelcome.play.slice(from).find(item => /welcome-gift-play\.mp3(?:\?|$)/.test(item.url) && item.playing && item.ended), retryPlay);
-    assert(completedContinue, 'Retry entered learning before its continue narration finished');
-    await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
-    await noLearning(f);
-    return {cancelledContinue,completedContinue,purposeStayedOnGiftPage:true,retryStartsLesson:true};
+    return {clicks:3,rewards:1,automaticLesson:false,lessonButtonWorks:true};
   });
+
+  await check('background-cancels-unclaimed-hello-and-durable-opening', async f => {
+    const p = f.page;
+    await openGift(p); await greetingAudio(p,{ended:false});
+    await p.evaluate(() => qaWelcome.setHidden(true));
+    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
+    assert.equal(await savedMeadow(p),null);
+    await p.evaluate(() => qaWelcome.setHidden(false));
+    await openGift(p);
+    await p.waitForTimeout(800);
+    assert.equal(await greetingCount(p),1,'Foreground repeated a same-session greeting');
+    await press(p,'[data-action="open-welcome-gift"]');
+    await p.waitForFunction(key => JSON.parse(localStorage.getItem(key) || 'null')?.welcomeGifts?.length === 1,MEADOW_KEY);
+    await p.evaluate(() => qaWelcome.setHidden(true));
+    await p.waitForTimeout(700);
+    await p.evaluate(() => qaWelcome.setHidden(false));
+    await giftGone(p);
+    await verifyGift(p,{shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
+    await p.waitForTimeout(800);
+    assert.equal(await p.locator('.welcome-gift-overlay:visible').count(),0,'A cancelled opening resurrected after foreground');
+    await noLearning(f);
+    return {unclaimedPreserved:true,nativeGreetingCancelled:true,durableAwardPreserved:true,staleAnimationCancelled:true};
+  }, undefined,undefined,{slowWelcome:true,motion:true});
+
+  await check('prototype-motion-opening-reveal-and-fade-stay-centered', async f => {
+    const p=f.page;
+    await openGift(p); await paperGift(p,'open-welcome-gift');
+    const geometry = await overlayGeometry(p);
+    await p.evaluate(() => {
+      window.qaGiftPhases = [];
+      const observe = () => {
+        const element=document.querySelector('.welcome-gift-overlay');
+        const phase=element?.open ? element.dataset.giftPhase : 'gone';
+        if (qaGiftPhases.at(-1)?.phase !== phase) qaGiftPhases.push({phase,at:performance.now(),animations:element ? [...element.getAnimations({subtree:true})].map(a => ({name:a.animationName || '',duration:a.effect?.getTiming().duration})) : []});
+      };
+      window.qaGiftObserver = new MutationObserver(observe);
+      qaGiftObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-gift-phase','open']});
+      observe();
+    });
+    const started=Date.now();
+    await claim(p,'shells');
+    await giftGone(p);
+    const phases=await p.evaluate(() => { qaGiftObserver.disconnect(); return qaGiftPhases; });
+    assert.deepEqual(phases.map(item=>item.phase),['wrapped','opening','opened','closing','gone']);
+    const opening=phases.find(item=>item.phase==='opening'), opened=phases.find(item=>item.phase==='opened'), closing=phases.find(item=>item.phase==='closing'), gone=phases.find(item=>item.phase==='gone');
+    assert(opened.at-opening.at >= 350,'Gift opening anticipation was skipped');
+    assert(closing.at-opened.at >= 1200,'The reward vanished before it could be understood');
+    assert(gone.at-closing.at >= 200,'The overlay closed without its fade');
+    assert(phases.some(item=>item.animations.some(a=>Number(a.duration)>100)),'No actual CSS/Web Animation was active');
+    assert(Date.now()-started<10000,'Automatic gift closure took too long');
+    await noLearning(f);
+    return {geometry,phases};
+  }, undefined,undefined,{motion:true});
 
   await check('two-tabs-contend-for-one-durable-gift', async f => {
     const p = f.page, other = await newPage(f);
@@ -460,7 +496,7 @@ async function main() {
     await noLearning(f,p); await noLearning(f,other);
     for (const page of [p,other]) {
       await page.reload({waitUntil:'domcontentloaded'}); await page.locator('main.home-view').waitFor();
-      assert.equal(await page.locator('[data-action="welcome-gift"]').count(), 0);
+      assert.equal(await page.locator('.welcome-gift-overlay:visible').count(), 0);
     }
     return {wallet,competingTabs:2};
   });
@@ -470,13 +506,13 @@ async function main() {
     await openGift(p);
     await p.evaluate(() => { qaWelcome.failWrites = true; });
     await press(p, '[data-action="open-welcome-gift"]');
-    await p.locator('[role="dialog"]').waitFor();
+    await p.locator('#modal-root [role="dialog"]').waitFor();
     assert.equal(await p.evaluate(() => qaWelcome.failedWrites), 1);
     assert.equal(await savedMeadow(p), null, 'Failed storage left a partial wallet or receipt');
-    assert.equal(await p.locator('main[data-gift-phase="opened"]').count(), 0, 'Unsaved gift was announced as collected');
+    assert.equal(await p.locator('.welcome-gift-overlay[data-gift-phase="opened"]').count(), 0, 'Unsaved gift was announced as collected');
     assert.deepEqual((await noLearning(f)).wallet, {shells:0,water:0});
     await p.evaluate(() => { qaWelcome.failWrites = false; });
-    await press(p, '[role="dialog"] [data-action="close"]');
+    await press(p, '#modal-root [role="dialog"] [data-action="close"]');
     await claim(p,'shells');
     const wallet = await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
     await noLearning(f);
@@ -484,23 +520,19 @@ async function main() {
   });
 
   for (const size of [{name:'desktop',width:1180,height:900},{name:'small-phone',width:320,height:568},{name:'landscape',width:640,height:360}]) {
-    await check(`layout-${size.name}-all-gift-controls`, async f => {
+    await check(`layout-${size.name}-centered-single-gift`, async f => {
       const p = f.page, states = {};
-      states.home = await layout(p, '.home-view .primary-wrap button,.home-view [data-action="welcome-gift"]');
-      states.homeGift = await paperGift(p,'welcome-gift');
-      await p.screenshot({path:path.join(out,`layout-${size.name}-home.png`),animations:'disabled'});
       await openGift(p);
-      states.wrapped = await layout(p, 'main.welcome-gift-view button');
+      states.wrapped = await layout(p,'.welcome-gift-overlay button');
+      states.geometry = await overlayGeometry(p);
       states.wrappedGift = await paperGift(p,'open-welcome-gift');
       await p.screenshot({path:path.join(out,`layout-${size.name}-wrapped.png`),animations:'disabled'});
       await claim(p,'shells');
-      states.opened = await layout(p, 'main.welcome-gift-view button');
+      assert.equal(await p.locator('.welcome-gift-overlay button:not([disabled])').count(),0,'Reward reveal added a redundant collection button');
       await p.screenshot({path:path.join(out,`layout-${size.name}-opened.png`),animations:'disabled'});
-      await noLearning(f);
-      await press(p, '[data-action="welcome-play"]');
-      await p.locator('main.event-view').waitFor({timeout:30000});
-      await noLearning(f);
-      return {states,continueStartsLessonWithoutRecording:true};
+      await giftGone(p); await noLearning(f);
+      states.home = await layout(p,'.home-view .primary-wrap button');
+      return {states,touchSingleClick:true,reducedMotionSupported:true};
     }, size.width,size.height);
   }
 
@@ -513,7 +545,7 @@ async function main() {
     const previews = [];
     for (const kind of ['shells','water']) {
       await p.goto(`${origin}/xiaoya/?garden=b&gm=test&gmWelcome=${kind}`, {waitUntil:'domcontentloaded'});
-      await p.locator('main.welcome-gift-view[data-gift-phase="wrapped"]').waitFor();
+      await openGift(p);
       const before = await bridge(p,'inspect');
       await claim(p,kind);
       const after = await noLearning(f);
@@ -521,17 +553,24 @@ async function main() {
       assert.equal(after.wallet[kind], before.wallet[kind]+1);
       assert.equal(after.wallet[kind==='shells'?'water':'shells'], before.wallet[kind==='shells'?'water':'shells']);
       assert.deepEqual(await snapshot(p), child, 'GM preview leaked into durable child storage');
-      previews.push({kind,before:{wallet:before.wallet,gifts:before.welcomeGifts},after:{wallet:after.wallet,gifts:after.welcomeGifts}});
+      await bridge(p,'navigate','home');
+      await giftGone(p);
+      await p.waitForTimeout(700);
+      assert.equal(await p.locator('.welcome-gift-overlay:visible').count(),0,'A cancelled GM reveal resurrected after navigation');
+      assert.equal((await bridge(p,'inspect')).wallet[kind],after.wallet[kind],'Navigation lost an already saved preview reward');
+      previews.push({kind,before:{wallet:before.wallet,gifts:before.welcomeGifts},after:{wallet:after.wallet,gifts:after.welcomeGifts},navigationCancelsReveal:true});
     }
     await p.goto(`${origin}/xiaoya/?garden=b&gm=test&gmPage=home`, {waitUntil:'domcontentloaded'});
     await p.locator('main.home-view').waitFor();
+    assert.equal(await p.locator('.welcome-gift-overlay:visible').count(),0,'Ordinary GM sandbox home unexpectedly forced a daily gift');
     await bridge(p,'navigate','welcome-gift');
-    await p.locator('main.welcome-gift-view[data-gift-phase="wrapped"]').waitFor();
+    await openGift(p);
     await claim(p,'shells');
     assert.equal((await bridge(p,'inspect')).welcomeGifts, 1, 'Reload did not start a fresh in-memory preview');
+    await giftGone(p);
     await press(p,'[data-gm-action="exit"]');
     await p.locator('main.home-view').waitFor();
-    assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 1, 'Exiting GM consumed the real daily gift');
+    await openGift(p);
     assert.deepEqual(await snapshot(p), child);
     await noLearning(f);
     return {previews,gmNavigationWorks:true,realStorageUnchanged:true};

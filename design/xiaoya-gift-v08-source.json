@@ -9,5 +9,7 @@
   "height": 512,
   "bytes": 146592,
   "sha256": "f808beb497b4d462bb6c5b88ba62d02eb8664be220816f80ecfee1a294010701",
-  "integration": "Exact delivered WebP bytes; shared gift icon for home, unwrapping and reward controls. Neutral placeholder on load failure. Existing welcome reward and storage rules unchanged."
+  "integration": "Exact delivered WebP bytes; shared gift icon for home, unwrapping and reward controls. Neutral placeholder on load failure. Existing welcome reward and storage rules unchanged.",
+  "prototype": "http://127.0.0.1:24861/api/studies/610f2d54d7e6/prototype/gifts-v08.html",
+  "motionIntegration": "v0.22.1 reuses prototype paper-box float, warm halo, four sparks, squash/open and treasure reveal. Centered native modal, black 48% scrim, one tap saves reward then reveals in place and auto fades; no separate collection page. Original WebP bytes and daily ledger unchanged."
 }

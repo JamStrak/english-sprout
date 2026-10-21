@@ -65,6 +65,13 @@ async function fixture(width = 1180) {
   const p = await c.newPage(); p.setDefaultTimeout(18000); p.on('pageerror',e=>errors.push(e.message));
   await p.goto(`${origin}/xiaoya/?garden=b`,{waitUntil:'domcontentloaded'});await p.locator('main.home-view').waitFor();
   assert.equal(await p.locator('meta[name="xiaoya-build"]').getAttribute('content'),expected.build);
+  // Finish the real daily welcome in this disposable profile before comparing
+  // records across GM actions. Native modal correctly blocks the GM launcher.
+  const welcome = p.locator('[data-action="open-welcome-gift"]');
+  if (await welcome.isVisible()) {
+    await welcome.click();
+    await p.locator('.welcome-gift-overlay[open]').waitFor({state:'hidden',timeout:12000});
+  }
   const child = await snapshot(p);
   return {c,p,requests,errors,access,child,width};
 }

@@ -1,6 +1,6 @@
 # 小芽英语 · 技术地图
 
-更新：2026-10-21，当前为小芽英语·自由花园版 v0.22.0。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
+更新：2026-10-21，当前为小芽英语·自由花园版 v0.22.1。分支、构建和本轮验证记录以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 与 [实施记录](XIAOYA_IMPLEMENTATION.md) 为入口。这里记录可定位的实现约定，不把历史设计提案当成当前行为。
 
 ## 1. 先分清两个产品
 
@@ -66,8 +66,8 @@
 - **日期是本地日历。** `localDay` 与 `addPracticeDays` 管理 YYYY-MM-DD，不用 UTC 日期截断代替本地天数。复习间隔 `REVIEW_INTERVALS = [1, 3, 7, 14, 30]`，同日重复不快速晋级。
 - **只有自由花园，历史不抹除。** 学习证据、练习安排、音色及既有自由花园存档继续使用原键。旧 A 轮次只用于学习历史兼容，原始归档可导出；不迁移 A 钱包、花朵或待发奖励到自由花园。历史 `rewardVariant` 保留，新奖励只写 `b`。
 - **奖励有凭据。** `experience.js` 的 `savePractice` / `restorePracticeRewards`、`challengeChange` / `restoreChallengeRewards`、`gardenChange` 管理落盘与断点恢复。奖励以轮次或挑战 ID 幂等，写入失败不能先展示领取成功；支持 Web Locks 的环境须在锁内重读最新值。
-- **欢迎小礼物不代表学习。** `garden-meadow.js` 的 `welcomeGift` / `claimWelcomeGift` 按显式本地日期判断资格；领取日期必须严格递增，倒退日期不重复发奖，按收据数交替送 1 贝壳 / 1 水。schema 1/2/3 先验证原账本再迁移到 4；余额校验包括礼物，不写学习证据、练习轮次或首次学习奖。`experience.js` 的 `claimWelcomeGift` 复用 `gardenChange` 的存储适配与 Web Lock，先保存再显示成功；`welcomePlay` 仅在声音自然播完且页面代际未改变时进入学习。GM `previewWelcome` 只操作内存花园。
-- **问候不等于领取。** 首页礼物未领、页面可见且无弹窗/声音时，400ms 后尝试当日欢迎语；同一页面会话每天只自动尝试一次。刷新保持同日选择，领完不自动播放。切页、弹窗、后台和 GM 工作台均取消；GM 沙盒不自动问候。`sound(...,{automatic:true})` 仅静默处理自动欢迎的 `NotAllowedError`，手动播放与其他真实故障保留反馈。六句循环不重复，下一轮首句避开上一轮末句；初次用户使用专用 first 介绍。
+- **欢迎小礼物不代表学习。** `garden-meadow.js` 的 `welcomeGift` / `claimWelcomeGift` 按显式本地日期判断资格；领取日期必须严格递增，倒退日期不重复发奖，按收据数交替送 1 贝壳 / 1 水。schema 1/2/3 先验证原账本再迁移到 4；余额校验包括礼物，不写学习证据、练习轮次或首次学习奖。`experience.js` 的 `claimWelcomeGift` 复用 `gardenChange` 的存储适配与 Web Lock，先保存再显示成功；稳定挂载在 `#app` 外的原生 dialog 经 wrapped → opening → opened → closing 原地揭晓；背景 inert，只有一次拆礼物操作。收据先保存、最短展示 2.4 秒，听完用途后淡出；7 秒保护上限避免声音失败卡住。切页、后台、GM 与存储同步取消旧回调，恢复首页，不自动进入学习。GM `previewWelcome` 只操作内存花园。
+- **问候不等于领取。** 首页礼物处于 wrapped、页面可见且无其他弹窗/声音时，400ms 后尝试当日欢迎语；同一页面会话每天只自动尝试一次。刷新保持同日选择，领完不自动播放。切页、弹窗、后台和 GM 工作台均取消；GM 沙盒不自动问候。`sound(...,{automatic:true})` 仅静默处理自动欢迎的 `NotAllowedError`，手动播放与其他真实故障保留反馈。六句循环不重复，下一轮首句避开上一轮末句；初次用户使用专用 first 介绍。
 - **盲盒先保存再揭晓。** `buyMystery` 复用 `gardenChange` / `openSeedPack` 与 Web Lock；六袋只表示包装选择，不是六个预定品种或不放回奖池。待种种子阻止重复购买，存储失败不展示成功，刷新不重抽。`mysteryVoiceRun`、页面代际与 pendingSeed ID 防止退出/后台/GM 后播放旧结果。`seed-appearance.js` 只根据稳定 ID 或有效 `seedColor` 标签派生配色和花名，存档仍保存原 flowerId，不迁移 schema、不按颜色替换品种。
 - **数值变化要迁移。** 自由花园日常选择 2 贝壳或 2 水，首轮 2 贝壳＋3 水；普通花 5 次水、巨型花 10 次。挑战每组首次通关 4 贝壳＋6 水，完成 3/6 个不同组分别一次限定种子。旧奖励版本与承诺数量不能因新常量重算。
 - **存档不是宽松 JSON。** `validateState` / `validatePracticePlan` / `validateChallenges` / `validateMeadow` 校验字段、版本、已知 ID 与账本一致性。新增字段须同步创建、验证、迁移与测试，不能通过删 localStorage 避开迁移错误。
@@ -92,7 +92,7 @@
 | 语音识别 | 本机 Worker / WASM，Whisper tiny.en，`speech-assets.js` 的 10 项固定资源，总计 81,191,822 字节 | 单独下载并校验模型及运行时后；声音整包状态不代表模型就绪 |
 | 核心界面 | 按构建指纹缓存的 JS/CSS/入口资源 | 服务工作线程正确安装并控制当前页面后 |
 
-`audio-pack.js` 同时管理声音与图片包状态：`startAudioPack` / `retryAudioPack`、`artPackStatus` / `retryArtPack` / `onArtPackChange`。`sw.template.js` 的核心缓存为 `xiaoya-core-<build>`，声音缓存为 `xiaoya-audio-v3`，图片缓存按渠道清单生成：v0.22.0 内测 `xiaoya-art-0de11ffa1045fcb0`、公开 `xiaoya-art-dc1c5cdc876bdca7`；识别缓存为 `english-sprout-speech-v1`。核心、完整声音包及完整图片包通过长度与 SHA-256 校验后，新 SW 才可激活接管；下载可复用已校验项。声音支持 Range 请求。家长页分别显示包进度与重试入口，不用清除全部缓存解决版本问题。
+`audio-pack.js` 同时管理声音与图片包状态：`startAudioPack` / `retryAudioPack`、`artPackStatus` / `retryArtPack` / `onArtPackChange`。`sw.template.js` 的核心缓存为 `xiaoya-core-<build>`，声音缓存为 `xiaoya-audio-v3`，图片缓存按渠道清单生成：v0.22.1 内测 `xiaoya-art-0de11ffa1045fcb0`、公开 `xiaoya-art-dc1c5cdc876bdca7`；识别缓存为 `english-sprout-speech-v1`。核心、完整声音包及完整图片包通过长度与 SHA-256 校验后，新 SW 才可激活接管；下载可复用已校验项。声音支持 Range 请求。家长页分别显示包进度与重试入口，不用清除全部缓存解决版本问题。
 
 当前 GM 审图索引为 497 项：已上线插画 224 张、成长候选图 268 张加 5 个应用图标，其中 2 个旧应用图标只供资源审核，不会回到儿童界面。这不是独立故事数量。候选图来源及逐文件哈希、像素一致性回执见 `design/xiaoya-growth-v09-source.json`；重导入用 `scripts/import-xiaoya-growth.mjs --source <v09-growth-complete>`，仅此维护脚本需要带 Pillow/WebP 的 Python，APP 不增加依赖。268 张无损 WebP 共 13,335,410 字节，原 PNG 共 19,680,312 字节；保留完整 RGBA、透明留白与锚点。美术尚未获用户验收，不能据技术检查将其标为已上线。
 
@@ -135,7 +135,7 @@ npm run build                        # 默认 public，不含 GM 工作台
 
 `build-xiaoya.mjs` 的 `MODULES` 是显式模块列表；新增模块须同步打包与离线清单。构建生成 `build-config.js`、`releases/<build>/`、`start-<build>.html`、`audio-pack.json`、`art-pack.json`、`version.json` 和 SW；内测另生成 GM 资源索引。新产品模块清单包含 `garden-history.js`，不再打包旧 `garden.js` 与 `story-art.js`。共享识别匹配/下载模块会复制进新产品 release 的 `shared/` 并重写导入，不直接以源码原路径发布。
 
-v0.22.0 核对值：内测 `b8a9e316fb64`，公开 `e1bd901197ab`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
+v0.22.1 核对值：内测 `3ba7adc6793b`，公开 `793ed70a71e0`。构建指纹来自文件字节，换行或资源变化可改变它，不手改指纹去“对齐”。核验 `dist/xiaoya/version.json` 和浏览器实际页内版本；看到相同 URL 不能证明侧栏正在运行最新模块。
 
 ### 启动器与版本诊断
 
@@ -162,7 +162,7 @@ v0.22.0 核对值：内测 `b8a9e316fb64`，公开 `e1bd901197ab`。构建指纹
 | GM 花朵成长 | `tests/xiaoya-growth.test.js`、`xiaoya-growth-motion.test.js`、`xiaoya-growth-assets.test.js`、`xiaoya-growth-browser.cjs`；真实 RAF 帧、逐滴变化、根点、淡化时长、减少动态效果、停止/切换/后台取消、保存/导出/失败重试、沙盒与儿童账本隔离、268 图解码及窄屏全画布。候选资源同时受构建渠道排除测试约束 |
 | 启动器、端口 | `python -m unittest tests.test_launcher tests.test_xiaoya_launcher` |
 | 旧 SW 升级、首次启动、离线入口 | `tests/xiaoya-startup-update-browser.cjs`、`tests/xiaoya-restart-art-browser.cjs`；独立服务与浏览器，覆盖旧 SW、旧指纹入口和未浏览图片的重启离线读取 |
-| 欢迎小礼物、存档迁移与交互 | `tests/xiaoya-welcome-gift.test.js`、`tests/xiaoya-welcome-greetings.test.js`、`tests/xiaoya-welcome-voices.test.js`、`tests/xiaoya-welcome-browser.cjs`；每日幂等与轮换、原生声音、自动播放恢复、双标签、写失败重试、取消、小屏与 GM 隔离 |
+| 欢迎小礼物、存档迁移与交互 | `tests/xiaoya-welcome-gift.test.js`、`tests/xiaoya-welcome-greetings.test.js`、`tests/xiaoya-welcome-voices.test.js`、`tests/xiaoya-welcome-browser.cjs`；每日幂等与轮换、原生声音、自动播放恢复、双标签、写失败重试、居中遮罩与键盘隔离、单击到账自动淡出、取消、真实动画帧、小屏与 GM 隔离 |
 | 六袋盲盒、颜色和结果语音 | `tests/xiaoya-seed-appearance.test.js`、`xiaoya-blindbox-voices.test.js`；`xiaoya-economy-browser.cjs` 覆盖购买、刷新、双标签、失败重试、后台取消、离线开袋和小屏/横屏；儿童布局选择器限定 `#app`，不将独立 GM 面板计入 |
 | 首页挑战/花园入口排列与显隐 | `tests/xiaoya-home-entry-browser.cjs`，桌面、窄屏、横屏及真实开放条件 |
 | 共用构建或共享模块 | 上述相关项＋旧产品 `tests/browser.cjs`；必要时旧产品领域单测 |
@@ -187,7 +187,7 @@ GM 脚本默认临时启动隔离静态服务；其他脚本多数需要已运�
 
 ### 基线证据与真实边界
 
-v0.22.0 本轮：Node 全量单测 **786/786**；最后微调淡化时间后，受影响单测 **36/36**。成长浏览器完整 **15/15**，最终构建定向复测 **8/8**；GM **10/10**、公开排除 **1/1**、[旧产品浏览器](UI_QA_xiaoya-v022-legacy.md) **36/36**。两渠道构建通过，最终 dist 为内测。覆盖真实动画帧、固定根点、交叉淡化时长、减少动态效果、取消与恢复、保存/导出/失败重试、儿童账本隔离、268 图解码和 320px 布局。本轮未改启动器，未重跑 Python 启动器、候选图片完整离线下载或独立 BGM 全套。实体设备和动效观感待用户验收；详细证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
+v0.22.1 本轮：Node 全量单测 **786/786**；欢迎礼物浏览器 **14/14**、GM **10/10**、公开排除 **1/1**、[旧产品浏览器](UI_QA_xiaoya-v0221-legacy.md) **36/36**。两渠道构建通过，最终 dist 为内测。覆盖原生语音、单击领取、原地揭晓及自动淡出、背景不可操作、刷新/双标签防重、存储失败重试、后台取消、GM 沙盒隔离和桌面/320px/横屏布局；截图已查看。本轮未改启动器或媒体文件，未重跑 Python 启动器、完整离线下载、成长动效或独立 BGM 全套。实体设备、扬声器听感和最终动效观感待用户验收；详细证据见 [实施记录](XIAOYA_IMPLEMENTATION.md)。
 
 历史 v0.20.0：Node 单测 **753/753**、欢迎礼物原生浏览器 **11/11**、旧产品浏览器 **36/36**，公开/内测构建通过；这些不是本轮重跑结果。
 

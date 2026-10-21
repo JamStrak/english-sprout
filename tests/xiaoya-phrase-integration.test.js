@@ -57,7 +57,10 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
   const modalRoot = {innerHTML:''};
   const document = {baseURI:'https://fixture.invalid/app/', hidden:false,
     querySelector: selector => selector === '#app' ? app : selector === '#modal-root' ? modalRoot : null,
-    querySelectorAll: () => [], addEventListener() {}, body:{append() {},addEventListener() {},dispatchEvent() {}}, createElement: () => ({remove() {}})};
+    querySelectorAll: () => [], addEventListener() {}, body:{append() {},addEventListener() {},dispatchEvent() {},classList:{add() {},remove() {}}},
+    createElement: () => ({dataset:{},innerHTML:'',open:false,setAttribute() {},addEventListener() {},focus() {},remove() {},
+      get firstElementChild() {return this.innerHTML?{}:null;},showModal() {this.open=true;},close() {this.open=false;},
+      querySelector(selector) {return selector==='button'&&this.innerHTML.includes('<button')?{setAttribute() {},addEventListener() {},focus() {}}:null;}})};
   const localStorage = {getItem:key => stored.get(key) ?? null, setItem(key, value) {stored.set(key, value); writes.push({key, value});}};
   const audio = {playSound: async file => {sounds.push(file); return play(file);}, stopSound() {},
     cancelRecording() {}, cancelRecognition() {}, releaseAudioSession() {},
@@ -81,7 +84,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
       recordChallengeAttempt:(state, input) => challenge.recordChallengeAttempt(state, copy(input)),
       recordChallengeHelp:(state, input) => challenge.recordChallengeHelp(state, copy(input))},
     location:{search:'?garden=b'}, JSON, URL, URLSearchParams, Event, Image:class {}, navigator:{},
-    window:{addEventListener() {}, scrollTo() {}},
+    window:{addEventListener() {}, scrollTo() {}},performance:{now:()=>0},matchMedia:()=>({matches:false}),
     setTimeout(fn, delay) {const id = ++sequence; timers.set(id, {fn, delay}); return id;},
     clearTimeout(id) {timers.delete(id);}};
   sandbox.createPictureLoader = options => storyPictures.createPictureLoader({...options,

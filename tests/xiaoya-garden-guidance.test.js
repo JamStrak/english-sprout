@@ -63,7 +63,10 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     querySelector(selector){if(selector==='#app')return root;if(selector==='#modal-root')return modalRoot;
       const action=selector.match(/^\[data-action="([^"]+)"\]$/)?.[1];return action?buttons().find(node=>node.dataset.action===action):null;},
     querySelectorAll(selector){return selector==='[data-action]'?buttons().filter(node=>node.dataset.action):[];},
-    addEventListener:register('document'),body:{append(){},addEventListener:register('body'),dispatchEvent(){}},createElement(){return {remove(){}};}};
+    addEventListener:register('document'),body:{append(){},addEventListener:register('body'),dispatchEvent(){},classList:{add(){},remove(){}}},
+    createElement(){return {dataset:{},innerHTML:'',open:false,setAttribute(){},addEventListener(){},focus(){},remove(){},
+      get firstElementChild(){return this.innerHTML?{}:null;},showModal(){this.open=true;},close(){this.open=false;},
+      querySelector(selector){return selector==='button'&&this.innerHTML.includes('<button')?{setAttribute(){},addEventListener(){},focus(){}}:null;}};}};
   class AudioContext{
     currentTime=0;destination={};resume(){}
     createOscillator(){return {frequency:{},connect(){},start(){calls.chimes++;},stop(){}};}
@@ -80,7 +83,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     layoutMeadowWatering(){/* Geometry has separate browser tests. */},
     bindMeadowInteractions(root,actions){meadowActions=actions;return ()=>{};},meadow,audio,document,JSON,Event,
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
-    location:{search},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
+    location:{search},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},performance:{now:()=>clock},matchMedia:()=>({matches:false}),
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
   Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:()=>({load(){},status:()=> 'ready'})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
