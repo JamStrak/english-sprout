@@ -1,6 +1,6 @@
 # GM 资源隔离、真实花园动效与低音量修复
 
-## 当前 v0.24.0 补充（2026-10-21）
+## v0.24.0 功能补充（2026-10-21，v0.24.1 沿用）
 
 以下原修复记录保留历史范围；当前版本指纹与验证以 [PROJECT_CONTEXT](../PROJECT_CONTEXT.md) 为准。
 
@@ -13,7 +13,7 @@
 
 ## 历史 v0.22.2 修复记录
 
-日期：2026-10-21；工程 `E:\AI新项目\其他实验\儿童英语练习\小芽英语`，分支 `codex/xiaoya-garden-ab`。交付提交可用 `git log -1 -- docs/XIAOYA_GM_RESOURCE_MOTION.md` 查询。当前构建与并行音效整合状态以 `PROJECT_CONTEXT.md` 为准。
+日期：2026-10-21；工程 `E:\AI新项目\其他实验\儿童英语练习\小芽英语启蒙正式版`，分支 `codex/xiaoya-garden-ab`。交付提交可用 `git log -1 -- docs/XIAOYA_GM_RESOURCE_MOTION.md` 查询。当前构建与并行音效整合状态以 `PROJECT_CONTEXT.md` 为准。
 
 ## 使用与实际修复
 

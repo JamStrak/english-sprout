@@ -3,8 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 
-export const XIAOYA_VERSION = '0.24.0';
-export const XIAOYA_NAME = '小芽英语·自由花园版';
+export const XIAOYA_VERSION = '0.24.1';
+export const XIAOYA_NAME = '小芽英语启蒙正式版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
 MODULES.push('blindbox-ui.js', 'seed-appearance.js', 'seed-shop.js', 'economy.css', 'meadow-hit-shapes.js', 'audio-pack.js', 'challenges.js', 'challenge-ui.js', 'challenge.css', 'story-assets.js', 'story-pictures.js');

@@ -209,7 +209,7 @@ class XiaoyaLauncherTests(unittest.TestCase):
         self.assertNotEqual(launcher.StartupLock(self.root).name, launcher._base.StartupLock(self.root).name)
 
     def test_double_click_wrapper_is_hidden_and_checks_required_files(self):
-        wrapper = (Path(__file__).resolve().parents[1] / "启动小芽英语.vbs").read_text(encoding="utf-16")
+        wrapper = (Path(__file__).resolve().parents[1] / "启动小芽英语启蒙正式版.vbs").read_text(encoding="utf-16")
         self.assertIn('launcher_xiaoya.py', wrapper)
         self.assertIn('fso.BuildPath(base, "launcher.py")', wrapper)
         self.assertIn('pythonw.exe', wrapper)

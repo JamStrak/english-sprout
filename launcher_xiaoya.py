@@ -151,7 +151,7 @@ def start_or_reuse(root: Path, ports=PORTS):
 
 def show_error(message: str):
     if os.name == "nt":
-        ctypes.windll.user32.MessageBoxW(None, message, "小芽英语·自由花园版 · 启动提示", 0x10)
+        ctypes.windll.user32.MessageBoxW(None, message, "小芽英语启蒙正式版 · 启动提示", 0x10)
     else:
         import sys
         print(message, file=sys.stderr)
@@ -175,7 +175,7 @@ def startup_path(root: Path) -> str:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="小芽英语·自由花园版本机预览")
+    parser = argparse.ArgumentParser(description="小芽英语启蒙正式版本机预览")
     parser.add_argument("--no-browser", action="store_true", help="仅启动或复用服务，不自动打开浏览器（维护用）")
     # Accept old desktop shortcuts but never launch the retired flowerpot game.
     parser.add_argument("--garden", choices=("a", "b"), help=argparse.SUPPRESS)
