@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clip_count": 6,
+  "total_bytes": 196104,
+  "total_seconds": 32.16,
+  "clips": [
+    {
+      "id": "welcome-hello-01",
+      "text": "你回来啦，欢迎你！我给你准备了一份小礼物，点开看看吧。",
+      "file": "welcome-hello-01.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 35660,
+      "seconds": 5.856,
+      "sha256": "7fc753497470ab235a9d51b794a87be971c0b43bc7c1d8f434ef95bb165c184c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你回来啦欢迎你我给你准备了一份小礼物点开看看吧",
+        "final_end_seconds": 5.2875
+      }
+    },
+    {
+      "id": "welcome-hello-02",
+      "text": "又见到你啦，真高兴！今天的小礼物，会是什么呢？",
+      "file": "welcome-hello-02.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 32060,
+      "seconds": 5.256,
+      "sha256": "31fb50521d12e2abefaebfbe17db1fdaa0f447b32471623abf96461af19a7530",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "又见到你啦真高兴今天的小礼物会是什么呢",
+        "final_end_seconds": 4.675
+      }
+    },
+    {
+      "id": "welcome-hello-03",
+      "text": "嗨，小伙伴！小芽送你一个小惊喜，打开看看吧。",
+      "file": "welcome-hello-03.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 32204,
+      "seconds": 5.28,
+      "sha256": "246b268ea0cc8980331e09431d3bf7d734a6107a3111e1645ec1994a0aeb6695",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "嗨小伙伴小芽送你一个小惊喜打开看看吧",
+        "final_end_seconds": 4.7
+      }
+    },
+    {
+      "id": "welcome-hello-04",
+      "text": "欢迎来玩！这份小礼物送给你，我们一起打开吧。",
+      "file": "welcome-hello-04.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 30764,
+      "seconds": 5.04,
+      "sha256": "97c3301f7a44cd40799ff740a26ca3bb7c0961ae1bf3826d0847ed7ed06f0949",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "欢迎来玩这份小礼物送给你我们一起打开吧",
+        "final_end_seconds": 4.475
+      }
+    },
+    {
+      "id": "welcome-hello-05",
+      "text": "见到你真开心！你看，这里有份小礼物，送给你。",
+      "file": "welcome-hello-05.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 32348,
+      "seconds": 5.304,
+      "sha256": "ab9dfa62c03e288dd663d533e9a9e3491bb6fcf0b2d4431b2778d0b544f47b3c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "见到你真开心你看这里有份小礼物送给你",
+        "final_end_seconds": 4.7375
+      }
+    },
+    {
+      "id": "welcome-hello-06",
+      "text": "哈喽，你来啦！今天也有小惊喜，点点礼物看看吧。",
+      "file": "welcome-hello-06.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "rate": "+0%",
+      "pitch": "+0Hz",
+      "volume": "+0%",
+      "bytes": 33068,
+      "seconds": 5.424,
+      "sha256": "0dd9ab7ec20ce3c4320275e754908f9cc58ad051711ade66e567dd4160b80458",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "哈喽你来啦今天也有小惊喜点点礼物看看吧",
+        "final_end_seconds": 4.8625
+      }
+    }
+  ]
+}

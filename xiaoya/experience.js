@@ -9,6 +9,7 @@ import {meadowPlantArt} from './meadow-art.js';
 import {meadowView,meadowCollection,bindMeadowInteractions,layoutMeadowWatering} from './meadow-ui.js';
 import {seedShopView,offerPicture} from './seed-shop.js';
 import {blindboxView} from './blindbox-ui.js';
+import {createWelcomeGreetings} from './welcome-greetings.js';
 import {LEGACY_GARDEN_KEY,readGardenHistory} from './garden-history.js';
 import {VOICES,VOICE_KEY,readVoice,saveVoice,lessonAudio} from './voices.js';
 import {icon,buddy,sceneArt,voicePortrait} from './art.js';
@@ -38,6 +39,8 @@ let recoveringRewards=false,recoveryRequested=false;
 let rewardReceipt=null,rewardSelection=null,rewardBusy=false,shopBusy=false,uiGeneration=0;
 let mysterySelection=null,mysteryVoiceRun=0;
 let welcomeReceipt=null,welcomeBusy=false;
+const chooseWelcomeGreeting=createWelcomeGreetings(appStorage);
+let welcomeGreetingTimer=null,welcomeAttemptDay=null;
 const effects=createFeedback({canSound:()=>!document.hidden&&!speaking&&!session?.waiting&&!session?.recording&&!['preparing','assessing'].includes(session?.assessment?.status)});
 const directStory=new URLSearchParams(location.search).get('story');
 // Old garden URL parameters and preferences cannot select a retired screen.
@@ -207,7 +210,7 @@ function cancelFeedbackVoice(){clearTimeout(feedbackVoiceTimer);feedbackVoiceTim
 function stopSpeech(){soundGeneration++;audio.stopSound();speaking=false;effects.setSilent(false);}
 function feedbackVoice(callback,delay=340){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},delay);}
 function clearGuide(){guideGeneration++;guideActions=[];applyGuide();}
-async function sound(file,targets=[]){const generation=++guideGeneration,playback=++soundGeneration;guideActions=targets;speaking=true;cancelIdleHint();effects.setSilent(true);applyGuide();try{return await audio.playSound(file);}catch(error){toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}}
+async function sound(file,targets=[],{automatic=false}={}){const generation=++guideGeneration,playback=++soundGeneration;guideActions=targets;speaking=true;cancelIdleHint();effects.setSilent(true);applyGuide();try{return await audio.playSound(file);}catch(error){if(!(automatic&&error.name==='NotAllowedError'))toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}}
 const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],next:['next-event']};
 const narrate=id=>sound(voice(`garden-${id}`),guideTargets[id]||[]);
 function button(action,label,glyph,extra=''){return `<button class="icon-button" data-action="${action}" aria-label="${esc(label)}" ${extra}>${icon(glyph)}</button>`;}
@@ -215,14 +218,14 @@ function primary(action,label,body,extra=''){return `<div class="primary-wrap"><
 function header(){
   const localHelp=page==='event'&&['story','request'].includes(session?.phase);
   const controls=page==='parent'?'':`${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}`;
-  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语<small class="edition-label">自由花园 v${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'0.19.0')}</small></span><div>${controls}</div></header>`;
+  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语<small class="edition-label">自由花园 v${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'0.20.0')}</small></span><div>${controls}</div></header>`;
 }
 function balance(){const garden=activeGarden();return `<div class="wallet" aria-label="${garden.shells} 枚贝壳，${garden.water} 滴水"><span>${shellArt()}<b data-shells>${garden.shells}</b></span><span>${dropArt()}<b data-water>${garden.water}</b></span></div>`;}
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
 function nextStory(){return storyFor(nextPractice().eventId);}
-function stopSession(){cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
+function stopSession(){cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
 function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);}
-function openModal(value){cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;renderModal();setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
+function openModal(value){cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;rewardSelection=null;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;renderModal();setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
 function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();restoreFocus?.focus?.();}
 function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback();openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function homeView(){
@@ -232,9 +235,25 @@ function homeView(){
   return `${header()}<main class="home-view home-welcome" data-next-event="${choice.eventId}" data-next-mode="${choice.mode}"><div class="home-glade"><i class="home-leaf" aria-hidden="true"></i><div class="home-companion" aria-hidden="true">${buddy('happy')}</div><i class="home-leaf" aria-hidden="true"></i>${gift}</div>${primary(resume?'garden':'next-event',resume?'去花园照顾小种子':`${choice.mode==='review'?'再见老朋友':'出发'}：${story.event.title}`,resume?canArt():icon('play',48))}<div class="reward-preview" aria-label="${hasRewardChoice()?'玩英语，选择两枚贝壳或两滴水':'第一份学习礼物，两枚贝壳和三滴水'}">${rewardPreview()}</div>${shortcuts?`<div class="home-shortcuts">${shortcuts}</div>`:''}</main>`;
 }
 
+function dailyWelcomeId(){return chooseWelcomeGreeting({date:today(),returning:!!(allRounds().length||meadowState.welcomeGifts.length||practice.entries.length||effectiveEvidence(state).length)});}
+function cancelWelcomeGreeting(){clearTimeout(welcomeGreetingTimer);welcomeGreetingTimer=null;}
+function scheduleWelcomeGreeting(){
+  cancelWelcomeGreeting();
+  if(GM_SANDBOX||page!=='home'||modal||gmWorkbenchOpen||document.hidden||speaking||welcomeAttemptDay===today()||!meadow.welcomeGift(meadowState,today()))return;
+  const generation=uiGeneration;
+  welcomeGreetingTimer=setTimeout(()=>{
+    welcomeGreetingTimer=null;
+    if(generation!==uiGeneration||page!=='home'||modal||gmWorkbenchOpen||document.hidden||speaking||!meadow.welcomeGift(meadowState,today()))return;
+    welcomeAttemptDay=today();
+    // Browsers may require a gesture after a restart. The gift itself remains
+    // a replay target; a blocked automatic hello must not look like an error.
+    sound(voice(dailyWelcomeId()),['welcome-gift'],{automatic:true});
+  },400);
+}
 function welcomeVoice(){
-  const id=welcomeReceipt?(welcomeReceipt.kind==='shells'?'shell':'water'):(allRounds().length||meadowState.welcomeGifts.length?'intro':'first');
-  return sound(voice(`welcome-gift-${id}`),welcomeReceipt?['welcome-gift-voice']:['open-welcome-gift']);
+  cancelWelcomeGreeting();welcomeAttemptDay=today();
+  const id=welcomeReceipt?`welcome-gift-${welcomeReceipt.kind==='shells'?'shell':'water'}`:dailyWelcomeId();
+  return sound(voice(id),welcomeReceipt?['welcome-gift-voice']:['open-welcome-gift']);
 }
 function openWelcomeGift(){
   welcomeReceipt=null;
@@ -551,7 +570,7 @@ function observation(attemptId=null){requireParent(()=>{const existing=attemptId
 async function submitObservation(result){const m=modal,s=session;if(m?.type!=='observe'||!m.event||m.saving)return;m.saving=true;const helped=m.helpedLocked||!!document.querySelector('#observed-help')?.checked,exact=!!document.querySelector('#exact-phrase')?.checked,phraseId=exact&&['independent','supported'].includes(result)?m.event.lessonId:null;
   const evidenceHelped=!!(helped||s?.retryAfterAttemptId||s?.priorChallengeHelp),evidenceResult=evidenceHelped&&result==='independent'?'supported':result;
   const next=m.attemptId?correctEvidence(state,m.attemptId,{correctionId:uid(),result,helped,phraseId,date:today()}):recordEvidence(state,{attemptId:uid(),eventId:m.event.id,contextId:s.context.id,kind:'speech',result:evidenceResult,source:'parent',helped:evidenceHelped,phraseId,date:today()});if(!save(next)){m.saving=false;return;}if(s&&!m.attemptId){s.attemptId=next.evidence[next.evidence.length-1].attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result,source:'parent',helped})){m.saving=false;return;}s.helped=helped;s.phase='resolved';}if(modal===m)modal=null;render();}
-function render(){cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='event'?eventView():page==='welcome-gift'?welcomeGiftView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),hasSeed:meadow.pendingChallengeSeeds(meadowState).length>0,primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='blindbox'?blindboxView({state:meadowState,header:header(),balance:balance(),selection:mysterySelection,busy:shopBusy}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;if(page==='blindbox'&&mysterySelection)mysterySelection.animate=false;renderModal();applyGuide();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();}
+function render(){cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='event'?eventView():page==='welcome-gift'?welcomeGiftView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),hasSeed:meadow.pendingChallengeSeeds(meadowState).length>0,primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='blindbox'?blindboxView({state:meadowState,header:header(),balance:balance(),selection:mysterySelection,busy:shopBusy}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;if(page==='blindbox'&&mysterySelection)mysterySelection.animate=false;renderModal();applyGuide();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();scheduleWelcomeGreeting();}
 function renderModal(){const root=document.querySelector('#modal-root');if(!root)return;if(!modal){root.innerHTML='';return;}const m=modal;let html='';
   if(m.type==='gate')html=`<h2>请交给陪伴的大人</h2><label for="parent-answer">${m.a} + ${m.b} =</label><input id="parent-answer" inputmode="numeric" autocomplete="off" aria-label="计算结果"><button class="primary-button" data-action="gate-submit">进入</button><button data-action="close">回到孩子的世界</button>`;
   if(m.type==='mic')html='<h2>录下这一次声音</h2><p>点话筒后，等它亮起来再说。停顿后自动结束，也可再次点击结束，最长 12 秒。</p><p>录音只在当前页面内存中临时回听，不上传。首次使用时浏览器还会询问麦克风权限。授权后，进入说话环节会提前打开话筒，点击后才开始录音；闲置 20 秒或离开环节会关闭话筒。</p><button class="primary-button" data-action="allow-mic">允许孩子使用本机麦克风</button><button data-action="disable-mic">暂不使用录音</button><button data-action="close">返回</button>';
@@ -583,7 +602,7 @@ app.addEventListener('click',event=>{const b=event.target.closest('button');if(!
 document.addEventListener('keydown',event=>{if(gmWorkbenchOpen||!modal)return;if(event.key==='Escape')return closeModal();if(modal.type==='gate'&&event.key==='Enter')return actions['gate-submit']();if(event.key==='Tab'){const list=[...document.querySelectorAll('.modal-card button,.modal-card input')].filter(el=>!el.disabled),first=list[0],last=list[list.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
 for(const type of ['pointerdown','pointerup','pointercancel','keydown','scroll','click'])document.addEventListener(type,idleHintActivity,{capture:true,passive:true});
 for(const type of ['pointerdown','keydown','scroll'])app.addEventListener(type,()=>{if(gardenIsActive()){cancelFeedbackVoice();scheduleGardenReminder();}},{capture:true,passive:true});
-function suspend(){cancelIdleHint();pointerHeld=false;uiGeneration++;rewardSelection=null;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
+function suspend(){cancelWelcomeGreeting();cancelIdleHint();pointerHeld=false;uiGeneration++;rewardSelection=null;cancelFeedbackVoice();effects.cancel();speaking=false;soundGeneration++;cancelMeadowDrag?.();cancelGardenReminder();clearGuide();audio.releaseAudioSession();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;session.hasClip=false;render();}}
 function resume(){
   if(gmWorkbenchOpen)return;
   if(!modal){

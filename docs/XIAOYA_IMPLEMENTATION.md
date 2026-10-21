@@ -1,5 +1,24 @@
 # 小芽英语 · 实施记录
 
+## v0.20.0 · 每日轮换欢迎语与首页主动问候（2026-10-21）
+
+之前欢迎声音只在点击礼物后播放，回访固定同一句。本次复用既有静态配音、礼物账本与 appStorage，补齐每日打开时的亲切问候，没有增加运行时接口或新依赖。
+
+- 新增六句中文欢迎语，`welcome-hello-01` 至 `06`，共 196,104 字节 / 32.16 秒。文案、音色、来源和哈希见 `public/xiaoya/audio/welcome-hello-manifest.json`，均纳入离线包与 GM 声音库。完整声音包 848 段 / 15,521,318 字节，插画包未变化。
+- `welcome-greetings.js` 每轮六句洗牌，一轮内不重复，下一轮首句不等于上一轮末句；同本地日刷新沿用同句，日期倒退不重抽。初次使用保留专用介绍。独立外观键 `xiaoya-english:welcome-greetings:v1` 经 appStorage 保存；写失败只退回内存，不触碰奖励/学习记录。
+- 首页当日礼物未领时，稍停 400ms 自动问候；同页面会话每日只尝试一次，领取后当天不再自动问候。点礼物可主动听当天欢迎。切页、弹窗、后台及 GM 工作台取消迟到声音，GM 沙盒不自动播放。
+- 浏览器自动播放限制只对自动欢迎静默处理，点礼物后真实播放恢复；其他声音故障仍保留原有错误反馈。没有以模拟成功掩盖播放失败，也不为了试听重置真实领取记录。
+- 基于 `5f4907d`，分支 `codex/xiaoya-garden-ab`。内测 **0.20.0 / 388ea80d6881**，公开 **ea9dc9eea89e**；旧产品仍 **1.8.1 / c4bccf69eebc**。最终 dist 保留内测，未部署。交付提交用 `git log -1 -- PROJECT_CONTEXT.md` 查询。
+
+验证（最终代码）：
+
+- `npm test` **753/753**，包含轮换、日期稳定、存储失败、预制音频与播放错误身份检查；日志 `test-results/welcome-v020-unit.log`。
+- `node tests/xiaoya-welcome-browser.cjs` **11/11**：六句真实 MP3 playing/ended、六次回访不重复、同日稳定、新日期、自动问候、导航/弹窗/后台取消、当天已领取不问候、礼物幂等、双标签、写失败、小屏及 GM 真实存档不变。`test-results/xiaoya-welcome-browser/report.json`。自动播放限制为一次注入 NotAllowedError 后验证真实点击恢复；后台可见性为自动化模拟。
+- `TEST_URL=http://127.0.0.1:24756 REPORT_NAME=xiaoya-v020-legacy node tests/browser.cjs` **36/36**；[旧产品摘要](UI_QA_xiaoya-v020-legacy.md)，日志 `test-results/welcome-v020-legacy.log`。
+- `npm run build`、`npm run build:dev` 均通过，日志 `test-results/welcome-v020-public-build.log`、`test-results/welcome-v020-internal-build.log`。六段制作期解码/波形/词边界检查均通过，静态资源测试 7/7。
+
+限制：未改启动器或插画，未重跑 Python 启动器、完整离线美术或独立 GM 全套；自动化不代表实体手机、真实儿童或主观音色验收。已领取当天礼物的用户可从 GM 声音库搜索 `welcome-hello` 试听，不改真实账本。未来花朵/种子素材另行接入，不属于本轮。
+
 ## v0.19.0 · 六袋种子盲盒与共享种子配色（2026-10-21）
 
 用户希望购买有挑选、拆袋和揭晓的惊喜，同时避免每新增一种花就制作一张种子图。复用已有纸艺种子袋、种子图片、花园购买账本、反馈音效及静态配音管线，没有新增运行时服务或依赖。

@@ -5,11 +5,11 @@ import vm from 'node:vm';
 
 const source=fs.readFileSync(new URL('../xiaoya/audio.js',import.meta.url),'utf8')
   .replace(/^import .*;\r?\n/gm,'').replace(/export (async )?function /g,'$1function ');
-function fixture(){
+function fixture({playError=null}={}){
   const timers=new Map(),sounds=[],states=[],fetches=[];let now=0,id=0;
   class Audio{
     constructor(url){this.src=url;this.currentTime=0;this.playCalls=0;sounds.push(this);}
-    play(){this.playCalls++;return Promise.resolve();}
+    play(){this.playCalls++;return playError?Promise.reject(playError):Promise.resolve();}
     pause(){this.paused=true;}
     removeAttribute(name){if(name==='src')this.src='';}
     load(){}
@@ -28,6 +28,13 @@ test('native playback starts in the click turn and does not launch a second fetc
   assert.equal(audio.playCalls,1);assert.deepEqual(f.states,['loading']);assert.equal(f.fetches.length,0);
   audio.onplaying();audio.currentTime=1;audio.onended();
   assert.equal(await done,true);assert.equal(f.fetches.length,0);assert.deepEqual(f.states,['loading','playing','idle']);assert.equal(f.timers.size,0);
+});
+
+test('autoplay denial retains its name so optional greetings can recover on a gesture',async()=>{
+  const f=fixture({playError:Object.assign(new Error('autoplay denied'),{name:'NotAllowedError'})});
+  await assert.rejects(f.start(),error=>error.name==='NotAllowedError'&&/浏览器/.test(error.message));
+  assert.equal(f.sounds[0].paused,true);assert.equal(f.timers.size,0);
+  assert.deepEqual(f.states,['loading','error']);
 });
 
 test('playback stalled after starting times out instead of leaving the lesson waiting forever',async()=>{

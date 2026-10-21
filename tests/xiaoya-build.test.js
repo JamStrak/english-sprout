@@ -30,6 +30,7 @@ async function fixture(t,{phrasePack=false,internal=false}={}) {
   for (const name of ['blindbox-ui.js', 'seed-appearance.js']) await fs.writeFile(path.join(root, 'xiaoya', name), '/* seed presentation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'runtime.js'), "import {INTERNAL_BUILD} from './build-config.js'; export const enabled=INTERNAL_BUILD;");
   await fs.writeFile(path.join(root, 'xiaoya', 'garden-history.js'), '/* read-only legacy history */');
+  await fs.writeFile(path.join(root, 'xiaoya', 'welcome-greetings.js'), '/* local welcome rotation */');
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.js'), "/* internal reviewer */");
   await fs.writeFile(path.join(root, 'xiaoya', 'gm.css'), ".gm-reviewer{color:green}");
   await fs.mkdir(path.join(root, 'public/xiaoya/audio'), {recursive:true});
@@ -121,8 +122,8 @@ test('build isolates product, fingerprints every module, rewrites shared imports
   assert.equal(await fs.readFile(path.join(built.output, startup), 'utf8'), html);
   assert.ok(built.core.includes(`./${startup}`), 'The immutable launch entry is part of the verified offline shell');
   assert.match(html, /<base href="\.\.\/">/);
-  assert.match(html, /<title>小芽英语·自由花园版 v0\.19\.0<\/title>/);
-  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.19\.0/);
+  assert.match(html, /<title>小芽英语·自由花园版 v0\.20\.0<\/title>/);
+  assert.match(await fs.readFile(path.join(built.output, 'manifest.webmanifest'), 'utf8'), /自由花园版 v0\.20\.0/);
   const script = html.match(/src="(xiaoya\/releases\/[^"]+\/app.js)"/)[1];
   const base = new URL('../', 'https://host.test/nested/xiaoya/');
   assert.equal(new URL(script, base).pathname, `/nested/xiaoya/releases/${built.build}/app.js`);

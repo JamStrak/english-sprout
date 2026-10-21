@@ -18,6 +18,7 @@ import * as practicePlan from '../xiaoya/practice-plan.js';
 import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
+import { createWelcomeGreetings } from '../xiaoya/welcome-greetings.js';
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
@@ -80,7 +81,7 @@ function fixture(initial=meadow.createMeadow(),{search='',extraStorage=[]}={}){
     localStorage:{getItem:key=>storage.get(key)??null,setItem(key,value){writes.push({key,value});storage.set(key,value);}},
     location:{search},URL,URLSearchParams,navigator:{},window:{AudioContext,addEventListener:register('window'),scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,due:clock+delay,delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createPictureLoader:()=>({load(){},status:()=> 'ready'})});
+  Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:()=>({load(){},status:()=> 'ready'})});
   vm.runInNewContext(source+`;globalThis.ui={enterGarden,gardenGuide,navigate,openModal,closeModal,render,
     getGarden:()=>meadowState,getFeedback:()=>feedback};`,sandbox);
   async function emit(scope,type,event={}){for(const listener of events[scope][type]||[])listener(event);await flush();}
@@ -154,11 +155,12 @@ test('15-second idle guidance is one-shot and responds to current state after re
 test('navigation, modal, background and pagehide cancel idle guidance; return waits a fresh 15 seconds',async()=>{
   for(const exit of ['navigate','modal','hidden','pagehide']){
     const f=fixture(readySeed(3));f.enterGarden();await f.advance(14000);
+    const gardenSounds=()=>f.sounds.filter(sound=>!sound.file.includes('/welcome-'));
     if(exit==='navigate')f.navigate('home');else if(exit==='modal')f.openModal({type:'error',message:'test'});
     else if(exit==='hidden')await f.hidden(true);else await f.pagehide();
-    await f.advance(60000);assert.equal(f.sounds.length,0,exit);
+    await f.advance(60000);assert.equal(gardenSounds().length,0,exit);
     if(exit==='modal')f.closeModal();else if(exit==='hidden')await f.hidden(false);else f.enterGarden();
-    await f.advance(14999);assert.equal(f.sounds.length,0,exit);await f.advance(1);assert.equal(f.sounds.length,1,exit);
+    await f.advance(14999);assert.equal(gardenSounds().length,0,exit);await f.advance(1);assert.equal(gardenSounds().length,1,exit);
   }
 });
 
@@ -166,7 +168,7 @@ test('late audio completion cannot resurrect a canceled garden reminder',async()
   for(const exit of [f=>f.navigate('home'),f=>f.openModal({type:'error',message:'test'}),f=>f.hidden(true),f=>f.pagehide()]){
     const f=fixture(readySeed());f.enterGarden();assert.equal(f.sounds.length,1);
     const old=f.sounds[0];await exit(f);old.resolve(true);await flush();await f.advance(60000);
-    assert.equal(f.sounds.length,1);
+    assert.equal(f.sounds.filter(sound=>!sound.file.includes('/welcome-')).length,1);
   }
 });
 

@@ -13,6 +13,7 @@ const root = path.resolve(__dirname, '..'), dist = path.join(root, 'dist');
 const out = path.join(root, 'test-results', 'xiaoya-welcome-browser');
 const filter = process.env.XIAOYA_TEST_FILTER ? new RegExp(process.env.XIAOYA_TEST_FILTER) : null;
 const MEADOW_KEY = 'xiaoya-english:meadow:v1';
+const GREETINGS_KEY = 'xiaoya-english:welcome-greetings:v1';
 const LEARNING_KEYS = ['xiaoya-english:state:v1', 'xiaoya-english:practice-plan:v1', 'xiaoya-english:challenges:v1'];
 const FIRST_DAY = '2026-10-21', SECOND_DAY = '2026-10-22';
 const forbidden = /(?:\/(?:speech|models?)\/|\/speech-local\.js|\.(?:onnx|wasm)(?:\?|$)|vosk|whisper)/i;
@@ -49,13 +50,13 @@ async function serve() {
   return `http://127.0.0.1:${server.address().port}`;
 }
 
-async function fixture(width = 1180, height = 900) {
+async function fixture(width = 1180, height = 900, options = {}) {
   const context = await browser.newContext({viewport:{width,height}, timezoneId:'Asia/Shanghai', serviceWorkers:'block', reducedMotion:'reduce', hasTouch:width<600, isMobile:width<600});
   const f = {context, pages:[], requests:[], errors:[], microphone:0, width, height};
   await context.exposeBinding('qaWelcomeMicAccess', () => { f.microphone++; });
   context.on('request', request => f.requests.push(request.url()));
   await context.route('**/*', route => new URL(route.request().url()).origin === origin && !forbidden.test(route.request().url()) ? route.continue() : route.abort('blockedbyclient'));
-  await context.addInitScript(({origin, firstDay, meadowKey}) => {
+  await context.addInitScript(({origin, firstDay, meadowKey, options}) => {
     if (location.origin !== origin) return;
     if (!localStorage.getItem('qa-welcome-child-sentinel')) {
       localStorage.setItem('qa-welcome-child-sentinel', 'keep-this-disposable-child-record');
@@ -75,7 +76,15 @@ async function fixture(width = 1180, height = 900) {
       static now() { return RealDate.now() + offset; }
     }
     window.Date = CalendarDate;
-    const qa = window.qaWelcome = {setDay, failWrites:false, failedWrites:0, play:[], errors:[]};
+    const qa = window.qaWelcome = {setDay, failWrites:false, failedWrites:0, play:[], errors:[], blockedWelcomes:options.blockWelcomeOnce ? 1 : 0, media:[]};
+    const isGreeting = url => /welcome-(?:hello-\d{2}|gift-first|gift-intro)\.mp3(?:\?|$)/.test(url);
+    qa.activeGreetings = () => qa.media.filter(({element,item}) => isGreeting(item.url) && !element.paused).length;
+    // Exercise the app's visibility handler without freezing the real media
+    // clock. Native audio must pause even when the background event is simulated.
+    qa.setHidden = hidden => {
+      Object.defineProperty(document, 'hidden', {configurable:true, get:() => hidden});
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
     const setItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function(key, value) {
       if (this === localStorage && key === meadowKey && qa.failWrites) {
@@ -89,16 +98,23 @@ async function fixture(width = 1180, height = 900) {
     };
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function() {
-      this.playbackRate = 4;
-      const item = {url:this.currentSrc || this.src, playing:false, ended:false, error:false};
+      const url = this.currentSrc || this.src;
+      this.playbackRate = options.slowWelcome && isGreeting(url) ? 1 : 4;
+      const item = {url, playing:false, ended:false, paused:false, error:false, rejected:null};
       qa.play.push(item);
+      qa.media.push({element:this,item});
       this.addEventListener('playing', () => { item.url = this.currentSrc || this.src; item.playing = true; }, {once:true});
       this.addEventListener('ended', () => { item.ended = true; }, {once:true});
+      this.addEventListener('pause', () => { item.paused = true; }, {once:true});
       this.addEventListener('error', () => { item.error = true; }, {once:true});
+      if (isGreeting(url) && qa.blockedWelcomes) {
+        qa.blockedWelcomes--; item.rejected = 'NotAllowedError';
+        return Promise.reject(new DOMException('Isolated welcome autoplay denial', 'NotAllowedError'));
+      }
       return play.call(this);
     };
     addEventListener('unhandledrejection', event => qa.errors.push(String(event.reason)));
-  }, {origin, firstDay:FIRST_DAY, meadowKey:MEADOW_KEY});
+  }, {origin, firstDay:FIRST_DAY, meadowKey:MEADOW_KEY, options});
   f.page = await newPage(f);
   await goHome(f.page);
   f.learning = await learningSnapshot(f.page);
@@ -119,6 +135,15 @@ async function goHome(page) {
 const snapshot = page => page.evaluate(() => Object.fromEntries(Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)])));
 const learningSnapshot = page => page.evaluate(keys => Object.fromEntries(keys.map(key => [key, localStorage.getItem(key)])), LEARNING_KEYS);
 const savedMeadow = page => page.evaluate(key => JSON.parse(localStorage.getItem(key) || 'null'), MEADOW_KEY);
+const savedGreeting = page => page.evaluate(key => JSON.parse(localStorage.getItem(key) || 'null'), GREETINGS_KEY);
+async function greetingAudio(page, {from=0, ended=true} = {}) {
+  await page.waitForFunction(({from,ended}) => qaWelcome.play.slice(from).some(item =>
+    /welcome-(?:hello-\d{2}|gift-first|gift-intro)\.mp3(?:\?|$)/.test(item.url) && item.playing && (!ended || item.ended)), {from,ended});
+  return page.evaluate(({from,ended}) => qaWelcome.play.slice(from).find(item =>
+    /welcome-(?:hello-\d{2}|gift-first|gift-intro)\.mp3(?:\?|$)/.test(item.url) && item.playing && (!ended || item.ended)), {from,ended});
+}
+const greetingId = item => /\/(welcome-(?:hello-\d{2}|gift-first|gift-intro))\.mp3(?:\?|$)/.exec(item.url)?.[1];
+const greetingCount = page => page.evaluate(() => qaWelcome.play.filter(item => /welcome-(?:hello-\d{2}|gift-first|gift-intro)\.mp3(?:\?|$)/.test(item.url)).length);
 async function bridge(page, method, ...args) {
   return page.evaluate(async({method,args}) => {
     const {gmBridge} = await import(new URL('experience.js', document.querySelector('script[type="module"][src]').src));
@@ -195,12 +220,12 @@ async function clean(f) {
   assert.deepEqual(f.errors, [], 'Page JavaScript errors');
   for (const page of f.pages) if (!page.isClosed()) assert.deepEqual(await page.evaluate(() => qaWelcome.errors), [], 'Unhandled page rejection');
 }
-async function check(name, run, width, height) {
+async function check(name, run, width, height, options) {
   if (filter && !filter.test(name)) return;
   let f;
   const start = Date.now();
   try {
-    f = await fixture(width,height);
+    f = await fixture(width,height,options);
     const detail = await run(f);
     await clean(f);
     await f.page.screenshot({path:path.join(out, `${name}.png`), animations:'disabled'});
@@ -221,6 +246,115 @@ async function main() {
   origin = await serve();
   browser = await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--autoplay-policy=no-user-gesture-required']});
 
+  await check('automatic-welcome-once-cancels-and-returns-next-day', async f => {
+    const p = f.page;
+    const first = await greetingAudio(p, {ended:false});
+    assert.equal(greetingId(first), 'welcome-gift-first', 'A new child received a returning-child greeting');
+    assert.equal(await p.locator('main.welcome-gift-view,[role="dialog"]').count(), 0, 'The automatic hello forced a popup');
+    assert.equal(await savedMeadow(p), null, 'The automatic hello gave an unclaimed reward');
+    assert.equal(await p.evaluate(() => qaWelcome.activeGreetings()), 1);
+    await press(p, 'header [data-action="parent"]');
+    await p.locator('[role="dialog"]').waitFor();
+    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
+    assert.equal((await p.evaluate(() => qaWelcome.play[0])).ended, false, 'The parent dialog did not interrupt a live greeting');
+    await press(p, '[role="dialog"] [data-action="close"]');
+    const afterDialog = await greetingCount(p);
+    await p.waitForTimeout(800);
+    assert.equal(await greetingCount(p), afterDialog, 'Closing the parent dialog repeated the automatic welcome');
+
+    // A gift tap is an intentional replay; going home cancels that replay and
+    // must not create another automatic greeting in the same page session.
+    const replayFrom = await p.evaluate(() => qaWelcome.play.length);
+    await openGift(p);
+    await greetingAudio(p, {from:replayFrom,ended:false});
+    await press(p, 'header [data-action="home"]');
+    await p.locator('main.home-view').waitFor();
+    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
+    const afterHome = await greetingCount(p);
+    await p.waitForTimeout(800);
+    assert.equal(await greetingCount(p), afterHome, 'Returning home repeated a same-session hello');
+
+    // Reload represents a fresh open. Starting the lesson must immediately
+    // cancel its welcome, with no recording permission or learned evidence.
+    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+    await greetingAudio(p, {ended:false});
+    await press(p, '.home-view [data-action="next-event"]');
+    await p.locator('main.event-view').waitFor();
+    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
+    await press(p, 'header [data-action="home"]');
+    await p.locator('main.home-view').waitFor();
+    const beforeNewDay = await greetingCount(p);
+    await p.waitForTimeout(800);
+    assert.equal(await greetingCount(p), beforeNewDay);
+    const newDayFrom = await p.evaluate(() => qaWelcome.play.length);
+    await p.evaluate(day => { qaWelcome.setDay(day); qaWelcome.setHidden(false); }, SECOND_DAY);
+    const nextDay = await greetingAudio(p, {from:newDayFrom,ended:false});
+    assert.equal(await greetingCount(p), beforeNewDay+1, 'Returning on another local day did not greet once');
+    await p.evaluate(() => qaWelcome.setHidden(true));
+    await p.waitForFunction(() => qaWelcome.activeGreetings() === 0);
+    await p.evaluate(() => qaWelcome.setHidden(false));
+    await p.waitForTimeout(800);
+    assert.equal(await greetingCount(p), beforeNewDay+1, 'A same-day foreground event repeated the welcome');
+    assert.equal(await savedMeadow(p), null);
+    await noLearning(f);
+    return {first,nextDay,parentDialogCancels:true,lessonCancels:true,simulatedBackgroundCancelsNativeMedia:true,sameSessionRepeat:false};
+  }, undefined,undefined,{slowWelcome:true});
+
+  await check('returning-welcome-six-day-shuffle-refresh-stability', async f => {
+    const p = f.page;
+    await openGift(p); await claim(p,'shells');
+    const choices = [];
+    for (let day = 22; day <= 27; day++) {
+      const date = `2026-10-${day}`;
+      await p.evaluate(date => qaWelcome.setDay(date), date);
+      await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+      const audio = await greetingAudio(p), chosen = await savedGreeting(p);
+      assert.match(greetingId(audio), /^welcome-hello-0[1-6]$/, 'Returning greetings did not use a prepared variant MP3');
+      assert.equal(chosen.id, greetingId(audio));
+      assert.equal(chosen.date, date);
+      choices.push({date,id:chosen.id,nativeAudio:audio});
+      await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+      const refreshed = await greetingAudio(p);
+      assert.equal(greetingId(refreshed), chosen.id, 'Refreshing rerolled today\'s greeting');
+      assert.deepEqual(await savedGreeting(p), chosen, 'Refresh consumed another greeting from the rotation');
+      if (day === 22) {
+        const from = await p.evaluate(() => qaWelcome.play.length);
+        await openGift(p);
+        const explicitReplay = await greetingAudio(p, {from});
+        assert.equal(greetingId(explicitReplay), chosen.id, 'Gift entry did not replay the same daily welcome');
+        assert.deepEqual(await savedGreeting(p), chosen);
+      }
+    }
+    assert.equal(new Set(choices.map(choice => choice.id)).size, 6, 'A greeting repeated before all six variants were heard');
+    await p.evaluate(() => qaWelcome.setDay('2026-10-28'));
+    await p.reload({waitUntil:'domcontentloaded'}); await p.locator('main.home-view').waitFor();
+    const nextCycle = await greetingAudio(p);
+    assert.notEqual(greetingId(nextCycle), choices.at(-1).id, 'The two shuffle cycles repeated the same greeting on adjacent days');
+    await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
+    await noLearning(f);
+    return {choices,nextCycle:greetingId(nextCycle),sameDayStable:true,allSixNativeFilesDecoded:true};
+  });
+
+  await check('autoplay-denial-silent-gift-tap-recovers-native-audio', async f => {
+    const p = f.page;
+    await p.waitForFunction(() => qaWelcome.play.some(item => item.rejected === 'NotAllowedError'));
+    const denied = await p.evaluate(() => qaWelcome.play.find(item => item.rejected === 'NotAllowedError'));
+    assert.equal(denied.playing, false);
+    await p.waitForTimeout(650);
+    assert.equal(await p.locator('.toast,[role="dialog"]').count(), 0, 'Expected autoplay denial displayed an error or a gate');
+    assert.equal(await greetingCount(p), 1, 'Blocked autoplay retried without a child gesture');
+    const choice = await savedGreeting(p), from = await p.evaluate(() => qaWelcome.play.length);
+    await openGift(p);
+    const recovered = await greetingAudio(p, {from});
+    assert.equal(greetingId(recovered), greetingId(denied), 'A retry changed the selected greeting');
+    assert.deepEqual(await savedGreeting(p), choice);
+    assert.equal(recovered.rejected, null, 'The recovery did not use native media playback');
+    assert.equal(await p.locator('.toast').count(), 0);
+    assert.equal(await savedMeadow(p), null);
+    await noLearning(f);
+    return {denied,recovered,errorToast:false,syntheticFailureCount:1,nativeGestureRecovery:true};
+  }, undefined,undefined,{blockWelcomeOnce:true});
+
   await check('optional-gift-persistent-idempotent-no-learning', async f => {
     const p = f.page;
     assert.equal(await p.locator('main.welcome-gift-view,[role="dialog"]').count(), 0, 'Home must not force a welcome popup');
@@ -238,6 +372,8 @@ async function main() {
     await p.reload({waitUntil:'domcontentloaded'});
     await p.locator('main.home-view').waitFor();
     assert.equal(await p.locator('[data-action="welcome-gift"]').count(), 0, 'A same-day gift reappeared after refresh');
+    await p.waitForTimeout(650);
+    assert.equal(await greetingCount(p), 0, 'A claimed daily gift announced another surprise after refresh');
     await verifyGift(p, {shells:1,water:0,gifts:[{date:FIRST_DAY,kind:'shells'}]});
     await noLearning(f);
     return {wallet,nativeShellAudio:shellAudio};
@@ -352,7 +488,9 @@ async function main() {
   }
 
   await check('gm-preview-and-navigation-keep-real-storage-untouched', async f => {
-    const p = f.page, child = await snapshot(p);
+    const p = f.page;
+    await greetingAudio(p);
+    const child = await snapshot(p);
     await assert.rejects(() => bridge(p,'previewWelcome','shells'), /免录音测试|sandbox/i, 'Ordinary development mode allowed a GM wallet mutation');
     assert.deepEqual(await snapshot(p), child);
     const previews = [];

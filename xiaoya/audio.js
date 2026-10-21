@@ -61,7 +61,7 @@ export function playSound(file, onState = () => {}) {
     audio.onended = () => { cachePublicSound(file); current.finish(true); };
     audio.onerror = () => current.finish(false, new Error('这段内置声音暂时无法读取，请家长双击「启动小芽英语」，在家长区检查声音准备状态。'));
     watchProgress();
-    audio.play().catch(error => { if (playback === current) current.finish(false, error.name === 'NotAllowedError' ? new Error('浏览器还没有允许播放声音，请点一下示范按钮。') : error); });
+    audio.play().catch(error => { if (playback === current) current.finish(false, error.name === 'NotAllowedError' ? Object.assign(new Error('浏览器还没有允许播放声音，请点一下示范按钮。'),{name:'NotAllowedError'}) : error); });
   });
 }
 

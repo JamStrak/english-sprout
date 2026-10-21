@@ -22,6 +22,7 @@ import * as challengeUI from '../xiaoya/challenge-ui.js';
 import * as matcher from '../src/speech-match.js';
 import {prepareSamples} from '../xiaoya/speech-signal.js';
 import {PHRASE_PACK_V015_EVENT_IDS} from '../xiaoya/phrase-pack-v015.js';
+import {createWelcomeGreetings} from '../xiaoya/welcome-greetings.js';
 
 const added = PHRASE_PACK_V015_EVENT_IDS.map(id => content.EVENTS.find(event => event.id === id));
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -63,7 +64,7 @@ function controllerFixture({stored = new Map(), voice = 'pip', recognized, play 
     recognize:async (url, accepted) => {recognitionCalls.push({url, accepted:[...accepted]});
       return recognized ?? {matched:true, stars:3, heard:accepted[0]};},
     beginRecording:async () => true, finishRecording() {}, replayClip:async () => true};
-  const sandbox = {...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
+  const sandbox = {createWelcomeGreetings, ...content, ...learning, ...curriculum, ...stories, ...storyArt, ...storyPictures,
     ...meadowArt, ...meadowUI, ...seedShop, ...gardenHistory, ...voices, ...art, ...gardenArt,
     ...practicePlan, ...challengeUI, meadow, challenge, audio, document, localStorage,
     readVoice:() => voice, installPaperArt() {}, bindMeadowInteractions() {}, layoutMeadowWatering() {},

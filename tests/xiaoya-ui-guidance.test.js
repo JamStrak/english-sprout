@@ -20,12 +20,18 @@ import * as curriculum from '../xiaoya/curriculum.js';
 import * as challenge from '../xiaoya/challenges.js';
 import * as challengeUI from '../xiaoya/challenge-ui.js';
 import { installPaperArt } from '../xiaoya/paper-art.js';
+import { createWelcomeGreetings } from '../xiaoya/welcome-greetings.js';
 
 // Exercise the real renderer and handlers with controlled audio/permission
 // completion. Button visibility is explicit; physical layout stays in browser tests.
 const source='const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage;\n'+fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export const /gm,'const ');
 const deferred=()=>{let resolve;const promise=new Promise(yes=>{resolve=yes;});return {promise,resolve};};
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+async function finishHomeWelcome(f){
+  f.advance(400);assert.match(f.sounds.at(-1).file,/welcome-.*\.mp3$/);
+  assert.deepEqual(f.hinted(),[],'No hand should interrupt the welcome voice');
+  f.sounds.at(-1).resolve(true);await flush();
+}
 function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false}={}){
   let nodes=[],primaryWraps=[],html='',timerId=0,renders=0,now=0;
   const images=[];
@@ -64,7 +70,7 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
       recordChallengeHelp:(state,input)=>challenge.recordChallengeHelp(state,JSON.parse(JSON.stringify(input)))},
     location:{search:storyId?`?story=${storyId}`:''},JSON,URL,URLSearchParams,Event,Image:class{constructor(){images.push(this);}},navigator:locks?{locks}:{},window:{addEventListener(){},scrollTo(){}},
     setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay,due:now+delay});return id;},clearTimeout(id){timers.delete(id);}};
-  Object.assign(sandbox,storyPictures,{createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
+  Object.assign(sandbox,storyPictures,{createWelcomeGreetings,createPictureLoader:options=>storyPictures.createPictureLoader({...options,createImage:()=>new sandbox.Image(),setTimer:sandbox.setTimeout,clearTimer:sandbox.clearTimeout})});
   vm.runInNewContext(source+`;globalThis.ui={startEvent,render,narrate,sound,sample,teach,record,playStory,storyContinue,navigate,openModal,suspend,actions,prepareMicrophone,assessClip,assessmentVoice,idleHintTarget,cancelIdleHint,scheduleIdleHint,idleHintActivity,
     getSession:()=>session,getState:()=>state,getPractice:()=>practice,getChallenges:()=>challenges,getMeadow:()=>meadowState,getModal:()=>modal,startChallenge,openChallenges,challengeSummary,restoreChallengeRewards,practiceToday,
     setMic(value){prefs.mic=value;},
@@ -533,18 +539,18 @@ test('assessment completion uses a gift while parent checkups keep their save ch
   f.setSession({phase:'resolved',assessmentMode:true});assert.match(f.button('finish').body,/data-icon="check"/);
 });
 
-test('the hand waits a full 15 seconds before pointing at the sole available primary action',()=>{
+test('the hand waits a full 15 seconds before pointing at the sole available primary action',async()=>{
   for(const [state,action] of [[null,'next-event'],[{},'record'],[{phase:'story',storyReady:true},'story-continue'],[{phase:'resolved'},'finish']]){
-    const f=fixture();if(state)f.setSession(state);
+    const f=fixture();await finishHomeWelcome(f);if(state)f.setSession(state);
     assert.equal(f.primaryWraps().length,1);assert.equal(f.idleHintTarget(),f.primaryWraps()[0]);
     assert.deepEqual(f.hinted(),[]);f.advance(14999);assert.deepEqual(f.hinted(),[],action);
     f.advance(1);assert.deepEqual(f.hinted(),[action]);
   }
 });
 
-test('document activity removes a visible hand and restarts its full idle interval',()=>{
+test('document activity removes a visible hand and restarts its full idle interval',async()=>{
   for(const type of ['pointerup','pointercancel','keydown','scroll','click']){
-    const f=fixture();f.advance(15000);assert.deepEqual(f.hinted(),['next-event']);
+    const f=fixture();await finishHomeWelcome(f);f.advance(15000);assert.deepEqual(f.hinted(),['next-event']);
     const registered=f.documentListeners.get(type).find(entry=>entry.callback===f.idleHintActivity);
     assert.ok(registered,`${type} is observed`);assert.equal(registered.options.capture,true);assert.equal(registered.options.passive,true);
     f.dispatch(type);assert.deepEqual(f.hinted(),[],type);
@@ -552,9 +558,9 @@ test('document activity removes a visible hand and restarts its full idle interv
   }
 });
 
-test('a held pointer suppresses the hand across repaint until release or cancellation',()=>{
+test('a held pointer suppresses the hand across repaint until release or cancellation',async()=>{
   for(const release of ['pointerup','pointercancel']){
-    const f=fixture();f.advance(15000);f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
+    const f=fixture();await finishHomeWelcome(f);f.advance(15000);f.dispatch('pointerdown');assert.deepEqual(f.hinted(),[]);
     assert.equal(f.idleHintTarget(),null);f.render();f.advance(30000);assert.deepEqual(f.hinted(),[]);
     f.dispatch(release);f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
   }
@@ -612,15 +618,17 @@ test('disabled, busy, hidden or competing primary buttons cannot receive an idle
   }
 });
 
-test('a cancelled timer cannot shorten the new interval even when its target is unchanged',()=>{
-  const f=fixture(),old=[...f.timers.values()].find(timer=>timer.delay===15000);assert.ok(old);
+test('a cancelled timer cannot shorten the new interval even when its target is unchanged',async()=>{
+  const f=fixture();await finishHomeWelcome(f);
+  const old=[...f.timers.values()].find(timer=>timer.delay===15000);assert.ok(old);
   f.advance(5000);f.dispatch('keydown');old.fn();assert.deepEqual(f.hinted(),[]);
   f.advance(14999);assert.deepEqual(f.hinted(),[]);f.advance(1);assert.deepEqual(f.hinted(),['next-event']);
 });
 
-test('late timers cannot reveal a hand on an old screen or contaminate a replacement screen',()=>{
+test('late timers cannot reveal a hand on an old screen or contaminate a replacement screen',async()=>{
   for(const change of ['repaint','navigate','modal','hidden','recording']){
-    const f=fixture(),s=f.setSession(),oldWrap=f.primaryWraps()[0],old=[...f.timers.values()].find(timer=>timer.delay===15000);
+    const f=fixture();await finishHomeWelcome(f);
+    const s=f.setSession(),oldWrap=f.primaryWraps()[0],old=[...f.timers.values()].find(timer=>timer.delay===15000);
     assert.ok(old);
     if(change==='repaint')f.render();
     if(change==='navigate')f.navigate('home');
