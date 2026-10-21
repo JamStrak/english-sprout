@@ -35,18 +35,39 @@ export function stopSound() {
   if (playback) { const old = playback; playback = null; old.finish(false); }
 }
 
+// Fade only the captured voice. Navigation or a newer voice can still stop it
+// immediately, and its timer must never touch a replacement playback.
+export function fadeOutSound(duration = 180) {
+  return playback ? playback.fadeOut(duration) : Promise.resolve();
+}
+
 export function playSound(file, onState = () => {}) {
   stopSound();
   return new Promise((resolve, reject) => {
     const audio = new Audio(absolute(file));
     audio.preload = 'auto';
-    let timer, finished = false, lastProgress = 0;
+    let timer, fadeTimer, fadePromise, resolveFade, started = false, finished = false, lastProgress = 0;
     const current = {audio, finish(ok, error) {
       if (finished) return; finished = true;
-      clearTimeout(timer); audio.onended = audio.onerror = audio.onplaying = audio.ontimeupdate = null;
+      clearTimeout(timer); clearTimeout(fadeTimer); audio.onended = audio.onerror = audio.onplaying = audio.ontimeupdate = null;
       audio.pause(); audio.removeAttribute('src'); audio.load();
       if (playback === current) playback = null;
+      resolveFade?.();
       onState(error ? 'error' : 'idle'); error ? reject(error) : resolve(ok);
+    }, fadeOut(duration) {
+      if (fadePromise) return fadePromise;
+      if (!started || !(duration > 0)) { current.finish(false); return Promise.resolve(); }
+      fadePromise = new Promise(resolve => { resolveFade = resolve; });
+      const start = performance.now(), volume = audio.volume;
+      const tick = () => {
+        if (finished) return;
+        const progress = Math.min(1, (performance.now() - start) / duration);
+        audio.volume = volume * (1 - progress);
+        if (progress >= 1) current.finish(false);
+        else fadeTimer = setTimeout(tick, Math.min(16, duration * (1 - progress)));
+      };
+      tick();
+      return fadePromise;
     }};
     playback = current;
     onState('loading');
@@ -54,7 +75,7 @@ export function playSound(file, onState = () => {}) {
       clearTimeout(timer);
       timer = setTimeout(() => current.finish(false, new Error('本地声音读取超时，请家长双击「启动小芽英语」，在家长区检查声音准备状态。')), 15000);
     };
-    audio.onplaying = () => { watchProgress(); onState('playing'); };
+    audio.onplaying = () => { started = true; watchProgress(); onState('playing'); };
     audio.ontimeupdate = () => {
       if (audio.currentTime > lastProgress) { lastProgress = audio.currentTime; watchProgress(); }
     };

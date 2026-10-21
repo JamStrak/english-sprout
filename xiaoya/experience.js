@@ -207,10 +207,21 @@ function idleHintActivity(event){
 }
 function applyGuide(){for(const button of document.querySelectorAll('[data-action]'))button.classList.toggle('is-guided',!modal&&!button.disabled&&(guideActions.includes(button.dataset.action)||guideActions.includes('primary')&&button.hasAttribute('data-primary')));}
 function cancelFeedbackVoice(){clearTimeout(feedbackVoiceTimer);feedbackVoiceTimer=null;}
-function stopSpeech(){soundGeneration++;audio.stopSound();speaking=false;effects.setSilent(false);}
+function stopSpeech({fade=false}={}){soundGeneration++;if(fade)void audio.fadeOutSound();else audio.stopSound();speaking=false;effects.setSilent(false);}
 function feedbackVoice(callback,delay=340){cancelFeedbackVoice();feedbackVoiceTimer=setTimeout(()=>{feedbackVoiceTimer=null;callback();},delay);}
 function clearGuide(){guideGeneration++;guideActions=[];applyGuide();}
-async function sound(file,targets=[],{automatic=false}={}){const generation=++guideGeneration,playback=++soundGeneration;guideActions=targets;speaking=true;cancelIdleHint();effects.setSilent(true);applyGuide();try{return await audio.playSound(file);}catch(error){if(!(automatic&&error.name==='NotAllowedError'))toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}}
+async function sound(file,targets=[],{automatic=false,fadePrevious=false}={}){
+  const generation=++guideGeneration,playback=++soundGeneration,ui=uiGeneration;
+  guideActions=targets;speaking=true;cancelIdleHint();effects.setSilent(true);applyGuide();
+  try{
+    if(fadePrevious){
+      await audio.fadeOutSound();
+      if(playback!==soundGeneration||ui!==uiGeneration||document.hidden)return false;
+    }
+    return await audio.playSound(file);
+  }catch(error){if(!(automatic&&error.name==='NotAllowedError'))toast(error.message||'内置声音暂时无法读取，请家长在家长区检查声音准备状态。');return false;}
+  finally{if(playback===soundGeneration){speaking=false;effects.setSilent(false);}if(generation===guideGeneration){clearGuide();scheduleIdleHint();}}
+}
 const guideTargets={welcome:['primary'],speak:['record','sample'],'speech-pass':['finish'],'speech-saved':['finish'],'speech-retry':['sample'],'speech-partial':['sample'],'speech-silent':['record','sample'],'speech-wait':['watch'],next:['next-event']};
 const narrate=id=>sound(voice(`garden-${id}`),guideTargets[id]||[]);
 function button(action,label,glyph,extra=''){return `<button class="icon-button" data-action="${action}" aria-label="${esc(label)}" ${extra}>${icon(glyph)}</button>`;}
@@ -218,7 +229,7 @@ function primary(action,label,body,extra=''){return `<div class="primary-wrap"><
 function header(){
   const localHelp=page==='event'&&['story','request'].includes(session?.phase);
   const controls=page==='parent'?'':`${localHelp?'':button('help','听下一步怎么玩','help')}${button('parent','家长陪伴区','parent')}`;
-  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语<small class="edition-label">自由花园 v${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'0.20.0')}</small></span><div>${controls}</div></header>`;
+  return `<header class="topbar">${button('home','回到首页','house')}<span class="brand">小芽英语<small class="edition-label">自由花园 v${esc(document.querySelector('meta[name="xiaoya-version"]')?.content||'0.20.1')}</small></span><div>${controls}</div></header>`;
 }
 function balance(){const garden=activeGarden();return `<div class="wallet" aria-label="${garden.shells} 枚贝壳，${garden.water} 滴水"><span>${shellArt()}<b data-shells>${garden.shells}</b></span><span>${dropArt()}<b data-water>${garden.water}</b></span></div>`;}
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
@@ -451,7 +462,7 @@ function rewardView(){
 function previewReward(choice){
   if(rewardBusy||modal||!(page==='reward'||session?.phase==='reward'))return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||!['shells','water'].includes(choice))return;
-  cancelFeedbackVoice();stopSpeech();rewardSelection={roundId:round.roundId,choice};render();rewardVoice();
+  cancelFeedbackVoice();rewardSelection={roundId:round.roundId,choice};render();rewardVoice({fadePrevious:true});
 }
 function confirmReward(){
   const selected=rewardSelection,round=meadow.pendingRewards(meadowState)[0];
@@ -461,7 +472,7 @@ function confirmReward(){
 async function collectReward(choice,roundId){
   if(rewardBusy)return;
   const round=meadow.pendingRewards(meadowState)[0];if(!round||round.roundId!==roundId)return;
-  rewardBusy=true;cancelFeedbackVoice();stopSpeech();render();const generation=uiGeneration;
+  rewardBusy=true;cancelFeedbackVoice();stopSpeech({fade:true});render();const generation=uiGeneration;
   try{const saved=await gardenChange(latest=>meadow.claimReward(latest,round.roundId,choice));if(!saved||modal||generation!==uiGeneration)return;rewardSelection=null;rewardReceipt=round.roundId;render();effects.play('reward',{target:document.querySelector('.reward-treasure')});feedbackVoice(()=>{if(generation===uiGeneration&&!modal&&!document.hidden&&(page==='reward'||session?.phase==='reward'))rewardVoice();});}
   finally{rewardBusy=false;if(!modal&&(page==='reward'||session?.phase==='reward'))render();}
 }
@@ -479,7 +490,7 @@ function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showP
 function gardenFeedback(kind,plantId){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId};render();const target=plantId?document.querySelector(`[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-tool');effects.play(kind==='planted'?'plant':kind,{target});feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
 function feedbackGuide(cue){if(activeGarden().plants.length>=3)return gardenGuide({automatic:true,cue});const expected=feedback;feedbackVoice(()=>{if(feedback===expected&&gardenIsActive())gardenGuide({automatic:true,cue});});}
 
-function rewardVoice(){const pending=meadow.pendingRewards(meadowState)[0];if(pending){const choice=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);return sound(voice(choice==='water'&&amounts.water===2?'flow-water-choice-v13':choice?`flow-${choice}`:'flow-choice'),choice?['confirm-reward']:['choose-shells','choose-water']);}const round=meadowState.rounds.find(r=>r.roundId===rewardReceipt)||(session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1)),receipt=round?.reward,newReward=round?.rewardVersion===3;return sound(voice(`economy-${receipt==='shells'?'shells':receipt==='water'?newReward?'water-v13':'water':newReward?'starter-v13':'starter'}`),['garden']);}
+function rewardVoice(options={}){const pending=meadow.pendingRewards(meadowState)[0];if(pending){const choice=rewardSelection?.roundId===pending.roundId?rewardSelection.choice:null,amounts=meadow.roundReward(meadowState,pending.roundId);return sound(voice(choice==='water'&&amounts.water===2?'flow-water-choice-v13':choice?`flow-${choice}`:'flow-choice'),choice?['confirm-reward']:['choose-shells','choose-water'],options);}const round=meadowState.rounds.find(r=>r.roundId===rewardReceipt)||(session?meadowState.rounds.find(r=>r.roundId===session.id):meadowState.rounds.at(-1)),receipt=round?.reward,newReward=round?.rewardVersion===3;return sound(voice(`economy-${receipt==='shells'?'shells':receipt==='water'?newReward?'water-v13':'water':newReward?'starter-v13':'starter'}`),['garden'],options);}
 function selectMeadowTool(tool){if(!gardenIsActive())return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();if(tool==='can'&&!meadowState.water)sound(voice('economy-water-short'),['next-event']);effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`));}
 function meadowGuide(cue){const action=meadow.nextAction(meadowState);if(cue==='bloom')return sound(voice('meadow-bloom'));if(cue==='giant')return sound(voice('meadow-giant'),['meadow-seed']);if(action==='challenge-seed')return sound(voice('challenge-seed'),['challenge-seed']);if(action==='reward')return sound(voice('economy-earned'),['collect-reward']);if(action==='pack')return sound(voice('economy-shop-ready'),['shop']);if(action==='learn')return meadowState.plants.some(p=>p.waterings<meadow.ALL_FLOWERS.find(f=>f.id===p.flowerId).waterNeeded)?sound(voice('economy-water-short'),['next-event']):narrate('next');return sound(voice(action==='plant'?'meadow-seed':'meadow-water-beside'),[action==='plant'?'meadow-seed':'meadow-can']);}
 async function openShop(){

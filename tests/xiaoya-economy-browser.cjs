@@ -12,7 +12,7 @@ const out=path.resolve(process.env.XIAOYA_ECONOMY_TEST_OUT||path.join(__dirname,
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const A='xiaoya-english:garden:v1',B='xiaoya-english:meadow:v1',PLAN='xiaoya-english:practice-plan:v1',STATE='xiaoya-english:state:v1';
 const DAY='2026-10-18';
-const report={origin,scope:'Disposable Edge profiles, real local audio at 4x, true touch, Web Locks and service worker; visibility events are synthesized because headless tabs all stay visible; the stale-receipt race deliberately delays storage notification and dispatches confirm to each exact DOM target; no real microphone or child learning data.',checks:[]};
+const report={origin,scope:'Disposable Edge profiles, real local audio at 4x (fade checks at 1x), true touch, Web Locks and service worker; visibility events are synthesized because headless tabs all stay visible; the stale-receipt race deliberately delays storage notification and dispatches confirm to each exact DOM target; no real microphone or child learning data.',checks:[]};
 let browser;
 const save=()=>fs.writeFileSync(path.join(out,filter?'results-filtered.json':'results.json'),JSON.stringify(report,null,2));
 const click=(p,action)=>p.locator(`[data-action="${action}"]`).first().tap();
@@ -34,7 +34,7 @@ async function fixture({width=390,height=844,motion='reduce',serviceWorkers='blo
     const q=window.qaEconomy={errors:[],audios:[],plays:[]};
     addEventListener('error',e=>{if(e.message)q.errors.push(e.message);});addEventListener('unhandledrejection',e=>q.errors.push(String(e.reason)));
     const NativeAudio=Audio;
-    window.Audio=function(...args){const a=new NativeAudio(...args),item={url:String(args[0]||''),ended:false,error:false};a.playbackRate=4;q.audios.push(item);a.addEventListener('playing',()=>q.plays.push(item.url));a.addEventListener('ended',()=>item.ended=true);a.addEventListener('error',()=>item.error=true);return a;};window.Audio.prototype=NativeAudio.prototype;
+    window.Audio=function(...args){const a=new NativeAudio(...args),item={url:String(args[0]||''),ended:false,error:false,volumes:[],get volume(){return a.volume;},get paused(){return a.paused;}};a.playbackRate=q.rate||4;q.audios.push(item);a.addEventListener('playing',()=>q.plays.push(item.url));a.addEventListener('volumechange',()=>item.volumes.push(a.volume));a.addEventListener('ended',()=>item.ended=true);a.addEventListener('error',()=>item.error=true);return a;};window.Audio.prototype=NativeAudio.prototype;
   },{origin,day:DAY});
   const p=await c.newPage();p.setDefaultTimeout(20000);
   try{
@@ -165,6 +165,26 @@ async function cases(){
     await click(p,'confirm-reward');await p.locator('.reward-view[data-choice="false"]').waitFor();const paid=await state(p);
     assert.deepEqual(balance(paid),[before.shells,before.water+2]);assert.equal(pending(paid).length,0);assert.equal(paid.rounds.at(-1).reward,'water');
     await receiptPurpose(p,'water');assert.deepEqual(await state(p),paid,'Receipt explanation cannot claim again');
+  });
+  await test('Resource explanations fade on selection and confirmation with native audio',async({p})=>{
+    for(const choice of ['shells','water']){
+      await seed(p,{pendingRounds:1});await p.evaluate(()=>qaEconomy.rate=1);
+      await click(p,'garden');await p.waitForFunction(()=>qaEconomy.plays.some(url=>url.endsWith('/flow-choice.mp3')));
+      await click(p,`choose-${choice}`);
+      assert.equal(await p.locator('[data-action="confirm-reward"]').isEnabled(),true,'Selection never waits for speech');
+      // load() cleanup can cancel the final queued volumechange/pause events;
+      // inspect the native element state as well as intermediate volume events.
+      await p.waitForFunction(()=>{const a=qaEconomy.audios.findLast(a=>a.url.endsWith('/flow-choice.mp3'));return a?.volume===0&&a.paused;});
+      const opening=await p.evaluate(()=>qaEconomy.audios.findLast(a=>a.url.endsWith('/flow-choice.mp3')));
+      assert(opening.volumes.some(v=>v>0&&v<1),'Opening explanation audibly ramps down instead of cutting abruptly');assert.equal(opening.ended,false);
+      const file=choice==='shells'?'flow-shells.mp3':'flow-water-choice-v13.mp3';
+      await p.waitForFunction(file=>qaEconomy.plays.some(url=>url.endsWith('/'+file)),file);
+      await click(p,'confirm-reward');await p.locator('.reward-view[data-choice="false"]').waitFor();
+      await p.waitForFunction(file=>{const a=qaEconomy.audios.findLast(a=>a.url.endsWith('/'+file));return a?.volume===0&&a.paused;},file);
+      const selected=await p.evaluate(file=>qaEconomy.audios.findLast(a=>a.url.endsWith('/'+file)),file);
+      assert(selected.volumes.some(v=>v>0&&v<1),'Selected explanation fades when the gift is claimed');assert.equal(selected.ended,false);
+      assert.equal((await state(p)).rounds.at(-1).reward,choice);assert.equal(pending(await state(p)).length,0);
+    }
   });
   await test('Leaving or reloading a resource preview preserves the pending gift and clears unconfirmed selection',async({p})=>{
     const before=await seed(p,{pendingRounds:1});await click(p,'garden');await previewReward(p,'shells');await click(p,'home');await p.locator('.home-view').waitFor();assert.deepEqual(await state(p),before);

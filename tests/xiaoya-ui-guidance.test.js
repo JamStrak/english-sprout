@@ -32,11 +32,11 @@ async function finishHomeWelcome(f){
   assert.deepEqual(f.hinted(),[],'No hand should interrupt the welcome voice');
   f.sounds.at(-1).resolve(true);await flush();
 }
-function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false}={}){
+function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()=>false,manualFade=false}={}){
   let nodes=[],primaryWraps=[],html='',timerId=0,renders=0,now=0;
   const images=[];
   const documentListeners=new Map();
-  const timers=new Map(),sounds=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
+  const timers=new Map(),sounds=[],fades=[],captures=[],writes=[],calls={cancelRecording:0,cancelOptions:[],cancelRecognition:0,release:0,replay:0,prepareRecording:0};
   const classList=initial=>{const classes=new Set(initial.split(/\s+/));return {toggle(name,on){if(on)classes.add(name);else classes.delete(name);},contains:name=>classes.has(name)};};
   function parse(markup){return [...markup.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)].map(match=>{
     const [,attributes,body]=match;
@@ -55,6 +55,7 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
     addEventListener(type,callback,options){if(!documentListeners.has(type))documentListeners.set(type,[]);documentListeners.get(type).push({callback,options});},body:{append(){},addEventListener(){},dispatchEvent(){}},createElement(){return {dataset:{},setAttribute(){},querySelector(){return {addEventListener(){}};},remove(){}};}};
   const localStorage={getItem:key=>stored?.get(key)??null,setItem(key,value){if(failWrite(key))throw new Error('QuotaExceededError');writes.push({key,value});stored?.set(key,value);}};
   const audio={playSound(file){const pending=deferred();sounds.push({file,...pending});return pending.promise;},stopSound(){},
+    fadeOutSound(){const pending=deferred();fades.push(pending);if(!manualFade)pending.resolve();return pending.promise;},
     cancelRecording(options){calls.cancelRecording++;calls.cancelOptions.push(options);for(const capture of captures)capture.resolve(false);},cancelRecognition(){calls.cancelRecognition++;},
     prepareRecording(){calls.prepareRecording++;return Promise.resolve(true);},
     releaseAudioSession(){calls.release++;audio.cancelRecording();audio.cancelRecognition();},replayClip(){calls.replay++;return Promise.resolve(true);},
@@ -78,7 +79,7 @@ function fixture({storyId='',recognized=null,stored=null,locks=null,failWrite=()
     setGarden(value){meadowState=value;page='garden';session=null;modal=null;render();},
     setMeadowReward(value){meadowState=value;page='reward';session=null;modal=null;rewardSelection=null;render();},
     setSession(overrides={}){const story=STORIES[0];session={id:'ui-round',event:story.event,story,context:story.event.contexts[0],phase:'request',assessmentMode:false,helped:false,storyGeneration:0,speechGeneration:0,frame:0,storyReady:false,storyRunning:false,hasClip:false,waiting:false,recording:false,teaching:false,assessment:null,...overrides};page='event';modal=null;prefs={mic:true};render();return session;}};`,sandbox);
-  return {...sandbox.ui,document,documentListeners,sounds,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
+  return {...sandbox.ui,document,documentListeners,sounds,fades,captures,calls,writes,timers,images,renders:()=>renders,html:()=>html,modalHtml:()=>modalRoot.innerHTML,
     primaryWraps:()=>primaryWraps,
     hinted:()=>primaryWraps.filter(wrap=>wrap.classList.contains('is-idle-hint')).map(wrap=>wrap.querySelector('[data-primary]').dataset.action),
     dispatch(type,extra={}){for(const {callback} of documentListeners.get(type)||[])callback({type,...extra});},
@@ -600,10 +601,35 @@ test('recall and unselected reward choices never gain a hand that favors one opt
   for(const choice of ['shells','water']){
     const f=fixture();f.setMeadowReward(garden);assert.ok(f.button('choose-shells'));assert.ok(f.button('choose-water'));
     f.advance(30000);assert.equal(f.idleHintTarget(),null);assert.deepEqual(f.hinted(),[]);
-    f.actions[`choose-${choice}`]();assert.equal(f.button('confirm-reward').hasAttribute('data-primary'),true);
+    f.actions[`choose-${choice}`]();assert.equal(f.button('confirm-reward').hasAttribute('data-primary'),true);await flush();
     f.advance(30000);assert.deepEqual(f.hinted(),[],'The choice explanation is still playing');
     f.sounds.at(-1).resolve(true);await flush();f.advance(14999);assert.deepEqual(f.hinted(),[]);
     f.advance(1);assert.deepEqual(f.hinted(),['confirm-reward'],'Only the explicitly selected gift is a primary target');
+  }
+});
+
+test('reward selection responds during the fade and only the latest choice can speak',async()=>{
+  const f=fixture({manualFade:true});let garden=meadow.createMeadow();
+  for(const roundId of ['starter','choice'])garden=meadow.rewardRound(garden,{roundId,eventId:stories.STORIES[0].id,date:'2026-10-18'});
+  f.setMeadowReward(garden);const before=f.sounds.length;
+  f.actions['choose-shells']();assert.equal(f.button('confirm-reward').disabled,false);
+  f.actions['choose-water']();assert.equal(f.button('choose-water').getAttribute('aria-pressed'),'true');
+  assert.equal(f.sounds.length,before,'No replacement voice overlaps the outgoing explanation');
+  for(const fade of f.fades)fade.resolve();await flush();
+  assert.equal(f.sounds.length,before+1);assert.match(f.sounds.at(-1).file,/flow-water-choice-v13\.mp3$/);
+  assert.equal(meadow.pendingRewards(f.getMeadow()).length,1,'Preview does not spend or grant resources');
+});
+
+test('leaving, backgrounding or confirming during the fade cannot resurrect preview speech',async()=>{
+  for(const action of ['home','parent','background','confirm-reward']){
+    const f=fixture({manualFade:true});let garden=meadow.createMeadow();
+    for(const roundId of ['starter','choice'])garden=meadow.rewardRound(garden,{roundId,eventId:stories.STORIES[0].id,date:'2026-10-18'});
+    f.setMeadowReward(garden);f.actions['choose-shells']();const before=f.sounds.length;
+    if(action==='background'){f.document.hidden=true;f.suspend();}else f.actions[action]();
+    const afterAction=f.sounds.length;
+    for(const fade of f.fades)fade.resolve();await flush();
+    assert.equal(f.sounds.length,afterAction,action);assert.ok(!f.sounds.slice(before).some(x=>/flow-shells\.mp3$/.test(x.file)),action);
+    assert.equal(meadow.pendingRewards(f.getMeadow()).length,action==='confirm-reward'?0:1,action);
   }
 });
 
