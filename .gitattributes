@@ -1,5 +1,7 @@
 # Speech assets are SHA-256 pinned; preserve original bytes on every platform.
 public/xiaoya/speech/** -text
+# This frozen phrase specification is hashed by the checked audio manifest.
+design/xiaoya-phrases-v015/phrases.json -text
 # Archived teaching sources are SHA-256 pinned, including their original newlines.
 design/xiaoya-teaching-v011/source-manifest.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
 design/xiaoya-teaching-v011/generation-record.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
