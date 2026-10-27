@@ -102,8 +102,13 @@ def bind_available(root: Path, ports=PORTS) -> PreviewServer:
 
 
 def ensure_build(root: Path):
-    """Build a missing local preview once; never overwrite an existing release."""
-    if (root / "dist" / "xiaoya" / "index.html").is_file():
+    """Keep local preview on the internal build, with the GM workbench available."""
+    output = root / "dist" / "xiaoya"
+    try:
+        metadata = json.loads((output / "version.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        metadata = None
+    if (output / "index.html").is_file() and isinstance(metadata, dict) and metadata.get("channel") == "internal":
         return
     script = root / "scripts" / "build.mjs"
     node = shutil.which("node")
@@ -117,7 +122,11 @@ def ensure_build(root: Path):
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         raise LaunchError("小芽英语首次构建未能完成。\n请让 Codex 检查 Node.js，再运行 npm run build:dev。已有学习记录不会丢失。") from error
-    if result.returncode != 0 or not (root / "dist" / "xiaoya" / "index.html").is_file():
+    try:
+        built = json.loads((output / "version.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        built = None
+    if result.returncode != 0 or not (output / "index.html").is_file() or not isinstance(built, dict) or built.get("channel") != "internal":
         detail = (result.stderr or result.stdout or "没有生成网页文件").strip()[-1200:]
         raise LaunchError(f"小芽英语首次构建失败，请让 Codex 检查后运行 npm run build:dev。\n{detail}")
 

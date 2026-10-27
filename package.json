@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:dev": "node scripts/build.mjs --internal",
+    "build:public": "node scripts/build.mjs --public-output",
     "test": "node --test tests/*.test.js",
     "preview": "python launcher_xiaoya.py --no-browser",
     "preview:legacy": "python launcher.py --no-browser"

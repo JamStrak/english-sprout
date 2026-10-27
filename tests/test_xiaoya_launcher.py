@@ -28,6 +28,7 @@ class XiaoyaLauncherTests(unittest.TestCase):
         (self.root / "dist" / "xiaoya").mkdir(parents=True)
         (self.root / "dist" / "index.html").write_text("old-product", encoding="utf-8")
         (self.root / "dist" / "xiaoya" / "index.html").write_text("new-product", encoding="utf-8")
+        (self.root / "dist" / "xiaoya" / "version.json").write_text(json.dumps({"channel": "internal"}), encoding="utf-8")
         (self.root / "private.txt").write_text("private", encoding="utf-8")
         self.servers, self.threads = [], []
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
@@ -109,11 +110,25 @@ class XiaoyaLauncherTests(unittest.TestCase):
             launcher.main([])
             browser.assert_called_once_with("http://127.0.0.1:24756/xiaoya/")
 
-    def test_existing_public_or_internal_build_is_never_overwritten(self):
+    def test_existing_internal_build_is_never_overwritten(self):
         with patch.object(launcher.subprocess, "run") as build:
             launcher.ensure_build(self.root)
         build.assert_not_called()
         self.assertEqual((self.root / "dist/xiaoya/index.html").read_text(), "new-product")
+
+    def test_public_build_is_replaced_with_internal_for_local_launch(self):
+        output = self.root / "dist/xiaoya"
+        (output / "version.json").write_text(json.dumps({"channel": "public"}), encoding="utf-8")
+        script = self.root / "scripts/build.mjs"
+        script.parent.mkdir()
+        script.write_text("// fixture", encoding="utf-8")
+        def complete(*args, **kwargs):
+            (output / "version.json").write_text(json.dumps({"channel": "internal"}), encoding="utf-8")
+            return Mock(returncode=0)
+        with patch.object(launcher.shutil, "which", return_value="node"), patch.object(launcher.subprocess, "run", side_effect=complete) as build:
+            launcher.ensure_build(self.root)
+        self.assertEqual(build.call_args.args[0], ["node", str(script), "--internal"])
+        self.assertEqual(json.loads((output / "version.json").read_text())["channel"], "internal")
 
     def test_latest_build_uses_distinct_entry_on_reused_server_and_preserves_garden(self):
         output = self.root / "dist/xiaoya"
@@ -165,6 +180,7 @@ class XiaoyaLauncherTests(unittest.TestCase):
         script.write_text("// fixture", encoding="utf-8")
         def complete(*args, **kwargs):
             index.write_text("internal-product", encoding="utf-8")
+            (index.parent / "version.json").write_text(json.dumps({"channel": "internal"}), encoding="utf-8")
             return Mock(returncode=0)
         with patch.object(launcher.shutil, "which", return_value="node"), patch.object(launcher.subprocess, "run", side_effect=complete) as build:
             launcher.ensure_build(self.root)

@@ -6,12 +6,13 @@ import {serializeCurriculum} from '../src/startup.js';
 import {buildXiaoya} from './build-xiaoya.mjs';
 const appVersion=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
 const buildArgs=process.argv.slice(2);
-if(buildArgs.some(argument=>argument!=='--internal'))throw new Error('Unknown build option. Use --internal only for the local GM review build.');
+if(buildArgs.some(argument=>!['--internal','--public-output'].includes(argument)) || (buildArgs.includes('--internal') && buildArgs.includes('--public-output')))throw new Error('Unknown or incompatible build options.');
 const internal=buildArgs.includes('--internal');
+const publicOutput=buildArgs.includes('--public-output');
 const root = path.resolve(import.meta.dirname, '..');
-const dist = path.join(root,'dist');
+const dist = path.join(root,publicOutput?'dist-public':'dist');
 // Only replace this project's generated dist directory.
-if (path.dirname(dist) !== root || path.basename(dist) !== 'dist') throw new Error('Unsafe build target');
+if (path.dirname(dist) !== root || !['dist','dist-public'].includes(path.basename(dist))) throw new Error('Unsafe build target');
 await fs.rm(dist,{recursive:true,force:true});
 await fs.mkdir(dist,{recursive:true});
 // Candidate growth art belongs to the internal review build until accepted.
