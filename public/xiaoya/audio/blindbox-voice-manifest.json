@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clip_count": 16,
+  "total_bytes": 299984,
+  "total_seconds": 48.6,
+  "clips": [
+    {
+      "id": "blindbox-choose",
+      "text": "六个小袋子，选一个喜欢的吧。用两枚贝壳，就能打开它。",
+      "file": "blindbox-choose.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 35948,
+      "seconds": 5.904,
+      "sha256": "b290ae56e7faca884d9f8e33e84df5170201088c20461ec4b815b3ce2c1c8edf",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "六个小袋子选一个喜欢的吧用两枚贝壳就能打开它",
+        "final_end_seconds": 5.3375
+      }
+    },
+    {
+      "id": "blindbox-reveal",
+      "text": "惊喜种子来啦！带它去花园，种下看看吧。",
+      "file": "blindbox-reveal.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 28460,
+      "seconds": 4.656,
+      "sha256": "c0b40df0d5b2fd951d15242ee74349b4bab91d6d79c9f4839193253940a6a8e0",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "惊喜种子来啦带它去花园种下看看吧",
+        "final_end_seconds": 4.075
+      }
+    },
+    {
+      "id": "blindbox-seed-daisy",
+      "text": "你找到雏菊种子啦！",
+      "file": "blindbox-seed-daisy.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 13628,
+      "seconds": 2.184,
+      "sha256": "53583c669095819c1494a69ca00449216fd44ac09b28062e28064039c8bfd128",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到雏菊种子啦",
+        "final_end_seconds": 1.6
+      }
+    },
+    {
+      "id": "blindbox-seed-tulip",
+      "text": "你找到郁金香种子啦！",
+      "file": "blindbox-seed-tulip.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 14636,
+      "seconds": 2.352,
+      "sha256": "f8b0dc4fed952372981a409faaa8c309e572919c0398317ccc3cb70e6db1b8ed",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到郁金香种子啦",
+        "final_end_seconds": 1.775
+      }
+    },
+    {
+      "id": "blindbox-seed-sunflower",
+      "text": "你找到向日葵种子啦！",
+      "file": "blindbox-seed-sunflower.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 14492,
+      "seconds": 2.328,
+      "sha256": "adb2ae25f56194c90585bec108d7a2212852469aa24e043b82e007ef0a37e2af",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到向日葵种子啦",
+        "final_end_seconds": 1.7625
+      }
+    },
+    {
+      "id": "blindbox-seed-bellflower",
+      "text": "你找到风铃花种子啦！",
+      "file": "blindbox-seed-bellflower.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 15212,
+      "seconds": 2.448,
+      "sha256": "2c377abbb18347b8142f2ea1d760a9c11d2ab555077dc1037904b213e8b58353",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到风铃花种子啦",
+        "final_end_seconds": 1.875
+      }
+    },
+    {
+      "id": "blindbox-seed-poppy",
+      "text": "你找到虞美人种子啦！",
+      "file": "blindbox-seed-poppy.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 14204,
+      "seconds": 2.28,
+      "sha256": "801b5a8af5c7f80849ece144fcfed3f3059766e3a1deef73f6664fe4745fd7c5",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到虞美人种子啦",
+        "final_end_seconds": 1.7
+      }
+    },
+    {
+      "id": "blindbox-seed-violet",
+      "text": "你找到紫罗兰种子啦！",
+      "file": "blindbox-seed-violet.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 14204,
+      "seconds": 2.28,
+      "sha256": "751c1c7e3de11aa0f74257d873766428e5db8a51c3487c3b187fc83d13097aea",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到紫罗兰种子啦",
+        "final_end_seconds": 1.7125
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-pink",
+      "text": "你找到粉粉蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-pink.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19532,
+      "seconds": 3.168,
+      "sha256": "4c12cf9322077fdb52f7842c59b1d00e692299cb404124fc4cb8aaf5a491f636",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到粉粉蝴蝶结花种子啦",
+        "final_end_seconds": 2.5875
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-blue",
+      "text": "你找到蓝蓝蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-blue.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19100,
+      "seconds": 3.096,
+      "sha256": "ac9aef46f02e895cfcb9439c170ee52665519b7ed2e58056fb2104a1d9c426e2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到蓝蓝蝴蝶结花种子啦",
+        "final_end_seconds": 2.525
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-yellow",
+      "text": "你找到金金蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-yellow.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19676,
+      "seconds": 3.192,
+      "sha256": "9cebc557a72eff2393b307058af8c5d032bf8e7761adb455e5544d8aac66bcd7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到金金蝴蝶结花种子啦",
+        "final_end_seconds": 2.6125
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-purple",
+      "text": "你找到紫紫蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-purple.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19244,
+      "seconds": 3.12,
+      "sha256": "fbc73f3aa6d374edf5eb4d23048fe557288424baffbc1f2f9aab16c0d442bad9",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到紫紫蝴蝶结花种子啦",
+        "final_end_seconds": 2.55
+      }
+    },
+    {
+      "id": "blindbox-seed-giant-daisy",
+      "text": "你找到巨型雏菊种子啦！",
+      "file": "blindbox-seed-giant-daisy.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 15644,
+      "seconds": 2.52,
+      "sha256": "7a5265ccf8271a9b1fff36c98fe6308bb1738a1e76193fd5c2ca8f51375b428d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到巨型雏菊种子啦",
+        "final_end_seconds": 1.95
+      }
+    },
+    {
+      "id": "blindbox-seed-giant-sunflower",
+      "text": "你找到巨型向日葵种子啦！",
+      "file": "blindbox-seed-giant-sunflower.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 17228,
+      "seconds": 2.784,
+      "sha256": "aacde477032fd1105e2fb08bcadf4ecbcff0b858ebfa74dc5b9c3cf088e151be",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到巨型向日葵种子啦",
+        "final_end_seconds": 2.2125
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-rainbow",
+      "text": "你找到彩虹蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-rainbow.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19388,
+      "seconds": 3.144,
+      "sha256": "03aaf61fac3b5ed701d67ffa539d432c3f2f20ec0df7b8a0fb8e13096ddfaee3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到彩虹蝴蝶结花种子啦",
+        "final_end_seconds": 2.575
+      }
+    },
+    {
+      "id": "blindbox-seed-bow-starlight",
+      "text": "你找到星光蝴蝶结花种子啦！",
+      "file": "blindbox-seed-bow-starlight.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 19388,
+      "seconds": 3.144,
+      "sha256": "086cf56c1d0f4c157e7944884eea78cf62aa282df4a93282b45e3a51f5fa219c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你找到星光蝴蝶结花种子啦",
+        "final_end_seconds": 2.5625
+      }
+    }
+  ]
+}

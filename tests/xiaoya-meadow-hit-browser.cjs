@@ -1,0 +1,176 @@
+// Compatibility regression for already-owned historical flowers whose opaque
+// pixels sit behind a neighbour's transparent canvas. Expected hits come from
+// shipped WebP alpha, never the hit paths or today's random acquisition pool.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const origin=new URL(process.env.TEST_URL||'http://127.0.0.1:24756').origin;
+assert(['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname));
+const out=path.resolve(process.env.XIAOYA_HIT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-meadow-hit'));
+const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
+const key='xiaoya-english:meadow:v1';
+const report={origin,scope:'Disposable Edge profiles; strictly validated schema-4 historical owned-flower ledgers migrated to schema 6 and actual shipped raster alpha. Checks compatibility of existing flowers, not current random acquisition or current first-clear prizes. Native mouse/touch/keyboard, CSS animation and requestAnimationFrame. No user profile, microphone, child data, clock acceleration, external requests or uploads. Touch is browser emulation, not physical-device validation.',checks:[]};
+const sparse=[{flowerId:'daisy',waterings:0,x:.25,y:.43},{flowerId:'tulip',waterings:2,x:.75,y:.43},{flowerId:'sunflower',waterings:5,x:.25,y:.88},{flowerId:'giant-daisy',waterings:10,x:.75,y:.88}];
+const overlap=giant=>[{flowerId:'daisy',waterings:5,x:.5,y:.52},{flowerId:giant?'giant-daisy':'tulip',waterings:0,x:.5,y:giant?.7:.65}];
+const milestoneFlowers=[{flowerId:'bow-rainbow',waterings:5,x:.25,y:.52},{flowerId:'bow-starlight',waterings:5,x:.75,y:.52}];
+const milestoneOverlap=[...milestoneFlowers,{flowerId:'giant-daisy',waterings:0,x:.25,y:.7},{flowerId:'giant-sunflower',waterings:0,x:.75,y:.7}];
+let browser;
+const save=()=>fs.writeFileSync(path.join(out,filter?'results-filtered.json':'results.json'),JSON.stringify(report,null,2));
+const state=p=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+function historicalMeadowFixture(plants,challengeUnitIds){
+  // These are genuine schema-4 receipt shapes and historical prices/rates. The
+  // legacy giants and 3/6-clear bows must not masquerade as current pack draws.
+  const date='2026-10-18',special=['bow-rainbow','bow-starlight'];
+  const milestone=plants.some(plant=>special.includes(plant.flowerId));
+  assert.equal(new Set(challengeUnitIds).size,6,'Historical milestones require six distinct first clears');
+  const rounds=[{roundId:'qa-hit-starter',eventId:'hello-everyone',date,
+    starter:true,reward:'starter',rewardVersion:3,amounts:{shells:2,water:3}}];
+  for(const reward of ['shells','water'])for(let i=0;i<12;i++)rounds.push({
+    roundId:`qa-hit-${reward}-${i}`,eventId:'food-water',date,starter:false,
+    reward,rewardVersion:3,amounts:{shells:2,water:2},
+  });
+  const challengeRewards=milestone?challengeUnitIds.map(unitId=>({
+    id:`challenge:first-clear:${unitId}`,unitId,date,shells:4,water:6,
+  })):[];
+  const offers=[];
+  const appendOffer=flowerId=>{
+    // All ordinary varieties used below historically cost 3; giant IDs cost 8.
+    assert(['daisy','tulip','sunflower','giant-daisy','giant-sunflower'].includes(flowerId));
+    const offer={id:`offer-${offers.length+1}`,flowerId,price:flowerId.startsWith('giant-')?8:3,date};
+    offers.push(offer);return offer;
+  };
+  const purchases=plants.map((plant,index)=>{
+    const id=`seed-${index+1}`;
+    if(special.includes(plant.flowerId))return {id,flowerId:plant.flowerId,source:'challenge',price:0,offerId:null};
+    const offer=appendOffer(plant.flowerId);
+    return {id,flowerId:plant.flowerId,source:'shop',price:offer.price,offerId:offer.id};
+  });
+  // Purchasing refreshes the shelf; the current offer must be unbought and
+  // differ from its predecessor even when no later purchase was made.
+  if(offers.length)appendOffer(offers.at(-1).flowerId==='daisy'?'tulip':'daisy');
+  const current=offers.at(-1),challengeSeeds=milestone?special.map((flowerId,index)=>({
+    milestoneId:`challenge-seed-${index===0?3:6}`,flowerId,
+    seedId:purchases.find(purchase=>purchase.flowerId===flowerId)?.id??null,
+  })):[];
+  return {schemaVersion:4,product:'xiaoya-english-meadow',
+    shells:2+12*2+challengeRewards.length*4-purchases.reduce((sum,purchase)=>sum+purchase.price,0),
+    water:3+12*2+challengeRewards.length*6-plants.reduce((sum,plant)=>sum+plant.waterings,0),
+    rounds,seedPacksOpened:purchases.length,pendingSeed:null,
+    plants:plants.map((plant,index)=>({id:`plant-${index+1}`,seedId:`seed-${index+1}`,...plant})),
+    purchases,legacy:null,shop:{date:current?date:null,
+      offer:current?{id:current.id,flowerId:current.flowerId,price:current.price}:null,reserved:null,offers},
+    previousRoundCount:0,challengeRewards,challengeSeeds,welcomeGifts:[],
+  };
+}
+
+async function fixture({touch=false,motion='no-preference',plants=sparse,fallback=false}={}){
+  const c=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1100,height:950},hasTouch:touch,isMobile:touch,reducedMotion:motion,timezoneId:'Asia/Shanghai',serviceWorkers:'block'});
+  const requests=[],errors=[];c.on('request',r=>requests.push({url:r.url(),method:r.method()}));
+  await c.route('**/*',r=>new URL(r.request().url()).origin===origin?r.continue():r.abort('blockedbyclient'));
+  if(fallback)await c.route(/\/xiaoya\/paper\/v[12]\//,r=>r.abort('failed'));
+  await c.addInitScript(origin=>{
+    if(location.origin!==origin)return;
+    // Hit geometry is not an audio test: keep the looping garden BGM and idle
+    // reminders off so settle() only waits for finite, deliberate feedback.
+    localStorage.setItem('xiaoya-english:preferences:v1',JSON.stringify({welcome:true,mic:false,guideStep:'done',audioControls:{music:false,reminders:false}}));
+    const q=window.qaHit={rings:[],clicks:[],audios:[],active:new Set(),microphoneCalls:0};
+    const NativeAudio=Audio;
+    window.Audio=function(...args){const a=new NativeAudio(...args);a.playbackRate=4;q.audios.push(String(args[0]||''));a.addEventListener('playing',()=>q.active.add(a));a.addEventListener('ended',()=>q.active.delete(a));a.addEventListener('pause',()=>q.active.delete(a));return a;};window.Audio.prototype=NativeAudio.prototype;
+    const gum=navigator.mediaDevices?.getUserMedia.bind(navigator.mediaDevices);if(gum)navigator.mediaDevices.getUserMedia=(...args)=>{q.microphoneCalls++;return gum(...args);};
+    document.addEventListener('click',e=>q.clicks.push({id:e.target.closest('[data-meadow-plant]')?.dataset.meadowPlant,drop:e.target.closest('[data-water-plant]')?.dataset.waterPlant,x:e.clientX,y:e.clientY,detail:e.detail}),true);
+    const seen=new WeakSet();new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes){if(n.nodeType!==1)continue;for(const ring of [...(n.matches('.xiaoya-fx-ring')?[n]:[]),...n.querySelectorAll('.xiaoya-fx-ring')]){if(seen.has(ring))continue;seen.add(ring);q.rings.push({x:Number.parseFloat(ring.style.left),y:Number.parseFloat(ring.style.top),size:Number.parseFloat(getComputedStyle(ring).width),still:ring.classList.contains('xiaoya-fx-still')});}}}).observe(document,{childList:true,subtree:true});
+    q.probes={};
+    q.setProbes=(id,points)=>{const body=document.querySelector(`[data-meadow-plant="${id}"] [data-plant-body]`),inverse=body.getScreenCTM().inverse(),extremes=[];for(let i=0;i<32;i++){const angle=i*Math.PI/16,dx=Math.cos(angle),dy=Math.sin(angle);extremes.push(points.reduce((best,p)=>!best||p.x*dx+p.y*dy>best.x*dx+best.y*dy?p:best,null));}q.probes[id]=[...new Map(extremes.filter(Boolean).map(p=>[p.x+','+p.y,p])).values()].map(p=>{const local=new DOMPoint(p.x,p.y).matrixTransform(inverse);return {x:local.x,y:local.y};});};
+    q.root=id=>{const b=document.querySelector(`[data-meadow-plant="${id}"]`),body=b.querySelector('[data-plant-body]'),soil=b.querySelector('[data-feedback-anchor]'),hit=[...b.querySelectorAll('[data-plant-hit]')].find(e=>getComputedStyle(e).display!=='none'),map=(e,x,y)=>{const p=new DOMPoint(x,y).matrixTransform(e.getScreenCTM());return {x:p.x,y:p.y};},style=getComputedStyle(body),image=b.querySelector('[data-paper-image]'),w=image.width.baseVal.value,h=image.height.baseVal.value,paintedHeight=Math.min(h,w/(384/512));return {body:map(body,80,164),soil:map(soil,80,164),paper:map(image,image.x.baseVal.value+w/2,image.y.baseVal.value+h-paintedHeight*.12),painted:(q.probes[id]||[]).map(p=>map(body,p.x,p.y)),hit:hit.getBoundingClientRect().toJSON(),hitKind:hit.dataset.plantHit,paperState:b.querySelector('[data-paper-art]').dataset.paperState,transform:style.transform,scale:style.scale,animations:body.getAnimations().map(a=>a.animationName||a.transitionProperty)};};
+    q.start=(id,point)=>{q.rings=[];q.clicks=[];q.samples=[];q.baseline=q.root(id);const at=performance.now();q.done=new Promise(resolve=>{const tick=()=>{q.samples.push({at:performance.now()-at,...q.root(id),hitId:document.elementFromPoint(point.x,point.y)?.closest('[data-meadow-plant]')?.dataset.meadowPlant});if(performance.now()-at<900)requestAnimationFrame(tick);else resolve();};tick();});};
+    q.images=async()=>{const maps=[];for(const b of document.querySelectorAll('.meadow-plant')){const e=b.querySelector('[data-paper-image]'),im=new Image();im.src=e.href.baseVal;await im.decode();const canvas=document.createElement('canvas');canvas.width=im.naturalWidth;canvas.height=im.naturalHeight;const ctx=canvas.getContext('2d');ctx.drawImage(im,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data,w=e.width.baseVal.value,h=e.height.baseVal.value,s=Math.min(w/canvas.width,h/canvas.height);maps.push({id:b.dataset.meadowPlant,art:e.href.baseVal,z:Number(getComputedStyle(b).zIndex),pixels,w:canvas.width,h:canvas.height,s,ox:e.x.baseVal.value+(w-canvas.width*s)/2,oy:e.y.baseVal.value+h-canvas.height*s,m:e.getScreenCTM(),rect:b.getBoundingClientRect().toJSON()});}return maps;};
+    q.alpha=(a,p)=>{const z=new DOMPoint(p.x,p.y).matrixTransform(a.m.inverse()),x=Math.floor((z.x-a.ox)/a.s),y=Math.floor((z.y-a.oy)/a.s);return x<0||y<0||x>=a.w||y>=a.h?0:a.pixels[(y*a.w+x)*4+3];};
+    q.covered=(a,p,margin=12)=>{for(let y=-margin;y<=margin;y+=3)for(let x=-margin;x<=margin;x+=3)if(x*x+y*y<=margin*margin&&q.alpha(a,{x:p.x+x,y:p.y+y})>=32)return true;return false;};
+    q.scan=async()=>{const maps=await q.images();return maps.map(a=>{const r={id:a.id,art:a.art,source:{width:a.w,height:a.h},rect:a.rect,total:0,eligible:0,own:0,covered:0,wrong:[],points:[],overlapPoints:[],transparentOverlap:0};const used=new Set();for(let y=0;y<a.h;y+=4)for(let x=0;x<a.w;x+=4){if(a.pixels[(y*a.w+x)*4+3]<128)continue;const raw=new DOMPoint(a.ox+x*a.s,a.oy+y*a.s).matrixTransform(a.m),pt={x:Math.round(raw.x),y:Math.round(raw.y)},token=pt.x+','+pt.y;if(used.has(token)||q.alpha(a,pt)<128)continue;used.add(token);r.total++;const front=maps.filter(b=>b.z>a.z);if(front.some(b=>q.covered(b,pt))){r.covered++;continue;}r.eligible++;const behindCanvas=front.some(b=>pt.x>b.rect.left&&pt.x<b.rect.right&&pt.y>b.rect.top&&pt.y<b.rect.bottom);if(behindCanvas)r.transparentOverlap++;const hit=document.elementFromPoint(pt.x,pt.y)?.closest('[data-meadow-plant]')?.dataset.meadowPlant;if(hit===a.id){r.own++;r.points.push(pt);if(behindCanvas)r.overlapPoints.push(pt);}else if(r.wrong.length<8)r.wrong.push({...pt,hit:hit||null});}q.setProbes(a.id,r.points);return r;});};
+  },origin);
+  const p=await c.newPage();p.setDefaultTimeout(15000);p.on('pageerror',e=>errors.push(e.message));
+  try{
+    await p.goto(origin+'/xiaoya/?garden=b');await p.locator('.home-view').waitFor();
+    const meta=await p.evaluate(()=>({version:document.querySelector('meta[name=xiaoya-version]').content,build:document.querySelector('meta[name=xiaoya-build]').content})),expected=JSON.parse(fs.readFileSync(path.join(__dirname,'../dist/xiaoya/version.json'),'utf8'));
+    assert.equal(meta.build,expected.build);assert.equal(meta.version,expected.version);if(report.build)assert.equal(meta.build,report.build,'Build does not change during QA');else Object.assign(report,meta);
+    const challengeUnitIds=await p.evaluate(async()=>{
+      const source=document.querySelector('script[type=module]').src;
+      const {CHALLENGE_UNITS}=await import(new URL('challenges.js',source));
+      return CHALLENGE_UNITS.slice(0,6).map(unit=>unit.id);
+    });
+    const historical=historicalMeadowFixture(plants,challengeUnitIds);
+    const wallet=await p.evaluate(async({key,historical})=>{
+      const source=document.querySelector('script[type=module]').src,m=await import(new URL('garden-meadow.js',source));
+      const before=JSON.stringify(historical),s=m.validateMeadow(historical);
+      if(JSON.stringify(historical)!==before)throw Error('Migration modified the historical fixture');
+      localStorage.setItem(key,JSON.stringify(s));return s;
+    },{key,historical});
+    assert.equal(wallet.schemaVersion,6,'The shipped validator strictly accepts and migrates the historical ledger');
+    for(const field of ['shells','water','rounds','plants','purchases','shop','challengeRewards'])
+      assert.deepEqual(wallet[field],historical[field],`Migration preserves historical ${field}`);
+    assert.deepEqual(wallet.challengeSeeds.slice(0,historical.challengeSeeds.length),historical.challengeSeeds,'Migration preserves already-owned milestone seeds');
+    assert.deepEqual(wallet.plants.map(({flowerId,waterings,x,y})=>({flowerId,waterings,x,y})),plants,'Fixture uses the requested real seed varieties, progress and positions');
+    await p.reload();
+    // The historical ledger intentionally has no receipt for today. Claim the
+    // real isolated daily gift instead of letting its modal mask every hit test.
+    await p.locator('[data-action="open-welcome-gift"]').click();
+    await p.locator('.welcome-gift-overlay').waitFor({state:'hidden'});
+    await p.locator('[data-action=garden]').click();await p.waitForFunction(({count,fallback})=>[...document.querySelectorAll('.meadow-plant [data-paper-art]')].length===count&&[...document.querySelectorAll('.meadow-plant [data-paper-art]')].every(n=>n.dataset.paperState===(fallback?'error':'ready')),{count:plants.length,fallback});await settle(p);
+    return {c,p,touch,motion,plants,requests,errors};
+  }catch(e){await c.close();throw e;}
+}
+async function settle(p){await p.waitForTimeout(750);await p.waitForFunction(()=>[...qaHit.active].every(a=>a.paused||a.ended));}
+async function scan(f){const rows=await f.p.evaluate(()=>qaHit.scan());for(const r of rows){assert(r.eligible>=40,`${r.id} has substantial exposed opaque pixels`);assert.equal(r.own,r.eligible,`${r.id} visible pixels must hit their own plant: ${JSON.stringify(r.wrong)}`);}return rows;}
+async function milestoneScan(f){
+  const rows=await scan(f),wallet=await state(f.p);
+  assert.equal(wallet.challengeRewards.length,6,'Six distinct legal first-clear rewards unlock both milestone seeds');
+  for(let i=0;i<milestoneFlowers.length;i++){
+    const flowerId=milestoneFlowers[i].flowerId,r=rows[i],purchase=wallet.purchases[i];
+    assert.equal(r.art,`xiaoya/paper/v2/flowers/${flowerId}.webp`);
+    assert.deepEqual(r.source,{width:384,height:512},'Scan comes from the actual delivered image canvas');
+    assert.equal(purchase.flowerId,flowerId);assert.equal(purchase.source,'challenge');assert.equal(purchase.price,0);
+    assert.equal(wallet.challengeSeeds[i].seedId,purchase.id,'The saved milestone entitlement owns this planted seed');
+  }
+  return rows;
+}
+function points(r,count=3){const sorted=[...r.points].sort((a,b)=>a.y-b.y||a.x-b.x);return [...new Map([.15,.5,.85].slice(0,count).map(q=>{const p=sorted[Math.floor((sorted.length-1)*q)];return [p.x+','+p.y,p];})).values()];}
+function compact(rows){return rows.map(({points,overlapPoints,...r})=>r);}
+async function activate(f,id,point,{keyboard=false,seed=false,repeat=false}={}){
+  const {p,touch,motion}=f,before=await state(p),bloom=await p.locator(`[data-meadow-plant="${id}"]`).evaluate(b=>b.classList.contains('is-bloom'));await p.evaluate(({id,point})=>qaHit.start(id,point),{id,point});
+  if(keyboard){await p.locator(`[data-meadow-plant="${id}"]`).focus();await p.keyboard.press('Enter');}
+  else if(touch)await p.touchscreen.tap(point.x,point.y);else await p.mouse.click(point.x,point.y);
+  if(repeat){await p.waitForTimeout(220);if(touch)await p.touchscreen.tap(point.x,point.y);else await p.mouse.click(point.x,point.y);}
+  await p.evaluate(()=>qaHit.done);const v=await p.evaluate(()=>({baseline:qaHit.baseline,samples:qaHit.samples,rings:qaHit.rings,clicks:qaHit.clicks,feedback:[...document.querySelectorAll('.meadow-plant.just-watered')].map(n=>n.dataset.meadowPlant)}));
+  assert(v.samples.length>=12);assert(v.clicks.length>=1);assert(v.clicks.every(c=>c.id===id),`Real input must activate ${id}: ${JSON.stringify(v.clicks)}`);assert.deepEqual(await state(p),before,'Greeting a flower or seed never spends water or edits saved positions');
+  const rings=v.rings.filter(r=>r.size===26);assert.equal(rings.length,repeat?2:1,'Exactly one input ring per activation');const expected=keyboard?v.baseline.body:point;for(const r of rings)assert(distance(r,expected)<.8,'Input ring is at the pointer, or soil root for keyboard');
+  assert(v.baseline.painted.length>=3,'Animation probes come from actual opaque artwork or visible vector shapes');
+  const paintedWidth=Math.max(...v.baseline.painted.map(p=>p.x))-Math.min(...v.baseline.painted.map(p=>p.x));
+  let rootDrift=0,hitDrift=0,maxPaintedMovement=0;for(const s of v.samples){rootDrift=Math.max(rootDrift,distance(s.body,v.baseline.body),distance(s.soil,v.baseline.soil),distance(s.paper,v.baseline.paper));assert(distance(s.paper,s.soil)<.8,'Painted image root stays aligned to its actual soil throughout animation');for(const k of ['x','y','width','height'])hitDrift=Math.max(hitDrift,Math.abs(s.hit[k]-v.baseline.hit[k]));for(let i=0;i<s.painted.length;i++)maxPaintedMovement=Math.max(maxPaintedMovement,distance(s.painted[i],v.baseline.painted[i]));assert.equal(s.hitId,id,'Stable hit silhouette remains under the original pointer throughout animation');}
+  assert(rootDrift<.8,`Root drift ${rootDrift}`);assert(hitDrift<.8,`Hit silhouette drift ${hitDrift}`);
+  const moving=v.samples.filter(s=>s.transform!=='none'&&s.transform!=='matrix(1, 0, 0, 1, 0, 0)'||!['none','1'].includes(s.scale));
+  if(motion==='reduce'){assert.equal(moving.length,0,'Reduced motion never bends or scales a plant');assert(rings.every(r=>r.still));}
+  else if(seed){assert(maxPaintedMovement>=Math.max(.5,Math.min(2,paintedWidth*.06)),`Actual seed pixels visibly deform: ${maxPaintedMovement}px across ${paintedWidth}px of painted width`);assert(moving.some(s=>s.at>=350&&s.at<650),'Seed acknowledgement lasts beyond a fleeting 75ms press');if(repeat)assert(moving.some(s=>s.at>=650),'Repeated tap restarts seed acknowledgement');}
+  if(bloom)assert.deepEqual(v.feedback,[id],'Visible flower click animates that flower, not its neighbour');
+  await settle(p);return {id,point,keyboard,repeat,frames:v.samples.length,rootDrift,hitDrift,maxPaintedMovement,paintedWidth,paintedProbeCount:v.baseline.painted.length,movingUntil:moving.at(-1)?.at||0,rings,clicks:v.clicks};
+}
+async function shot(p,name){const file=path.join(out,name+'.png');await p.screenshot({path:file,fullPage:true});return file;}
+async function check(name,options,fn){if(filter&&!filter.test(name))return;let f;try{f=await fixture(options);const evidence=await fn(f);assert.deepEqual(f.errors,[]);assert.equal(await f.p.evaluate(()=>qaHit.microphoneCalls),0);assert(f.requests.every(r=>r.method==='GET'&&new URL(r.url).origin===origin));report.checks.push({name,status:'PASS',evidence});console.log('PASS '+name);}catch(e){report.checks.push({name,status:'FAIL',error:e.stack,trace:f?await f.p.evaluate(()=>({baseline:qaHit.baseline,samples:qaHit.samples,clicks:qaHit.clicks})).catch(()=>null):null,screenshot:f?await shot(f.p,'failure-'+(report.checks.length+1)).catch(()=>null):null});process.exitCode=1;console.error('FAIL '+name+' '+e.message);}finally{await f?.c.close();save();}}
+
+(async()=>{
+  fs.mkdirSync(out,{recursive:true});browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--autoplay-policy=no-user-gesture-required']});
+  await check('Milestone rainbow and starlight actual painted pixels respond to mouse and keyboard with fixed roots',{plants:milestoneFlowers},async f=>{const rows=await milestoneScan(f),clicks=[];for(const r of rows){for(const pt of points(r))clicks.push(await activate(f,r.id,pt));clicks.push(await activate(f,r.id,points(r,1)[0],{keyboard:true}));}return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'milestone-mouse-root')};});
+  await check('Milestone rainbow and starlight petals remain touchable through foreground giant seed transparency',{touch:true,plants:milestoneOverlap},async f=>{const rows=await milestoneScan(f),clicks=[];for(const r of rows.slice(0,2)){assert(r.transparentOverlap>r.eligible*.9,'Most of each actual milestone flower lies inside a foreground giant seed canvas');for(const pt of points({...r,points:r.overlapPoints}))clicks.push(await activate(f,r.id,pt));}for(const r of rows.slice(2))clicks.push(await activate(f,r.id,points(r,1)[0],{seed:true}));return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'milestone-touch-transparent-overlap')};});
+  await check('Milestone reduced-motion touch preserves image hits, soil alignment and transparent passthrough',{touch:true,motion:'reduce',plants:milestoneOverlap},async f=>{const rows=await milestoneScan(f),clicks=[];for(const r of rows.slice(0,2)){assert(r.overlapPoints.length>40);clicks.push(await activate(f,r.id,points({...r,points:r.overlapPoints},1)[0]));}return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'milestone-reduced-motion')};});
+  await check('Mouse hits opaque seed, sprout, flower and giant artwork',{},async f=>{const rows=await scan(f),clicks=[];for(const r of rows){const count=Number(r.id.slice(6))>=3?3:1;for(const pt of points(r,count))clicks.push(await activate(f,r.id,pt,{seed:r.id==='plant-1'}));}return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'desktop-visible-art')};});
+  await check('Touch hits visible flower petals and leaves without finding an empty upper box',{touch:true},async f=>{const rows=await scan(f),clicks=[];for(const r of rows.filter(r=>['plant-1','plant-3','plant-4'].includes(r.id)))for(const pt of points(r,r.id==='plant-1'?1:3))clicks.push(await activate(f,r.id,pt,{seed:r.id==='plant-1'}));return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'touch-visible-art')};});
+  await check('Ordinary seed transparent canvas cannot intercept the rear flower',{plants:overlap(false)},async f=>{const rows=await scan(f),r=rows[0];assert(r.transparentOverlap>r.eligible*.5,'Fixture really places most flower pixels behind the front seed canvas');const clicks=[];for(const pt of points(r))clicks.push(await activate(f,r.id,pt));return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'ordinary-seed-overlap')};});
+  await check('Giant seed transparent canvas cannot intercept the rear flower on touch',{touch:true,plants:overlap(true)},async f=>{const rows=await scan(f),r=rows[0];assert(r.transparentOverlap>r.eligible*.9,'Fixture places the visible rear flower inside the giant seed canvas');const clicks=[];for(const pt of points(r))clicks.push(await activate(f,r.id,pt));const seed=rows[1];clicks.push(await activate(f,seed.id,points(seed,1)[0],{seed:true}));return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'giant-seed-overlap')};});
+  await check('Seed feedback is sustained, can restart, and keeps its root and target still',{touch:true},async f=>{const rows=await scan(f),r=rows[0],point=points(r,1)[0];return {clicks:[await activate(f,r.id,point,{seed:true,repeat:true}),await activate(f,r.id,point,{seed:true,keyboard:true})]};});
+  await check('Reduced motion keeps pixel hit testing and pointer acknowledgement',{touch:true,motion:'reduce',plants:overlap(true)},async f=>{const rows=await scan(f),clicks=[];for(const r of rows)clicks.push(await activate(f,r.id,points(r,1)[0],{seed:r.id==='plant-2'}));return {alpha:compact(rows),clicks,screenshot:await shot(f.p,'reduced-motion-hit')};});
+  await check('Watering mode never spends water for an empty-ground click near a seed',{touch:true},async f=>{const {p}=f,can=await p.locator('[data-action=meadow-can]').boundingBox();await p.touchscreen.tap(can.x+can.width/2,can.y+can.height/2);await p.locator('[data-water-layer].is-ready').waitFor();await settle(p);const point=await p.evaluate(()=>{const b=document.querySelector('[data-meadow-plant="plant-1"]').getBoundingClientRect(),center={x:b.x+b.width/2,y:b.y+b.height*.65},field=document.querySelector('[data-meadow-field]');for(let dy=-40;dy<=40;dy+=2)for(let dx=-40;dx<=40;dx+=2){const p={x:Math.round(center.x+dx),y:Math.round(center.y+dy)},e=document.elementFromPoint(p.x,p.y);if(Math.hypot(dx,dy)<60&&e?.closest('[data-meadow-field]')===field&&!e.closest('[data-meadow-plant],[data-water-plant]'))return {...p,distanceToOldFallback:Math.hypot(dx,dy)};}throw Error('No exposed nearby ground');}),before=await state(p);await p.touchscreen.tap(point.x,point.y);await p.waitForTimeout(450);assert.deepEqual(await state(p),before,'Touch on nearby empty grass must not pick a neighbour or deduct water');await p.mouse.click(point.x,point.y);await p.waitForTimeout(450);assert.deepEqual(await state(p),before,'Mouse on nearby empty grass must not pick a neighbour or deduct water');return {point,water:before.water,screenshot:await shot(p,'empty-ground')};});
+  await check('Missing paper art uses visible vector flower targets without neighbour rectangles',{fallback:true,plants:overlap(true)},async f=>{const targets=await f.p.evaluate(()=>[...document.querySelectorAll('[data-meadow-plant]')].map(b=>{const body=b.querySelector('[data-paper-fallback]'),shapes=[...body.querySelectorAll('path,ellipse,circle')],candidates=[];for(const e of shapes){const box=e.getBBox(),m=e.getScreenCTM();for(let y=box.y;y<=box.y+box.height;y+=3)for(let x=box.x;x<=box.x+box.width;x+=3){const p=new DOMPoint(x,y);if(!e.isPointInFill(p)&&!e.isPointInStroke(p))continue;const screen=p.matrixTransform(m),pt={x:Math.round(screen.x),y:Math.round(screen.y)};if(document.elementFromPoint(pt.x,pt.y)?.closest('[data-meadow-plant]')===b)candidates.push(pt);}}return {id:b.dataset.meadowPlant,points:candidates};}));for(const r of targets){assert(r.points.length>=20,'Visible fallback has substantial native hit area');await f.p.evaluate(({id,points})=>qaHit.setProbes(id,points),r);}const clicks=[];for(const r of targets)clicks.push(await activate(f,r.id,points(r,1)[0],{seed:r.id==='plant-2'}));return {clicks,screenshot:await shot(f.p,'fallback-hit')};});
+})().catch(e=>{report.fatal=e.stack;process.exitCode=1;console.error(e);}).finally(async()=>{await browser?.close();save();});
+

@@ -1,0 +1,15 @@
+/* Decorative overlay never receives input or participates in page layout. */
+.xiaoya-fx-layer{position:fixed;inset:0;z-index:35;overflow:hidden;pointer-events:none!important;contain:strict}
+.xiaoya-fx-layer *{pointer-events:none!important;user-select:none}
+.xiaoya-fx-target{transition:scale .17s ease-out}
+.xiaoya-fx-press{scale:.96}
+.xiaoya-fx-pop{scale:1.045}
+.xiaoya-fx-particle{position:absolute;display:block;width:var(--fx-size);height:var(--fx-size);opacity:0;transform:translate(-50%,-50%);animation:xiaoya-fx-burst var(--fx-duration) ease-out var(--fx-delay) both;will-change:transform,opacity}
+.xiaoya-fx-particle>svg{display:block;width:100%;height:100%;overflow:visible}
+.xiaoya-fx-ring{border:2px solid currentColor;border-radius:50%;color:#e2b261;animation-name:xiaoya-fx-ring}
+.xiaoya-fx-travel{animation-name:xiaoya-fx-flight;animation-timing-function:cubic-bezier(.22,.62,.35,1)}
+.xiaoya-fx-still{animation:none;opacity:.8;will-change:auto}
+@keyframes xiaoya-fx-burst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}18%{opacity:1}75%{opacity:.95}100%{opacity:0;transform:translate(calc(-50% + var(--fx-dx)),calc(-50% + var(--fx-dy))) rotate(var(--fx-turn)) scale(.7)}}
+@keyframes xiaoya-fx-flight{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1}45%{transform:translate(calc(-50% + var(--fx-dx)*.45),calc(-50% + var(--fx-dy)*.45 - 28px)) rotate(var(--fx-turn)) scale(1.1)}85%{opacity:1;transform:translate(calc(-50% + var(--fx-dx)),calc(-50% + var(--fx-dy))) scale(.8)}100%{opacity:0;transform:translate(calc(-50% + var(--fx-dx)),calc(-50% + var(--fx-dy))) scale(.45)}}
+@keyframes xiaoya-fx-ring{0%{opacity:.8;transform:translate(-50%,-50%) scale(.65)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)}}
+@media(prefers-reduced-motion:reduce){.xiaoya-fx-target{transition:none}.xiaoya-fx-press,.xiaoya-fx-pop{scale:1}.xiaoya-fx-particle{animation:none;opacity:.8;will-change:auto}}

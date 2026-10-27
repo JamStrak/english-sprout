@@ -1,0 +1,296 @@
+{
+  "version": "v02-commercial",
+  "date": "2026-10-18",
+  "study_id": "610f2d54d7e6",
+  "status": "approved_direction_production_candidates",
+  "style": {
+    "number": 273,
+    "id": "handdraw-273",
+    "name": "手撕纸拼贴",
+    "resolver": "gpt-image-2 calibration; traits required; actual generator model not exposed"
+  },
+  "palette": {
+    "number": 9,
+    "id": "tea-milk",
+    "tokens": [
+      "#EFEADF",
+      "#CCD4BD",
+      "#344B45",
+      "#749986",
+      "#D08D6C"
+    ]
+  },
+  "generator": "image_gen.imagegen",
+  "model": "not exposed by tool",
+  "transparency": "requested true; verified from pixel alpha, originals archived byte-identically",
+  "reference": "experiments/01-hug.png; take Xiaoya identity and paper rendering, not hug pose or bear",
+  "rights": "AI-generated production candidates; source style library MIT does not grant third-party IP rights; release/comprehension review remains",
+  "assets": [
+    {
+      "key": "buddy",
+      "file": "05-buddy-welcome-original.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-7843a9fb-9290-4deb-9ca9-b5a03cff38f6.png",
+      "prompt": "风格名称：手撕纸拼贴 / Hand-Torn Paper Collage Illustration。\n为《小芽英语》已批准的纸片花园UI制作一张可直接叠加的单角色精灵图，只画参考图里绿色的小芽，不画熊。严格保持其身份：浅柔绿圆润梨形身体，头顶恰好两片深灰绿大叶片，短小四肢、深茶色豆眼、桃色脸颊，不穿衣服。大叶片与身体比例参考原图，不变成普通人、青蛙或小熊。小芽完整站立，一手简单圆掌招手，另一手自然展开，温柔明亮的欢迎微笑，双眼睁开。孩子与家长都愿意亲近的高质量绘本IP感。\n角色高度概括、比例略夸张、造型笨拙有趣；只保留必要造型，大面积留白。哑光纤维彩纸，克制手撕边缘，2–3层薄纸质感，近乎平面、微弱自遮挡，无塑料3D与硬投影。归约细节，灭高频冗余。配色沿用09雾林茶奶：小芽身体为参考浅柔绿，叶片#749986和#344B45，脸颊#D08D6C，辅色#CCD4BD；允许同色明暗，不另加艳色。\n竖向构图，完整角色居中，头顶叶子、手脚绝不裁切；身体含叶片约占高度78%，脚底落在画面高度88%左右，左右边距至少12%。本图是实际APP首页欢迎角色素材，没有底板、背景、地毯、地面、投影、外框、按钮、字母文字数字、水印、飘浮花朵或其他道具。真实透明背景PNG，主体之外像素alpha=0，不要画棋盘格、白背景或灰背景，纸张纹理只存在角色内部。",
+      "prompt_en": "Style: Hand-Torn Paper Collage Illustration. Create one transparent production sprite of the approved Xiaoya, not the bear. Preserve the light soft-green pear-shaped body, exactly two large dark sage leaves on the head, short limbs, dark-tea bean eyes, peach cheeks and no clothes. Full standing body, one simple rounded hand waves and the other opens naturally, warm welcome smile with open eyes. Highly simplified, slightly exaggerated, charmingly awkward shapes with abundant empty space. Matte fibrous paper, restrained torn edges, two or three thin layers, nearly flat shading, no plastic 3D or hard cast shadow. Reduce detail and eliminate redundant high-frequency noise. Palette09 tea-milk: reference pale green body, #749986/#344B45 leaves, #D08D6C cheeks, #CCD4BD accents; tonal variations only. Portrait, full body centered, no cropped leaves/hands/feet. Character about78% of image height, feet at88%, at least12% margins. Actual homepage welcome sprite: no base/background/rug/ground/shadow/frame/buttons/letters/text/numbers/watermark/floating flowers/props. Real transparent PNG, alpha0 outside character, no checkerboard, white or gray background; texture only inside character."
+    },
+    {
+      "key": "tools",
+      "file": "06-garden-tools-original.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-19d9c2b0-0796-42de-a17d-f00d8929a75c.png",
+      "prompt": "风格名称：手撕纸拼贴 / Hand-Torn Paper Collage Illustration。\n为《小芽英语》的纸片花园UI制作一张六件独立道具的透明素材板，三列两行等尺寸网格，所有单元完全分离，方便按每个格子单独裁切。不是完整界面，不要画格子线、文字或底板。严格保持参考图的高级哑光彩纸手撕边缘、微弱纸纤维与2–3层薄纸拼贴，不画角色。\n左上：一只陶杏色小种子纸袋，袋口折叠、正面只有一片绿叶剪纸图案；中上：一颗饱满浅陶棕色椭圆种子，清晰大形状与一条淡色种脐；右上：一只灰柔绿色小浇水壶，提把与朝右的长壶嘴，壶身完整，没有飞出的水。\n左下：一只奶油色和浅陶杏色扇形贝壳，仅三到五道宽纸层纹，贝壳是可收藏的实物不是蓝色界面按钮；中下：一滴饱满的灰雾蓝水滴，由三张大纸片表现清澈，不做玻璃、不做高光光晕；右下：一簇两片灰绿色的小叶装饰，只两片叶，不加碎屑花瓣。\n每格只一个主题，居中且占格子70%左右；所有物件四边都留至少15%透明空间，相邻图案不可接触或越格，没有地面投影。材质与原有小芽插画一致，但小尺寸UI道具细节比大插画更少。09雾林茶奶基准：#EFEADF #CCD4BD #344B45 #749986 #D08D6C；水滴允许必要固有色灰雾蓝#89AAB1，只在水滴出现，不加荧光。归约细节，灭高频冗余。\n真实透明背景PNG，主体以外alpha=0，透明不能烘焙成白色灰色或棋盘格。纸纹只在物件内部，无文字、数字、字母、按钮底、边框、编号、勾号、水印。统一精细而克制，幼儿轻松认出轮廓。",
+      "prompt_en": "Style: Hand-Torn Paper Collage Illustration. Six separate garden UI objects on a transparent sheet, equal3-column2-row cells, fully separated for cropping. Not a UI screenshot; no grid lines, text or backing panels. Match reference matte colored paper, restrained torn edges/fibers and2–3thin layers, no characters. Top-left: clay-apricot seed paperbag with folded opening and one green leaf cutout symbol. Top-middle: plump pale clay-brown oval seed with one pale hilum. Top-right: muted sage wateringcan with handle and long right-facing spout, no pouring water. Bottom-left: cream/light-clay fan shell with only3–5broad layered ridges, a real collectible shell not a blue button. Bottom-middle: plump mist-blue paper droplet, three broad pieces, no glass/glow. Bottom-right: two small sage decorative leaves, no fragments. One centered object percell at about70%size and15%transparent margins, no overlap or groundshadow. Less detail than full illustrations for small UI use. Palette09 #EFEADF #CCD4BD #344B45 #749986 #D08D6C; necessary water local color #89AAB1 only on droplet; no neon. Reduce detail and eliminate redundant high-frequency noise. Real transparent PNG alpha0 outside objects, not flattened white/gray/checkerboard. Papertexture only inobjects. No text/digits/letters/buttonbases/frames/numbers/checkmarks/watermarks; clear preschool silhouettes."
+    },
+    {
+      "key": "flowers",
+      "file": "07-six-garden-flowers-original.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-07396081-87c2-4408-8540-36ff08c5cf7e.png",
+      "prompt": "风格名称：手撕纸拼贴 / Hand-Torn Paper Collage Illustration。为《小芽英语》纸片花园做六株可直接使用的花朵素材，真实透明背景，2列3行，六格大小完全一致，每株完整位于自己的格子中央，四边留足18%空白，绝不能越格或与邻格接触。每株仅一朵主花、一个完整茎和两片大叶，无花盆、无泥土、无地面、无草簇、无浮游花瓣，不画文字或网格线。\n按从左到右从上到下顺序：\n第一行左：奶油白雏菊，五到八片宽大奶油花瓣和小柔黄圆花心；第一行右：陶粉色郁金香，单个杯形花冠三瓣大形。\n第二行左：柔和蜂蜜黄色向日葵，圆陶棕花盘与少量宽大黄色花瓣；第二行右：雾蓝色铃兰型铃铛花，只一个清晰下垂的蓝色钟形花冠。\n第三行左：陶红色虞美人，四片宽大陶红纸花瓣与深茶色花心；第三行右：灰紫色紫罗兰，五片圆润灰紫大花瓣，浅奶油小花心。\n所有花株同一正面近平面视角，茎略自然弯曲，但根部都在每格水平50%高度88%，花冠在上部，完整根尖无裁切。适合384×512单株精灵图，小尺寸仍可一眼区分。\n材质严格沿用参考图高级哑光手撕彩纸、2–3大纸片层次，微弱纤维只在纸内部。简洁有温度，不写实、不3D塑料、无强阴影无复杂叶脉。角色高度概括、比例略夸张、造型笨拙有趣；只保留必要物件，大面积留白。归约细节，灭高频冗余。\n叶茎统一用09雾林茶奶的#749986和#344B45，奶油#EFEADF，辅助#CCD4BD，陶色#D08D6C。花瓣的黄、粉、蓝、紫属于识别花种所需的低饱和固有色，不引入荧光、艳丽彩虹或额外背景。\n必须是真透明PNG，花株以外alpha=0；不要白底、灰底、棋盘格或任何色块底板，不要文字字母数字水印。",
+      "prompt_en": "Six separate complete garden flowers, two columns and three rows, transparent PNG. Left-to-right/top-to-bottom: cream daisy with a soft yellow center; clay-pink cup-shaped tulip; honey-yellow sunflower with clay-brown disk; one drooping mist-blue bellflower; four broad clay-red poppy petals and dark tea center; five muted-purple violet petals and small cream center. One main bloom, full stem and two large leaves, no pots/soil/grass/floating petals. Front nearly flat view; roots at horizontal50%/vertical88% in each cell, no cropping or overlap. Match premium matte torn-paper collage reference, two or three broad layers, very faint internal fibers, weak shadows, no plastic3D or busy veins. Highly simplified, slightly exaggerated, charmingly awkward forms; keep only essential objects and abundant negative space. Reduce detail and eliminate redundant high-frequency noise. Palette09 sage #749986/dark tea #344B45 stems, cream #EFEADF, pale sage #CCD4BD, clay #D08D6C. Muted yellow/pink/blue/purple are necessary flower local colors, never neon/rainbow. Alpha0 outside plants, no white/gray/checkerboard backing, text, letters, digits, watermarks or grid.",
+      "reference": "experiments/01-hug.png",
+      "outputs": [
+        {
+          "id": "daisy",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            0,
+            543,
+            484
+          ]
+        },
+        {
+          "id": "tulip",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            0,
+            1086,
+            484
+          ]
+        },
+        {
+          "id": "sunflower",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            484,
+            543,
+            938
+          ]
+        },
+        {
+          "id": "bellflower",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            484,
+            1086,
+            938
+          ]
+        },
+        {
+          "id": "poppy",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            938,
+            543,
+            1448
+          ]
+        },
+        {
+          "id": "violet",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            938,
+            1086,
+            1448
+          ]
+        }
+      ]
+    },
+    {
+      "key": "special-flowers",
+      "file": "08-bow-and-giant-flowers-original.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-377e88b7-1697-461c-bc60-bff5b5a5cd35.png",
+      "prompt": "为《小芽英语》制作六株花园精灵，真实透明PNG，固定2列3行六个单独完整花株，各格不画框线，每株仅占格子中央约65%，四周和格间有足够透明留白，绝不可越格、切割、接触邻格。各株正面近平面，完整花冠、茎、两片大叶，根尖在每格x50% y88%，无花盆、无泥土、无草地、无漂浮装饰。依照附图的高级手撕哑光彩纸拼贴风格，2–3层大形纸片、朴拙轻微不对称、简单内纤维，轻微层次而非强阴影，禁止塑料3D。\n六株顺序严格：\n第一行左 bow-pink：花冠本身是一只陶粉色蝴蝶结的轮廓，两只宽大蝴蝶翅形花瓣+小圆花心，花梗从花冠下方伸出，不是普通圆花再系蝴蝶结，无飘带。\n第一行右 bow-blue：同种蝴蝶结花冠但雾蓝色，两只短宽三角圆角花瓣，小圆花心，无飘带。\n第二行左 bow-yellow：同种蝴蝶结花冠但柔蜂蜜黄色，两只宽花瓣，小圆花心，无飘带。\n第二行右 bow-purple：同种蝴蝶结花冠但灰紫色，两只宽花瓣，小圆花心，无飘带。\n第三行左 giant-daisy：一株更饱满的奶油白大雏菊，8–10片宽大浅奶油花瓣，浅蜂蜜色花心，两片更饱满宽大叶，仍为单一主花冠，不增加小花。\n第三行右 giant-sunflower：一株更饱满的大向日葵，8–10片宽大柔蜂蜜黄花瓣，圆陶棕花盘，两片宽大叶，仍为单一主花冠。\n叶和茎严格沿用#749986与#344B45，纸色#EFEADF，辅助#CCD4BD，陶色#D08D6C；花瓣的灰粉灰蓝柔黄灰紫属于花种固有色，低饱和，不添加艳丽渐变或荧光。\n角色高度概括、比例略夸张、造型笨拙有趣；只保留必要物件与动作，大面积留白。归约细节，灭高频冗余。无文字字母数字、无图标框、无白底、无灰底、无棋盘格、无水印。素材以外alpha=0。",
+      "prompt_en": "Six isolated complete garden sprites in equal two-column three-row cells, real transparent PNG. Each centered at about65% of its cell with generous gutters; no overlap/crop. Full front-facing bloom/stem/two large leaves, root at x50%y88%, no pots/soil/grass/floating ornaments. Match reference premium matte hand-torn colored-paper collage, two or three broad layers, subtly irregular silhouettes and internal fibers, weak layer shadows, no plastic3D. Reading order: clay-pink bow flower; mist-blue bow flower; honey-yellow bow flower; muted-purple bow flower; fuller cream giant daisy with8–10broad petals and honey center; fuller giant sunflower with8–10honey petals and clay-brown disk. Bow corollas themselves have two broad rounded wing petals and small round centers, NOT ordinary flowers tied with bows; no tails. Giants retain one bloom with two broad leaves. Stems/leaves #749986/#344B45, cream #EFEADF, pale sage #CCD4BD, clay #D08D6C; subdued local flower pink/blue/yellow/purple, no fluorescent gradients. Highly simplified, slightly exaggerated, charmingly awkward forms, essential objects only, ample negative space. Reduce detail and eliminate redundant high-frequency noise. Alpha0 outside subjects; no text/digits/letters/frames/white/gray/checkerboard/watermark.",
+      "reference": "originals/07-six-garden-flowers-original.png",
+      "outputs": [
+        {
+          "id": "bow-pink",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            0,
+            543,
+            500
+          ]
+        },
+        {
+          "id": "bow-blue",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            0,
+            1086,
+            500
+          ]
+        },
+        {
+          "id": "bow-yellow",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            500,
+            543,
+            928
+          ]
+        },
+        {
+          "id": "bow-purple",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            500,
+            1086,
+            928
+          ]
+        },
+        {
+          "id": "giant-daisy",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            0,
+            928,
+            543,
+            1448
+          ]
+        },
+        {
+          "id": "giant-sunflower",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "crop": [
+            543,
+            928,
+            1086,
+            1448
+          ]
+        }
+      ]
+    },
+    {
+      "key": "growth",
+      "file": "09-growth-stages-original.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-b0abdc7f-2ff5-41cc-89e3-e4c5d32c3cc2.png",
+      "prompt": "为《小芽英语》绘制纸片花园的三张生长阶段精灵，横排1行3格，三个物件独立完整，每个只占本格中央60%，格间至少20%透明空隙，透明PNG，不画边框、文字、底板。\n左格seed-in-soil：一小撮暖陶棕色土壤剖面，上面露一枚米色圆种子的上半部；非常简洁小鼓包，不要花盆、地板、长土条或石子。\n中格sprout：从小陶棕土点长出一株两片绿色大叶的小嫩芽，茎极短，完整根部，清晰的小株轮廓。\n右格bud：一株绿色细直花梗，两片大叶，顶端一个尚未开放的低饱和陶粉色闭合花苞。不要已经开放的花瓣。\n每格根部/接地点统一x50% y88%，适合最终384×512透明画布；各株都完整，不越格，不接触别株。\n材质与参考图完全同一套高级哑光手撕纸拼贴，2–3层大纸片，简洁天然边缘，极微弱纸层厚度，无强阴影、无高频纹理、无塑料3D。固定配色09雾林茶奶：叶茎#749986/#344B45，种子/底纸色#EFEADF与#CCD4BD，土和花苞#D08D6C的深浅变化。不要亮彩虹色。\n角色高度概括、比例略夸张、造型笨拙有趣；场景只保留最必要的物件与动作；大面积留白。归约细节，灭高频冗余。三株外背景必须为alpha=0，不要白底灰底棋盘格，不要任何文字、字母、数字、水印。",
+      "prompt_en": "Three isolated growth-stage sprites in one horizontal row, real transparent PNG with60%occupied cells and at least20%clear gutters, no frames/text/panels. Left seed-in-soil: small warm clay-brown soil mound with upper half of one cream round seed visible, no pot/floor/long soil strip/stones. Center sprout: two large green baby leaves on a very short stem emerging from a tiny clay soil dot, complete base. Right bud: slim green stem, two large leaves and one closed muted clay-pink bud, NOT an open bloom. Roots/contact points at x50%y88% percell for final384x512transparent sprites. Complete subjects, no overlap. Match premium matte torn-paper collage, two or three large paper layers, restrained edges, faint layer depth, no hard shadows/high-frequency texture/plastic3D. Palette09 #749986/#344B45 leaves, #EFEADF/#CCD4BD seed, #D08D6C soil/bud with tonal variation. Highly simplified, slightly exaggerated, charmingly awkward forms; essential objects/actions only, ample negative space. Reduce detail and eliminate redundant high-frequency noise. Alpha0 outside subjects; no white/gray/checkerboard background, letters/digits/text/watermark.",
+      "reference": "originals/07-six-garden-flowers-original.png",
+      "outputs": [
+        {
+          "id": "seed-in-soil",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.4,
+          "grid": [
+            3,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "sprout",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.58,
+          "grid": [
+            3,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "bud",
+          "size": [
+            384,
+            512
+          ],
+          "root": true,
+          "occupy": 0.78,
+          "grid": [
+            3,
+            1,
+            2
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "study_id": "610f2d54d7e6",
+  "plan_id": "068987cc19fa4d73",
+  "study_name": "小芽英语-手撕纸花园-r001",
+  "style_id": "handdraw-273",
+  "palette_id": "tea-milk",
+  "generator": "Codex 内置 imagegen；实际底层模型版本未对外暴露，未声称为2.5",
+  "reference": "C:/Users/Jam/.codex/worktrees/xiaoya-english-design/儿童英语练习/design/xiaoya-goodbye-comic/goodbye-v2.png",
+  "rights": "用户项目既有形象参考与本轮AI生成。保留来源；AI生成不等于版权独占，未进行商标/著作权法律清权。",
+  "assets": [
+    {
+      "file": "01-hug.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-0dbb114f-f645-4e4a-9f23-b32e7762a1bd.png",
+      "meaning": "I love you：小芽主动与温柔熊伙伴拥抱。",
+      "prompt": "为3–4岁无字母英语启蒙APP《小芽英语》创作一张可直接作为教学内容的高级儿童绘本插画。横向7:5构图，单幅，不是分镜、不是拼图、不是UI。主题 I love you，用画面完全讲清楚亲密拥抱。参考图只继承小芽和棕熊的身份，完全改用下述新画风，不沿用参考图的水彩渲染或四格排版。\n角色小芽：浅柔绿、圆润梨形的小芽精灵，两个深绿色叶片长在头顶，黑豆眼，桃色小脸颊，短小的双臂双腿，没有服装；熊是更大一号温柔棕熊照护者，圆耳朵、米色口鼻与肚皮。小芽主动张开双臂贴近熊的肚子，熊弯腰轻轻抱住小芽，两者闭眼微笑，触碰关系清晰可读。两人完整身体位于画面中央偏下，角色占画面约60%，手臂与身体连接合理，每人只有两臂两腿。手使用简单完整的圆掌，避免细碎手指。\n画风：273 手撕纸拼贴风 / Hand-Torn Paper Collage Illustration。角色高度概括、比例略夸张、造型笨拙有趣；场景只保留最必要的物件与动作；大面积留白。精致手撕纸边缘、哑光彩纸、轻微纸纤维，2–3层柔和纸张叠合，平面图形美感，不是塑料3D，不厚重投影。背景是一张温暖奶油纸，只有低矮椭圆地毯和很小的绿叶形状，减少视觉干扰。亲密、安稳、有触感，克制而不寡淡，不做廉价卡通或复杂装饰。\n配色严格以雾林茶奶09为基准：奶纸背景#EFEADF；浅灰绿#CCD4BD；深茶绿#344B45用于眼睛和最深轮廓；灰柔绿#749986；陶杏#D08D6C用于熊与脸颊暖色。可以同色明暗变化。小芽一定绿色，熊暖陶棕色。不要额外出现蓝紫艳色。没有文字、数字、字母、符号、边框、水印、按钮、爱心漂浮特效。主体四周留足边距，干净背景。",
+      "prompt_en": "Landscape 7:5 wordless teaching illustration for a 3–4-year-old English app. A pale-green pear-shaped sprout creature with two green leaves on its head hugs a larger friendly brown bear caregiver, smiling with eyes closed. Clearly connected arms and complete bodies. Style 273 hand-torn paper collage: highly simplified, slightly exaggerated charming forms, only essential objects/action, generous negative space. Matte colored paper, subtle fibers, 2–3 thin layers, minimal shadows. Palette 09 tea-milk: #EFEADF #CCD4BD #344B45 #749986 #D08D6C and related tonal variations. Preserve identity from the supplied project reference, not its watercolor rendering or comic layout. Warm cream paper background and a low oval rug. No text, letters, numbers, buttons, floating hearts, borders, or watermark."
+    },
+    {
+      "file": "02-thanks.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-7525376e-7e68-4b84-ae78-1cc50e2d760d.png",
+      "meaning": "Thank you：熊把红苹果递给小芽，小芽双手接收。",
+      "prompt": "为3–4岁无字母英语启蒙APP《小芽英语》创作可直接用于教学的高级儿童绘本插画。横向7:5构图，单幅，不是分镜、拼图、UI。严格继承参考图中小芽与棕熊的造型和手撕纸表现：浅柔绿圆润梨形小芽精灵，头顶两片绿叶，豆眼，桃色脸颊，小短手脚，不穿服装；更大一号温柔棕熊，圆耳、米色口鼻和肚皮，简单圆掌。两人各两臂两腿，接合准确。273手撕纸拼贴风：角色高度概括、比例略夸张、造型笨拙有趣；场景只保留最必要的物件与动作；大面积留白。哑光彩纸、轻微纸纤维、克制的撕纸边缘、2–3层薄纸叠合，几乎平面、极弱接触阴影，不塑料3D。比参考图更少地毯和碎叶纹理，归约细节，灭高频冗余。09雾林茶奶：奶纸#EFEADF，浅灰绿#CCD4BD，深茶绿#344B45，灰柔绿#749986，陶杏#D08D6C，允许同色明暗与必要固有色。无蓝紫霓虹。没有文字字母数字、标志、边框、水印、按钮和漂浮装饰。主体完整，四边留出至少10%呼吸边距，角色占画面约60%。\n主题 Thank you（谢谢）：熊伙伴在画面右边微微弯腰，把一颗清楚的大红苹果递向左侧小芽；小芽用两只手郑重接住苹果，稍微低头、微笑看着熊，表达收到礼物后的感谢。红苹果在两人之间，熊的一只手托苹果侧下方，小芽两手已接触苹果，不出现多余手或多个苹果。两人的目光与身体朝向建立交流。熊另一手自然垂下。暖红苹果#C86D55、短棕色果梗，无其他水果。简单小地面椭圆，奶油纸背景，无餐桌、无需文字也能理解收到礼物与感谢。",
+      "prompt_en": "A single landscape 7:5 wordless teaching image, same two-leaf pale-green sprout and brown bear as the supplied hug reference, identical hand-torn paper collage style 273 and palette 09. Bear on the right bends and gives one large warm-red apple #C86D55 to Xiaoya on the left. Xiaoya receives it with both hands, smiling gratefully and slightly bowing. Hands touch the same apple clearly, no extra hands or fruit. Simple oval ground and warm cream paper background. Highly simplified large shapes, muted matte paper, subtle fibers, 2–3 thin layers, minimal shadows, reduce detail and eliminate redundant high-frequency marks. Palette #EFEADF #CCD4BD #344B45 #749986 #D08D6C with semantic apple red. Full bodies, at least 10% breathing room. No text, letters, numbers, logos, UI, borders, floating decorations, or watermark."
+    },
+    {
+      "file": "03-go-home.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-93b112e0-1cf2-4f81-9fed-2131633275f6.png",
+      "meaning": "Let’s go home：户外，小芽和熊沿连续小路走向敞门的暖屋。",
+      "prompt": "为3–4岁无字母英语启蒙APP《小芽英语》创作可直接用于教学的高级儿童绘本插画。横向7:5构图，单幅，不是分镜、拼图、UI。严格继承参考图中小芽与棕熊的造型和手撕纸表现：浅柔绿圆润梨形小芽精灵，头顶两片绿叶，豆眼，桃色脸颊，小短手脚，不穿服装；更大一号温柔棕熊，圆耳、米色口鼻和肚皮，简单圆掌。两人各两臂两腿，接合准确。273手撕纸拼贴风：角色高度概括、比例略夸张、造型笨拙有趣；场景只保留最必要的物件与动作；大面积留白。哑光彩纸、轻微纸纤维、克制的撕纸边缘、2–3层薄纸叠合，几乎平面、极弱接触阴影，不塑料3D。比参考图更少地毯和碎叶纹理，归约细节，灭高频冗余。09雾林茶奶：奶纸#EFEADF，浅灰绿#CCD4BD，深茶绿#344B45，灰柔绿#749986，陶杏#D08D6C，允许同色明暗与必要固有色。无蓝紫霓虹。没有文字字母数字、标志、边框、水印、按钮和漂浮装饰。主体完整，四边留出至少10%呼吸边距，角色占画面约60%。\n主题 Let’s go home（一起回家）：明确户外，两位熟悉伙伴并肩沿着一条连续的奶油色小路走向画面右侧的一座温暖小房子。小芽在左前、熊在其右后，身体都朝右，脚在走路，熊单肩背一个朴素小布包。小芽一只手指向家，另一只手自然摆动；熊低头看小芽并温柔微笑。右侧小房子的门是打开的，露出暖陶杏色灯光，屋顶深茶绿、墙奶纸、门灰柔绿。能看到小路从脚下连续通向门槛，角色正朝门前进，不是离家或挥手告别。房子占右侧约25%，角色占中左约45%，身体完整；地面只有极简灰绿草地，没有树林、落日或高细节背景。低矮水平构图，画面安静、明确、适合幼儿看懂。",
+      "prompt_en": "A single landscape 7:5 wordless teaching image for Let’s go home. The same two-leaf pale-green sprout Xiaoya and larger friendly brown bear walk toward a warm house on the right along one continuous cream path. Xiaoya points to the home; bear carries a simple shoulder bag. Both full bodies are mid-step toward the open door. The path visibly reaches the doorstep; this is going home, not leaving or saying goodbye. Simple tea-green roof, cream walls, muted green door, warm terracotta interior. Sparse sage ground, no detailed forest or sunset. Exact character identity and hand-torn paper collage style from the hug reference. Highly simplified, slightly exaggerated charming shapes, generous negative space, 2–3 matte paper layers, subtle fibers, minimal shadow. Palette 09 #EFEADF #CCD4BD #344B45 #749986 #D08D6C and tonal variations. Reduce detail and eliminate redundant high-frequency marks. No text, letters, numbers, icons, UI, borders, or watermark."
+    }
+  ]
+}

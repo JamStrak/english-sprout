@@ -1,0 +1,15 @@
+{
+  "integratedAt": "2026-10-21",
+  "source": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v08-gift-reveal/runtime/gift-box.webp",
+  "generator": "image_gen.imagegen; model version not exposed",
+  "style": "273 Hand Torn Paper / 09 Tea Milk",
+  "usage": "Project-created asset supplied by the user-authorized Creative Asset Lab; no third-party stock dependency. Closed box only, no separate lid.",
+  "target": "public/xiaoya/paper/v1/gift-box.webp",
+  "width": 512,
+  "height": 512,
+  "bytes": 146592,
+  "sha256": "f808beb497b4d462bb6c5b88ba62d02eb8664be220816f80ecfee1a294010701",
+  "integration": "Exact delivered WebP bytes; shared gift icon for home, unwrapping and reward controls. Neutral placeholder on load failure. Existing welcome reward and storage rules unchanged.",
+  "prototype": "http://127.0.0.1:24861/api/studies/610f2d54d7e6/prototype/gifts-v08.html",
+  "motionIntegration": "v0.22.1 reuses prototype paper-box float, warm halo, four sparks, squash/open and treasure reveal. Centered native modal, black 48% scrim, one tap saves reward then reveals in place and auto fades; no separate collection page. Original WebP bytes and daily ledger unchanged."
+}

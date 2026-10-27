@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-16",
+  "tool": "built-in image_gen.imagegen",
+  "toolMode": "reference-image edit",
+  "useCase": "illustration-story",
+  "reference": "../xiaoya-goodbye-comic/goodbye-v2.png",
+  "referencePurpose": "Preserve the two-leaf pale-green sprout, yellow-backpack brown bear, and warm watercolor/gouache picture-book style.",
+  "generation": {
+    "transparentBackground": false,
+    "referenceImagePaths": [
+      "C:/Users/Jam/.codex/worktrees/xiaoya-english-design/儿童英语练习/design/xiaoya-goodbye-comic/goodbye-v2.png"
+    ],
+    "repairPasses": 0
+  },
+  "layout": {
+    "columns": 2,
+    "rows": 2,
+    "readingOrder": [
+      "top-left",
+      "top-right",
+      "bottom-left",
+      "bottom-right"
+    ],
+    "width": 1484,
+    "height": 1060,
+    "nominalPanelWidth": 742,
+    "nominalPanelHeight": 530,
+    "panelAspectRatio": 1.4,
+    "divider": "Thin ivory cross near the image midpoint; crop gutters slightly when displaying an individual panel.",
+    "integrationNote": "Use the existing one-frame CSS display with slight overscan and inspect actual 320/390 px rendering. Browser cropping is outside this asset-only validation."
+  },
+  "encoding": {
+    "tool": "FFmpeg",
+    "codec": "libwebp",
+    "quality": 82,
+    "compressionLevel": 6,
+    "resize": false,
+    "crop": false,
+    "pixelEditing": false,
+    "command": "ffmpeg -hide_banner -loglevel warning -n -i design/xiaoya-garden-comics/{name}-v1.png -c:v libwebp -quality 82 -compression_level 6 public/xiaoya/stories/{name}-v1.webp"
+  },
+  "qa": {
+    "method": "Visual inspection of generated originals and final runtime WebPs.",
+    "checks": [
+      "Four ordered panels; no written text, letters, subtitles, speech bubbles, or watermark.",
+      "Same two characters with consistent colors, two leaves, yellow backpack, and simple mitten hands.",
+      "No observed reverse-palm pads, extra limbs, intersecting bodies, or floating key props.",
+      "Objects and consequences remain clear between panels; the speaking cue belongs to the request/response action."
+    ],
+    "limits": [
+      "No child comprehension study or learning assessment was performed.",
+      "No browser crop, loading, offline cache, or app integration validation was performed in this asset task."
+    ]
+  },
+  "assets": [
+    {
+      "id": "water-v1",
+      "lessonId": "needs-01",
+      "phrase": "I need water.",
+      "source": "water-v1.png",
+      "runtime": "../../public/xiaoya/stories/water-v1.webp",
+      "generatedSource": "C:/Users/Jam/.codex/generated_images/01a142bc-00d0-7701-ae95-ac8a6533df8b/exec-9fce809d-2ad1-4aa5-afea-6053e157cdf0.png",
+      "sourceBytes": 2496583,
+      "runtimeBytes": 191260,
+      "sourceSha256": "0e10d3657932f575e6054d296f624ab349dd726dc46fd59c7180bf0b038b3bde",
+      "runtimeSha256": "be98c27fbe84e5350114b80e487be8a0850791948a818d5ab35636e5c74ee40f",
+      "targetAudioPanel": 3,
+      "frames": [
+        {
+          "position": "top-left",
+          "meaning": "Thirst after playing with the red ball; empty blue cup nearby."
+        },
+        {
+          "position": "top-right",
+          "meaning": "Sprout holds the empty cup toward the bear to ask for water."
+        },
+        {
+          "position": "bottom-left",
+          "meaning": "Bear responds by pouring water into the same cup; the water stream meets its opening."
+        },
+        {
+          "position": "bottom-right",
+          "meaning": "Sprout drinks from the cup and looks satisfied; pitcher returned to the table."
+        }
+      ],
+      "visualReview": "Accepted. Empty-cup request, physically aligned pouring stream, and drinking outcome are clearly differentiated. A small nonverbal pant mark appears in panel 1; it is not writing.",
+      "prompt": "Use case: illustration-story.\nEdit the supplied reference picture into a NEW wordless four-panel story for a toddler English-learning app, keeping its exact character identities and warm hand-painted watercolor/gouache picture-book style. The reference is a STYLE AND CHARACTER REFERENCE; replace the farewell story with the water story described below.\nAsset: a 2 by 2 comic atlas, exactly FOUR equal rectangular panels, reading order top-left, top-right, bottom-left, bottom-right. Overall landscape canvas about 1.4:1; each panel about 1.4:1. One thin straight ivory vertical divider at the exact horizontal midpoint, and one thin straight ivory horizontal divider at the exact vertical midpoint. No outer labels. Every panel is a complete simple scene with ample space around hands and cup, important actions well inside the panel edges.\nCharacters: the same round pale-green sprout child with TWO green leaves on its head and small dark-green feet, rosy cheeks, black oval eyes, little soft green mitten hands; the same friendly round cinnamon-brown bear with a small YELLOW BACKPACK, black oval eyes, light muzzle, rosy cheeks. Exactly two arms per character. Bear paws are simple rounded furry mittens, no paw pads anywhere. Consistent sizes, face, colors and backpack across all four panels.\nPlace: the same cozy sunlit playroom, warm cream walls, wood floor, green oval rug; keep the background simple and the action clearly readable.\nPanel 1 top-left: after playing together with their red ball, the sprout is tired and thirsty, resting one small hand at its mouth/throat and gently panting, one subtle sweat drop. Bear sits nearby. The ball lies still on the rug. Show a clear empty blue drinking cup sitting nearby. No water is being given yet.\nPanel 2 top-right: closer medium shot. Sprout looks toward the bear, holding out the SAME upright EMPTY blue cup with its open rim and empty interior clearly visible. Its mouth is slightly open as if asking for water. Bear looks attentively at sprout. A clear pitcher containing clean transparent water is on the low wooden side table beside the bear. This is asking for drinking water, not offering a present.\nPanel 3 bottom-left: clear medium shot, main teaching moment. Bear carefully tilts the transparent pitcher and pours one continuous thin stream of water DIRECTLY INTO the blue cup. Sprout holds the cup upright steadily with both hands and looks gratefully toward the bear with mouth slightly open. Show the water level in the blue cup rising; pitcher spout and cup rim align physically. Keep fingers/paws anatomically simple and no intersections between hands, pitcher and cup.\nPanel 4 bottom-right: sprout happily DRINKS from the SAME blue cup, cup at its mouth and tilted slightly in a physically natural way. Bear smiles nearby, now pitcher standing upright on the side table. The red ball remains visible as a small continuity detail. Sprout is comfortable and satisfied.\nNo writing anywhere: no English, Chinese, letters, numbers, subtitles, labels, logos, speech bubbles, thought bubbles, watermarks, or pictographic callouts. No extra characters. No weird reverse palms, extra limbs, fused hands, floating cup, intersecting objects, dangerous hot liquid, visual arrows, duplicate props. Warm soft daylight and gentle expressive poses. Strong clear causal sequence for a 3-year-old who cannot read."
+    },
+    {
+      "id": "help-v1",
+      "lessonId": "needs-08",
+      "phrase": "Help me, please.",
+      "source": "help-v1.png",
+      "runtime": "../../public/xiaoya/stories/help-v1.webp",
+      "generatedSource": "C:/Users/Jam/.codex/generated_images/01a142bc-00d0-7701-ae95-ac8a6533df8b/exec-661d8916-aa2f-4243-a0f2-d31cd15dccba.png",
+      "sourceBytes": 2455442,
+      "runtimeBytes": 176660,
+      "sourceSha256": "2b4bd272b3c6ec31d1282b92ea00fa474ee366bce9f6b7d261f77178f78ef102",
+      "runtimeSha256": "0858a267b37fe61d30da0b14b62cd58a846b40eb585bc9f3774a382fc9d0a127",
+      "targetAudioPanel": 3,
+      "frames": [
+        {
+          "position": "top-left",
+          "meaning": "Sprout tries to lift the wooden toy chest lid, but it stays closed."
+        },
+        {
+          "position": "top-right",
+          "meaning": "Sprout turns toward the bear and reaches out to request help."
+        },
+        {
+          "position": "bottom-left",
+          "meaning": "Sprout and bear lift the same attached lid together, exposing the red toy car."
+        },
+        {
+          "position": "bottom-right",
+          "meaning": "Sprout has the red toy car; both friends are happy beside the open chest."
+        }
+      ],
+      "visualReview": "Accepted. Closed-lid difficulty, social request, shared lifting action, and obtained toy form a readable sequence. Mitten hands can partially overlap the lid edge, but no obvious extra limbs, disconnected lid, or hand-pad defect was observed.",
+      "prompt": "Use case: illustration-story.\nEdit the supplied reference picture into a NEW wordless four-panel story for a toddler English-learning app, keeping its exact character identities and warm hand-painted watercolor/gouache picture-book style. The reference is a STYLE AND CHARACTER REFERENCE; replace the farewell story with the toy-box help story below.\nAsset: a 2 by 2 comic atlas, exactly FOUR equal rectangular panels, reading order top-left, top-right, bottom-left, bottom-right. Overall landscape canvas about 1.4:1; each panel about 1.4:1. One thin straight ivory vertical divider at the exact horizontal midpoint, and one thin straight ivory horizontal divider at the exact vertical midpoint. One moment per panel. No inset panels. Important actions and both hands remain clearly inside the panel edges.\nCharacters: the same round pale-green sprout child with TWO green leaves on its head and small dark-green feet, rosy cheeks, black oval eyes, soft green mitten hands; the same friendly round cinnamon-brown bear with a small YELLOW BACKPACK. Keep both characters' exact faces, colors, anatomy and size relationship throughout. Exactly two arms each. Hands are simple soft mittens, bear paws rounded furry mittens, no visible paw pads on hands. No reverse palms or extra fingers.\nPlace: the same cozy sunlit playroom with warm cream walls, wood floor and green oval rug, with uncluttered background.\nKey prop: ONE low wide rectangular honey-colored wooden TOY CHEST on the rug, its gently rounded hinged flat lid attached along its BACK edge. Chest has a small friendly circular carved groove on front, no letters or text. Lid is not a removable board. The same chest, proportions, hinges and position across the panels. Its contents are a clearly visible red toy car only after lid opens. Side views ensure hands and lid are physically unambiguous.\nPanel 1 top-left: sprout kneels beside the firmly CLOSED toy chest and grasps the front lid lip with both small hands, trying to pull upward. The lid remains completely shut with a visible seam. Sprout looks concentrated, slightly puzzled; bear with yellow backpack is nearby but not helping yet. This establishes a child who cannot open a toy chest.\nPanel 2 top-right: sprout has tried but the lid is still completely CLOSED. Now sprout looks up directly at the nearby bear with pleading, friendly eyes and slightly open mouth, one hand still on the closed lid and the other empty open mitten reaching toward the bear. Bear turns attentively toward sprout and the chest. Clear social request for assistance, NOT crying, not an injury.\nPanel 3 bottom-left: MAIN TEACHING MOMENT, they cooperate to lift the SAME hinged lid. Sprout on the LEFT and bear on the RIGHT each support one end of the front lid edge with two simple mitten hands. Lid rotates BACKWARD around the back hinge to about 55 degrees. They face each other with warm open-mouth expressions, visibly doing the action together. Interior opening now reveals a small red wooden toy car. The lid is attached to the box; hands touch its edge without penetrating wood; no trapped fingers, no duplicated lids, no detached panels.\nPanel 4 bottom-right: lid is safely fully open, attached to its hinge. Sprout sits in front of the chest happily holding the red toy car with both hands. Bear sits beside it, smiling with hands resting naturally on knees. Toy is clearly out of the chest and obtained because of the assistance. Happy calm result.\nNo writing anywhere: no English, Chinese, letters, numbers, subtitles, labels, logos, watermarks, speech bubbles or thought bubbles. No arrows, no floating labels, no stress symbols. No extra characters or limbs, no reverse hands, no fusion through the chest, no floating disconnected lid. Readable causal action for a three-year-old who cannot read, simple clean silhouettes, soft warm daylight, gentle expressions."
+    }
+  ]
+}

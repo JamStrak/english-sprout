@@ -1,0 +1,497 @@
+{
+  "version": "v0.10",
+  "source_thread": "019ff4f9-dc2f-7a61-8f79-b108371098e5",
+  "source_directory": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial",
+  "total_bytes": 758286.0,
+  "assets": [
+    {
+      "id": "buddy-welcome",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\buddy-welcome.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\buddy-welcome.webp",
+      "size": [
+        768,
+        896
+      ],
+      "bytes": 84104,
+      "sha256": "91296370b3d998c39bea5d7dfd404075f51734e84184bbbd64c98f923cdc61ea",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\05-buddy-welcome-original.png",
+      "original_sha256": "e47eb25abd95b8ae3fdc357665f30eff7acae7bbb7fdaaffaf3e698f2318df0e",
+      "generation_key": "buddy",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/buddy-welcome.webp"
+    },
+    {
+      "id": "seed-pack",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed-pack.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed-pack.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 32720,
+      "sha256": "76b96f76f442089debf95ac8a6249305f615401abf10d6dc0781587d5c2ebc5e",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": null,
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\06-garden-tools-original.png",
+      "original_sha256": "d7d54b78e5d0f0096415a2e81a8025e9bb749acf8b9c8409f70a172eaa4a7e23",
+      "generation_key": "tools",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/seed-pack.webp"
+    },
+    {
+      "id": "seed",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 34388,
+      "sha256": "48d3e23988b6f3c733d7252758bc126c37533ba7dc38ca9d9c5577f5d84b315b",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": null,
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\06-garden-tools-original.png",
+      "original_sha256": "d7d54b78e5d0f0096415a2e81a8025e9bb749acf8b9c8409f70a172eaa4a7e23",
+      "generation_key": "tools",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/seed.webp"
+    },
+    {
+      "id": "watering-can",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\watering-can.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\watering-can.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 25198,
+      "sha256": "ebcf56ea2f4b900fbe89ae7d84d4d50dd36f3c58a956dad064176b28f593d5b9",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": null,
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\06-garden-tools-original.png",
+      "original_sha256": "d7d54b78e5d0f0096415a2e81a8025e9bb749acf8b9c8409f70a172eaa4a7e23",
+      "generation_key": "tools",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/watering-can.webp"
+    },
+    {
+      "id": "shell",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\shell.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\shell.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 27100,
+      "sha256": "0f7d3f3c23ad0c56fbb2bedc593fd77a7f9d1939aed7a000b847e15b287698c1",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": null,
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\06-garden-tools-original.png",
+      "original_sha256": "d7d54b78e5d0f0096415a2e81a8025e9bb749acf8b9c8409f70a172eaa4a7e23",
+      "generation_key": "tools",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/shell.webp"
+    },
+    {
+      "id": "water-drop",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\water-drop.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\water-drop.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 21824,
+      "sha256": "1a4b25ee2d9c68e2c4543a903a212f6ba570a98e8c1860ccf4a5743fae9e7be6",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": null,
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\06-garden-tools-original.png",
+      "original_sha256": "d7d54b78e5d0f0096415a2e81a8025e9bb749acf8b9c8409f70a172eaa4a7e23",
+      "generation_key": "tools",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/water-drop.webp"
+    },
+    {
+      "id": "daisy",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\daisy.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\daisy.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 39248,
+      "sha256": "bbb317ebb63aae43ed4050900086181c9945a1bad3cc2010d7a38ad7a6813805",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/daisy.webp"
+    },
+    {
+      "id": "tulip",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\tulip.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\tulip.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 45886,
+      "sha256": "03fd53300efad113dfe8fd58508bcf57867ddf72c4cc76d52f0859d81db3de7f",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/tulip.webp"
+    },
+    {
+      "id": "sunflower",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\sunflower.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\sunflower.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 41006,
+      "sha256": "c23f23883bb6b916b7f4cfb8ed7803bdbfcc35f733c62b2de180932e0df7ff5b",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/sunflower.webp"
+    },
+    {
+      "id": "bellflower",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bellflower.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bellflower.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 34130,
+      "sha256": "d727ce863a07f12134a1b446773298f823e4fbee16df0d87e19cf1b0a4d2d762",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/bellflower.webp"
+    },
+    {
+      "id": "poppy",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\poppy.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\poppy.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 45412,
+      "sha256": "17692097c50f451e6d6356239466360e084ce5f4514915d222bbc1c5dbd78e8f",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/poppy.webp"
+    },
+    {
+      "id": "violet",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\violet.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\violet.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 42518,
+      "sha256": "7a8da648ea9d53e28c6836ad83b79ac0dfe012be37bb3949d0a0d20a93ce5a9f",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\07-six-garden-flowers-original.png",
+      "original_sha256": "7a388a0d7e0c96bce3b08cd9a1e54d0a11a4574acd089a858d4854e8d5e63774",
+      "generation_key": "flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/violet.webp"
+    },
+    {
+      "id": "bow-pink",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-pink.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-pink.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 41578,
+      "sha256": "8de9c1e53c6718cb0fd5e95f25f0d553cb346bf01d0eff0772421c37f2563a37",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/bow-pink.webp"
+    },
+    {
+      "id": "bow-blue",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-blue.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-blue.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 39202,
+      "sha256": "48635829fc0db98a5359658c645d34aeda36db5ec1141dba2e03cf6245bbda1d",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/bow-blue.webp"
+    },
+    {
+      "id": "bow-yellow",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-yellow.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-yellow.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 38128,
+      "sha256": "9370b97325e33066a6a39dd6dae36843a83fe6ae7bc05d6c282486a0915aaf8c",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/bow-yellow.webp"
+    },
+    {
+      "id": "bow-purple",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-purple.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bow-purple.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 37686,
+      "sha256": "3172439a2009214d45ed853e8ba3da1b6e69336b4b2f2155197f6120a19ce654",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/bow-purple.webp"
+    },
+    {
+      "id": "giant-daisy",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\giant-daisy.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\giant-daisy.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 35048,
+      "sha256": "1f268aa027b45cd5f410429bf7c9017b71fe9e4eebc9f6eef0f1cbeb6ea0d7fe",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/giant-daisy.webp"
+    },
+    {
+      "id": "giant-sunflower",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\giant-sunflower.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\giant-sunflower.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 42378,
+      "sha256": "4e87e99b4045023ca7b0756a32916874ecd07b707b71caa4911b525bac4c77da",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\08-bow-and-giant-flowers-original.png",
+      "original_sha256": "80af5ae849c10783f3d93cc0c2ad71d988534cf8453af1ae84eabebce39b4f09",
+      "generation_key": "special-flowers",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/flowers/giant-sunflower.webp"
+    },
+    {
+      "id": "seed-in-soil",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed-in-soil.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\seed-in-soil.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 6156,
+      "sha256": "9d97b4f4506192398607e5a253c2f0b1547b809b39616c71f28ed43249158243",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\09-growth-stages-original.png",
+      "original_sha256": "296e212a146187bdf81e6773012d2007f059bda5a4a52da8781651e90bbc5d94",
+      "generation_key": "growth",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/seed-in-soil.webp"
+    },
+    {
+      "id": "sprout",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\sprout.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\sprout.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 14802,
+      "sha256": "1cf5ee4e00a9d6635f80b99cb9c0482f11612175bca1eca669a80a4163abb08f",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\09-growth-stages-original.png",
+      "original_sha256": "296e212a146187bdf81e6773012d2007f059bda5a4a52da8781651e90bbc5d94",
+      "generation_key": "growth",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/sprout.webp"
+    },
+    {
+      "id": "bud",
+      "png": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bud.png",
+      "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\runtime\\bud.webp",
+      "size": [
+        384,
+        512
+      ],
+      "bytes": 29774,
+      "sha256": "0a33f4c38837fecbbaa4f8ad20779c6474743b03734d4e45dd06e1ab82167d47",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "root_anchor": [
+        0.5,
+        0.88
+      ],
+      "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\v02-commercial\\originals\\09-growth-stages-original.png",
+      "original_sha256": "296e212a146187bdf81e6773012d2007f059bda5a4a52da8781651e90bbc5d94",
+      "generation_key": "growth",
+      "status": "generated; visual production candidate; app integration pending",
+      "repository_path": "public/xiaoya/paper/v1/bud.webp"
+    }
+  ]
+}

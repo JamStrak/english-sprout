@@ -1,5 +1,7 @@
 # 声音播放优化与验证 · v1.2.1
 
+> 范围标记（2026-10-19）：本页属于旧产品「英语小芽」`src/` 的规则或历史记录，文中“当前/本轮”仅指所标版本。新产品「小芽英语」`xiaoya/` 以 [当前状态](../PROJECT_CONTEXT.md)、[技术地图](XIAOYA_ENGINEERING.md) 和 [资料索引](INDEX.md) 为入口；旧听音选图、Vosk、旧奖励及发布结论不能直接套用。原记录保留，不表示本轮重新验收。
+
 2026-10-10。正式网址 https://jamstrak.github.io/english-sprout/ 。
 发布提交 b3867f6，GitHub Pages 任务 38036547468 completed / success。
 正式构建 40fe69f3b1e4；本地构建 403b4d0486dd。按提交 Git blob 的 LF 内容计算，精确得到正式编号。

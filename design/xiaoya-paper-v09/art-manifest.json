@@ -1,0 +1,100 @@
+[
+  {
+    "file": "01-hug.png",
+    "meaning": "I love you：小芽主动与温柔熊伙伴拥抱。",
+    "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\experiments\\01-hug.png",
+    "original_size": [
+      1484,
+      1060
+    ],
+    "original_bytes": 2201015,
+    "original_sha256": "631d0c80be1dc2d6c41865bed225eb59cd93901a1d7bcd17f810ae0b2fd326f4",
+    "has_alpha": false,
+    "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\runtime\\01-hug.webp",
+    "runtime_size": [
+      1400,
+      1000
+    ],
+    "runtime_bytes": 79834,
+    "webp_quality": 82,
+    "source": "Codex 内置 imagegen；实际底层模型版本未对外暴露，未声称为2.5",
+    "rights": "用户项目既有形象参考与本轮AI生成。保留来源；AI生成不等于版权独占，未进行商标/著作权法律清权。",
+    "event_id": "family-love",
+    "project_runtime": "public/xiaoya/stories/love-paper-v1.webp",
+    "runtime_sha256": "ba69eb21dbf2974198ade05ce224d4c5bd7aa6c062b5ad863596c8722a999b4b"
+  },
+  {
+    "file": "02-thanks.png",
+    "meaning": "Thank you：熊把红苹果递给小芽，小芽双手接收。",
+    "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\experiments\\02-thanks.png",
+    "original_size": [
+      1484,
+      1060
+    ],
+    "original_bytes": 2140246,
+    "original_sha256": "7b442a17062eaf4212570400927416eacc2b9f1ec526f7ae8c0946e2eeca6fc8",
+    "has_alpha": false,
+    "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\runtime\\02-thanks.webp",
+    "runtime_size": [
+      1400,
+      1000
+    ],
+    "runtime_bytes": 77800,
+    "webp_quality": 82,
+    "source": "Codex 内置 imagegen；实际底层模型版本未对外暴露，未声称为2.5",
+    "rights": "用户项目既有形象参考与本轮AI生成。保留来源；AI生成不等于版权独占，未进行商标/著作权法律清权。",
+    "event_id": "hello-thanks",
+    "project_runtime": "public/xiaoya/stories/thanks-paper-v1.webp",
+    "runtime_sha256": "19c6d71ee77c9116d53e29f93aa68cfe7f626b04f2a3cd8616431f4640ccbe63"
+  },
+  {
+    "file": "03-go-home.png",
+    "meaning": "Let’s go home：户外，小芽和熊沿连续小路走向敞门的暖屋。",
+    "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\experiments\\03-go-home.png",
+    "original_size": [
+      1484,
+      1060
+    ],
+    "original_bytes": 2480300,
+    "original_sha256": "61de25ff326ceb956f2285bd8ff5c8837d78b413d4b1b4da1221ad88a211a92b",
+    "has_alpha": false,
+    "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\runtime\\03-go-home.webp",
+    "runtime_size": [
+      1400,
+      1000
+    ],
+    "runtime_bytes": 119270,
+    "webp_quality": 82,
+    "source": "Codex 内置 imagegen；实际底层模型版本未对外暴露，未声称为2.5",
+    "rights": "用户项目既有形象参考与本轮AI生成。保留来源；AI生成不等于版权独占，未进行商标/著作权法律清权。",
+    "event_id": "outside-go-home",
+    "project_runtime": "public/xiaoya/stories/home-paper-v1.webp",
+    "runtime_sha256": "b4bdf70c6f02f4711702ac1a797393742b2462529d600c177b5616ff97506fae"
+  },
+  {
+    "file": "04-garden-background.png",
+    "meaning": "花园环境底图：中央大面积低细节可种植区域，由程序叠加花苗与交互，不内嵌按钮。",
+    "plan_id": "7f0d0e3461e043c8",
+    "original": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\experiments\\04-garden-background.png",
+    "original_size": [
+      1672,
+      941
+    ],
+    "original_bytes": 2300451,
+    "original_sha256": "7cf593ac19d068ae15204257e12d71cb850244e36bcbfc719735ce068791e6f8",
+    "has_alpha": false,
+    "runtime": "E:\\AI code Project\\AI GAME\\创意资产实验室\\studies\\小芽英语-手撕纸花园-r001-9f81c1\\delivery\\runtime\\04-garden-background.webp",
+    "runtime_size": [
+      1599,
+      900
+    ],
+    "runtime_bytes": 80006,
+    "webp_quality": 82,
+    "source": "Codex 内置 imagegen；底层模型版本未暴露。",
+    "rights": "本轮AI生成，参考本项目小芽拥抱插画的媒介；AI生成不等于版权独占，未进行法律清权。",
+    "observation": "中央可种区域完整；实际山丘地平线约42%而非提示词35%，纸纹较可见。作为r001候选背景由APP适配裁切，不宣称逐项精确符合提示词。",
+    "event_id": "garden-background",
+    "project_runtime": "public/xiaoya/stories/garden-paper-v1.webp",
+    "runtime_sha256": "3482b8a0fa438f41ccd7f8918dfd5447132970aead2c436440d3352d7ea774cf"
+  }
+]

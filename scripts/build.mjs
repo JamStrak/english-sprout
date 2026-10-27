@@ -3,14 +3,19 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {ANIMALS} from '../src/avatars.js';
 import {serializeCurriculum} from '../src/startup.js';
+import {buildXiaoya} from './build-xiaoya.mjs';
 const appVersion=JSON.parse(await fs.readFile(new URL('../package.json',import.meta.url),'utf8')).version;
+const buildArgs=process.argv.slice(2);
+if(buildArgs.some(argument=>argument!=='--internal'))throw new Error('Unknown build option. Use --internal only for the local GM review build.');
+const internal=buildArgs.includes('--internal');
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root,'dist');
 // Only replace this project's generated dist directory.
 if (path.dirname(dist) !== root || path.basename(dist) !== 'dist') throw new Error('Unsafe build target');
 await fs.rm(dist,{recursive:true,force:true});
 await fs.mkdir(dist,{recursive:true});
-await fs.cp(path.join(root,'public'),dist,{recursive:true});
+// Candidate growth art belongs to the internal review build until accepted.
+await fs.cp(path.join(root,'public'),dist,{recursive:true,filter:source=>internal||source!==path.join(root,'public','xiaoya','growth')});
 await fs.cp(path.join(root,'src'),path.join(dist,'src'),{recursive:true});
 const template=await fs.readFile(path.join(root,'index.html'),'utf8');
 if(!template.includes('<!-- APP_CURRICULUM -->'))throw new Error('Missing inline curriculum marker');
@@ -52,3 +57,4 @@ sw=sw.replace('__BUILD_ID__',version).replace('__CORE_FILES__',JSON.stringify(re
 await fs.writeFile(path.join(dist,'sw.js'),sw);
 await fs.writeFile(path.join(dist,'version.json'),JSON.stringify({version:appVersion,build:version}));
 console.log('Built English Sprout '+appVersion+' · '+version);
+await buildXiaoya({root,dist,internal});

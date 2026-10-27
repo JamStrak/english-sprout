@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clip_count": 15,
+  "total_bytes": 510708,
+  "total_seconds": 83.808,
+  "clips": [
+    {
+      "id": "challenge-intro",
+      "text": "这里是花园挑战。把学过的四句话说给小芽听，一起打开大礼物吧！",
+      "file": "challenge-intro.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 40412,
+      "seconds": 6.648,
+      "sha256": "0601d50ff2be15ed7365a828722c0a17b1908afbd8a5358a413191bb1a52bd88",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这里是花园挑战把学过的四句话说给小芽听一起打开大礼物吧",
+        "final_end_seconds": 6.0875
+      }
+    },
+    {
+      "id": "challenge-invite",
+      "text": "你已经练过这些话啦！点小旗子，试试花园挑战吧。",
+      "file": "challenge-invite.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31772,
+      "seconds": 5.208,
+      "sha256": "08f32db629573b15682a72d8f044ebf049bcc6832f0fd336ca225bedbe5489c4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你已经练过这些话啦点小旗子试试花园挑战吧",
+        "final_end_seconds": 4.6375
+      }
+    },
+    {
+      "id": "challenge-question",
+      "text": "看看这幅画，这个时候，你会怎么说呢？想好了，就点话筒。想听一遍，也可以点小耳朵。",
+      "file": "challenge-question.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 54812,
+      "seconds": 9.048,
+      "sha256": "d4ec0eab64fc61206a8d07f103a365affa5dea61f51b71680bc44c20dd2bc1c9",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "看看这幅画这个时候你会怎么说呢想好了就点话筒想听一遍也可以点小耳朵",
+        "final_end_seconds": 8.475
+      }
+    },
+    {
+      "id": "challenge-practice",
+      "text": "这句我们再一起练练。刚才完成的小步，都帮你留下啦。",
+      "file": "challenge-practice.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 34364,
+      "seconds": 5.64,
+      "sha256": "675cd8e9af4e5f946f1f01aab260d229337d1f56bb4177a92b1d81fbb2fb786b",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这句我们再一起练练刚才完成的小步都帮你留下啦",
+        "final_end_seconds": 5.075
+      }
+    },
+    {
+      "id": "challenge-step",
+      "text": "这一小步完成啦！我们接着试一试。",
+      "file": "challenge-step.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 23420,
+      "seconds": 3.816,
+      "sha256": "a57eb759aff8deb53c9803c98f9105c1ad0f42dd5927fd3b6b2ff5cf30387241",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这一小步完成啦我们接着试一试",
+        "final_end_seconds": 3.2375
+      }
+    },
+    {
+      "id": "challenge-return",
+      "text": "再来试试刚才那一句吧。",
+      "file": "challenge-return.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 15212,
+      "seconds": 2.448,
+      "sha256": "5a355d1bde348995f3371785385355ed7ffdd2a5e30461f35a1a1ef834710804",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "再来试试刚才那一句吧",
+        "final_end_seconds": 1.875
+      }
+    },
+    {
+      "id": "challenge-clear",
+      "text": "挑战完成啦！四枚贝壳，还有六滴水，都是你的！带回花园吧！",
+      "file": "challenge-clear.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 42140,
+      "seconds": 6.936,
+      "sha256": "07aba1d9669ba661c9f71cd9f7e35ee962f95c23031ac4a652e816b178c174d8",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "挑战完成啦四枚贝壳还有六滴水都是你的带回花园吧",
+        "final_end_seconds": 6.3625
+      }
+    },
+    {
+      "id": "challenge-replay",
+      "text": "你又把这几句话说出来啦！我们去花园看看吧。",
+      "file": "challenge-replay.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 27164,
+      "seconds": 4.44,
+      "sha256": "11b15b11762d66a3ca81c0da4890edd99cbab9e6f70c2792aa8435b12799df4d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你又把这几句话说出来啦我们去花园看看吧",
+        "final_end_seconds": 3.8625
+      }
+    },
+    {
+      "id": "challenge-seed",
+      "text": "这是挑战送给你的特别种子！种进花园，看看会开出什么花吧。",
+      "file": "challenge-seed.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 37676,
+      "seconds": 6.192,
+      "sha256": "2f4a88c464b810de96590bc23a9b64495b13df74741f4706e70776fd9d07909e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "这是挑战送给你的特别种子种进花园看看会开出什么花吧",
+        "final_end_seconds": 5.625
+      }
+    },
+    {
+      "id": "challenge-wait",
+      "text": "先和小芽学学这几句话，再来挑战吧。",
+      "file": "challenge-wait.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 22844,
+      "seconds": 3.72,
+      "sha256": "95269b6a4b515d9d6aa621b0660ed2d67ccf8b8ebd579b05528eab85b0a67ffa",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "先和小芽学学这几句话再来挑战吧",
+        "final_end_seconds": 3.1375
+      }
+    },
+    {
+      "id": "challenge-saved",
+      "text": "已经完成的小步，都帮你留下啦。准备好了，随时回来接着玩。",
+      "file": "challenge-saved.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 37244,
+      "seconds": 6.12,
+      "sha256": "9375139a7ab3197d951bf2441e6ceb1b0d4233ba9c68fcf4c96e5f52fb56792c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "已经完成的小步都帮你留下啦准备好了随时回来接着玩",
+        "final_end_seconds": 5.5375
+      }
+    },
+    {
+      "id": "economy-water-v13",
+      "text": "两滴水，收好啦！去给小苗浇水吧。",
+      "file": "economy-water-v13.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 26300,
+      "seconds": 4.296,
+      "sha256": "9f3a34ab501a7ab3a74c38ac22fc4f7db1c66e28900580822f87c106a78f6580",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "两滴水收好啦去给小苗浇水吧",
+        "final_end_seconds": 3.725
+      }
+    },
+    {
+      "id": "economy-starter-v13",
+      "text": "送你第一份小礼物！两枚贝壳，还有三滴水。去种下第一颗种子吧。",
+      "file": "economy-starter-v13.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 42860,
+      "seconds": 7.056,
+      "sha256": "0737c787a21781288b5e6f14fec36beb1deef5219abeea63201fd16bcd9b5307",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "送你第一份小礼物两枚贝壳还有三滴水去种下第一颗种子吧",
+        "final_end_seconds": 6.475
+      }
+    },
+    {
+      "id": "flow-water-choice-v13",
+      "text": "水滴可以浇花。想要这两滴水，就点小礼物。",
+      "file": "flow-water-choice-v13.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 30476,
+      "seconds": 4.992,
+      "sha256": "b55968dd5bb19420713cf9b05250ea6f2c0a05663efc16f8a91ff493afb0d68c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "水滴可以浇花想要这两滴水就点小礼物",
+        "final_end_seconds": 4.425
+      }
+    },
+    {
+      "id": "flow-review-v13",
+      "text": "老朋友来啦！看看这幅画，你还记得怎么说吗？想听一遍，就点小耳朵。",
+      "file": "flow-review-v13.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 44012,
+      "seconds": 7.248,
+      "sha256": "8fc776eceef439a0ec78749861635b9f9a327d92be930af36243f0189f2374a3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "老朋友来啦看看这幅画你还记得怎么说吗想听一遍就点小耳朵",
+        "final_end_seconds": 6.6875
+      }
+    }
+  ]
+}

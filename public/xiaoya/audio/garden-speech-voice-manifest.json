@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clips": [
+    {
+      "id": "garden-speech-pass",
+      "text": "我听懂啦！点亮闪闪的贝壳，收下小礼物吧。",
+      "file": "garden-speech-pass.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 30188,
+      "seconds": 4.944,
+      "sha256": "c1b27c77823d74922e24b5e7e56ca380caf6a8adfac82ab00c501194a3d908e7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "我听懂啦点亮闪闪的贝壳收下小礼物吧",
+        "final_end_seconds": 4.3625
+      }
+    },
+    {
+      "id": "garden-speech-retry",
+      "text": "再试试看。点小耳朵，听一听，再点话筒跟我说。",
+      "file": "garden-speech-retry.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 32492,
+      "seconds": 5.328,
+      "sha256": "61d253f2f9f48b8a60982e6e0da485a38a2252ba8a0ebd05b714a0665e7b5760",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "再试试看点小耳朵听一听再点话筒跟我说",
+        "final_end_seconds": 4.75
+      }
+    },
+    {
+      "id": "garden-speech-partial",
+      "text": "已经有一点像啦！点小耳朵，再听一遍，一起试试。",
+      "file": "garden-speech-partial.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 33068,
+      "seconds": 5.424,
+      "sha256": "4a34caf238202ad7c3ab9adc104a1e62a59ac92ca9230554bb3d133a98f014f6",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "已经有一点像啦点小耳朵再听一遍一起试试",
+        "final_end_seconds": 4.8375
+      }
+    },
+    {
+      "id": "garden-speech-silent",
+      "text": "等话筒亮起来，再开口说哦。也可以点小耳朵，先听一听。",
+      "file": "garden-speech-silent.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 34652,
+      "seconds": 5.688,
+      "sha256": "9a455fcab60ff745a4ff92ff3d2761f407dae943e04375689e55597e69673df2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "等话筒亮起来再开口说哦也可以点小耳朵先听一听",
+        "final_end_seconds": 5.125
+      }
+    },
+    {
+      "id": "garden-speech-wait",
+      "text": "小耳朵还没准备好。可以点下面的小三角，先听伙伴说。",
+      "file": "garden-speech-wait.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 34652,
+      "seconds": 5.688,
+      "sha256": "79fa099d28b84420951617070af7b7b4df779c3a59688846b3cbcd2d086f9bdf",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小耳朵还没准备好可以点下面的小三角先听伙伴说",
+        "final_end_seconds": 5.125
+      }
+    },
+    {
+      "id": "garden-speech-saved",
+      "text": "我听懂啦！点小勾勾，收好这次练习吧。",
+      "file": "garden-speech-saved.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 27596,
+      "seconds": 4.512,
+      "sha256": "1d04e160c71532dcecd79cac9bd4e0986d2be848232f7d36d752df65ca0a36ee",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "我听懂啦点小勾勾收好这次练习吧",
+        "final_end_seconds": 3.9375
+      }
+    },
+    {
+      "id": "garden-open-pack",
+      "text": "点一下种子袋，看看里面藏着什么种子！",
+      "file": "garden-open-pack.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 22556,
+      "seconds": 3.672,
+      "sha256": "2768e24d09bbc8925e4f842189a610e4f10213f906afd0d805284c448b5258d7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "点一下种子袋看看里面藏着什么种子",
+        "final_end_seconds": 3.0875
+      }
+    }
+  ]
+}

@@ -1,0 +1,398 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "generic public lesson text synthesized during production; no runtime TTS connection",
+  "review": "decoded waveform and exact word-boundary coverage checked; real-child acceptance pending",
+  "clips": [
+    {
+      "id": "hello-everyone",
+      "text": "见到几个朋友，可以挥挥手说大家好。听我说。",
+      "file": "hello-everyone.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31772,
+      "seconds": 5.208,
+      "sha256": "7c7b581e5f05b6b96621128a23ae7803fc124c32d9115b2deed3f322f402be81",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "见到几个朋友可以挥挥手说大家好听我说",
+        "final_end_seconds": 4.6375
+      }
+    },
+    {
+      "id": "hello-everyone-elsewhere",
+      "text": "走进屋里见到大家，也可以说大家好。听我说。",
+      "file": "hello-everyone-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32348,
+      "seconds": 5.304,
+      "sha256": "5728cfea11463c5a8b95b02a11c1a1eea380a9eca872271388de6dd3646806aa",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "走进屋里见到大家也可以说大家好听我说",
+        "final_end_seconds": 4.725
+      }
+    },
+    {
+      "id": "family-love",
+      "text": "看着你爱的人，可以告诉它我爱你。听我说。",
+      "file": "family-love.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 30044,
+      "seconds": 4.92,
+      "sha256": "70c35ccdd1e4dc5f6ac74efe4a32406e73a03329dfc06ceaa7ac343754273ef8",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "看着你爱的人可以告诉它我爱你听我说",
+        "final_end_seconds": 4.35
+      }
+    },
+    {
+      "id": "family-love-elsewhere",
+      "text": "睡前也可以对家人说我爱你。听我说。",
+      "file": "family-love-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 27020,
+      "seconds": 4.416,
+      "sha256": "733a09b62a260d33123bb0c9eed6fb3145efa294ee6c6f2e3232388ab5b714f2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "睡前也可以对家人说我爱你听我说",
+        "final_end_seconds": 3.8375
+      }
+    },
+    {
+      "id": "hello-youre-welcome",
+      "text": "别人对你说谢谢，可以回应不客气。听我说。",
+      "file": "hello-youre-welcome.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 28460,
+      "seconds": 4.656,
+      "sha256": "14996fdf1db96c7a2c8da6d5d343a1f6b2e52de82f6cf57c6c022b096c6c8bfe",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "别人对你说谢谢可以回应不客气听我说",
+        "final_end_seconds": 4.075
+      }
+    },
+    {
+      "id": "hello-youre-welcome-elsewhere",
+      "text": "朋友感谢你借给它蜡笔，可以说不客气。听我说。",
+      "file": "hello-youre-welcome-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 30764,
+      "seconds": 5.04,
+      "sha256": "82b023dd61bcd97ceba019b18f740caae20d5f24f0cbd5e63302fb2937f0cc80",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友感谢你借给它蜡笔可以说不客气听我说",
+        "final_end_seconds": 4.4625
+      }
+    },
+    {
+      "id": "hello-excuse",
+      "text": "别人正在忙，想请它听你说，可以先说打扰一下。听我说。",
+      "file": "hello-excuse.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35660,
+      "seconds": 5.856,
+      "sha256": "6dd4b84cc41bff626cdba64259ff5f509be79345535b18636bb91b4f010ed6da",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "别人正在忙想请它听你说可以先说打扰一下听我说",
+        "final_end_seconds": 5.275
+      }
+    },
+    {
+      "id": "hello-excuse-elsewhere",
+      "text": "想问正在画画的朋友一个问题，可以先说打扰一下。听我说。",
+      "file": "hello-excuse-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35516,
+      "seconds": 5.832,
+      "sha256": "3b2095ca28f043b2c5f1f4de78206fa7558f47140e6543d40e4181aa1c14c36a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想问正在画画的朋友一个问题可以先说打扰一下听我说",
+        "final_end_seconds": 5.2625
+      }
+    },
+    {
+      "id": "outside-go-home",
+      "text": "准备离开外面回到家里，可以说我们回家吧。听我说。",
+      "file": "outside-go-home.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33932,
+      "seconds": 5.568,
+      "sha256": "7bfd3cc3ff9da2e8f7150685b4bed42643a0564967f9d6fd4eaf88b08c38798b",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "准备离开外面回到家里可以说我们回家吧听我说",
+        "final_end_seconds": 5.0
+      }
+    },
+    {
+      "id": "outside-go-home-elsewhere",
+      "text": "野餐后要回家，也可以说我们回家吧。听我说。",
+      "file": "outside-go-home-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31340,
+      "seconds": 5.136,
+      "sha256": "e17f9a321aaf1485dbb032acc3b551f978ecc2e889e2ea59b17d12e86aee1484",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "野餐后要回家也可以说我们回家吧听我说",
+        "final_end_seconds": 4.5625
+      }
+    },
+    {
+      "id": "outside-ready",
+      "text": "鞋子穿好，东西拿好，可以说我准备好出发了。听我说。",
+      "file": "outside-ready.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 36812,
+      "seconds": 6.048,
+      "sha256": "26a55b6a11ca1ff3ad97c978f3e21507be52286d4b6f47bc36d8544ca95b4cd4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "鞋子穿好东西拿好可以说我准备好出发了听我说",
+        "final_end_seconds": 5.4875
+      }
+    },
+    {
+      "id": "outside-ready-elsewhere",
+      "text": "收好东西准备离开时，可以说我准备好出发了。听我说。",
+      "file": "outside-ready-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35660,
+      "seconds": 5.856,
+      "sha256": "44c81473dc632514034fc6833db52190e01408b592323fa2eba745978e6524b0",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "收好东西准备离开时可以说我准备好出发了听我说",
+        "final_end_seconds": 5.2875
+      }
+    },
+    {
+      "id": "family-come",
+      "text": "想请朋友走到你这里，可以招手说请过来。听我说。",
+      "file": "family-come.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33644,
+      "seconds": 5.52,
+      "sha256": "cae6876cb56bcd206297e0497f843545f1f22fdcef7fee6dec13ce3f8a3922a7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想请朋友走到你这里可以招手说请过来听我说",
+        "final_end_seconds": 4.95
+      }
+    },
+    {
+      "id": "family-come-elsewhere",
+      "text": "朋友在门边，可以招招手说请过来。听我说。",
+      "file": "family-come-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 29468,
+      "seconds": 4.824,
+      "sha256": "ee59b531ac14ee28b72ea849fd602ad8b278a6b158aa86c9d07a804ca0923192",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友在门边可以招招手说请过来听我说",
+        "final_end_seconds": 4.2625
+      }
+    },
+    {
+      "id": "food-eat",
+      "text": "饭菜准备好了，可以邀请大家说我们吃饭吧。听我说。",
+      "file": "food-eat.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34364,
+      "seconds": 5.64,
+      "sha256": "08c897b505d85eb9d41d2df8ca68b51797dcbf55b1a861abe91e2f0147fd5371",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "饭菜准备好了可以邀请大家说我们吃饭吧听我说",
+        "final_end_seconds": 5.0625
+      }
+    },
+    {
+      "id": "food-eat-elsewhere",
+      "text": "野餐准备好了，也可以说我们吃饭吧。听我说。",
+      "file": "food-eat-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 30908,
+      "seconds": 5.064,
+      "sha256": "05d64463ea9f240083caaad949a63769aaa15250f1ff7b63c26c53751f4b466e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "野餐准备好了也可以说我们吃饭吧听我说",
+        "final_end_seconds": 4.5
+      }
+    },
+    {
+      "id": "feelings-happy",
+      "text": "心里高兴、想笑的时候，可以说我很开心。听我说。",
+      "file": "feelings-happy.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34796,
+      "seconds": 5.712,
+      "sha256": "be28f4f7bb78337eb7c1e772094c964655349ba7495cba6549db6978fea30c42",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "心里高兴想笑的时候可以说我很开心听我说",
+        "final_end_seconds": 5.15
+      }
+    },
+    {
+      "id": "feelings-happy-elsewhere",
+      "text": "想起开心的事情，也可以告诉家人我很开心。听我说。",
+      "file": "feelings-happy-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34364,
+      "seconds": 5.64,
+      "sha256": "364df43b5ec0e7a0f17693bdd01bb983de53defb7a2fb727c6f1c9908c1b9e12",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想起开心的事情也可以告诉家人我很开心听我说",
+        "final_end_seconds": 5.075
+      }
+    },
+    {
+      "id": "feelings-tired",
+      "text": "玩过后身体累了，想休息，可以说我累了。听我说。",
+      "file": "feelings-tired.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32924,
+      "seconds": 5.4,
+      "sha256": "d770e070fca0f5e9e9cc8fdf8f66329e36e7fb22e5fc373cf569e852a11686f9",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "玩过后身体累了想休息可以说我累了听我说",
+        "final_end_seconds": 4.825
+      }
+    },
+    {
+      "id": "feelings-tired-elsewhere",
+      "text": "走路以后想坐下歇一歇，可以说我累了。听我说。",
+      "file": "feelings-tired-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33356,
+      "seconds": 5.472,
+      "sha256": "c43921d8411dd1fe8929723214864f15465fd9546b63c49534aa523bd5774b53",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "走路以后想坐下歇一歇可以说我累了听我说",
+        "final_end_seconds": 4.9
+      }
+    },
+    {
+      "id": "play-your-turn",
+      "text": "你玩过一次，接下来请朋友玩，可以说轮到你了。听我说。",
+      "file": "play-your-turn.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34796,
+      "seconds": 5.712,
+      "sha256": "c16fcb29c9076b95678291771724b471ae1839ce3afc2f6ed1fb44b3d9e216bb",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你玩过一次接下来请朋友玩可以说轮到你了听我说",
+        "final_end_seconds": 5.1375
+      }
+    },
+    {
+      "id": "play-your-turn-elsewhere",
+      "text": "轮流玩球时，把下一次机会给朋友，可以说轮到你了。听我说。",
+      "file": "play-your-turn-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 37820,
+      "seconds": 6.216,
+      "sha256": "502e8cd3a23d5cf1b5055028a33096857c2a42af86783998ae2668bc42403499",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "轮流玩球时把下一次机会给朋友可以说轮到你了听我说",
+        "final_end_seconds": 5.65
+      }
+    },
+    {
+      "id": "play-can-do",
+      "text": "想试着自己完成时，可以说我可以自己做。听我说。",
+      "file": "play-can-do.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34076,
+      "seconds": 5.592,
+      "sha256": "ee2cc0e1ba92601413f5b489aff055239c2883cde3e0fab82547fd57c54ff6b5",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想试着自己完成时可以说我可以自己做听我说",
+        "final_end_seconds": 5.0125
+      }
+    },
+    {
+      "id": "play-can-do-elsewhere",
+      "text": "准备自己穿好鞋子时，可以说我可以自己做。听我说。",
+      "file": "play-can-do-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34508,
+      "seconds": 5.664,
+      "sha256": "faeef03be7573ba30048d67f8275429db68eea91bdfc04c5da231c5151eca006",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "准备自己穿好鞋子时可以说我可以自己做听我说",
+        "final_end_seconds": 5.1
+      }
+    },
+    {
+      "id": "play-good-job",
+      "text": "朋友认真做成了一件事，可以拍拍手说做得好。听我说。",
+      "file": "play-good-job.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35804,
+      "seconds": 5.88,
+      "sha256": "27500955a860c05b64c9f0d1690288d8a456ef3fb2177d5e98ab43fb9869c7f5",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友认真做成了一件事可以拍拍手说做得好听我说",
+        "final_end_seconds": 5.3
+      }
+    },
+    {
+      "id": "play-good-job-elsewhere",
+      "text": "朋友认真完成了画，也可以告诉它做得好。听我说。",
+      "file": "play-good-job-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33068,
+      "seconds": 5.424,
+      "sha256": "6008e881725c620559099e08c7f3a9e49491d7c439b45b23dd49d54006ba1ef9",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友认真完成了画也可以告诉它做得好听我说",
+        "final_end_seconds": 4.85
+      }
+    }
+  ]
+}

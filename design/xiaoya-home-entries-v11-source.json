@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "version": "v11",
+  "created": "2026-10-22",
+  "studyId": "610f2d54d7e6",
+  "status": "technical-checks-pass-art-awaiting-user-review",
+  "assets": [
+    {
+      "id": "learning-entry",
+      "title": "学习入口",
+      "runtime": "runtime/learning-entry.webp",
+      "original": "originals/learning-entry.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-d9ed53e1-90ae-4a9d-adf1-17dd09829d1e.png",
+      "originalSha256": "32b24f32ab878eb1a07ab15b49a25d8c8db856c0b07842633f246af20991be93",
+      "originalUnmodified": true,
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "width": 960,
+      "height": 640,
+      "bytes": 82542,
+      "quality": 88,
+      "runtimeSha256": "1b59acd3ab4bfdca9fbb0eaf388be8983a26a278e1da23c002db05440137e1b0",
+      "hasAlpha": false,
+      "opaqueBackgroundIntent": true
+    },
+    {
+      "id": "garden-entry",
+      "title": "花园入口",
+      "runtime": "runtime/garden-entry.webp",
+      "original": "originals/garden-entry.png",
+      "source": "C:/Users/Jam/.codex/generated_images/019ff4f9-dc2f-7a61-8f79-b108371098e5/exec-ca10d6c5-faf0-4c55-a19a-ceb8a361e71e.png",
+      "originalSha256": "702d4363531722d84d60623c64b5e7c77c341cef285320b370a8531af95e98d9",
+      "originalUnmodified": true,
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "width": 960,
+      "height": 640,
+      "bytes": 113492,
+      "quality": 88,
+      "runtimeSha256": "ce20e4267e0d55bfa654f1d34c6eccad0d578e5b46c463ecf128ddd51af6c528",
+      "hasAlpha": false,
+      "opaqueBackgroundIntent": true
+    }
+  ],
+  "generation": {
+    "tool": "image_gen.imagegen",
+    "model": "not-exposed-by-tool",
+    "transparentBackground": false,
+    "prompts": "prompts.json"
+  },
+  "direction": {
+    "style": "273",
+    "palette": "09",
+    "generalPrompt": "归约细节，灭高频冗余"
+  },
+  "rights": "Generated from project reference art and installed style reference. Provider terms and reference rights have not been independently re-audited; no additional rights assurance is implied.",
+  "scope": "v11 artwork integrated into the formal APP v0.26.0; user art approval remains pending.",
+  "checks": {
+    "runtimeDimensions": "pass",
+    "max180000BytesEach": "pass",
+    "byteExactOriginalPreservation": "pass",
+    "fullImageNoCropping": "pass",
+    "phoneVisualReview": "pass-at-320x213-manual-review-see-QA.md",
+    "integratedInFormalApp": true,
+    "userApproval": false
+  },
+  "integration": {
+    "version": "0.26.0",
+    "sourceDirectory": "E:/AI code Project/AI GAME/创意资产实验室/studies/小芽英语-手撕纸花园-r001-9f81c1/delivery/v11-home-entries",
+    "runtimeDirectory": "public/xiaoya/paper/chapters",
+    "totalBytes": 196034,
+    "browserViewports": [
+      1180,
+      320
+    ]
+  }
+}

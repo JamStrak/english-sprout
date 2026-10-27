@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "prerecorded during production; no runtime TTS connection",
+  "tempo_or_pitch_effects": false,
+  "review": "decoded waveform and returned word-boundary coverage checked; subjective user acceptance pending",
+  "encoder": "mono 24000Hz MP3 48kbps; loudnorm I=-20 TP=-1.5 LRA=7; no tempo or pitch effects",
+  "clip_count": 5,
+  "total_bytes": 138700,
+  "total_seconds": 22.68,
+  "clips": [
+    {
+      "id": "welcome-gift-intro",
+      "text": "你又来啦！小芽给你留了一份小礼物，点开看看吧。",
+      "file": "welcome-gift-intro.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 31340,
+      "seconds": 5.136,
+      "sha256": "2cffec3a425a459d6efb5ca997b44f20f757c3b541d08a2b95ea9b72b5212fcd",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你又来啦小芽给你留了一份小礼物点开看看吧",
+        "final_end_seconds": 4.5625
+      }
+    },
+    {
+      "id": "welcome-gift-first",
+      "text": "你好呀！送你一份小礼物，点开看看吧。",
+      "file": "welcome-gift-first.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 26300,
+      "seconds": 4.296,
+      "sha256": "c86085737258c8fdc5c2fbe3910ef7f8178a862d3c3857a00b6ef0ea884b2939",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你好呀送你一份小礼物点开看看吧",
+        "final_end_seconds": 3.725
+      }
+    },
+    {
+      "id": "welcome-gift-shell",
+      "text": "哇，一枚贝壳！攒起来，可以买喜欢的种子。",
+      "file": "welcome-gift-shell.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 30332,
+      "seconds": 4.968,
+      "sha256": "78ed4e6ff523bb899b035e40153edede4d4dbfa6cddcba1050873174d6aff3c3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "哇一枚贝壳攒起来可以买喜欢的种子",
+        "final_end_seconds": 4.3875
+      }
+    },
+    {
+      "id": "welcome-gift-water",
+      "text": "是一滴水！带去花园，给小苗浇水吧。",
+      "file": "welcome-gift-water.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 27308,
+      "seconds": 4.464,
+      "sha256": "d784c719946b7bf78bcc066b409610181772949bc2ee3a9437d20f1dcebbce8f",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "是一滴水带去花园给小苗浇水吧",
+        "final_end_seconds": 3.8875
+      }
+    },
+    {
+      "id": "welcome-gift-play",
+      "text": "收好啦！来和小芽玩一句英语吧。",
+      "file": "welcome-gift-play.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "model": "Microsoft Edge Neural TTS",
+      "client": "edge-tts 7.3.1",
+      "source": "free online synthesis of generic public text during production only",
+      "bytes": 23420,
+      "seconds": 3.816,
+      "sha256": "fb341cca03c8278c385f9abfc0689efcaac0751c9ba5e3236135f4ee006f521b",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "收好啦来和小芽玩一句英语吧",
+        "final_end_seconds": 3.2375
+      }
+    }
+  ]
+}

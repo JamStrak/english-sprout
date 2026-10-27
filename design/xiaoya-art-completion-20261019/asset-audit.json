@@ -1,0 +1,2611 @@
+{
+  "auditDate": "2026-10-19",
+  "appVersion": "0.13.0",
+  "appBuild": "4ce4c9e7e34f",
+  "auditedRuntimeCommit": "743ab83",
+  "worktree": "C:\\Users\\Jam\\.codex\\worktrees\\xiaoya-english-design\\儿童英语练习",
+  "branch": "codex/xiaoya-garden-ab",
+  "counts": {
+    "storyEvents": 55,
+    "uniqueExpressions": 53,
+    "corePaperKeyImages": 24,
+    "primaryWithoutGeneratedArt": 29,
+    "legacyPrimaryImages": 2,
+    "vectorIntroFrames": 1,
+    "alternateContextSlots": 55,
+    "objectAndIdentitySlots": 8,
+    "requirementEntries": 95,
+    "missingReferencedFiles": 0
+  },
+  "countNote": "Requirement entries are usage slots, not a promise of the same number of new image generations. Alternate request/resolved states may need two files; proven semantic reuse and icon derivation may need no new generation.",
+  "preserved": {
+    "paperObjects": {
+      "buddy-welcome": "xiaoya/paper/v1/buddy-welcome.webp",
+      "seed-pack": "xiaoya/paper/v1/seed-pack.webp",
+      "seed": "xiaoya/paper/v1/seed.webp",
+      "watering-can": "xiaoya/paper/v1/watering-can.webp",
+      "shell": "xiaoya/paper/v1/shell.webp",
+      "water-drop": "xiaoya/paper/v1/water-drop.webp",
+      "seed-in-soil": "xiaoya/paper/v1/seed-in-soil.webp",
+      "sprout": "xiaoya/paper/v1/sprout.webp",
+      "bud": "xiaoya/paper/v1/bud.webp",
+      "flower-daisy": "xiaoya/paper/v1/flowers/daisy.webp",
+      "flower-tulip": "xiaoya/paper/v1/flowers/tulip.webp",
+      "flower-sunflower": "xiaoya/paper/v1/flowers/sunflower.webp",
+      "flower-bellflower": "xiaoya/paper/v1/flowers/bellflower.webp",
+      "flower-poppy": "xiaoya/paper/v1/flowers/poppy.webp",
+      "flower-violet": "xiaoya/paper/v1/flowers/violet.webp",
+      "flower-bow-pink": "xiaoya/paper/v1/flowers/bow-pink.webp",
+      "flower-bow-blue": "xiaoya/paper/v1/flowers/bow-blue.webp",
+      "flower-bow-yellow": "xiaoya/paper/v1/flowers/bow-yellow.webp",
+      "flower-bow-purple": "xiaoya/paper/v1/flowers/bow-purple.webp",
+      "flower-giant-daisy": "xiaoya/paper/v1/flowers/giant-daisy.webp",
+      "flower-giant-sunflower": "xiaoya/paper/v1/flowers/giant-sunflower.webp"
+    },
+    "coreStories": [
+      {
+        "id": "hello-everyone",
+        "image": "hello-everyone-paper-v1.webp"
+      },
+      {
+        "id": "hello-morning",
+        "image": "hello-morning-paper-v1.webp"
+      },
+      {
+        "id": "family-love",
+        "image": "love-paper-v1.webp"
+      },
+      {
+        "id": "hello-thanks",
+        "image": "thanks-paper-v1.webp"
+      },
+      {
+        "id": "hello-youre-welcome",
+        "image": "hello-youre-welcome-paper-v2.webp"
+      },
+      {
+        "id": "hello-sorry",
+        "image": "hello-sorry-paper-v1.webp"
+      },
+      {
+        "id": "hello-okay",
+        "image": "hello-okay-paper-v1.webp"
+      },
+      {
+        "id": "hello-goodbye",
+        "image": "hello-goodbye-paper-v1.webp"
+      },
+      {
+        "id": "bed-night",
+        "image": "bed-night-paper-v1.webp"
+      },
+      {
+        "id": "hello-welcome",
+        "image": "hello-welcome-paper-v1.webp"
+      },
+      {
+        "id": "hello-excuse",
+        "image": "hello-excuse-paper-v1.webp"
+      },
+      {
+        "id": "outside-go-home",
+        "image": "home-paper-v1.webp"
+      },
+      {
+        "id": "outside-ready",
+        "image": "outside-ready-paper-v1.webp"
+      },
+      {
+        "id": "family-come",
+        "image": "family-come-paper-v1.webp"
+      },
+      {
+        "id": "food-eat",
+        "image": "food-eat-paper-v1.webp"
+      },
+      {
+        "id": "food-hungry",
+        "image": "food-hungry-paper-v1.webp"
+      },
+      {
+        "id": "feelings-happy",
+        "image": "feelings-happy-paper-v1.webp"
+      },
+      {
+        "id": "feelings-tired",
+        "image": "feelings-tired-paper-v1.webp"
+      },
+      {
+        "id": "play-turn",
+        "image": "play-turn-paper-v1.webp"
+      },
+      {
+        "id": "play-your-turn",
+        "image": "play-your-turn-paper-v1.webp"
+      },
+      {
+        "id": "play-can-do",
+        "image": "play-can-do-paper-v1.webp"
+      },
+      {
+        "id": "play-did-it",
+        "image": "play-did-it-paper-v1.webp"
+      },
+      {
+        "id": "play-good-job",
+        "image": "play-good-job-paper-v1.webp"
+      },
+      {
+        "id": "play-again",
+        "image": "play-again-paper-v1.webp"
+      }
+    ],
+    "background": "public/xiaoya/stories/garden-paper-v1.webp",
+    "functionalVectors": [
+      "microphone",
+      "ear/sound",
+      "play",
+      "back",
+      "check",
+      "progress",
+      "watering target outline",
+      "touch rings",
+      "particles"
+    ]
+  },
+  "missingFiles": [],
+  "assets": [
+    {
+      "assetId": "story-play-again-intro",
+      "category": "story-intro",
+      "priority": "P0",
+      "eventId": "play-again",
+      "title": "倒了再试试",
+      "english": "Let's try again.",
+      "chinese": "我们再试一次吧。",
+      "core": true,
+      "setup": "刚搭的积木塔倒了，小芽和朋友看着散落的积木。",
+      "request": "邀请朋友再试一次。",
+      "help": "没成功也可以再试，可以说我们再试一次吧。",
+      "resolution": "两个人重新搭，塔稳稳地站住了。",
+      "current": "procedural-svg",
+      "retainedImage": "public/xiaoya/stories/play-again-paper-v1.webp",
+      "brief": "刚搭的积木塔倒了，小芽和朋友看着散落的积木。",
+      "frame": 0
+    },
+    {
+      "assetId": "flower-bow-rainbow",
+      "category": "flower",
+      "priority": "P0",
+      "name": "彩虹蝴蝶结花",
+      "current": "procedural-svg",
+      "brief": "Rainbow paper bow petals, soft multicolour bands, golden centre, visibly distinct from four ordinary bow flowers.",
+      "size": [
+        384,
+        512
+      ],
+      "alpha": true,
+      "root": [
+        0.5,
+        0.88
+      ],
+      "waterNeeded": 5
+    },
+    {
+      "assetId": "flower-bow-starlight",
+      "category": "flower",
+      "priority": "P0",
+      "name": "星光蝴蝶结花",
+      "current": "procedural-svg",
+      "brief": "Purple night-sky paper bow petals, small golden paper stars, visibly distinct from ordinary purple bow flower.",
+      "size": [
+        384,
+        512
+      ],
+      "alpha": true,
+      "root": [
+        0.5,
+        0.88
+      ],
+      "waterNeeded": 5
+    },
+    {
+      "assetId": "voice-aiden",
+      "category": "portrait",
+      "priority": "P3",
+      "name": "小熊伙伴",
+      "current": "procedural-svg",
+      "brief": "小熊伙伴，保留既有动物身份；同一套手撕纸头像，不改变音色。",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true
+    },
+    {
+      "assetId": "voice-ryan",
+      "category": "portrait",
+      "priority": "P3",
+      "name": "小狐伙伴",
+      "current": "procedural-svg",
+      "brief": "小狐伙伴，保留既有动物身份；同一套手撕纸头像，不改变音色。",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true
+    },
+    {
+      "assetId": "voice-pip",
+      "category": "portrait",
+      "priority": "P3",
+      "name": "泡泡猫",
+      "current": "procedural-svg",
+      "brief": "泡泡猫，保留既有动物身份；同一套手撕纸头像，不改变音色。",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true
+    },
+    {
+      "assetId": "pot-front",
+      "category": "prop",
+      "priority": "P3",
+      "current": "procedural-svg",
+      "brief": "A 花园和首页快捷入口共用的陶土花盆。只替换盆体；保留植物在后、盆沿在前的遮挡。",
+      "size": [
+        320,
+        360
+      ],
+      "alpha": true,
+      "logicalViewBox": [
+        0,
+        0,
+        160,
+        180
+      ],
+      "potLip": [
+        80,
+        117
+      ]
+    },
+    {
+      "assetId": "challenge-flag",
+      "category": "prop",
+      "priority": "P3",
+      "current": "procedural-svg",
+      "brief": "花园挑战共用金色小旗与星形，保持小尺寸清楚。",
+      "size": [
+        256,
+        256
+      ],
+      "alpha": true
+    },
+    {
+      "assetId": "app-icon",
+      "category": "identity",
+      "priority": "P3",
+      "current": "public/xiaoya/icons/icon-512.png",
+      "brief": "复用既有纸艺小芽角色做安装图标，保留中心安全区；交付 512/192 PNG 与轻量浏览器图标，不必重新创造角色。",
+      "alpha": false,
+      "derivedSizes": [
+        [
+          512,
+          512
+        ],
+        [
+          192,
+          192
+        ],
+        [
+          48,
+          48
+        ]
+      ]
+    },
+    {
+      "assetId": "story-food-water-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-water",
+      "title": "玩后要水",
+      "english": "I need water.",
+      "chinese": "我需要水。",
+      "core": false,
+      "setup": "你刚玩过球，面前有空杯子和一壶水。",
+      "request": "告诉伙伴你想喝水。",
+      "help": "玩累了想喝水，可以告诉伙伴你需要水。",
+      "resolution": "伙伴把水倒进你的杯子，陪你一起休息。",
+      "current": "public/xiaoya/stories/water-v1.webp",
+      "reason": "legacy-non-paper-style",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-more-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-more",
+      "title": "野餐添一点",
+      "english": "More, please.",
+      "chinese": "请再给我一点。",
+      "core": false,
+      "setup": "野餐垫上，你的小盘子已经空了，伙伴还有水果。",
+      "request": "向伙伴再要一点水果。",
+      "help": "还想吃一点，可以有礼貌地再要一点。",
+      "resolution": "伙伴往你盘里放一点水果，大家继续野餐。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-no-thanks-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-no-thanks",
+      "title": "吃饱谢绝加餐",
+      "english": "No, thank you.",
+      "chinese": "不用了，谢谢。",
+      "core": false,
+      "setup": "你已经吃饱了，伙伴又递来一块点心。",
+      "request": "告诉伙伴你不需要了。",
+      "help": "不想再吃，可以说不用了，并谢谢伙伴。",
+      "resolution": "伙伴收好点心，尊重你的选择。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-box-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-box",
+      "title": "打开玩具盒",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "你选中的玩具盒盖子卡住了，伙伴就在旁边。",
+      "request": "请伙伴帮你打开玩具盒。",
+      "help": "盒子打不开，可以向伙伴求助。",
+      "resolution": "伙伴过来打开盒子，你们一起玩里面的玩具。",
+      "current": "public/xiaoya/stories/help-v1.webp",
+      "reason": "legacy-non-paper-style",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-ball-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-ball",
+      "title": "邀请踢球",
+      "english": "Let's play together.",
+      "chinese": "我们一起玩吧。",
+      "core": false,
+      "setup": "草地上有一只球，伙伴坐在旁边看着你。",
+      "request": "邀请伙伴一起来玩。",
+      "help": "想和伙伴一起玩，可以主动邀请它。",
+      "resolution": "伙伴走过来，你们把球滚来滚去。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-bridge-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-bridge",
+      "title": "合作搭桥",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "小河两边有积木，最后一块桥板需要伙伴扶住。",
+      "request": "请伙伴帮你把桥搭好。",
+      "help": "桥板拿不稳，可以请伙伴帮忙。",
+      "resolution": "伙伴扶住桥板，你把小桥接好了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-hands-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-hands",
+      "title": "玩泥后洗手",
+      "english": "Wash your hands.",
+      "chinese": "洗洗手。",
+      "core": false,
+      "setup": "你玩过泥巴，洗手池旁有香皂和毛巾。",
+      "request": "听伙伴说的话，找到洗手的地方。",
+      "help": "小手脏了，伙伴在提醒你洗手。",
+      "resolution": "水流冲掉泥巴，毛巾把小手擦干。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-zip-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-zip",
+      "title": "拉链卡住",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "出门前你的外套拉链卡住了，伙伴空着双手。",
+      "request": "请伙伴帮忙拉好外套。",
+      "help": "拉链卡住了，可以请伙伴帮忙。",
+      "resolution": "伙伴帮你拉好拉链，你可以出门了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        0,
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-socks-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-socks",
+      "title": "更换湿袜子",
+      "english": "My socks are wet.",
+      "chinese": "我的袜子湿了。",
+      "core": false,
+      "setup": "踩过水洼之后，脚上的袜子湿了，旁边有干袜子。",
+      "request": "告诉伙伴袜子湿了。",
+      "help": "脚不舒服，因为袜子湿了，可以告诉伙伴。",
+      "resolution": "伙伴拿来干袜子，你把湿袜子放进篮子。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-outside-cat-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "outside-cat",
+      "title": "发现小猫",
+      "english": "What's this?",
+      "chinese": "这是什么？",
+      "core": false,
+      "setup": "树边探出一只小猫，你第一次发现它。",
+      "request": "向伙伴问问你发现了什么。",
+      "help": "看到想认识的东西，可以问这是什么。",
+      "resolution": "伙伴陪你看清小猫，小猫轻轻摇动尾巴。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-outside-bird-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "outside-bird",
+      "title": "邀请看小鸟",
+      "english": "Look at the bird.",
+      "chinese": "看那只小鸟。",
+      "core": false,
+      "setup": "枝头停着一只小鸟，伙伴还低头看着地面。",
+      "request": "请伙伴一起看小鸟。",
+      "help": "伙伴还没看到小鸟，你可以提醒它看。",
+      "resolution": "伙伴抬头，小鸟展开翅膀。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-outside-dog-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "outside-dog",
+      "title": "寻找狗叫来源",
+      "english": "I hear a dog.",
+      "chinese": "我听到狗叫。",
+      "core": false,
+      "setup": "小路旁传来狗叫声，伙伴正在寻找声音。",
+      "request": "告诉伙伴你听到了什么。",
+      "help": "听到狗叫，可以把听见的声音告诉伙伴。",
+      "resolution": "你们一起找到围栏旁的小狗。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-bed-book-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "bed-book",
+      "title": "选择共读的书",
+      "english": "Let's read a book.",
+      "chinese": "我们看一本书吧。",
+      "core": false,
+      "setup": "床边放着绘本，伙伴坐在软垫上。",
+      "request": "邀请伙伴一起看书。",
+      "help": "想一起看绘本，可以邀请伙伴读一本书。",
+      "resolution": "伙伴坐到你身边，一起翻开绘本。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-bed-story-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "bed-story",
+      "title": "邀请讲故事",
+      "english": "Tell me a story.",
+      "chinese": "给我讲个故事。",
+      "core": false,
+      "setup": "你盖好毯子，伙伴坐在床边，今晚还没开始讲故事。",
+      "request": "请伙伴给你讲个故事。",
+      "help": "想听故事，可以把这个愿望告诉伙伴。",
+      "resolution": "伙伴翻开绘本，开始讲一个安静的小故事。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-full-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-full",
+      "title": "吃饱的小肚子",
+      "english": "I'm full.",
+      "chinese": "我吃饱了。",
+      "core": false,
+      "setup": "小芽吃完了饭，摸着鼓鼓的肚子，朋友准备再添一点。",
+      "request": "告诉朋友你吃饱了。",
+      "help": "已经吃饱了，不用勉强再吃，可以告诉朋友我吃饱了。",
+      "resolution": "朋友放下饭勺，小芽舒服地休息。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        0,
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-spoon-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-spoon",
+      "title": "把勺子递过来",
+      "english": "Pass the spoon, please.",
+      "chinese": "请把勺子递给我。",
+      "core": false,
+      "setup": "饭碗在小芽面前，勺子放在朋友那边。",
+      "request": "请朋友把勺子递过来。",
+      "help": "勺子在朋友那边，可以请它把勺子递给你。",
+      "resolution": "朋友把勺子递过来，小芽可以吃饭了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-apple-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-apple",
+      "title": "喜欢红苹果",
+      "english": "I like apples.",
+      "chinese": "我喜欢苹果。",
+      "core": false,
+      "setup": "水果盘里有苹果和香蕉，小芽开心地拿起苹果。",
+      "request": "告诉朋友你喜欢苹果。",
+      "help": "你喜欢吃苹果，可以开心地告诉朋友我喜欢苹果。",
+      "resolution": "小芽和朋友一起分享喜欢的苹果。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-hot-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-hot",
+      "title": "先等热汤凉一点",
+      "english": "It's too hot.",
+      "chinese": "这个太烫了。",
+      "core": false,
+      "setup": "汤碗冒着热气，小芽凑近后赶紧停住。",
+      "request": "告诉朋友汤太烫了。",
+      "help": "汤很烫，先不要喝，可以告诉朋友这个太烫了。",
+      "resolution": "朋友把汤放稳，等热气少了才一起尝。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-food-milk-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "food-milk",
+      "title": "早餐想喝牛奶",
+      "english": "May I have some milk?",
+      "chinese": "可以给我一些牛奶吗？",
+      "core": false,
+      "setup": "早餐桌上有牛奶壶，小芽面前的杯子还是空的。",
+      "request": "请朋友倒一点牛奶。",
+      "help": "想喝牛奶，可以有礼貌地问，能给我一些牛奶吗。",
+      "resolution": "朋友倒好牛奶，小芽接过杯子。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-teeth-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-teeth",
+      "title": "牙刷跳跳舞",
+      "english": "Brush your teeth.",
+      "chinese": "刷刷牙。",
+      "core": false,
+      "setup": "洗手台上放着牙刷牙膏，睡前小芽张开嘴。",
+      "request": "和朋友一起刷牙。",
+      "help": "牙刷和牙膏准备好了，伙伴说刷刷牙，我们就刷一刷。",
+      "resolution": "小芽刷好牙，对着镜子露出干净的牙齿。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-face-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-face",
+      "title": "洗掉小花脸",
+      "english": "Let's wash our faces.",
+      "chinese": "我们洗洗脸吧。",
+      "core": false,
+      "setup": "画画后小芽和朋友脸上沾了颜色，旁边有水盆。",
+      "request": "邀请朋友一起洗脸。",
+      "help": "脸上沾了颜色，可以邀请朋友，我们洗洗脸吧。",
+      "resolution": "两个人把小花脸洗干净，用毛巾轻轻擦脸。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-tissue-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-tissue",
+      "title": "纸巾来帮忙",
+      "english": "Use a tissue.",
+      "chinese": "用一张纸巾。",
+      "core": false,
+      "setup": "小芽鼻子流了一点鼻涕，朋友拿出纸巾盒。",
+      "request": "听伙伴提醒拿纸巾。",
+      "help": "鼻子需要擦一擦，伙伴会提醒你，用一张纸巾。",
+      "resolution": "小芽用纸巾轻轻擦鼻子，把用过的纸巾放进垃圾桶。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-dry-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-dry",
+      "title": "小手擦干啦",
+      "english": "Let's dry our hands.",
+      "chinese": "我们擦干手吧。",
+      "core": false,
+      "setup": "洗完手，小芽和朋友的手还在滴水，毛巾挂在一旁。",
+      "request": "邀请朋友一起擦干手。",
+      "help": "小手湿湿的，可以一起拿毛巾，我们擦干手吧。",
+      "resolution": "两个人用毛巾擦干手，干爽的小手张开了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-care-shoes-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "care-shoes",
+      "title": "穿好鞋子去玩",
+      "english": "Put on your shoes.",
+      "chinese": "穿上鞋子。",
+      "core": false,
+      "setup": "门已经打开，小芽脚上只有袜子，鞋子摆在门边。",
+      "request": "听伙伴提醒穿好鞋子。",
+      "help": "出门前，伙伴会提醒你穿上鞋子。",
+      "resolution": "小芽把两只鞋穿好，和朋友一起出发。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-roll-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-roll",
+      "title": "小球滚过来",
+      "english": "Roll the ball.",
+      "chinese": "滚一滚球。",
+      "core": false,
+      "setup": "小芽和朋友坐在草地两头，中间放着一只球。",
+      "request": "邀请朋友把球沿地面滚来。",
+      "help": "让小球贴着地面滚过来，可以说滚一滚球。",
+      "resolution": "小球沿草地滚到小芽面前，小芽把它接住。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-catch-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-catch",
+      "title": "张开手接球",
+      "english": "Catch the ball.",
+      "chinese": "接住球。",
+      "core": false,
+      "setup": "小芽举起软球，朋友张开双手站在对面。",
+      "request": "提醒朋友接住球。",
+      "help": "轻轻抛球给朋友前，可以提醒它接住球。",
+      "resolution": "球轻轻飞过去，朋友用双手接住了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-tower-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-tower",
+      "title": "搭一座高高的塔",
+      "english": "Let's build a tower.",
+      "chinese": "我们搭一座塔吧。",
+      "core": false,
+      "setup": "地毯上有好多积木，小芽想把它们一块块搭高。",
+      "request": "邀请朋友一起搭塔。",
+      "help": "想把积木搭得高高的，可以邀请朋友，我们搭一座塔吧。",
+      "resolution": "两个人轮流放积木，彩色高塔立起来了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-play-tidy-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "play-tidy",
+      "title": "玩具回到盒子里",
+      "english": "Put it in the box.",
+      "chinese": "把它放进盒子里。",
+      "core": false,
+      "setup": "玩好以后，小球还在地上，旁边有打开的玩具盒。",
+      "request": "听伙伴提醒把球收进盒子。",
+      "help": "玩具玩好了，伙伴提醒，把它放进盒子里。",
+      "resolution": "小芽把球放进盒子，地面变整洁了。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-outside-hand-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "outside-hand",
+      "title": "一起牵手走",
+      "english": "Hold my hand.",
+      "chinese": "牵着我的手。",
+      "core": false,
+      "setup": "小芽和朋友来到小桥前，朋友伸出手。",
+      "request": "邀请朋友牵着手一起走。",
+      "help": "一起走路时，可以伸出手说牵着我的手。",
+      "resolution": "两个人牵好手，慢慢走过小桥。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-outside-rain-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "outside-rain",
+      "title": "窗外下雨啦",
+      "english": "It's raining outside.",
+      "chinese": "外面下雨了。",
+      "core": false,
+      "setup": "小芽望向窗外，雨点落在树叶和水洼里。",
+      "request": "告诉朋友外面下雨了。",
+      "help": "看见窗外的雨点，可以告诉朋友外面下雨了。",
+      "resolution": "朋友走到窗边看雨，两个人拿起雨伞。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-bed-hug-primary",
+      "category": "primary-story",
+      "priority": "P1",
+      "eventId": "bed-hug",
+      "title": "想要暖暖的抱抱",
+      "english": "I need a hug.",
+      "chinese": "我想要一个拥抱。",
+      "core": false,
+      "setup": "小芽的气球飞走了，它低着头，朋友就在旁边。",
+      "request": "告诉朋友你想要一个拥抱。",
+      "help": "有一点难过，想让朋友抱抱，可以说我想要一个拥抱。",
+      "resolution": "朋友张开手，轻轻抱住愿意靠近的小芽。",
+      "current": "procedural-svg",
+      "reason": "no-generated-art",
+      "currentTeachingFrames": [
+        1
+      ],
+      "preferredFrameCount": 1,
+      "frameNote": "One clear request/meaning scene; use a second image only where before/after is required for understanding. Never a baked four-panel comic."
+    },
+    {
+      "assetId": "story-hello-morning-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-morning",
+      "title": "清晨碰面",
+      "english": "Good morning.",
+      "chinese": "早上好。",
+      "core": true,
+      "setup": "窗边亮起晨光，伙伴刚刚醒来。",
+      "request": "向伙伴打个早上的招呼。",
+      "help": "早上见面，可以挥挥手，跟伙伴说早上好。",
+      "resolution": "伙伴挥挥手，邀请你一起迎接新的一天。",
+      "context": {
+        "id": "hello-morning-elsewhere",
+        "settingId": "garden-morning",
+        "scene": "outside",
+        "label": "换个地方：在花园和伙伴说早上好。",
+        "setup": "早上来到花园，伙伴正在给花浇水。",
+        "request": "在花园和伙伴说早上好。",
+        "help": "花园里的伙伴也在等你打招呼。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-welcome-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-welcome",
+      "title": "迎接新朋友",
+      "english": "Nice to meet you.",
+      "chinese": "很高兴认识你。",
+      "core": true,
+      "setup": "门口来了第一次见面的新伙伴。",
+      "request": "向新伙伴表示欢迎。",
+      "help": "这是刚认识的朋友，可以告诉它很高兴认识它。",
+      "resolution": "新伙伴走进小屋，开心地向你挥手。",
+      "context": {
+        "id": "hello-welcome-elsewhere",
+        "settingId": "park-new-friend",
+        "scene": "outside",
+        "label": "换个地方：和公园里的新朋友打招呼。",
+        "setup": "来到公园，遇到第一次见面的小熊。",
+        "request": "和公园里的新朋友打招呼。",
+        "help": "这是新认识的朋友，试着欢迎它。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-goodbye-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-goodbye",
+      "title": "送玩伴回家",
+      "english": "See you later.",
+      "chinese": "一会儿见。",
+      "core": true,
+      "setup": "玩伴背起小包，站在小屋门口准备回家。",
+      "request": "和玩伴告别。",
+      "help": "朋友要暂时离开了，可以说一会儿见。",
+      "resolution": "伙伴挥手告别，约好下次再来。",
+      "context": {
+        "id": "hello-goodbye-elsewhere",
+        "settingId": "park-goodbye",
+        "scene": "outside",
+        "label": "换个地方：在公园和朋友说再见。",
+        "setup": "公园的游戏结束了，朋友走向回家的小路。",
+        "request": "在公园和朋友说再见。",
+        "help": "朋友要回家了，可以挥手告别。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-water-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-water",
+      "title": "玩后要水",
+      "english": "I need water.",
+      "chinese": "我需要水。",
+      "core": false,
+      "setup": "你刚玩过球，面前有空杯子和一壶水。",
+      "request": "告诉伙伴你想喝水。",
+      "help": "玩累了想喝水，可以告诉伙伴你需要水。",
+      "resolution": "伙伴把水倒进你的杯子，陪你一起休息。",
+      "context": {
+        "id": "food-water-elsewhere",
+        "settingId": "bed-water",
+        "scene": "bed",
+        "label": "换个地方：告诉伙伴你想喝一点水。",
+        "setup": "睡前的床边放着空杯子，水壶在伙伴身边。",
+        "request": "告诉伙伴你想喝一点水。",
+        "help": "睡前口渴了，也可以说自己需要水。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-more-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-more",
+      "title": "野餐添一点",
+      "english": "More, please.",
+      "chinese": "请再给我一点。",
+      "core": false,
+      "setup": "野餐垫上，你的小盘子已经空了，伙伴还有水果。",
+      "request": "向伙伴再要一点水果。",
+      "help": "还想吃一点，可以有礼貌地再要一点。",
+      "resolution": "伙伴往你盘里放一点水果，大家继续野餐。",
+      "context": {
+        "id": "food-more-elsewhere",
+        "settingId": "drawing-more",
+        "scene": "play",
+        "label": "换个地方：请伙伴再给一点纸。",
+        "setup": "一起画画时，装彩色纸的小碗空了，伙伴还有纸。",
+        "request": "请伙伴再给一点纸。",
+        "help": "材料不够了，也可以有礼貌地再要一点。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-no-thanks-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-no-thanks",
+      "title": "吃饱谢绝加餐",
+      "english": "No, thank you.",
+      "chinese": "不用了，谢谢。",
+      "core": false,
+      "setup": "你已经吃饱了，伙伴又递来一块点心。",
+      "request": "告诉伙伴你不需要了。",
+      "help": "不想再吃，可以说不用了，并谢谢伙伴。",
+      "resolution": "伙伴收好点心，尊重你的选择。",
+      "context": {
+        "id": "food-no-thanks-elsewhere",
+        "settingId": "park-decline",
+        "scene": "outside",
+        "label": "换个地方：有礼貌地拒绝果汁。",
+        "setup": "外出休息时，伙伴递来一杯你不想喝的果汁。",
+        "request": "有礼貌地拒绝果汁。",
+        "help": "不需要的时候可以拒绝，不用勉强接受。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-box-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-box",
+      "title": "打开玩具盒",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "你选中的玩具盒盖子卡住了，伙伴就在旁边。",
+      "request": "请伙伴帮你打开玩具盒。",
+      "help": "盒子打不开，可以向伙伴求助。",
+      "resolution": "伙伴过来打开盒子，你们一起玩里面的玩具。",
+      "context": {
+        "id": "play-box-elsewhere",
+        "settingId": "coat-zip",
+        "scene": "care-zip",
+        "label": "换个地方：请伙伴帮忙拉好外套。",
+        "setup": "出门前你的外套拉链卡住了，伙伴空着双手。",
+        "request": "请伙伴帮忙拉好外套。",
+        "help": "拉链卡住也可以请求帮助。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": "story-care-zip-primary"
+    },
+    {
+      "assetId": "story-play-ball-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-ball",
+      "title": "邀请踢球",
+      "english": "Let's play together.",
+      "chinese": "我们一起玩吧。",
+      "core": false,
+      "setup": "草地上有一只球，伙伴坐在旁边看着你。",
+      "request": "邀请伙伴一起来玩。",
+      "help": "想和伙伴一起玩，可以主动邀请它。",
+      "resolution": "伙伴走过来，你们把球滚来滚去。",
+      "context": {
+        "id": "play-ball-elsewhere",
+        "settingId": "blocks-invite",
+        "scene": "play-bridge",
+        "label": "换个地方：邀请伙伴和你一起玩积木。",
+        "setup": "小屋地毯上摆着积木，伙伴正好空闲。",
+        "request": "邀请伙伴和你一起玩积木。",
+        "help": "换成积木，也可以邀请伙伴一起玩。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-bridge-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-bridge",
+      "title": "合作搭桥",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "小河两边有积木，最后一块桥板需要伙伴扶住。",
+      "request": "请伙伴帮你把桥搭好。",
+      "help": "桥板拿不稳，可以请伙伴帮忙。",
+      "resolution": "伙伴扶住桥板，你把小桥接好了。",
+      "context": {
+        "id": "play-bridge-elsewhere",
+        "settingId": "basket-lift",
+        "scene": "play-box",
+        "label": "换个地方：请伙伴帮你抬起玩具筐。",
+        "setup": "收拾游戏时，大玩具筐需要两个人一起抬。",
+        "request": "请伙伴帮你抬起玩具筐。",
+        "help": "一个人抬不动的时候可以请求帮助。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-hands-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-hands",
+      "title": "玩泥后洗手",
+      "english": "Wash your hands.",
+      "chinese": "洗洗手。",
+      "core": false,
+      "setup": "你玩过泥巴，洗手池旁有香皂和毛巾。",
+      "request": "听伙伴说的话，找到洗手的地方。",
+      "help": "小手脏了，伙伴在提醒你洗手。",
+      "resolution": "水流冲掉泥巴，毛巾把小手擦干。",
+      "context": {
+        "id": "care-hands-elsewhere",
+        "settingId": "picnic-wash",
+        "scene": "food",
+        "label": "换个地方：听伙伴的话，把手洗干净再吃东西。",
+        "setup": "准备野餐前，桌旁有清水盆，手上还沾着颜料。",
+        "request": "听伙伴的话，把手洗干净再吃东西。",
+        "help": "吃东西之前，要先洗掉手上的颜料。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-zip-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-zip",
+      "title": "拉链卡住",
+      "english": "Help me, please.",
+      "chinese": "请帮帮我。",
+      "core": false,
+      "setup": "出门前你的外套拉链卡住了，伙伴空着双手。",
+      "request": "请伙伴帮忙拉好外套。",
+      "help": "拉链卡住了，可以请伙伴帮忙。",
+      "resolution": "伙伴帮你拉好拉链，你可以出门了。",
+      "context": {
+        "id": "care-zip-elsewhere",
+        "settingId": "backpack-buckle",
+        "scene": "hello",
+        "label": "换个地方：请伙伴帮你打开书包扣子。",
+        "setup": "到了门口，书包上的扣子打不开。",
+        "request": "请伙伴帮你打开书包扣子。",
+        "help": "扣子打不开，也可以向伙伴求助。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-socks-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-socks",
+      "title": "更换湿袜子",
+      "english": "My socks are wet.",
+      "chinese": "我的袜子湿了。",
+      "core": false,
+      "setup": "踩过水洼之后，脚上的袜子湿了，旁边有干袜子。",
+      "request": "告诉伙伴袜子湿了。",
+      "help": "脚不舒服，因为袜子湿了，可以告诉伙伴。",
+      "resolution": "伙伴拿来干袜子，你把湿袜子放进篮子。",
+      "context": {
+        "id": "care-socks-elsewhere",
+        "settingId": "spilled-water-socks",
+        "scene": "food",
+        "label": "换个地方：告诉伙伴你需要换掉湿袜子。",
+        "setup": "在屋里打翻了一点水，脚上的袜子被打湿了。",
+        "request": "告诉伙伴你需要换掉湿袜子。",
+        "help": "屋里的水也会打湿袜子，可以说明发生了什么。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-cat-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "outside-cat",
+      "title": "发现小猫",
+      "english": "What's this?",
+      "chinese": "这是什么？",
+      "core": false,
+      "setup": "树边探出一只小猫，你第一次发现它。",
+      "request": "向伙伴问问你发现了什么。",
+      "help": "看到想认识的东西，可以问这是什么。",
+      "resolution": "伙伴陪你看清小猫，小猫轻轻摇动尾巴。",
+      "context": {
+        "id": "outside-cat-elsewhere",
+        "settingId": "window-snail",
+        "scene": "hello",
+        "label": "换个地方：向伙伴问问窗边的小动物。",
+        "setup": "窗边出现一只小蜗牛，你想知道它是什么。",
+        "request": "向伙伴问问窗边的小动物。",
+        "help": "遇到不同的新东西，也可以问这是什么。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-bird-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "outside-bird",
+      "title": "邀请看小鸟",
+      "english": "Look at the bird.",
+      "chinese": "看那只小鸟。",
+      "core": false,
+      "setup": "枝头停着一只小鸟，伙伴还低头看着地面。",
+      "request": "请伙伴一起看小鸟。",
+      "help": "伙伴还没看到小鸟，你可以提醒它看。",
+      "resolution": "伙伴抬头，小鸟展开翅膀。",
+      "context": {
+        "id": "outside-bird-elsewhere",
+        "settingId": "window-bird",
+        "scene": "hello",
+        "label": "换个地方：邀请伙伴转过来看看小鸟。",
+        "setup": "小屋窗台飞来一只小鸟，伙伴背对着窗户。",
+        "request": "邀请伙伴转过来看看小鸟。",
+        "help": "窗边也有小鸟，提醒伙伴一起看。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-dog-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "outside-dog",
+      "title": "寻找狗叫来源",
+      "english": "I hear a dog.",
+      "chinese": "我听到狗叫。",
+      "core": false,
+      "setup": "小路旁传来狗叫声，伙伴正在寻找声音。",
+      "request": "告诉伙伴你听到了什么。",
+      "help": "听到狗叫，可以把听见的声音告诉伙伴。",
+      "resolution": "你们一起找到围栏旁的小狗。",
+      "context": {
+        "id": "outside-dog-elsewhere",
+        "settingId": "window-dog",
+        "scene": "bed",
+        "label": "换个地方：告诉伙伴窗外传来的声音。",
+        "setup": "在屋里听到窗外有狗叫声，伙伴还在看书。",
+        "request": "告诉伙伴窗外传来的声音。",
+        "help": "没有看到小狗时，也能告诉伙伴自己听到了它。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-bed-book-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "bed-book",
+      "title": "选择共读的书",
+      "english": "Let's read a book.",
+      "chinese": "我们看一本书吧。",
+      "core": false,
+      "setup": "床边放着绘本，伙伴坐在软垫上。",
+      "request": "邀请伙伴一起看书。",
+      "help": "想一起看绘本，可以邀请伙伴读一本书。",
+      "resolution": "伙伴坐到你身边，一起翻开绘本。",
+      "context": {
+        "id": "bed-book-elsewhere",
+        "settingId": "garden-book",
+        "scene": "outside",
+        "label": "换个地方：邀请伙伴坐下共读。",
+        "setup": "午后的花园长椅上放着绘本，伙伴走了过来。",
+        "request": "邀请伙伴坐下共读。",
+        "help": "在花园里也可以邀请伙伴一起看书。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-bed-story-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "bed-story",
+      "title": "邀请讲故事",
+      "english": "Tell me a story.",
+      "chinese": "给我讲个故事。",
+      "core": false,
+      "setup": "你盖好毯子，伙伴坐在床边，今晚还没开始讲故事。",
+      "request": "请伙伴给你讲个故事。",
+      "help": "想听故事，可以把这个愿望告诉伙伴。",
+      "resolution": "伙伴翻开绘本，开始讲一个安静的小故事。",
+      "context": {
+        "id": "bed-story-elsewhere",
+        "settingId": "rain-story",
+        "scene": "hello",
+        "label": "换个地方：请伙伴给你讲个故事。",
+        "setup": "雨天不能出门，你和伙伴坐在窗边的小椅子上。",
+        "request": "请伙伴给你讲个故事。",
+        "help": "雨天休息时，也可以请求伙伴讲故事。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-bed-night-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "bed-night",
+      "title": "盖毯道晚安",
+      "english": "Good night.",
+      "chinese": "晚安。",
+      "core": true,
+      "setup": "夜灯亮着，伙伴准备休息，星星出现在窗外。",
+      "request": "向伙伴说晚安。",
+      "help": "睡前可以向伙伴道晚安。",
+      "resolution": "伙伴拉好毯子，夜灯柔和地暗下来。",
+      "context": {
+        "id": "bed-night-elsewhere",
+        "settingId": "camp-night",
+        "scene": "outside",
+        "label": "换个地方：在帐篷里向伙伴说晚安。",
+        "setup": "露营的小帐篷里，伙伴铺好了睡袋。",
+        "request": "在帐篷里向伙伴说晚安。",
+        "help": "睡在帐篷里，也可以在休息前说晚安。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-thanks-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-thanks",
+      "title": "收到朋友的苹果",
+      "english": "Thank you.",
+      "chinese": "谢谢你。",
+      "core": true,
+      "setup": "朋友把篮子里的苹果送给小芽。",
+      "request": "收到苹果后谢谢朋友。",
+      "help": "朋友把苹果送给你，可以说谢谢你。",
+      "resolution": "小芽接过苹果，微笑着感谢朋友。",
+      "context": {
+        "id": "hello-thanks-elsewhere",
+        "settingId": "thanks-crayon",
+        "scene": "play",
+        "label": "换个地方：谢谢借蜡笔的朋友。",
+        "setup": "画画时朋友把自己的蜡笔借给你。",
+        "request": "谢谢借蜡笔的朋友。",
+        "help": "朋友借给你蜡笔，也可以说谢谢你。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-sorry-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-sorry",
+      "title": "不小心碰倒积木",
+      "english": "I'm sorry.",
+      "chinese": "对不起。",
+      "core": true,
+      "setup": "小芽转身时碰倒了朋友刚搭好的积木。",
+      "request": "告诉朋友你很抱歉。",
+      "help": "不小心碰倒朋友的积木，可以说对不起。",
+      "resolution": "小芽道了歉，和朋友一起把积木搭好。",
+      "context": {
+        "id": "hello-sorry-elsewhere",
+        "settingId": "sorry-cup",
+        "scene": "food",
+        "label": "换个地方：为碰翻水杯向朋友道歉。",
+        "setup": "野餐时不小心碰翻了朋友的水杯。",
+        "request": "为碰翻水杯向朋友道歉。",
+        "help": "不小心弄洒了水，可以先说对不起，再一起擦干。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-okay-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-okay",
+      "title": "原谅不小心的朋友",
+      "english": "That's okay.",
+      "chinese": "没关系。",
+      "core": true,
+      "setup": "朋友不小心把小芽的积木碰倒了，低下头很不好意思。",
+      "request": "告诉朋友没关系。",
+      "help": "朋友不是故意的，它很不好意思，你可以说没关系。",
+      "resolution": "朋友放松下来，两个人一起重新搭积木。",
+      "context": {
+        "id": "hello-okay-elsewhere",
+        "settingId": "okay-picture",
+        "scene": "play",
+        "label": "换个地方：回应朋友的道歉。",
+        "setup": "朋友不小心弄皱了你的画，正低头向你道歉。",
+        "request": "回应朋友的道歉。",
+        "help": "愿意原谅朋友时，可以告诉它没关系。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-hungry-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "food-hungry",
+      "title": "肚子咕噜咕噜",
+      "english": "I'm hungry.",
+      "chinese": "我饿了。",
+      "core": true,
+      "setup": "午饭时间到了，小芽摸摸肚子，看着桌上的饭。",
+      "request": "告诉朋友你饿了。",
+      "help": "肚子饿了，想吃东西，可以告诉朋友我饿了。",
+      "resolution": "朋友端来午饭，小芽开始吃饭。",
+      "context": {
+        "id": "food-hungry-elsewhere",
+        "settingId": "picnic-hungry",
+        "scene": "outside",
+        "label": "换个地方：告诉朋友你想吃东西。",
+        "setup": "在公园玩了一阵，你摸着肚子，朋友打开野餐篮。",
+        "request": "告诉朋友你想吃东西。",
+        "help": "玩过以后肚子饿了，也可以告诉朋友我饿了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-full-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-full",
+      "title": "吃饱的小肚子",
+      "english": "I'm full.",
+      "chinese": "我吃饱了。",
+      "core": false,
+      "setup": "小芽吃完了饭，摸着鼓鼓的肚子，朋友准备再添一点。",
+      "request": "告诉朋友你吃饱了。",
+      "help": "已经吃饱了，不用勉强再吃，可以告诉朋友我吃饱了。",
+      "resolution": "朋友放下饭勺，小芽舒服地休息。",
+      "context": {
+        "id": "food-full-elsewhere",
+        "settingId": "picnic-full",
+        "scene": "outside",
+        "label": "换个地方：告诉朋友你已经吃饱。",
+        "setup": "野餐时你吃饱了，朋友又拿出一块面包。",
+        "request": "告诉朋友你已经吃饱。",
+        "help": "吃饱后可以停下来，告诉朋友我吃饱了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-spoon-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-spoon",
+      "title": "把勺子递过来",
+      "english": "Pass the spoon, please.",
+      "chinese": "请把勺子递给我。",
+      "core": false,
+      "setup": "饭碗在小芽面前，勺子放在朋友那边。",
+      "request": "请朋友把勺子递过来。",
+      "help": "勺子在朋友那边，可以请它把勺子递给你。",
+      "resolution": "朋友把勺子递过来，小芽可以吃饭了。",
+      "context": {
+        "id": "food-spoon-elsewhere",
+        "settingId": "picnic-spoon",
+        "scene": "outside",
+        "label": "换个地方：请朋友递给你勺子。",
+        "setup": "野餐的酸奶打开了，勺子在朋友的篮子里。",
+        "request": "请朋友递给你勺子。",
+        "help": "想吃酸奶，可以请朋友递一下勺子。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-apple-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-apple",
+      "title": "喜欢红苹果",
+      "english": "I like apples.",
+      "chinese": "我喜欢苹果。",
+      "core": false,
+      "setup": "水果盘里有苹果和香蕉，小芽开心地拿起苹果。",
+      "request": "告诉朋友你喜欢苹果。",
+      "help": "你喜欢吃苹果，可以开心地告诉朋友我喜欢苹果。",
+      "resolution": "小芽和朋友一起分享喜欢的苹果。",
+      "context": {
+        "id": "food-apple-elsewhere",
+        "settingId": "orchard-apple",
+        "scene": "outside",
+        "label": "换个地方：告诉朋友你喜欢的水果。",
+        "setup": "果园里树上挂着苹果，你指着苹果开心地笑。",
+        "request": "告诉朋友你喜欢的水果。",
+        "help": "看见喜欢的苹果，也可以告诉朋友我喜欢苹果。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-hot-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-hot",
+      "title": "先等热汤凉一点",
+      "english": "It's too hot.",
+      "chinese": "这个太烫了。",
+      "core": false,
+      "setup": "汤碗冒着热气，小芽凑近后赶紧停住。",
+      "request": "告诉朋友汤太烫了。",
+      "help": "汤很烫，先不要喝，可以告诉朋友这个太烫了。",
+      "resolution": "朋友把汤放稳，等热气少了才一起尝。",
+      "context": {
+        "id": "food-hot-elsewhere",
+        "settingId": "bakery-hot",
+        "scene": "food",
+        "label": "换个地方：告诉朋友面包太烫了。",
+        "setup": "刚出炉的面包冒着热气，你停下伸过去的手。",
+        "request": "告诉朋友面包太烫了。",
+        "help": "刚出炉的面包很烫，先停一停，告诉朋友这个太烫了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-milk-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "food-milk",
+      "title": "早餐想喝牛奶",
+      "english": "May I have some milk?",
+      "chinese": "可以给我一些牛奶吗？",
+      "core": false,
+      "setup": "早餐桌上有牛奶壶，小芽面前的杯子还是空的。",
+      "request": "请朋友倒一点牛奶。",
+      "help": "想喝牛奶，可以有礼貌地问，能给我一些牛奶吗。",
+      "resolution": "朋友倒好牛奶，小芽接过杯子。",
+      "context": {
+        "id": "food-milk-elsewhere",
+        "settingId": "picnic-milk",
+        "scene": "outside",
+        "label": "换个地方：有礼貌地要一点牛奶。",
+        "setup": "野餐时你的杯子空了，朋友的篮子里放着牛奶。",
+        "request": "有礼貌地要一点牛奶。",
+        "help": "想喝牛奶时，可以先问朋友能给我一些牛奶吗。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-teeth-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-teeth",
+      "title": "牙刷跳跳舞",
+      "english": "Brush your teeth.",
+      "chinese": "刷刷牙。",
+      "core": false,
+      "setup": "洗手台上放着牙刷牙膏，睡前小芽张开嘴。",
+      "request": "和朋友一起刷牙。",
+      "help": "牙刷和牙膏准备好了，伙伴说刷刷牙，我们就刷一刷。",
+      "resolution": "小芽刷好牙，对着镜子露出干净的牙齿。",
+      "context": {
+        "id": "care-teeth-elsewhere",
+        "settingId": "camp-teeth",
+        "scene": "outside",
+        "label": "换个地方：听伙伴提醒一起刷牙。",
+        "setup": "露营早上，小水杯旁放着牙刷，朋友准备洗漱。",
+        "request": "听伙伴提醒一起刷牙。",
+        "help": "在帐篷外也要刷牙，听伙伴说刷刷牙。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-face-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-face",
+      "title": "洗掉小花脸",
+      "english": "Let's wash our faces.",
+      "chinese": "我们洗洗脸吧。",
+      "core": false,
+      "setup": "画画后小芽和朋友脸上沾了颜色，旁边有水盆。",
+      "request": "邀请朋友一起洗脸。",
+      "help": "脸上沾了颜色，可以邀请朋友，我们洗洗脸吧。",
+      "resolution": "两个人把小花脸洗干净，用毛巾轻轻擦脸。",
+      "context": {
+        "id": "care-face-elsewhere",
+        "settingId": "garden-face",
+        "scene": "outside",
+        "label": "换个地方：邀请朋友一起洗掉泥点。",
+        "setup": "在花园挖土后，你们的脸上都沾了泥点。",
+        "request": "邀请朋友一起洗掉泥点。",
+        "help": "脸上有泥点时，可以邀请朋友，我们洗洗脸吧。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-tissue-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-tissue",
+      "title": "纸巾来帮忙",
+      "english": "Use a tissue.",
+      "chinese": "用一张纸巾。",
+      "core": false,
+      "setup": "小芽鼻子流了一点鼻涕，朋友拿出纸巾盒。",
+      "request": "听伙伴提醒拿纸巾。",
+      "help": "鼻子需要擦一擦，伙伴会提醒你，用一张纸巾。",
+      "resolution": "小芽用纸巾轻轻擦鼻子，把用过的纸巾放进垃圾桶。",
+      "context": {
+        "id": "care-tissue-elsewhere",
+        "settingId": "picnic-tissue",
+        "scene": "outside",
+        "label": "换个地方：听伙伴提醒擦擦嘴。",
+        "setup": "野餐后你嘴边沾了果酱，朋友递来一张纸巾。",
+        "request": "听伙伴提醒擦擦嘴。",
+        "help": "嘴边有果酱，也可以用一张纸巾擦干净。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-dry-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-dry",
+      "title": "小手擦干啦",
+      "english": "Let's dry our hands.",
+      "chinese": "我们擦干手吧。",
+      "core": false,
+      "setup": "洗完手，小芽和朋友的手还在滴水，毛巾挂在一旁。",
+      "request": "邀请朋友一起擦干手。",
+      "help": "小手湿湿的，可以一起拿毛巾，我们擦干手吧。",
+      "resolution": "两个人用毛巾擦干手，干爽的小手张开了。",
+      "context": {
+        "id": "care-dry-elsewhere",
+        "settingId": "park-dry",
+        "scene": "outside",
+        "label": "换个地方：邀请朋友把手擦干。",
+        "setup": "公园里洗完手，纸巾盒就在水龙头旁边。",
+        "request": "邀请朋友把手擦干。",
+        "help": "手上还有水滴，可以用纸巾，我们擦干手吧。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-care-shoes-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "care-shoes",
+      "title": "穿好鞋子去玩",
+      "english": "Put on your shoes.",
+      "chinese": "穿上鞋子。",
+      "core": false,
+      "setup": "门已经打开，小芽脚上只有袜子，鞋子摆在门边。",
+      "request": "听伙伴提醒穿好鞋子。",
+      "help": "出门前，伙伴会提醒你穿上鞋子。",
+      "resolution": "小芽把两只鞋穿好，和朋友一起出发。",
+      "context": {
+        "id": "care-shoes-elsewhere",
+        "settingId": "picnic-shoes",
+        "scene": "outside",
+        "label": "换个地方：听伙伴提醒先穿鞋。",
+        "setup": "野餐垫上休息完，你准备离开，鞋子在垫子旁。",
+        "request": "听伙伴提醒先穿鞋。",
+        "help": "要离开野餐垫了，先穿上鞋子。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-turn-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-turn",
+      "title": "轮到我滑啦",
+      "english": "It's my turn.",
+      "chinese": "轮到我了。",
+      "core": true,
+      "setup": "朋友刚从滑梯滑下来，排在后面的小芽走到台阶旁。",
+      "request": "告诉朋友轮到你了。",
+      "help": "朋友玩过一次，现在可以说轮到我了。",
+      "resolution": "小芽滑下来，朋友在下面开心地等。",
+      "context": {
+        "id": "play-turn-elsewhere",
+        "settingId": "blocks-turn",
+        "scene": "play",
+        "label": "换个地方：告诉朋友轮到你放积木。",
+        "setup": "朋友刚给积木塔放好一块，把剩下的积木递给你。",
+        "request": "告诉朋友轮到你放积木。",
+        "help": "朋友放过一块，现在可以说轮到我了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-roll-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-roll",
+      "title": "小球滚过来",
+      "english": "Roll the ball.",
+      "chinese": "滚一滚球。",
+      "core": false,
+      "setup": "小芽和朋友坐在草地两头，中间放着一只球。",
+      "request": "邀请朋友把球沿地面滚来。",
+      "help": "让小球贴着地面滚过来，可以说滚一滚球。",
+      "resolution": "小球沿草地滚到小芽面前，小芽把它接住。",
+      "context": {
+        "id": "play-roll-elsewhere",
+        "settingId": "indoor-roll",
+        "scene": "play",
+        "label": "换个地方：请朋友把球滚进小球门。",
+        "setup": "屋里用积木搭了小球门，朋友拿着球站在前面。",
+        "request": "请朋友把球滚进小球门。",
+        "help": "把球沿着地面滚进球门，可以说滚一滚球。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-catch-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-catch",
+      "title": "张开手接球",
+      "english": "Catch the ball.",
+      "chinese": "接住球。",
+      "core": false,
+      "setup": "小芽举起软球，朋友张开双手站在对面。",
+      "request": "提醒朋友接住球。",
+      "help": "轻轻抛球给朋友前，可以提醒它接住球。",
+      "resolution": "球轻轻飞过去，朋友用双手接住了。",
+      "context": {
+        "id": "play-catch-elsewhere",
+        "settingId": "indoor-catch",
+        "scene": "play",
+        "label": "换个地方：听提醒张开手接球。",
+        "setup": "屋里的软垫上，朋友准备把软球轻轻抛给你。",
+        "request": "听提醒张开手接球。",
+        "help": "伙伴提醒接住球，你就张开双手，等球过来。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-tower-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-tower",
+      "title": "搭一座高高的塔",
+      "english": "Let's build a tower.",
+      "chinese": "我们搭一座塔吧。",
+      "core": false,
+      "setup": "地毯上有好多积木，小芽想把它们一块块搭高。",
+      "request": "邀请朋友一起搭塔。",
+      "help": "想把积木搭得高高的，可以邀请朋友，我们搭一座塔吧。",
+      "resolution": "两个人轮流放积木，彩色高塔立起来了。",
+      "context": {
+        "id": "play-tower-elsewhere",
+        "settingId": "sand-tower",
+        "scene": "outside",
+        "label": "换个地方：邀请朋友一起堆沙塔。",
+        "setup": "沙坑边有几只小桶，你想用沙子堆一座高塔。",
+        "request": "邀请朋友一起堆沙塔。",
+        "help": "玩沙时也能邀请朋友，我们搭一座塔吧。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-again-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-again",
+      "title": "倒了再试试",
+      "english": "Let's try again.",
+      "chinese": "我们再试一次吧。",
+      "core": true,
+      "setup": "刚搭的积木塔倒了，小芽和朋友看着散落的积木。",
+      "request": "邀请朋友再试一次。",
+      "help": "没成功也可以再试，可以说我们再试一次吧。",
+      "resolution": "两个人重新搭，塔稳稳地站住了。",
+      "context": {
+        "id": "play-again-elsewhere",
+        "settingId": "ball-again",
+        "scene": "outside",
+        "label": "换个地方：邀请朋友再滚一次。",
+        "setup": "小球没有滚进球门，停在球门旁边。",
+        "request": "邀请朋友再滚一次。",
+        "help": "小球没进去，还可以再试一次。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-did-it-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-did-it",
+      "title": "我自己搭好了",
+      "english": "I did it.",
+      "chinese": "我做到了。",
+      "core": true,
+      "setup": "小芽专心把最后一块拼图放进空位。",
+      "request": "告诉朋友你做到了。",
+      "help": "你自己完成了，可以开心地说我做到了。",
+      "resolution": "拼图完整了，朋友为小芽拍拍手。",
+      "context": {
+        "id": "play-did-it-elsewhere",
+        "settingId": "zip-did-it",
+        "scene": "care",
+        "label": "换个地方：把自己做到的事告诉朋友。",
+        "setup": "你自己把外套拉链从下往上拉好了。",
+        "request": "把自己做到的事告诉朋友。",
+        "help": "自己拉好了拉链，也可以开心地说我做到了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-tidy-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "play-tidy",
+      "title": "玩具回到盒子里",
+      "english": "Put it in the box.",
+      "chinese": "把它放进盒子里。",
+      "core": false,
+      "setup": "玩好以后，小球还在地上，旁边有打开的玩具盒。",
+      "request": "听伙伴提醒把球收进盒子。",
+      "help": "玩具玩好了，伙伴提醒，把它放进盒子里。",
+      "resolution": "小芽把球放进盒子，地面变整洁了。",
+      "context": {
+        "id": "play-tidy-elsewhere",
+        "settingId": "crayon-tidy",
+        "scene": "play",
+        "label": "换个地方：听伙伴提醒把蜡笔收好。",
+        "setup": "画画结束，桌上散着蜡笔，蜡笔盒开着。",
+        "request": "听伙伴提醒把蜡笔收好。",
+        "help": "画画用的蜡笔也可以收进盒子里。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-hand-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "outside-hand",
+      "title": "一起牵手走",
+      "english": "Hold my hand.",
+      "chinese": "牵着我的手。",
+      "core": false,
+      "setup": "小芽和朋友来到小桥前，朋友伸出手。",
+      "request": "邀请朋友牵着手一起走。",
+      "help": "一起走路时，可以伸出手说牵着我的手。",
+      "resolution": "两个人牵好手，慢慢走过小桥。",
+      "context": {
+        "id": "outside-hand-elsewhere",
+        "settingId": "park-hand",
+        "scene": "outside",
+        "label": "换个地方：请伙伴牵着你的手。",
+        "setup": "公园的小路上有人经过，你伸手邀请伙伴一起走。",
+        "request": "请伙伴牵着你的手。",
+        "help": "外出一起走路，可以邀请伙伴牵着你的手。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-rain-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "outside-rain",
+      "title": "窗外下雨啦",
+      "english": "It's raining outside.",
+      "chinese": "外面下雨了。",
+      "core": false,
+      "setup": "小芽望向窗外，雨点落在树叶和水洼里。",
+      "request": "告诉朋友外面下雨了。",
+      "help": "看见窗外的雨点，可以告诉朋友外面下雨了。",
+      "resolution": "朋友走到窗边看雨，两个人拿起雨伞。",
+      "context": {
+        "id": "outside-rain-elsewhere",
+        "settingId": "porch-rain",
+        "scene": "outside",
+        "label": "换个地方：把下雨的发现告诉朋友。",
+        "setup": "你们在门廊休息，看见花园里落下雨点。",
+        "request": "把下雨的发现告诉朋友。",
+        "help": "门廊外落下雨点，也可以告诉朋友外面下雨了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-bed-hug-alternate",
+      "category": "alternate-context",
+      "priority": "P2-extension",
+      "eventId": "bed-hug",
+      "title": "想要暖暖的抱抱",
+      "english": "I need a hug.",
+      "chinese": "我想要一个拥抱。",
+      "core": false,
+      "setup": "小芽的气球飞走了，它低着头，朋友就在旁边。",
+      "request": "告诉朋友你想要一个拥抱。",
+      "help": "有一点难过，想让朋友抱抱，可以说我想要一个拥抱。",
+      "resolution": "朋友张开手，轻轻抱住愿意靠近的小芽。",
+      "context": {
+        "id": "bed-hug-elsewhere",
+        "settingId": "bedtime-hug",
+        "scene": "bed",
+        "label": "换个地方：告诉伙伴你想要抱抱。",
+        "setup": "睡前你有一点想念家人，伙伴坐在旁边。",
+        "request": "告诉伙伴你想要抱抱。",
+        "help": "想要安慰时，可以说我想要一个拥抱。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-everyone-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-everyone",
+      "title": "大家好",
+      "english": "Hello, everyone.",
+      "chinese": "大家好。",
+      "core": true,
+      "setup": "小芽来到花园，两位朋友抬起头看着它。",
+      "request": "向大家挥手打招呼。",
+      "help": "见到几个朋友，可以挥挥手说大家好。",
+      "resolution": "朋友们一起挥手，欢迎小芽加入。",
+      "context": {
+        "id": "hello-everyone-elsewhere",
+        "settingId": "room-everyone",
+        "scene": "hello-everyone",
+        "label": "换个地方：和屋里的朋友们打招呼。",
+        "setup": "小芽走进小屋，两个朋友正坐在地毯上。",
+        "request": "和屋里的朋友们打招呼。",
+        "help": "走进屋里见到大家，也可以说大家好。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-family-love-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "family-love",
+      "title": "我爱你",
+      "english": "I love you.",
+      "chinese": "我爱你。",
+      "core": true,
+      "setup": "小芽开心地看着亲近的朋友，两个人面对面站着。",
+      "request": "把你的爱告诉对方。",
+      "help": "看着你爱的人，可以告诉它我爱你。",
+      "resolution": "朋友微笑着张开双臂，小芽愿意地靠近。",
+      "context": {
+        "id": "family-love-elsewhere",
+        "settingId": "bedtime-love",
+        "scene": "family-love",
+        "label": "换个地方：睡前告诉家人你爱它。",
+        "setup": "睡前家人坐在小芽的床边，两个人温柔地望着对方。",
+        "request": "睡前告诉家人你爱它。",
+        "help": "睡前也可以对家人说我爱你。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-youre-welcome-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-youre-welcome",
+      "title": "不客气",
+      "english": "You're welcome.",
+      "chinese": "不客气。",
+      "core": true,
+      "setup": "小芽把苹果递给朋友，朋友微笑着向小芽道谢。",
+      "request": "回应朋友的谢谢。",
+      "help": "别人对你说谢谢，可以回应不客气。",
+      "resolution": "小芽笑着回应，朋友开心地拿起苹果。",
+      "context": {
+        "id": "hello-youre-welcome-elsewhere",
+        "settingId": "crayon-welcome",
+        "scene": "hello-youre-welcome",
+        "label": "换个地方：回应借蜡笔的朋友。",
+        "setup": "小芽把蜡笔借给朋友，朋友向小芽说谢谢。",
+        "request": "回应借蜡笔的朋友。",
+        "help": "朋友感谢你借给它蜡笔，可以说不客气。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-hello-excuse-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "hello-excuse",
+      "title": "打扰一下",
+      "english": "Excuse me.",
+      "chinese": "打扰一下。",
+      "core": true,
+      "setup": "朋友正在看书，小芽站在旁边，想请朋友听自己说话。",
+      "request": "有礼貌地请朋友注意你。",
+      "help": "别人正在忙，想请它听你说，可以先说打扰一下。",
+      "resolution": "朋友抬起头，愿意听小芽说话。",
+      "context": {
+        "id": "hello-excuse-elsewhere",
+        "settingId": "garden-excuse",
+        "scene": "hello-excuse",
+        "label": "换个地方：问问题前先打个招呼。",
+        "setup": "朋友正在花园里画画，你站在旁边想问一个问题。",
+        "request": "问问题前先打个招呼。",
+        "help": "想问正在画画的朋友一个问题，可以先说打扰一下。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-go-home-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "outside-go-home",
+      "title": "我们回家吧",
+      "english": "Let's go home.",
+      "chinese": "我们回家吧。",
+      "core": true,
+      "setup": "花园里的游戏收好了，小芽和朋友站在通向小屋的小路旁。",
+      "request": "邀请朋友一起回家。",
+      "help": "准备离开外面回到家里，可以说我们回家吧。",
+      "resolution": "小芽和朋友沿着小路，走向温暖的小屋。",
+      "context": {
+        "id": "outside-go-home-elsewhere",
+        "settingId": "picnic-go-home",
+        "scene": "outside-go-home",
+        "label": "换个地方：邀请伙伴结束野餐一起回家。",
+        "setup": "野餐结束，你们收好篮子，家就在小路的另一头。",
+        "request": "邀请伙伴结束野餐一起回家。",
+        "help": "野餐后要回家，也可以说我们回家吧。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-outside-ready-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "outside-ready",
+      "title": "我准备好出发了",
+      "english": "I'm ready to go.",
+      "chinese": "我准备好出发了。",
+      "core": true,
+      "setup": "小芽穿好鞋，背好小包，朋友在敞开的门边等着。",
+      "request": "告诉朋友你已经准备好出发。",
+      "help": "鞋子穿好，东西拿好，可以说我准备好出发了。",
+      "resolution": "朋友点点头，和小芽一起走出门。",
+      "context": {
+        "id": "outside-ready-elsewhere",
+        "settingId": "picnic-ready",
+        "scene": "outside-ready",
+        "label": "换个地方：告诉伙伴你准备好走了。",
+        "setup": "野餐垫收好了，你背起自己的小包，伙伴正在等你。",
+        "request": "告诉伙伴你准备好走了。",
+        "help": "收好东西准备离开时，可以说我准备好出发了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-family-come-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "family-come",
+      "title": "请过来",
+      "english": "Come here, please.",
+      "chinese": "请过来。",
+      "core": true,
+      "setup": "小芽站在野餐垫旁边，朋友在几步远的小路上。",
+      "request": "招招手，请朋友来到你身边。",
+      "help": "想请朋友走到你这里，可以招手说请过来。",
+      "resolution": "朋友走过来，和小芽坐到野餐垫上。",
+      "context": {
+        "id": "family-come-elsewhere",
+        "settingId": "room-come",
+        "scene": "family-come",
+        "label": "换个地方：请朋友走过来一起坐。",
+        "setup": "你坐在铺好软垫的小屋里，朋友正在门边。",
+        "request": "请朋友走过来一起坐。",
+        "help": "朋友在门边，可以招招手说请过来。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-food-eat-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "food-eat",
+      "title": "我们吃饭吧",
+      "english": "Let's eat.",
+      "chinese": "我们吃饭吧。",
+      "core": true,
+      "setup": "饭菜已经摆上桌，小芽和朋友洗好手，准备坐下。",
+      "request": "邀请朋友一起开始吃饭。",
+      "help": "饭菜准备好了，可以邀请大家说我们吃饭吧。",
+      "resolution": "小芽和朋友坐好，一起吃起饭来。",
+      "context": {
+        "id": "food-eat-elsewhere",
+        "settingId": "picnic-eat",
+        "scene": "food-eat",
+        "label": "换个地方：邀请朋友开始吃野餐。",
+        "setup": "野餐垫上摆好了食物，你和朋友都洗好了手。",
+        "request": "邀请朋友开始吃野餐。",
+        "help": "野餐准备好了，也可以说我们吃饭吧。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-feelings-happy-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "feelings-happy",
+      "title": "我很开心",
+      "english": "I'm happy.",
+      "chinese": "我很开心。",
+      "core": true,
+      "setup": "小芽眉眼弯弯，开心地笑着，朋友站在身边。",
+      "request": "把开心的心情告诉朋友。",
+      "help": "心里高兴、想笑的时候，可以说我很开心。",
+      "resolution": "朋友也笑起来，和小芽分享这份开心。",
+      "context": {
+        "id": "feelings-happy-elsewhere",
+        "settingId": "bedtime-happy",
+        "scene": "feelings-happy",
+        "label": "换个地方：告诉家人你很开心。",
+        "setup": "睡前你想到今天和家人一起玩的时光，露出了笑容。",
+        "request": "告诉家人你很开心。",
+        "help": "想起开心的事情，也可以告诉家人我很开心。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-feelings-tired-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "feelings-tired",
+      "title": "我累了",
+      "english": "I'm tired.",
+      "chinese": "我累了。",
+      "core": true,
+      "setup": "玩了一会儿，小芽打了个哈欠，身边有一块软垫。",
+      "request": "告诉朋友你想休息了。",
+      "help": "玩过后身体累了，想休息，可以说我累了。",
+      "resolution": "朋友陪小芽坐到软垫上，安静地休息。",
+      "context": {
+        "id": "feelings-tired-elsewhere",
+        "settingId": "walk-tired",
+        "scene": "feelings-tired",
+        "label": "换个地方：告诉伙伴你有些累了。",
+        "setup": "散步回来，你坐到门边的小椅子上，腿想歇一歇。",
+        "request": "告诉伙伴你有些累了。",
+        "help": "走路以后想坐下歇一歇，可以说我累了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-your-turn-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-your-turn",
+      "title": "轮到你了",
+      "english": "It's your turn.",
+      "chinese": "轮到你了。",
+      "core": true,
+      "setup": "小芽刚给积木塔放好一块，手里还有一块，朋友在旁边等。",
+      "request": "把下一次机会交给朋友。",
+      "help": "你玩过一次，接下来请朋友玩，可以说轮到你了。",
+      "resolution": "朋友接过积木，给塔放上下一块。",
+      "context": {
+        "id": "play-your-turn-elsewhere",
+        "settingId": "ball-your-turn",
+        "scene": "play-your-turn",
+        "label": "换个地方：告诉朋友接下来该它玩。",
+        "setup": "你刚沿草地滚过一次球，把球推到朋友面前。",
+        "request": "告诉朋友接下来该它玩。",
+        "help": "轮流玩球时，把下一次机会给朋友，可以说轮到你了。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-can-do-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-can-do",
+      "title": "我可以自己做",
+      "english": "I can do it.",
+      "chinese": "我可以自己做。",
+      "core": true,
+      "setup": "拼图还差一块，小芽拿着合适的拼图块，朋友在旁边等。",
+      "request": "告诉朋友你想自己来。",
+      "help": "想试着自己完成时，可以说我可以自己做。",
+      "resolution": "小芽自己把拼图块放好，露出开心的笑容。",
+      "context": {
+        "id": "play-can-do-elsewhere",
+        "settingId": "shoes-can-do",
+        "scene": "play-can-do",
+        "label": "换个地方：告诉伙伴你可以自己穿鞋。",
+        "setup": "你坐在门边，手里拿着已经解开鞋带的小鞋子。",
+        "request": "告诉伙伴你可以自己穿鞋。",
+        "help": "准备自己穿好鞋子时，可以说我可以自己做。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    },
+    {
+      "assetId": "story-play-good-job-alternate",
+      "category": "alternate-context",
+      "priority": "P2-core",
+      "eventId": "play-good-job",
+      "title": "做得好",
+      "english": "Good job!",
+      "chinese": "做得好！",
+      "core": true,
+      "setup": "朋友刚搭好一座稳稳的积木塔，小芽开心地看着。",
+      "request": "夸一夸朋友完成的事情。",
+      "help": "朋友认真做成了一件事，可以拍拍手说做得好。",
+      "resolution": "朋友收到鼓励，开心地笑了起来。",
+      "context": {
+        "id": "play-good-job-elsewhere",
+        "settingId": "drawing-good-job",
+        "scene": "play-good-job",
+        "label": "换个地方：夸一夸朋友画得用心。",
+        "setup": "朋友把画好的彩色图画举给你看。",
+        "request": "夸一夸朋友画得用心。",
+        "help": "朋友认真完成了画，也可以告诉它做得好。"
+      },
+      "current": "procedural-svg",
+      "requiredStates": [
+        "request",
+        "resolved"
+      ],
+      "stateNote": "Current optional life check displays request then resolved. Supply explicit state-to-file mapping; share a still only when its meaning remains valid in both states. The primary resolution text is context only, not a literal alternate-scene instruction.",
+      "reuseCandidate": null
+    }
+  ]
+}

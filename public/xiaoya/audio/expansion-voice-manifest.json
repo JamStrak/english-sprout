@@ -1,0 +1,728 @@
+{
+  "version": 1,
+  "language": "Chinese",
+  "source": "generic public lesson text synthesized during production; no runtime TTS connection",
+  "review": "decoded waveform and exact word-boundary coverage checked; real-child acceptance pending",
+  "clips": [
+    {
+      "id": "hello-thanks",
+      "text": "朋友把苹果送给你，可以说谢谢你。听我说。",
+      "file": "hello-thanks.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31484,
+      "seconds": 5.16,
+      "sha256": "c8ddfd471b579c96b5c2e2fb17d23989b2cbf582df9c7b5421df157a663f5375",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友把苹果送给你可以说谢谢你听我说",
+        "final_end_seconds": 4.5875
+      }
+    },
+    {
+      "id": "hello-thanks-elsewhere",
+      "text": "朋友借给你蜡笔，也可以说谢谢你。听我说。",
+      "file": "hello-thanks-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 29612,
+      "seconds": 4.848,
+      "sha256": "38c8b535d4bbd5c740fe1c764ee893d6d96067178c07aab8da88007585545ad8",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友借给你蜡笔也可以说谢谢你听我说",
+        "final_end_seconds": 4.275
+      }
+    },
+    {
+      "id": "hello-sorry",
+      "text": "不小心碰倒朋友的积木，可以说对不起。听我说。",
+      "file": "hello-sorry.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 30476,
+      "seconds": 4.992,
+      "sha256": "86d1b09796ee45d682b987afa4e3f27fc6a9850ef09f51e5c1bdfb96eecabe7c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "不小心碰倒朋友的积木可以说对不起听我说",
+        "final_end_seconds": 4.425
+      }
+    },
+    {
+      "id": "hello-sorry-elsewhere",
+      "text": "不小心弄洒了水，可以先说对不起，再一起擦干。听我说。",
+      "file": "hello-sorry-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 36092,
+      "seconds": 5.928,
+      "sha256": "c3a5d6b3b552fd761ab7a012d017bc8a743dc8487d9df186c4261e62ad810972",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "不小心弄洒了水可以先说对不起再一起擦干听我说",
+        "final_end_seconds": 5.35
+      }
+    },
+    {
+      "id": "hello-okay",
+      "text": "朋友不是故意的，它很不好意思，你可以说没关系。听我说。",
+      "file": "hello-okay.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 38396,
+      "seconds": 6.312,
+      "sha256": "488f684bdddb70a9e216692043500de50b0f2da92eaa8cfefb8b67954bfbd73c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友不是故意的它很不好意思你可以说没关系听我说",
+        "final_end_seconds": 5.7375
+      }
+    },
+    {
+      "id": "hello-okay-elsewhere",
+      "text": "愿意原谅朋友时，可以告诉它没关系。听我说。",
+      "file": "hello-okay-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31628,
+      "seconds": 5.184,
+      "sha256": "b4103f2e4dbd4daf061b439f0943c79074e8478a8bdbf8fa54db6a78d90d6df7",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "愿意原谅朋友时可以告诉它没关系听我说",
+        "final_end_seconds": 4.6125
+      }
+    },
+    {
+      "id": "food-hungry",
+      "text": "肚子饿了，想吃东西，可以告诉朋友我饿了。听我说。",
+      "file": "food-hungry.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34796,
+      "seconds": 5.712,
+      "sha256": "0c45cff0479cfe0ceb63adf3682e666725bc669e8d7fe7a6501f2acc787034f4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "肚子饿了想吃东西可以告诉朋友我饿了听我说",
+        "final_end_seconds": 5.1375
+      }
+    },
+    {
+      "id": "food-hungry-elsewhere",
+      "text": "玩过以后肚子饿了，也可以告诉朋友我饿了。听我说。",
+      "file": "food-hungry-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34940,
+      "seconds": 5.736,
+      "sha256": "60eaacc7f770898a99c1fe13106a3f52a7323ddeb2ffbe2dd2048e222d0d396a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "玩过以后肚子饿了也可以告诉朋友我饿了听我说",
+        "final_end_seconds": 5.175
+      }
+    },
+    {
+      "id": "food-full",
+      "text": "已经吃饱了，不用勉强再吃，可以告诉朋友我吃饱了。听我说。",
+      "file": "food-full.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 38972,
+      "seconds": 6.408,
+      "sha256": "22a3725bc84e212d3381d2bca4e6d1ba513d31aff47d0022e1edf2b6bfb1dba2",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "已经吃饱了不用勉强再吃可以告诉朋友我吃饱了听我说",
+        "final_end_seconds": 5.8375
+      }
+    },
+    {
+      "id": "food-full-elsewhere",
+      "text": "吃饱后可以停下来，告诉朋友我吃饱了。听我说。",
+      "file": "food-full-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32204,
+      "seconds": 5.28,
+      "sha256": "ce5f307e6e4249e7721d703a0ad0c6d2ab5d483f587d2ef5bc1fa908f50bd38d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "吃饱后可以停下来告诉朋友我吃饱了听我说",
+        "final_end_seconds": 4.7
+      }
+    },
+    {
+      "id": "food-spoon",
+      "text": "勺子在朋友那边，可以请它把勺子递给你。听我说。",
+      "file": "food-spoon.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32492,
+      "seconds": 5.328,
+      "sha256": "801e735318bff178586f9479e4bd18de94f899eec65a3bfca7660cff5ec5da39",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "勺子在朋友那边可以请它把勺子递给你听我说",
+        "final_end_seconds": 4.75
+      }
+    },
+    {
+      "id": "food-spoon-elsewhere",
+      "text": "想吃酸奶，可以请朋友递一下勺子。听我说。",
+      "file": "food-spoon-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 28892,
+      "seconds": 4.728,
+      "sha256": "39e85a11c5bccc4daf4c4147ebcb88250a1a6e0161cc1fe2f47d631977ca4791",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想吃酸奶可以请朋友递一下勺子听我说",
+        "final_end_seconds": 4.15
+      }
+    },
+    {
+      "id": "food-apple",
+      "text": "你喜欢吃苹果，可以开心地告诉朋友我喜欢苹果。听我说。",
+      "file": "food-apple.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35948,
+      "seconds": 5.904,
+      "sha256": "53e3b8283e59f211f069986ca778170aed8cbd03c9acdd0816907ef06d535fb4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你喜欢吃苹果可以开心地告诉朋友我喜欢苹果听我说",
+        "final_end_seconds": 5.325
+      }
+    },
+    {
+      "id": "food-apple-elsewhere",
+      "text": "看见喜欢的苹果，也可以告诉朋友我喜欢苹果。听我说。",
+      "file": "food-apple-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35804,
+      "seconds": 5.88,
+      "sha256": "9ec216711071af2256a89fcfbcc8894e36ce10775c8ef3c3fc12cd0c3e28370c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "看见喜欢的苹果也可以告诉朋友我喜欢苹果听我说",
+        "final_end_seconds": 5.3
+      }
+    },
+    {
+      "id": "food-hot",
+      "text": "汤很烫，先不要喝，可以告诉朋友这个太烫了。听我说。",
+      "file": "food-hot.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 36812,
+      "seconds": 6.048,
+      "sha256": "76100dffda82a77c54fb06fee58b70350c9559f033f3775ce2ccc84c887e3426",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "汤很烫先不要喝可以告诉朋友这个太烫了听我说",
+        "final_end_seconds": 5.4875
+      }
+    },
+    {
+      "id": "food-hot-elsewhere",
+      "text": "刚出炉的面包很烫，先停一停，告诉朋友这个太烫了。听我说。",
+      "file": "food-hot-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 40556,
+      "seconds": 6.672,
+      "sha256": "4d3b80d19cc6fafde42050274cbeb176052a43db6113d457aa28e68178cdb12a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "刚出炉的面包很烫先停一停告诉朋友这个太烫了听我说",
+        "final_end_seconds": 6.1
+      }
+    },
+    {
+      "id": "food-milk",
+      "text": "想喝牛奶，可以有礼貌地问，能给我一些牛奶吗。听我说。",
+      "file": "food-milk.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34940,
+      "seconds": 5.736,
+      "sha256": "c5b101fbe04733f6546ca41d69ba87dc755d0f07c7259c222e89677421e397ea",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想喝牛奶可以有礼貌地问能给我一些牛奶吗听我说",
+        "final_end_seconds": 5.1625
+      }
+    },
+    {
+      "id": "food-milk-elsewhere",
+      "text": "想喝牛奶时，可以先问朋友能给我一些牛奶吗。听我说。",
+      "file": "food-milk-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35372,
+      "seconds": 5.808,
+      "sha256": "f726a35a8a4ca04df29e1e44aaea5839c2f2821fa171248793bf0a628c260d4d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想喝牛奶时可以先问朋友能给我一些牛奶吗听我说",
+        "final_end_seconds": 5.225
+      }
+    },
+    {
+      "id": "care-teeth",
+      "text": "牙刷和牙膏准备好了，伙伴说刷刷牙，我们就刷一刷。听我说。",
+      "file": "care-teeth.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 40844,
+      "seconds": 6.72,
+      "sha256": "1bd9751a8bf4134ea5ed9287deca94b22abaddc6d60498297087608ca66321a3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "牙刷和牙膏准备好了伙伴说刷刷牙我们就刷一刷听我说",
+        "final_end_seconds": 6.15
+      }
+    },
+    {
+      "id": "care-teeth-elsewhere",
+      "text": "在帐篷外也要刷牙，听伙伴说刷刷牙。听我说。",
+      "file": "care-teeth-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33068,
+      "seconds": 5.424,
+      "sha256": "9f23d21ce434957e52b601b776b4618b952b2c09d1a0849785ddf3ad93a3d758",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "在帐篷外也要刷牙听伙伴说刷刷牙听我说",
+        "final_end_seconds": 4.8625
+      }
+    },
+    {
+      "id": "care-face",
+      "text": "脸上沾了颜色，可以邀请朋友，我们洗洗脸吧。听我说。",
+      "file": "care-face.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34508,
+      "seconds": 5.664,
+      "sha256": "c7d8ff60fed681e39cc76c8ee503ba7e8e870298353d4d3f1bfd04b7a8eb770e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "脸上沾了颜色可以邀请朋友我们洗洗脸吧听我说",
+        "final_end_seconds": 5.1
+      }
+    },
+    {
+      "id": "care-face-elsewhere",
+      "text": "脸上有泥点时，可以邀请朋友，我们洗洗脸吧。听我说。",
+      "file": "care-face-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34364,
+      "seconds": 5.64,
+      "sha256": "c1f10c7e6134fb7341b62d98aac2ad258926a6541687249b747b4e11135607e5",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "脸上有泥点时可以邀请朋友我们洗洗脸吧听我说",
+        "final_end_seconds": 5.075
+      }
+    },
+    {
+      "id": "care-tissue",
+      "text": "鼻子需要擦一擦，伙伴会提醒你，用一张纸巾。听我说。",
+      "file": "care-tissue.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35948,
+      "seconds": 5.904,
+      "sha256": "e256872a40f140cc76271e08d8e6b88b3c1a65f3db4a7ddbe8f8c4a2bc37b3fe",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "鼻子需要擦一擦伙伴会提醒你用一张纸巾听我说",
+        "final_end_seconds": 5.3375
+      }
+    },
+    {
+      "id": "care-tissue-elsewhere",
+      "text": "嘴边有果酱，也可以用一张纸巾擦干净。听我说。",
+      "file": "care-tissue-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32204,
+      "seconds": 5.28,
+      "sha256": "0fc123ee8f34b43bed66fff3d042ebf1c0f6f48f9c53fc6faf97f3aba212752d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "嘴边有果酱也可以用一张纸巾擦干净听我说",
+        "final_end_seconds": 4.7
+      }
+    },
+    {
+      "id": "care-dry",
+      "text": "小手湿湿的，可以一起拿毛巾，我们擦干手吧。听我说。",
+      "file": "care-dry.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35084,
+      "seconds": 5.76,
+      "sha256": "0f24a3a5559013c83e825dd97f7dad46b9494010328cd18e09d50b0168038bec",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小手湿湿的可以一起拿毛巾我们擦干手吧听我说",
+        "final_end_seconds": 5.1875
+      }
+    },
+    {
+      "id": "care-dry-elsewhere",
+      "text": "手上还有水滴，可以用纸巾，我们擦干手吧。听我说。",
+      "file": "care-dry-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33788,
+      "seconds": 5.544,
+      "sha256": "553e882a00b360149dcf71f162d2d6fe478c2ff15429669309995f05758b5783",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "手上还有水滴可以用纸巾我们擦干手吧听我说",
+        "final_end_seconds": 4.975
+      }
+    },
+    {
+      "id": "care-shoes",
+      "text": "出门前，伙伴会提醒你穿上鞋子。听我说。",
+      "file": "care-shoes.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31196,
+      "seconds": 5.112,
+      "sha256": "85447a0de29c99e9fb59aceff033929df6c03f799b4222292e807fe6878de8d4",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "出门前伙伴会提醒你穿上鞋子听我说",
+        "final_end_seconds": 4.55
+      }
+    },
+    {
+      "id": "care-shoes-elsewhere",
+      "text": "要离开野餐垫了，先穿上鞋子。听我说。",
+      "file": "care-shoes-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 28748,
+      "seconds": 4.704,
+      "sha256": "5a6c66d0b5310fd1ba9c618ead8357c0b6eaf2b30294648c1c01ea963048191e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "要离开野餐垫了先穿上鞋子听我说",
+        "final_end_seconds": 4.125
+      }
+    },
+    {
+      "id": "play-turn",
+      "text": "朋友玩过一次，现在可以说轮到我了。听我说。",
+      "file": "play-turn.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 29756,
+      "seconds": 4.872,
+      "sha256": "09a4eaeedd38cc81e1842467e4918b2cda4874f941de058e8b9c910f7df41c69",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友玩过一次现在可以说轮到我了听我说",
+        "final_end_seconds": 4.3
+      }
+    },
+    {
+      "id": "play-turn-elsewhere",
+      "text": "朋友放过一块，现在可以说轮到我了。听我说。",
+      "file": "play-turn-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 29324,
+      "seconds": 4.8,
+      "sha256": "e57438f0271ae76595e7962712790cfa6ca678950e5e5271d89b67022f359d8a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "朋友放过一块现在可以说轮到我了听我说",
+        "final_end_seconds": 4.225
+      }
+    },
+    {
+      "id": "play-roll",
+      "text": "让小球贴着地面滚过来，可以说滚一滚球。听我说。",
+      "file": "play-roll.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33212,
+      "seconds": 5.448,
+      "sha256": "aac25bd203d218ade5acd88875bd8c9cca5788de55d48068043d549c6e06c8f8",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "让小球贴着地面滚过来可以说滚一滚球听我说",
+        "final_end_seconds": 4.875
+      }
+    },
+    {
+      "id": "play-roll-elsewhere",
+      "text": "把球沿着地面滚进球门，可以说滚一滚球。听我说。",
+      "file": "play-roll-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33644,
+      "seconds": 5.52,
+      "sha256": "47e7d544ef58274d18b1bceda10748e41972f9f2722365c78f4f37cb4f4196c1",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "把球沿着地面滚进球门可以说滚一滚球听我说",
+        "final_end_seconds": 4.9375
+      }
+    },
+    {
+      "id": "play-catch",
+      "text": "轻轻抛球给朋友前，可以提醒它接住球。听我说。",
+      "file": "play-catch.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33932,
+      "seconds": 5.568,
+      "sha256": "86b6da7a842f356f5d08a41d46cd0ffdd31dc4227a1e8c59b376536636e69d3e",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "轻轻抛球给朋友前可以提醒它接住球听我说",
+        "final_end_seconds": 5.0
+      }
+    },
+    {
+      "id": "play-catch-elsewhere",
+      "text": "伙伴提醒接住球，你就张开双手，等球过来。听我说。",
+      "file": "play-catch-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35372,
+      "seconds": 5.808,
+      "sha256": "c31b7b73e902fd2d98239eb24a62d2ff1a7a7c8fda5e65633774943af558f31c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "伙伴提醒接住球你就张开双手等球过来听我说",
+        "final_end_seconds": 5.225
+      }
+    },
+    {
+      "id": "play-tower",
+      "text": "想把积木搭得高高的，可以邀请朋友，我们搭一座塔吧。听我说。",
+      "file": "play-tower.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 37964,
+      "seconds": 6.24,
+      "sha256": "b74e761853cf1ebfca296a40407fc3e7cee8ed7e1c752057a5aef90ace7b4c8a",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想把积木搭得高高的可以邀请朋友我们搭一座塔吧听我说",
+        "final_end_seconds": 5.675
+      }
+    },
+    {
+      "id": "play-tower-elsewhere",
+      "text": "玩沙时也能邀请朋友，我们搭一座塔吧。听我说。",
+      "file": "play-tower-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32204,
+      "seconds": 5.28,
+      "sha256": "1b45b003d8e453444000e0c76077f472b9c5748a01d6672b0496b994f608fd1c",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "玩沙时也能邀请朋友我们搭一座塔吧听我说",
+        "final_end_seconds": 4.7
+      }
+    },
+    {
+      "id": "play-again",
+      "text": "没成功也可以再试，可以说我们再试一次吧。听我说。",
+      "file": "play-again.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33932,
+      "seconds": 5.568,
+      "sha256": "e86c2e411b3d057eb08d6531e5d9aa25d05d3874a5edce117249233de255bbec",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "没成功也可以再试可以说我们再试一次吧听我说",
+        "final_end_seconds": 5.0
+      }
+    },
+    {
+      "id": "play-again-elsewhere",
+      "text": "小球没进去，还可以再试一次。听我说。",
+      "file": "play-again-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 27308,
+      "seconds": 4.464,
+      "sha256": "2127c58750a6ff53f4ed3babb6b7b9626797c1110eeae80e0144fc5cc480976f",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "小球没进去还可以再试一次听我说",
+        "final_end_seconds": 3.9
+      }
+    },
+    {
+      "id": "play-did-it",
+      "text": "你自己完成了，可以开心地说我做到了。听我说。",
+      "file": "play-did-it.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 30044,
+      "seconds": 4.92,
+      "sha256": "b2c317798b4c76adec409a20db223149fdcabe2ea1b7b441213beacecb93438b",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "你自己完成了可以开心地说我做到了听我说",
+        "final_end_seconds": 4.35
+      }
+    },
+    {
+      "id": "play-did-it-elsewhere",
+      "text": "自己拉好了拉链，也可以开心地说我做到了。听我说。",
+      "file": "play-did-it-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31628,
+      "seconds": 5.184,
+      "sha256": "4dd4ae8fe757131776c7133e1c4d50dd63f28ac4d438ac05c1f235c087a8b3b8",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "自己拉好了拉链也可以开心地说我做到了听我说",
+        "final_end_seconds": 4.6
+      }
+    },
+    {
+      "id": "play-tidy",
+      "text": "玩具玩好了，伙伴提醒，把它放进盒子里。听我说。",
+      "file": "play-tidy.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34076,
+      "seconds": 5.592,
+      "sha256": "e0c1c198501dfe33eb328f135b2c2279b8d4731f87f85771053898e4d8a950ac",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "玩具玩好了伙伴提醒把它放进盒子里听我说",
+        "final_end_seconds": 5.0125
+      }
+    },
+    {
+      "id": "play-tidy-elsewhere",
+      "text": "画画用的蜡笔也可以收进盒子里。听我说。",
+      "file": "play-tidy-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 28172,
+      "seconds": 4.608,
+      "sha256": "1d1b330ae5fe30b42ed37d25d9a7d65122142c9c01425bdcf41c59b943f27603",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "画画用的蜡笔也可以收进盒子里听我说",
+        "final_end_seconds": 4.0375
+      }
+    },
+    {
+      "id": "outside-hand",
+      "text": "一起走路时，可以伸出手说牵着我的手。听我说。",
+      "file": "outside-hand.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 32636,
+      "seconds": 5.352,
+      "sha256": "dd2bf54b982d2e40d184e25392932b344f93aa5fde4f1affaf1f251b418896f3",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "一起走路时可以伸出手说牵着我的手听我说",
+        "final_end_seconds": 4.7875
+      }
+    },
+    {
+      "id": "outside-hand-elsewhere",
+      "text": "外出一起走路，可以邀请伙伴牵着你的手。听我说。",
+      "file": "outside-hand-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 33068,
+      "seconds": 5.424,
+      "sha256": "20533faab53540bfce4c80ac69b2d0ee692b42b0b4211359c44aec3305270406",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "外出一起走路可以邀请伙伴牵着你的手听我说",
+        "final_end_seconds": 4.8625
+      }
+    },
+    {
+      "id": "outside-rain",
+      "text": "看见窗外的雨点，可以告诉朋友外面下雨了。听我说。",
+      "file": "outside-rain.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 34220,
+      "seconds": 5.616,
+      "sha256": "445a352ecc87a83c29c860ef045b6c0c37bb3f97ec60593b5b67c136cedb923d",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "看见窗外的雨点可以告诉朋友外面下雨了听我说",
+        "final_end_seconds": 5.0375
+      }
+    },
+    {
+      "id": "outside-rain-elsewhere",
+      "text": "门廊外落下雨点，也可以告诉朋友外面下雨了。听我说。",
+      "file": "outside-rain-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 35804,
+      "seconds": 5.88,
+      "sha256": "ca27c1133a7024ebbeff1bfb2274a26e3e39643d75b4986d2cc6886731f23b1b",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "门廊外落下雨点也可以告诉朋友外面下雨了听我说",
+        "final_end_seconds": 5.3125
+      }
+    },
+    {
+      "id": "bed-hug",
+      "text": "有一点难过，想让朋友抱抱，可以说我想要一个拥抱。听我说。",
+      "file": "bed-hug.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 37532,
+      "seconds": 6.168,
+      "sha256": "e0fe731685d3ea3f8f35dcad410dab58356e2377ee967d7b1084ee43c834d058",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "有一点难过想让朋友抱抱可以说我想要一个拥抱听我说",
+        "final_end_seconds": 5.5875
+      }
+    },
+    {
+      "id": "bed-hug-elsewhere",
+      "text": "想要安慰时，可以说我想要一个拥抱。听我说。",
+      "file": "bed-hug-elsewhere.mp3",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "bytes": 31052,
+      "seconds": 5.088,
+      "sha256": "df65040871603d2bbbc2d7b96cca52f9519fdd2c694584f943927674d7179cce",
+      "flags": [],
+      "word_coverage": {
+        "matches_prompt": true,
+        "text": "想要安慰时可以说我想要一个拥抱听我说",
+        "final_end_seconds": 4.525
+      }
+    }
+  ]
+}

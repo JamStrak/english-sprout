@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+  <title id="title">小芽英语</title>
+  <!-- Opaque paper fills every mask; all sprout features fit the central 80% circle. -->
+  <rect width="512" height="512" fill="#EFEADF"/>
+  <g fill="#749986">
+    <path d="M256 249C259 225 257 196 253 171" fill="none" stroke="#749986" stroke-width="20" stroke-linecap="round"/>
+    <path d="M250 197C204 201 151 176 151 127C202 123 247 148 250 197Z"/>
+    <path d="M257 187C253 138 292 103 349 108C351 153 311 193 257 187Z"/>
+    <path d="M155 296C155 244 197 219 255 219C314 219 357 247 357 296C357 354 320 386 256 386C192 386 155 354 155 296Z"/>
+  </g>
+  <g fill="#344B45">
+    <circle cx="224" cy="288" r="8"/>
+    <circle cx="288" cy="288" r="8"/>
+    <path d="M236 316Q256 336 276 316" fill="none" stroke="#344B45" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>
