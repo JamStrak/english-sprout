@@ -4,7 +4,7 @@
 
 ## 目前核实的状态
 
-- v0.28 新增实际钱包设置及本地进度备份恢复；本地 `npm test` 922 项、GM 钱包和跨浏览器恢复及旧产品浏览器检查通过。公开包本机构建为 `0.28.0 / a13ee67e67e9 / public`；GitHub 和 WorkBuddy 的部署状态需分别实测，WorkBuddy 更新前仍是 v0.27。
+- v0.28 新增实际钱包设置及本地进度备份恢复；本地 `npm test` 922 项、GM 钱包和跨浏览器恢复及旧产品浏览器检查通过。公开包本机构建为 `0.28.0 / a13ee67e67e9 / public`；GitHub Pages 已部署产品提交 `8d290d699c06c88565598216a19a834018ddad8b`，Actions `40490862429` 成功，线上为 `0.28.0 / 45ff049f23be / public`；新旧站入口与线上进度备份模块 HTTP 检查通过。未作线上真实儿童或实体设备验收。WorkBuddy 更新前仍是 v0.27，需由用户交接并另行核实。
 
 - 本机正式工程是 `E:\AI新项目\其他实验\儿童英语练习\小芽英语启蒙正式版`，分支 `codex/xiaoya-garden-ab`。v0.27 产品改动已审核并保存为提交 `d0c6778`；实际交付与后续改动以 Git 提交记录为准，不要混入未核对的文件。
 - GitHub 仓库是 [JamStrak/english-sprout](https://github.com/JamStrak/english-sprout)，Pages 地址为 [旧产品首页](https://jamstrak.github.io/english-sprout/) 和 `/xiaoya/`；实际部署以 Actions 记录及线上版本文件为准。
