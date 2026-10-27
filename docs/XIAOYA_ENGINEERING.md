@@ -42,7 +42,7 @@
 | 页面背景音乐 | `garden-music.js`：`createGardenMusic`、`gardenMusicSettings`、`gardenMusicGain`；`experience.js`：`syncGardenMusic`、`gmBridge.musicSettings/setMusicSettings/previewMusic` | 只保留 `bgm-garden`，仅 `page===garden` 自动播放原钢琴；总音量默认 50%，乘使用点音量后使用平方增益，语音压至 `min(0.12, gain*0.24)`。循环通道不随浇水或页面切换重建；正常导航、弹窗和 GM 进出用 600ms smoothstep 淡入淡出，从当前音量续接，淡出至零才暂停。GM 仅用户主动试听时可在非花园播放；录音/后台仍立即静音。旧首页/商店/盲盒绑定由设置归一化忽略，不改儿童存档。来源与哈希见 `public/xiaoya/audio/garden-piano-source.json` |
 | 交互声音与配置 | `sound-catalog.js`：`SOUND_ASSETS`、`SOUND_EVENTS`；`sound-settings.js`：`createSoundSettingsStore`；`sound-player.js`：`createSoundPlayer`；`experience.js`、`feedback.js` | 17 段声匣短音效，30 个交互＋1 个 BGM 使用点；语音/回听/录音优先，单个 SFX 通道按优先级和冷却间隔播放。默认录音启动无声、结束提示禁用。完整映射见 [声音设计](XIAOYA_SOUND_DESIGN.md)，来源见 [筛选记录](XIAOYA_SOUND_SELECTION.md) |
 | GM 音效管理 | `gm-sounds.js`：`createSoundWorkbench`；`gm.js` | 按使用点查询、试听、禁用、解绑、替换、上传、恢复和导出；单文件 2 MiB、含 Base64 的总配置 5 MiB。修改不写学习或奖励，模拟模式只写内存；公开包排除管理面板，保留正常播放模块 |
-| GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 八页：课程速查、声音库、图片库、背景音乐、音效管理、花朵成长、数值与备份、流程测试；公开包物理排除、内存存档隔离、模拟标记、真实儿童记录不变 |
+| GM 内测 | `gm.js`、`gm.css`、`runtime.js`；`experience.js` 的 `gmBridge` | 八页：课程速查、声音库、图片库、背景音乐、音效管理、花朵成长、数值与备份、流程测试；公开包物理排除、内存存档隔离、模拟标记、模拟测试不写真实儿童记录；正式内测中可主动设置真实余额 |
 | GM 花朵成长 | `gm-growth.js`、`growth-core.js`、`growth-motion.js`、`growth-settings.js`、`growth-catalog.js` | 审核目录有 50 花 × 5 阶段＋18 种子，其中 21 花已用于实际挑战，29 花仍为候选；审核默认 10 水、40/55/70/85/100%，逐滴插值；全画布根点 `(192,451)` 固定，不裁切。六项统一 motion 应用于实际花园，审核水数、阶段比例和单花覆盖仍只影响预览，不写儿童账本 |
 | GM 数值与统一备份 | `gm-economy.js`、`tuning-backup.js` | 11 项即时预览、明确保存；导出四类已保存参数，导入全量预检、预览、确认后写入，写失败尝试回滚并报告；不导入孩子的学习、花园或录音 |
 | 静态发布与离线 | `scripts/build.mjs`、`scripts/build-xiaoya.mjs`、`xiaoya/audio-pack.js`、`xiaoya/sw.template.js` | 两产品、渠道、完整声音/图片清单、后台 SHA-256 校验、版本更新需一起核对 |
@@ -53,7 +53,7 @@
 
 ## 3. 数据与存档约定
 
-正式数据保存在浏览器当前 origin 的 localStorage；领域模块先校验，UI 经 `runtime.js` 的 `appStorage` 读写。孩子的学习和花园存档目前只有 `experience.js` 的 `exportState` JSON 导出，没有导入、账户或云同步；错误状态导出可能含原始存档，属于用户数据，不应提交或作为公开测试样本。GM 已支持四类调参配置的统一导入/导出，它不恢复或改写孩子的数据。
+正式数据保存在浏览器当前 origin 的 localStorage；领域模块先校验，UI 经 `runtime.js` 的 `appStorage` 读写。家长区经 `progress-backup.js` 导出、校验并恢复真实学习和花园存档；没有账户或云同步。备份属于用户数据，不应提交或作为公开测试样本。恢复先预览并确认替换，检测预览后的改动，写入失败尽力回滚；要求关闭其他同站点页面，尤其旧版本页面不识别恢复标记。故障诊断导出不能当作正常备份恢复。GM 已支持四类调参配置的统一导入/导出，它不恢复或改写孩子的数据。
 
 | localStorage 键 | 源码 / 内容 |
 | --- | --- |
@@ -61,7 +61,7 @@
 | `xiaoya-english:practice-plan:v1` | `practice-plan.js`，新学/复习/自由练习参与日志 |
 | `xiaoya-english:challenges:v1` | `challenges.js`，挑战尝试、帮助、邀请、推迟记录；schema 2 新增可选 `stars`，旧记录不推断星级，继续按原结果兼容 |
 | `xiaoya-english:garden:v1` | `garden-history.js` 只读旧 A 花盆归档；不删历史数据，也不再开放操作 |
-| `xiaoya-english:meadow:v1` | `garden-meadow.js`，自由花园经济、购买、种植、挑战奖；当前对象 `schemaVersion: 6`，保留 `welcomeGifts: [{date, kind}]`，增加种子成长快照与逐关种子奖励；学习奖励 v4、挑战奖励 v2 保存金额快照，键名仍是 v1 |
+| `xiaoya-english:meadow:v1` | `garden-meadow.js`，自由花园经济、购买、种植、挑战奖；调整余额时升级到 `schemaVersion: 7`，以有符号累计家长调整额维持账本校验；旧版先验证后兼容。保留 `welcomeGifts: [{date, kind}]`，增加种子成长快照与逐关种子奖励；学习奖励 v4、挑战奖励 v2 保存金额快照，键名仍是 v1 |
 | `xiaoya-english:welcome-greetings:v1` | `welcome-greetings.js`，schema 1 的日期、当日语音 ID、剩余轮换列表；只影响欢迎语，不是奖励凭据。经 appStorage 隔离 GM；存储失败回退内存，不阻塞学习 |
 | `xiaoya-english:preferences:v1` | `experience.js`，麦克风许可意愿、引导、`audioControls:{music,reminders}`（均默认 true）及 `gardenMusic:{enabled,volume}`；缺失音乐偏好默认开启/0.5，数值夹到 0–1。GM 普通内测允许持久化此偏好，模拟模式通过 `appStorage` 只写内存，不覆盖真实设置 |
 | `xiaoya-english:guidance:v1` | `guidance-policy.js`，访问与已讲过的操作情境；旧学习/练习/商店记录识别回访，不改学习证据。首次会话各情境一次，之后只在闲置或主动求助时播放；通过 appStorage 隔离 |

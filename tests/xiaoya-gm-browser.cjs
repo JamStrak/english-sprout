@@ -139,6 +139,20 @@ async function main() {
       assert.deepEqual(config,{internal:false,channel:'public'});return config;
     });return;
   }
+  await check('real wallet can be set in GM',async f=>{
+    await openWorkbench(f.p,'economy');
+    await f.p.locator('[data-wallet-field="shells"]').fill('47');
+    await f.p.locator('[data-wallet-field="water"]').fill('23');
+    await press(f.p,'[data-economy-action="wallet-save"]');
+    await f.p.waitForFunction(()=>JSON.parse(localStorage.getItem('xiaoya-english:meadow:v1')).shells===47);
+    const after=await snapshot(f.p),key='xiaoya-english:meadow:v1',wallet=JSON.parse(after[key]);
+    assert.equal(wallet.water,23);
+    const beforeOther={...f.child},afterOther={...after};delete beforeOther[key];delete afterOther[key];assert.deepEqual(afterOther,beforeOther);
+    await f.p.reload();await f.p.locator('main.home-view').waitFor();await openWorkbench(f.p,'economy');
+    assert.equal(await f.p.locator('[data-wallet-field="shells"]').inputValue(),'47');
+    assert.equal(await f.p.locator('[data-wallet-field="water"]').inputValue(),'23');
+    f.child=await snapshot(f.p);return {shells:47,water:23};
+  });
   await check('workbench course search and all three native voice auditions',async f=>{
     await openWorkbench(f.p);
     assert.match(await f.p.locator('.gm-section-heading p').textContent(),/115.*84/);

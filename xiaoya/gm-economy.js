@@ -12,13 +12,37 @@ const FIELD_GROUPS=[
 ];
 const same=(a,b)=>Object.keys(DEFAULT_ECONOMY_SETTINGS).every(key=>a[key]===b[key]);
 
-export function createEconomyWorkbench({storage=appStorage}={}) {
+export function createEconomyWorkbench({storage=appStorage,wallet=()=>null,setWallet=()=>false}={}) {
   const store=createEconomySettingsStore({storage});
   let target, saved=store.load(), draft={...saved}, selected=ALL_FLOWERS[0].id;
   let waters={normal:saved.normalWaterNeeded,giant:saved.giantWaterNeeded};
   let message='', error=false, pending=null;
   const dirty=()=>!same(draft,saved);
   function notice(text,failed=false){message=text;error=failed;updateStatus();}
+  function updateWallet() {
+    const current=wallet();
+    const status=target?.querySelector('[data-wallet-current]');
+    if(!status || !current) return;
+    status.textContent=`当前真实余额：${current.shells} 贝壳，${current.water} 水滴`;
+    for(const key of ['shells','water'])target.querySelector(`[data-wallet-field="${key}"]`).value=current[key];
+  }
+  async function saveWallet(button) {
+    const values={};
+    for(const key of ['shells','water']) {
+      const raw=target.querySelector(`[data-wallet-field="${key}"]`).value.trim();
+      if(!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw)) || Number(raw)>1000000000) {
+        target.querySelector('[data-wallet-status]').textContent='请输入 0 到 1000000000 的整数。';return;
+      }
+      values[key]=Number(raw);
+    }
+    const status=target.querySelector('[data-wallet-status]');
+    button.disabled=true;
+    try {
+      if(!await setWallet(values)) throw Error('保存失败，请检查浏览器存储。');
+      if(status.isConnected){updateWallet();status.textContent='已保存真实余额，返回花园即可使用。';}
+    } catch(err) {if(status.isConnected)status.textContent=`未保存：${err.message}`;}
+    finally {button.disabled=false;}
+  }
   function updateStatus(){
     const element=target?.querySelector('[data-economy-status]');if(!element)return;
     element.textContent=message || (dirty()?'有未保存的数值草稿。比较画面已更新；点击“保存数值”后才应用到花园。':GM_SANDBOX?'当前参数仅保存在本次测试内存，退出后恢复正式参数。':'数值已保存到本机；花园下一次奖励、购买和新种子使用这套参数。');
@@ -78,7 +102,9 @@ export function createEconomyWorkbench({storage=appStorage}={}) {
   function click(event){
     const button=event.target.closest('[data-economy-action]');if(!button||!target.contains(button))return;
     const action=button.dataset.economyAction;
-    if(action==='save'){
+    if(action==='wallet-save'){void saveWallet(button);}
+    else if(action==='wallet-refresh'){updateWallet();target.querySelector('[data-wallet-status]').textContent='已读取当前余额。';}
+    else if(action==='save'){
       try{saved=store.save(draft);draft={...saved};notice(GM_SANDBOX?'已保存到本次测试内存；退出测试不改正式参数。':'数值已保存，后续奖励、购买和新种子立即沿用。');}
       catch(err){notice(`未保存：${err.message}`,true);}
     }else if(action==='defaults'){draft={...DEFAULT_ECONOMY_SETTINGS};message='已载入推荐数值草稿；点击保存才会生效。';error=false;updateFields();}
@@ -107,6 +133,7 @@ export function createEconomyWorkbench({storage=appStorage}={}) {
     if(!dirty()){saved=store.load();draft={...saved};}
     pending=null;
     target.innerHTML=`<div class="gm-section-heading"><div><h2>数值与参数备份</h2><p>${GM_SANDBOX?'测试模式：无限资源；这里的调整只在本次测试有效。':'正式内测：保存后持久生效。进入流程测试会继承参数，退出恢复玩家数据。'}</p></div><span class="gm-count" data-economy-dirty></span></div>
+      ${GM_SANDBOX?'<section class="gm-economy-backup"><h3>真实贝壳与水滴</h3><p>模拟测试不能修改真实余额。请退出测试后在这里设置。</p></section>':`<section class="gm-economy-backup"><h3>真实贝壳与水滴</h3><p>为孩子设置这个浏览器中花园的当前余额；保存后立即生效，不改变已种的花或学习记录。</p><p data-wallet-current></p><div class="gm-flow-buttons"><label>贝壳 <input type="number" data-wallet-field="shells" aria-label="真实贝壳数量" min="0" max="1000000000" step="1"></label><label>水滴 <input type="number" data-wallet-field="water" aria-label="真实水滴数量" min="0" max="1000000000" step="1"></label><button class="gm-primary" data-economy-action="wallet-save">保存真实余额</button><button data-economy-action="wallet-refresh">重新读取余额</button></div><p data-wallet-status role="status" aria-live="polite"></p></section>`}
       <div class="gm-economy-layout"><section class="gm-economy-settings">${FIELD_GROUPS.map(([title,fields])=>`<fieldset><legend>${title}</legend>${fields.map(([key,label])=>{const[min,max,integer]=ECONOMY_LIMITS[key],percent=key==='giantChance';return `<label>${label}<input type="number" data-economy-field="${key}" aria-label="${label}" min="${percent?min*100:min}" max="${percent?max*100:max}" step="${percent?0.1:integer?1:.05}"></label>`;}).join('')}</fieldset>`).join('')}
       <p class="gm-economy-note">普通练习仍二选一领取。挑战同时奖励贝壳、水滴和本关种子（种子仅首次完成）；每颗新种子独立判定巨型。已有种子的体型和成熟水数保持原值。</p>
       <div class="gm-flow-buttons"><button class="gm-primary" data-economy-action="save">保存数值</button><button data-economy-action="reload">放弃草稿</button><button data-economy-action="defaults">载入推荐值</button></div></section>
@@ -117,6 +144,6 @@ export function createEconomyWorkbench({storage=appStorage}={}) {
       </section></div>
       <p class="gm-economy-status" data-economy-status role="status" aria-live="polite"></p>
       <section class="gm-economy-backup"><h3>一次备份，保留全部调参</h3><p>包含数值、成长阶段大小与单花覆盖、浇水动效、全部音效开关/音量/本机替换音频、背景音乐。只导出已保存值，不包含孩子的学习、花园、钱包或录音。</p><div class="gm-flow-buttons"><button data-economy-action="export">导出全部已保存参数</button><button data-economy-action="import">选择参数备份</button><input type="file" accept=".json,application/json" data-economy-import hidden aria-label="选择参数备份文件"></div><div data-economy-import-review hidden><p></p><button class="gm-primary" data-economy-action="restore">恢复这份参数</button><button data-economy-action="cancel-import">取消</button></div></section>`;
-    updateFields();
+    updateFields();if(!GM_SANDBOX)updateWallet();
   }};
 }

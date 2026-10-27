@@ -28,7 +28,7 @@ import { audioControls, createGuidancePolicy, GUIDANCE_KEY } from '../xiaoya/gui
 
 // Run the real UI and click handlers with deterministic timers and audio endings.
 // All storage is isolated; garden fixtures use the same validated economy as production.
-const source='const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage;\n'+fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export const /gm,'const ');
+const source='const INTERNAL_BUILD=false,GM_SANDBOX=false,appStorage=localStorage,RESTORE_KEY="xiaoya-english:restore-in-progress:v1";\n'+fs.readFileSync(new URL('../xiaoya/experience.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export const /gm,'const ');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function reward(state,choice='shells'){
   const roundId=`garden-test-${state.rounds.length+1}`;

@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {CHALLENGE_GROWTH_ASSETS} from '../xiaoya/challenge-flowers.js';
 
-export const XIAOYA_VERSION = '0.27.0';
+export const XIAOYA_VERSION = '0.28.0';
 export const XIAOYA_NAME = '小芽英语启蒙正式版';
 const MODULES = ['paper.css', 'paper-art.js', 'app.js', 'experience.js', 'practice-plan.js', 'feedback.js', 'feedback.css', 'stories.js', 'garden-meadow.js', 'meadow-art.js', 'meadow-ui.js', 'meadow.css', 'garden-art.js', 'voices.js', 'art.js', 'content.js', 'curriculum.js', 'learning.js', 'audio.js', 'speech-local.js', 'speech-worker.js', 'speech-assets.js', 'speech-signal.js', 'style.css'];
 const SHARED = ['speech-match.js', 'speech-download.js'];
@@ -14,7 +14,7 @@ MODULES.push('sound-catalog.js', 'sound-settings.js', 'sound-player.js');
 MODULES.push('guidance-clock.js', 'guidance-policy.js');
 MODULES.push('challenge-flowers.js', 'economy-settings.js');
 MODULES.push('meadow-motion.js', 'growth-core.js', 'growth-motion.js', 'growth-settings.js');
-MODULES.push('chapters.js', 'chapter-ui.js', 'chapters.css');
+MODULES.push('chapters.js', 'chapter-ui.js', 'chapters.css', 'progress-backup.js');
 const INTERNAL_MODULES = ['gm-economy.js', 'tuning-backup.js', 'gm.js', 'gm.css', 'gm-sounds.js', 'gm-growth.js', 'growth-catalog.js'];
 const ICONS = ['icon-paper-v04-48.png', 'icon-paper-v04-192.png', 'icon-paper-v04-512.png'];
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');

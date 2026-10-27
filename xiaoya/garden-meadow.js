@@ -231,11 +231,12 @@ function expectedRoundAmounts(version,starter) {
 function validateEconomyState(state,modern) {
   const snapshots=state.schemaVersion>=5;
   const inventory=state.schemaVersion>=6;
+  const adjustments=state.schemaVersion>=7;
   const hasWelcomeGifts=state.schemaVersion>=4;
   const unlimited=hasWelcomeGifts && hasUnlimitedResources(state);
   fields(state,['schemaVersion','product','shells','water','rounds','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop',
     ...(modern?['previousRoundCount','challengeRewards','challengeSeeds']:[]),...(hasWelcomeGifts?['welcomeGifts']:[]),
-    ...(snapshots?['economyStartRound','seedSnapshotStart','legacyChallengeCount']:[]),...(unlimited?['testMode']:[])]);
+    ...(snapshots?['economyStartRound','seedSnapshotStart','legacyChallengeCount']:[]),...(adjustments?['balanceAdjustments']:[]),...(unlimited?['testMode']:[])]);
   whole(state.shells,'贝壳');whole(state.water,'水');whole(state.seedPacksOpened,'种子包数量');
   if(!Array.isArray(state.rounds) || !Array.isArray(state.plants) || !Array.isArray(state.purchases)) fail('列表错误');
   if(state.legacy!==null) validateLegacy(state.legacy);
@@ -410,14 +411,24 @@ function validateEconomyState(state,modern) {
   }
   if(state.legacy && state.legacy.plants.some((plant)=>!plantedIds.has(plant.seedId))) fail('旧植物不能丢失');
   whole(usedWater,'累计浇水');
-  if(state.shells!==earnedShells-(unlimited?0:spentShells)) fail('贝壳余额与参与奖励、购买记录不符');
-  if(state.water!==earnedWater-(unlimited?0:usedWater)) fail('水余额与参与奖励、浇水记录不符');
+  let shellAdjustment=0,waterAdjustment=0;
+  if(adjustments) {
+    fields(state.balanceAdjustments,['shells','water']);
+    ({shells:shellAdjustment,water:waterAdjustment}=state.balanceAdjustments);
+    if(!Number.isSafeInteger(shellAdjustment) || !Number.isSafeInteger(waterAdjustment)) fail('家长余额调整记录错误');
+    if(unlimited) fail('测试存档不能包含家长余额调整');
+  }
+  const expectedShells=earnedShells-(unlimited?0:spentShells)+shellAdjustment;
+  const expectedWater=earnedWater-(unlimited?0:usedWater)+waterAdjustment;
+  if(!Number.isSafeInteger(expectedShells) || state.shells!==expectedShells) fail('贝壳余额与参与奖励、购买记录不符');
+  if(!Number.isSafeInteger(expectedWater) || state.water!==expectedWater) fail('水余额与参与奖励、浇水记录不符');
   return state;
 }
 
 /** Validate old ledgers before migration; no balance is recomputed at new rates. */
 export function validateMeadow(input) {
-  if(input?.product!==PRODUCT || ![1,2,3,4,5,6].includes(input?.schemaVersion)) fail('产品或版本不匹配');
+  if(input?.product!==PRODUCT || ![1,2,3,4,5,6,7].includes(input?.schemaVersion)) fail('产品或版本不匹配');
+  if(input.schemaVersion===7) return validateEconomyState(input,true);
   if(input.schemaVersion===6) return validateEconomyState(input,true);
   if(input.schemaVersion===5) {
     // First apply v5's single-held-seed and sequential-plant rules unchanged.
@@ -445,6 +456,19 @@ export function validateMeadow(input) {
   return validateMeadow({...copy(previous),schemaVersion:5,
     economyStartRound:previous.rounds.length,seedSnapshotStart:previous.purchases.length,
     legacyChallengeCount:previous.challengeRewards.length,challengeSeeds});
+}
+
+/** Set the current real wallet, preserving the existing rewards and purchases. */
+export function setMeadowBalance(input,values) {
+  const state=validateMeadow(input);
+  if(GM_SANDBOX || hasUnlimitedResources(state)) fail('测试模式不能修改正式余额');
+  fields(values,['shells','water']);
+  boundedInteger(values.shells,0,1000000000,'贝壳数量');
+  boundedInteger(values.water,0,1000000000,'水滴数量');
+  if(values.shells===state.shells && values.water===state.water) return state;
+  const previous=state.balanceAdjustments || {shells:0,water:0};
+  return validateMeadow({...state,schemaVersion:7,shells:values.shells,water:values.water,
+    balanceAdjustments:{shells:previous.shells+(values.shells-state.shells),water:previous.water+(values.water-state.water)}});
 }
 
 /** The caller supplies its local calendar day. Opening this preview never pays. */
