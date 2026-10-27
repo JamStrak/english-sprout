@@ -1,4 +1,4 @@
-import {ALL_FLOWERS,nextAction,pendingRewards,hasUnlimitedResources,flowerForSeed} from './garden-meadow.js';
+import {ALL_FLOWERS,nextAction,pendingRewards,hasUnlimitedResources,flowerForSeed,ownedSeeds,pendingChallengeSeeds} from './garden-meadow.js';
 import {meadowPlantArt} from './meadow-art.js';
 import {shellArt,dropArt,canArt,packArt,seedArt,seedArtForFlower} from './garden-art.js';
 import {icon} from './art.js';
@@ -18,10 +18,12 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
       ${Array.from({length:16},(_,i)=>`<i class="meadow-grass" aria-hidden="true" style="left:${5+(i*37)%90}%;top:${30+(i*19)%62}%"></i>`).join('')}
       ${state.plants.map(p=>{const f=flowerForSeed(p),bloom=p.waterings===f.waterNeeded;return `<button class="meadow-plant ${bloom?'is-bloom':'is-growing'} ${f.giant?'is-giant':''} ${feedback?.plantId===p.id?'just-watered':''} ${tool==='can'&&!bloom&&canWater?'can-water':''}" data-meadow-plant="${p.id}" data-waterings="${p.waterings}" data-needed="${f.waterNeeded}" style="--soil-x:${p.x*100}%;--soil-y:${p.y*100}%;--scale:${f.scale};z-index:${Math.round(p.y*100)}" aria-label="${f.name}，已浇${p.waterings}次，共需${f.waterNeeded}次${bloom?'，已经开花':''}">${meadowPlantArt(f,p.waterings)}${!bloom?`<span class="meadow-drops" aria-hidden="true">${Array.from({length:f.waterNeeded},(_,i)=>`<i class="${i<p.waterings?'filled':''}"></i>`).join('')}</span>`:''}${feedback?.plantId===p.id&&!feedback.motion?`<span class="meadow-splash" aria-hidden="true">${bloom?'✦':dropArt()}</span>`:''}</button>`;}).join('')}
       ${tool==='can'?`<div class="meadow-water-layer" data-water-layer><svg class="meadow-water-links" aria-hidden="true"></svg>${state.plants.filter(p=>p.waterings<flowerForSeed(p).waterNeeded).map(p=>`<button class="meadow-water-target ${feedback?.plantId===p.id?'just-watered':''}" data-water-plant="${p.id}" aria-label="给${flowerForSeed(p).name}浇一滴水，还需${flowerForSeed(p).waterNeeded-p.waterings}滴" ${canWater?'':'aria-disabled="true"'}><span data-feedback-body>${dropArt()}</span></button>`).join('')}</div>`:''}
-      ${tool==='seed'?`<span class="meadow-landing" aria-hidden="true">${icon('tap',40)}<i></i></span>`:!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
+      ${tool==='seed'?'<span class="meadow-landing" aria-hidden="true"><i></i></span>':!state.plants.length?'<span class="meadow-empty-mark" aria-hidden="true">✧</span>':''}
     </div>
     <div class="meadow-tools">
-      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.name}种子，放到草地上">${seedArtForFlower(flower)}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:next==='challenge-seed'||specialPending?`<button class="meadow-tool seed-tool challenge-seed-tool inviting" data-action="challenge-seed" aria-label="领取挑战赢得的特别花种子">${seedArt()}<span class="giant-badge" aria-hidden="true">✦</span></button>`:`<button class="meadow-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${packArt()}<span class="meadow-cost">${shellArt()}${lowestSeedPrice}+</span></button>`}
+      <button class="meadow-tool inventory-tool ${['seeds','challenge-seed'].includes(next)?'inviting':''}" data-action="meadow-inventory" aria-label="打开种子背包，选择已拥有的种子"><span class="inventory-bag-art">${packArt()}${seedArt()}</span><span class="tool-caption">种子</span><span class="inventory-count">${ownedSeeds(state).length+pendingChallengeSeeds(state).length}</span></button>
+      ${seed?`<button class="meadow-tool seed-tool ${tool==='seed'?'selected':''} ${next==='plant'?'inviting':''}" data-action="meadow-seed" data-meadow-tool="seed" aria-pressed="${tool==='seed'}" aria-label="拿起${flower.name}种子，放到草地上">${seedArtForFlower(flower)}${flower.giant||flower.special?'<span class="giant-badge" aria-hidden="true">✦</span>':''}</button>`:''}
+      <button class="meadow-tool shop-tool ${next==='pack'?'inviting':''}" data-action="shop" aria-label="打开种子商店，可以买种子或留下一包喜欢的种子">${shellArt()}<span class="tool-caption">商店</span><span class="meadow-cost">${lowestSeedPrice}+</span></button>
       <button class="meadow-tool can-tool ${tool==='can'?'selected':''} ${next==='water'?'inviting':''}" data-action="meadow-can" data-meadow-tool="can" aria-pressed="${tool==='can'}" aria-label="点水壶，再点小苗进度条旁边的水滴浇水">${canArt()}<span class="meadow-cost">${dropArt()}${unlimited?'∞':state.water}</span></button>
       <button class="meadow-tool play-tool ${next==='learn'?'inviting':''}" data-primary data-action="next-event" aria-label="再玩一个故事，选择贝壳或水">${icon('play',40)}</button>
     </div>
@@ -31,6 +33,15 @@ export function meadowView({state,header,balance,feedback,tool,backgroundUrl=nul
 export function meadowCollection(state) {
   const grown=new Set(state.plants.filter(p=>p.waterings===flowerForSeed(p).waterNeeded).map(p=>p.flowerId));
   return `<div class="meadow-collection">${ALL_FLOWERS.map(f=>`<div class="flower-stamp ${grown.has(f.id)?'collected':''}" aria-label="${grown.has(f.id)?f.name:'尚未种出的花'}">${grown.has(f.id)?meadowPlantArt(f,f.waterNeeded):'<span aria-hidden="true">?</span>'}</div>`).join('')}</div>`;
+}
+
+const escapeText=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function inventorySeeds(state){
+  return [...ownedSeeds(state).map(seed=>({...seed,key:`owned:${seed.id}`,source:'已拥有'})),...pendingChallengeSeeds(state).map(seed=>({...seed,key:`challenge:${seed.milestoneId}`,source:'挑战奖励'}))];
+}
+export function meadowInventory(state){
+  const seeds=inventorySeeds(state);
+  return `<p class="seed-inventory-help">选一颗，放到草地上。也可以直接拖出去种下。</p><div class="seed-inventory" role="group" aria-label="所有可种植的种子">${seeds.map(seed=>{const flower=flowerForSeed(seed),selected=seed.id&&seed.id===state.pendingSeed?.id;return `<button class="inventory-seed ${selected?'selected':''}" data-inventory-seed="${escapeText(seed.key)}" aria-label="选择${escapeText(flower.name)}种子${flower.giant?'，巨大型':''}" aria-pressed="${!!selected}"><span class="inventory-seed-art">${seedArtForFlower(flower)}</span><strong>${escapeText(flower.name)}</strong><small>${flower.giant?'巨大型 · ':''}${seed.source}</small>${selected?`<span class="inventory-picked" aria-hidden="true">${icon('check',20)}</span>`:''}</button>`;}).join('')}</div>${seeds.length?'':'<div class="inventory-empty">'+seedArt()+'<p>还没有种子，去商店挑一袋吧。</p><button data-action="inventory-shop">去种子商店</button></div>'}`;
 }
 
 const WATER_SIZE=48,WATER_PITCH=56,WATER_EDGE=8;
@@ -108,10 +119,18 @@ export function layoutMeadowWatering(root){
 
 // One pointer gesture has one outcome. The synthetic click after a drag is consumed.
 // Taps and keyboard activation use the same callbacks as dragging; no HTML drag API.
-export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTouch}) {
-  let drag=null,dropTap=null,ghost=null,suppressUntil=0;
+export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTouch,onChooseSeed}) {
+  let drag=null,dropTap=null,actionTap=null,ghost=null,cursor=null,suppressUntil=0;
   const active=()=>read().active;
-  const clear=()=>{if(dropTap)suppressUntil=Date.now()+450;dropTap=null;ghost?.remove();ghost=null;const old=drag;drag=null;if(old&&root.hasPointerCapture?.(old.id))root.releasePointerCapture(old.id);};
+  const hideCursor=()=>{cursor?.remove();cursor=null;root.querySelector?.('[data-meadow-field]')?.classList.remove('seed-cursor-active');};
+  const clear=()=>{if(dropTap||actionTap||drag)suppressUntil=Date.now()+450;dropTap=null;actionTap=null;ghost?.remove();ghost=null;hideCursor();root.classList?.remove('inventory-dragging');const old=drag;drag=null;if(old&&root.hasPointerCapture?.(old.id))root.releasePointerCapture(old.id);};
+  clear.sync=()=>{if(!active())actionTap=null;if(!active()||read().tool!=='seed'||!read().state.pendingSeed)hideCursor();};
+  function moveCursor(event){
+    const field=event.target.closest?.('[data-meadow-field]'),state=read();
+    if(drag||event.pointerType!=='mouse'||!state.active||state.tool!=='seed'||!state.state.pendingSeed||!field){hideCursor();return;}
+    if(!cursor){cursor=document.createElement('div');cursor.className='meadow-seed-cursor';cursor.setAttribute('aria-hidden','true');cursor.innerHTML=seedArtForFlower(flowerForSeed(state.state.pendingSeed));document.body.append(cursor);}
+    cursor.style.left=`${event.clientX}px`;cursor.style.top=`${event.clientY}px`;field.classList.add('seed-cursor-active');
+  }
   function position(event) {
     const field=root.querySelector('[data-meadow-field]');if(!field)return null;
     const rect=field.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width,y=(event.clientY-rect.top)/rect.height;
@@ -128,23 +147,51 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
     return closest;
   }
   root.addEventListener('pointerdown',event=>{
-    if(!active()||event.isPrimary===false||event.button>0)return;
-    suppressUntil=0;dropTap=null;
+    if(event.isPrimary===false||event.button>0)return;
+    // A fresh press is never the compatibility click from the preceding gesture,
+    // including a quick press on a panel that the previous gesture just opened.
+    suppressUntil=0;dropTap=null;actionTap=null;
+    const inventory=event.target.closest('[data-inventory-seed]');
+    if(inventory&&read().seedPicker&&!inventory.disabled){
+      const seed=inventorySeeds(read().state).find(s=>s.key===inventory.dataset.inventorySeed);if(!seed)return;
+      hideCursor();drag={id:event.pointerId,key:seed.key,seed,tool:'seed',x:event.clientX,y:event.clientY,moved:false};root.setPointerCapture?.(event.pointerId);return;
+    }
+    if(!active())return;
     const drop=event.target.closest('[data-water-plant]');
     if(drop){dropTap={id:event.pointerId,plantId:drop.dataset.waterPlant,x:event.clientX,y:event.clientY,moved:false};return;}
-    const button=event.target.closest('[data-meadow-tool]');if(!button||button.disabled)return;
+    const button=event.target.closest('[data-meadow-tool]');
+    if(!button){
+      const action=event.target.closest('button[data-action]');
+      if(['touch','pen'].includes(event.pointerType)&&action&&!action.disabled&&action.getAttribute('aria-disabled')!=='true')actionTap={id:event.pointerId,button:action,x:event.clientX,y:event.clientY,moved:false};
+      return;
+    }
+    if(button.disabled)return;
     drag={id:event.pointerId,tool:button.dataset.meadowTool,x:event.clientX,y:event.clientY,moved:false};
     root.setPointerCapture?.(event.pointerId);
   });
   root.addEventListener('pointermove',event=>{
+    moveCursor(event);
+    if(actionTap?.id===event.pointerId&&Math.hypot(event.clientX-actionTap.x,event.clientY-actionTap.y)>=8)actionTap.moved=true;
     if(dropTap?.id===event.pointerId&&Math.hypot(event.clientX-dropTap.x,event.clientY-dropTap.y)>=8)dropTap.moved=true;
-    if(!drag||drag.id!==event.pointerId||!active())return;
+    if(!drag||drag.id!==event.pointerId||!(active()||drag.key&&read().seedPicker))return;
     if(!drag.moved&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;
     drag.moved=true;event.preventDefault();
-    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.innerHTML=drag.tool==='seed'?seedArtForFlower(flowerForSeed(read().state.pendingSeed)):canArt();document.body.append(ghost);}
+    if(drag.key)root.classList.add('inventory-dragging');
+    if(!ghost){ghost=document.createElement('div');ghost.className='meadow-drag-ghost';ghost.setAttribute('aria-hidden','true');ghost.innerHTML=drag.tool==='seed'?seedArtForFlower(flowerForSeed(drag.seed||read().state.pendingSeed)):canArt();document.body.append(ghost);}
     ghost.style.left=`${event.clientX}px`;ghost.style.top=`${event.clientY}px`;
   });
   root.addEventListener('pointerup',event=>{
+    if(actionTap?.id===event.pointerId){
+      const tap=actionTap;actionTap=null;suppressUntil=Date.now()+450;
+      const hit=document.elementFromPoint(event.clientX,event.clientY)?.closest('button[data-action]');
+      // After a touch drag, Chromium can omit the next compatibility click.
+      // Complete a short press once through the existing click action instead.
+      // The detail-0 click also preserves keyboard/assistive activation semantics.
+      if(active()&&!tap.moved&&Math.hypot(event.clientX-tap.x,event.clientY-tap.y)<8&&hit===tap.button&&!hit.disabled&&hit.getAttribute('aria-disabled')!=='true'){
+        event.preventDefault();hit.click();
+      }
+      return;
+    }
     if(dropTap?.id===event.pointerId){
       const tap=dropTap;dropTap=null;
       // A touch drag can suppress the browser's next compatibility click.
@@ -157,6 +204,11 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
       return;
     }
     if(!drag||drag.id!==event.pointerId)return;
+    if(drag.key){
+      const current=drag,point=read().seedPicker&&position(event),valid=read().seedPicker;clear();suppressUntil=Date.now()+450;event.preventDefault();
+      if(valid&&(!current.moved||point))onChooseSeed(current.key,current.moved?point:null);
+      return;
+    }
     const current=drag,point=active()&&position(event),target=active()&&plantAt(event);clear();
     suppressUntil=Date.now()+450;event.preventDefault();
     if(!current.moved){if(active()){onTouch();onSelect(current.tool);}return;}
@@ -167,6 +219,8 @@ export function bindMeadowInteractions(root,{read,onSelect,onPlant,onWater,onTou
   });
   root.addEventListener('pointercancel',clear);
   root.addEventListener('lostpointercapture',()=>{if(drag)clear();});
+  root.addEventListener('pointerleave',()=>{hideCursor();if(actionTap){actionTap=null;suppressUntil=Date.now()+450;}});
+  root.ownerDocument?.defaultView?.addEventListener('scroll',hideCursor,{passive:true,capture:true});
   root.addEventListener('click',event=>{
     if(event.detail!==0&&Date.now()<suppressUntil){event.preventDefault();event.stopImmediatePropagation();return;}
     if(!active())return;

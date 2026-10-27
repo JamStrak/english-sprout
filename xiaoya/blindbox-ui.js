@@ -1,5 +1,5 @@
 import {getEconomySettings} from './economy-settings.js';
-import {flowerForSeed} from './garden-meadow.js';
+import {flowerForSeed,ownedSeeds} from './garden-meadow.js';
 import {packArt,shellArt,seedArtForFlower} from './garden-art.js';
 import {seedAppearance} from './seed-appearance.js';
 import {icon} from './art.js';
@@ -7,9 +7,10 @@ import {icon} from './art.js';
 const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // The six bags are choices of wrapping, not six different odds or a finite pool.
-// Only the persisted pendingSeed determines the result, including after reload.
+// Reveal only this purchase; an older seed in the backpack is not a new draw.
 export function blindboxView({state,header,balance,selection=null,busy=false}) {
-  const flower=state.pendingSeed?flowerForSeed(state.pendingSeed):null;
+  const purchased=ownedSeeds(state).find(seed=>seed.id===selection?.seedId);
+  const flower=purchased?flowerForSeed(purchased):null;
   if(flower){
     const seed=seedAppearance(flower),opening=selection?.animate===true;
     return `${header}<main class="blindbox-view blindbox-reveal ${opening?'is-opening':''}" data-blindbox-phase="revealed" data-flower-id="${flower.id}">${balance}

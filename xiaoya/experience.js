@@ -7,7 +7,7 @@ import {pictureFor,pictureSequence,createPictureLoader} from './story-pictures.j
 import * as meadow from './garden-meadow.js';
 import {getEconomySettings,ECONOMY_SETTINGS_KEY} from './economy-settings.js';
 import {meadowPlantArt} from './meadow-art.js';
-import {meadowView,meadowCollection,bindMeadowInteractions,layoutMeadowWatering} from './meadow-ui.js';
+import {meadowView,meadowCollection,meadowInventory,bindMeadowInteractions,layoutMeadowWatering} from './meadow-ui.js';
 import {seedShopView,offerPicture} from './seed-shop.js';
 import {blindboxView} from './blindbox-ui.js';
 import {createWelcomeGreetings} from './welcome-greetings.js';
@@ -117,12 +117,12 @@ async function restorePracticeRewards(){
   }finally{recoveringRewards=false;if(recoveryRequested){recoveryRequested=false;restorePracticeRewards();}}
 }
 function save(next){if(storageProblem)return showError('原记录需要处理，请先到家长区导出。'),false;try{validateState(next);appStorage.setItem(STORAGE_KEY,JSON.stringify(next));state=next;return true;}catch{return showError('记录未保存，请检查浏览器存储空间后重试。'),false;}}
-async function gardenChange(change){
+async function gardenChange(change,{allowUnchanged=false}={}){
   const key=meadow.MEADOW_KEY,validate=meadow.validateMeadow,create=meadow.createMeadow;
   const commit=()=>{if(storageProblem)return showError('原记录需要处理，请先到家长区导出。'),false;try{
   // Re-read inside the cross-tab lock; no stale balance is used by an open tab.
   const raw=appStorage.getItem(key),latest=raw?validate(JSON.parse(raw)):create();
-  const next=change(latest);validate(next);if(next!==latest)appStorage.setItem(key,JSON.stringify(next));meadowState=next;return next!==latest;
+  const next=change(latest);validate(next);if(next!==latest)appStorage.setItem(key,JSON.stringify(next));meadowState=next;return next!==latest||allowUnchanged;
 }catch{return showError('花园没有保存，贝壳和水没有扣除。请检查存储后重试。'),false;}};
   return !GM_SANDBOX&&navigator.locks?.request?navigator.locks.request(key,commit):commit();
 }
@@ -200,7 +200,6 @@ async function finishChallengeStep(){
 }
 async function takeChallengeSeed(){
   if(challengeBusy)return;
-  if(meadowState.pendingSeed)return enterGarden();
   challengeBusy=true;const generation=uiGeneration;
   try{const changed=await gardenChange(meadow.redeemChallengeSeed);if(!changed||generation!==uiGeneration||modal||document.hidden)return;enterGarden();meadowTool='seed';render();stopSpeech();effects.play('seed',{target:document.querySelector('[data-action="meadow-seed"]')});feedbackVoice(()=>{if(gardenIsActive()&&!modal)sound(voice('challenge-seed'),['meadow-seed']);});}finally{challengeBusy=false;}
 }
@@ -309,9 +308,9 @@ function balance(){const garden=activeGarden(),unlimited=meadow.hasUnlimitedReso
 function nextPractice(){const plan=practiceToday();if(!plan.cards.some(c=>c.firstDate)&&STORIES.some(s=>s.id===directStory))return {eventId:directStory,mode:'new'};return plan.next||{eventId:STORIES[0].id,mode:'free'};}
 function nextStory(){return storyFor(nextPractice().eventId);}
 function stopSession(){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();effects.setSilent(false);speaking=false;meadowTool=null;cancelGardenReminder();clearGuide();if(session)cancelStory(session);audio.releaseAudioSession();session=null;}
-function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);soundPlayer.play(next==='shop'?'shop-open':next==='challenges'?'challenge-start':'navigate');}
+function navigate(next){stopSession();modal=null;feedback=null;clearTimeout(feedbackTimer);page=next;render();window.scrollTo(0,0);if(next==='chapters')requestAnimationFrame(()=>{if(page!=='chapters'||modal)return;const focus=app.querySelector('[data-chapter-focus]'),box=focus?.getBoundingClientRect();if(box&&(box.top<0||box.bottom>window.innerHeight))focus.scrollIntoView({block:'center',behavior:'instant'});});soundPlayer.play(next==='shop'?'shop-open':next==='challenges'?'challenge-start':'navigate');}
 function openModal(value){cancelWelcomeGift();cancelWelcomeGreeting();cancelIdleHint();uiGeneration++;cancelFeedbackVoice();cancelMeadowDrag?.();effects.cancel();cancelGardenReminder();clearGuide();if(session){cancelStory(session);cancelAttempt(session);session.teaching=false;}audio.stopSound();speaking=false;restoreFocus=document.activeElement;modal=value;guidanceClock.pause();visualHintClock.pause();renderModal();soundPlayer.play(value.type==='collection'?'collection':value.type==='error'?'blocked':'panel-open');setTimeout(()=>document.querySelector('.modal-card button,.modal-card input')?.focus(),0);}
-function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();restoreFocus?.focus?.();soundPlayer.play('panel-close');}
+function closeModal({keepMicIntent=false}={}){uiGeneration++;if(['mic','gate'].includes(modal?.type)&&session&&!keepMicIntent)session.pendingMicIntent=false;modal=null;render();prepareMicrophone();scheduleGardenReminder();cancelMeadowDrag?.();const focus=restoreFocus?.isConnected?restoreFocus:app.querySelector(`[data-action="${restoreFocus?.dataset?.action||'garden'}"]`);focus?.focus?.({preventScroll:true});soundPlayer.play('panel-close');}
 function requireParent(callback){if(GM_SANDBOX||parentUnlocked)return callback();openModal({type:'gate',callback,a:3+Math.floor(Math.random()*5),b:2+Math.floor(Math.random()*4)});}
 function chaptersToday(){return getChapterProgress(practiceToday());}
 function selectedChapter(){const progress=chaptersToday();return progress.chapters.find(c=>c.id===(selectedChapterId||progress.currentChapterId))||progress.chapters[0];}
@@ -605,7 +604,7 @@ async function gardenGuide({automatic=false,idle=false,manual=false,cue}={}){
   if(!automatic||activeGarden().plants.length<3)await meadowGuide(cue,{idle,manual});
   scheduleGardenReminder();
 }
-function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(!meadowState.pendingSeed&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){afterCue(()=>inviteChallenge().catch(()=>{}));scheduleGardenReminder();}else afterCue(()=>gardenGuide({automatic:true}));}
+function enterGarden(){if(meadow.pendingRewards(meadowState).length)return showPendingReward();navigate('garden');effects.prepare();if(!meadow.ownedSeeds(meadowState).length&&meadow.nextAction(meadowState)!=='challenge-seed'&&challenge.invitationFor(challenges,{practicePlan:practiceToday(),date:today()})){afterCue(()=>inviteChallenge().catch(()=>{}));scheduleGardenReminder();}else afterCue(()=>gardenGuide({automatic:true}));}
 function gardenFeedback(kind,plantId,soundId,{motion=false}={}){stopSpeech();clearTimeout(feedbackTimer);feedback={kind,plantId,motion};render();const target=plantId?document.querySelector(`[data-meadow-plant="${plantId}"]`):document.querySelector('.seed-tool');effects.play(kind==='planted'?'plant':kind,{target,soundId,visual:!motion});if(!motion)feedbackTimer=setTimeout(()=>{feedback=null;if(page==='garden')render();},3200);}
 function feedbackGuide(cue){if(activeGarden().plants.length>=3)return gardenGuide({automatic:true,cue});const expected=feedback;feedbackVoice(()=>{if(feedback===expected&&gardenIsActive())gardenGuide({automatic:true,cue});});}
 
@@ -621,10 +620,10 @@ function rewardVoice(options={}){
 function challengeClearVoice(options={}){const r=meadowState.challengeRewards.find(r=>r.unitId===challengeReceipt);return sound(voice(r?.shells===4&&r?.water===6?'challenge-clear':'challenge-seed'),[],options);}
 
 function selectMeadowTool(tool){if(!gardenIsActive()||meadowBusy)return;if(tool==='seed'&&!meadowState.pendingSeed)return;stopSpeech();meadowTool=tool;render();effects.tap(document.querySelector(`[data-action="meadow-${tool==='seed'?'seed':'can'}"]`),{soundId:tool==='seed'?'tool-seed':'tool-water'});if(tool==='can'&&!meadow.hasUnlimitedResources(meadowState)&&!meadowState.water)afterCue(()=>sound(voice('economy-water-short'),['next-event']));}
-function meadowGuide(cue,options={}){const action=meadow.nextAction(meadowState);if(cue==='bloom')return sound(voice('meadow-bloom'),[],options);if(cue==='giant')return sound(voice('meadow-giant'),['meadow-seed'],options);if(action==='challenge-seed')return sound(voice('challenge-seed'),['challenge-seed'],options);if(action==='reward')return sound(voice('economy-earned'),['collect-reward'],options);if(action==='pack')return sound(voice('economy-shop-ready'),['shop'],options);if(action==='learn')return meadowState.plants.some(p=>p.waterings<meadow.flowerForSeed(p).waterNeeded)?sound(voice('economy-water-short'),['next-event'],options):narrate('next',options);return sound(voice(action==='plant'?'meadow-seed':'meadow-water-beside'),[action==='plant'?'meadow-seed':'meadow-can'],options);}
+function meadowGuide(cue,options={}){const action=meadow.nextAction(meadowState);if(cue==='bloom')return sound(voice('meadow-bloom'),[],options);if(cue==='giant')return sound(voice('meadow-giant'),['meadow-seed'],options);if(action==='challenge-seed')return sound(voice('challenge-seed'),['meadow-inventory'],options);if(action==='seeds')return sound(voice('meadow-seed'),['meadow-inventory'],options);if(action==='reward')return sound(voice('economy-earned'),['collect-reward'],options);if(action==='pack')return sound(voice('economy-shop-ready'),['shop'],options);if(action==='learn')return meadowState.plants.some(p=>p.waterings<meadow.flowerForSeed(p).waterNeeded)?sound(voice('economy-water-short'),['next-event'],options):narrate('next',options);return sound(voice(action==='plant'?'meadow-seed':'meadow-water-beside'),[action==='plant'?'meadow-seed':'meadow-can'],options);}
 async function openShop(){
   if(shopBusy)return;
-  if(meadowState.pendingSeed||meadow.pendingRewards(meadowState).length)return enterGarden();
+  if(meadow.pendingRewards(meadowState).length)return enterGarden();
   shopBusy=true;const generation=uiGeneration;
   try{await gardenChange(latest=>meadow.ensureShop(latest,today()));if(generation!==uiGeneration||modal)return;navigate('shop');effects.prepare();if(!prefs.shopSeen){savePrefs({...prefs,shopSeen:true});afterCue(()=>sound(voice('economy-shop')));}}
   finally{shopBusy=false;}
@@ -633,31 +632,31 @@ function shortOnShells(canReserve=false){const wallet=document.querySelector('.w
 function revealPurchasedSeed(generation){if(generation!==uiGeneration||modal||page!=='shop')return;navigate('garden');meadowTool='seed';gardenFeedback('seed');feedbackGuide(meadow.flowerForSeed(meadowState.pendingSeed).giant?'giant':'seed');}
 function openBlindbox(){
   if(shopBusy||page!=='shop')return;
-  if(meadowState.pendingSeed)return enterGarden();
   mysterySelection=null;navigate('blindbox');effects.prepare();afterCue(blindboxVoice);
 }
 async function blindboxVoice(options={}){
   if(page!=='blindbox'||modal||document.hidden||gmWorkbenchOpen)return;
-  const generation=uiGeneration,run=++mysteryVoiceRun,seed=meadowState.pendingSeed;
+  const generation=uiGeneration,run=++mysteryVoiceRun,seed=meadow.ownedSeeds(meadowState).find(s=>s.id===mysterySelection?.seedId);
   if(!seed)return sound(voice(getEconomySettings().packPrice===2?'blindbox-choose':'economy-shop'),[],options);
   const named=await sound(voice(`blindbox-seed-${seed.flowerId}`),[],options);
   if(named&&run===mysteryVoiceRun&&generation===uiGeneration&&page==='blindbox'&&!modal&&!document.hidden&&!gmWorkbenchOpen&&meadowState.pendingSeed?.id===seed.id)return sound(voice('blindbox-reveal'),[],options);
 }
 function plantBlindboxSeed(){
-  if(page!=='blindbox'||!meadowState.pendingSeed)return;
+  if(page!=='blindbox'||!mysterySelection?.seedId||meadowState.pendingSeed?.id!==mysterySelection.seedId)return;
   navigate('garden');meadowTool='seed';gardenFeedback('seed');
   feedbackGuide(meadow.flowerForSeed(meadowState.pendingSeed).giant?'giant':'seed');
 }
 async function buyMystery(index){
-  if(shopBusy||page!=='blindbox'||modal||meadowState.pendingSeed||!Number.isInteger(index)||index<0||index>5)return;
+  if(shopBusy||page!=='blindbox'||modal||mysterySelection?.seedId||!Number.isInteger(index)||index<0||index>5)return;
   if(!meadow.hasUnlimitedResources(meadowState)&&meadowState.shells<getEconomySettings().packPrice)return shortOnShells();
   shopBusy=true;mysterySelection={index,animate:false};const generation=uiGeneration;
   cancelFeedbackVoice();mysteryVoiceRun++;stopSpeech();render();
   try{
     const bought=await gardenChange(latest=>meadow.openSeedPack(latest));
+    mysterySelection=bought?{index,animate:true,seedId:meadowState.pendingSeed.id}:null;
     if(generation!==uiGeneration||document.hidden||modal||page!=='blindbox')return;
     if(bought){
-      mysterySelection={index,animate:true};render();effects.play('seed',{target:app.querySelector('.seed-reveal-art'),soundId:'bag-open'});
+      render();effects.play('seed',{target:app.querySelector('.seed-reveal-art'),soundId:'bag-open'});
       // The purchase is already saved. Animation/audio never decide its result.
       feedbackVoice(()=>{
         if(generation!==uiGeneration||page!=='blindbox'||modal||document.hidden||gmWorkbenchOpen)return;
@@ -666,13 +665,13 @@ async function buyMystery(index){
       },650);
     }else{
       mysterySelection=null;render();
-      if(!meadowState.pendingSeed&&!meadow.hasUnlimitedResources(meadowState)&&meadowState.shells<getEconomySettings().packPrice)shortOnShells();
+      if(!meadow.hasUnlimitedResources(meadowState)&&meadowState.shells<getEconomySettings().packPrice)shortOnShells();
     }
   }finally{
     shopBusy=false;
     // A visibility interruption invalidates narration, not the saved purchase.
     // If the child returned before the lock settled, remove the busy bags too.
-    if(!document.hidden&&!modal&&page==='blindbox'&&(!meadowState.pendingSeed||generation!==uiGeneration))render();
+    if(!document.hidden&&!modal&&page==='blindbox'&&(!mysterySelection?.seedId||generation!==uiGeneration))render();
   }
 }
 async function buySeed(id,source){
@@ -686,6 +685,20 @@ async function reserveSeed(id,replace=false){
   const offer=meadowState.shop.offer;if(!offer||offer.id!==id){if(modal?.type==='replace-seed')closeModal();return;}
   if(meadowState.shop.reserved&&meadowState.shop.reserved.id!==id&&!replace){openModal({type:'replace-seed',offerId:id});sound(voice('economy-replace'));return;}
   shopBusy=true;const generation=uiGeneration;try{const saved=await gardenChange(latest=>meadow.reserveOffer(latest,id,{replace}));if(generation!==uiGeneration||modal?.type==='error')return;modal=null;render();if(saved){effects.play('seed',{target:document.querySelector('.reserve-seed'),soundId:'reserve'});afterCue(()=>sound(voice('economy-reserve')));}}finally{shopBusy=false;}
+}
+async function chooseInventorySeed(key,point=null){
+  if(page!=='garden'||modal?.type!=='seeds'||meadowBusy)return;
+  const generation=uiGeneration;let selected=false,validSelection=false;meadowBusy=true;
+  try{selected=await gardenChange(latest=>{
+    const next=key.startsWith('owned:')?meadow.selectSeed(latest,key.slice(6)):key.startsWith('challenge:')?meadow.redeemChallengeSeed(latest,key.slice(10)):latest;
+    // Picking the held seed again is a valid action even though it needs no write.
+    validSelection=key.startsWith('owned:')?next.pendingSeed?.id===key.slice(6):key.startsWith('challenge:')&&next!==latest;
+    return next;
+  },{allowUnchanged:true});}
+  finally{meadowBusy=false;}
+  if(!selected||!validSelection||generation!==uiGeneration||page!=='garden'||modal?.type!=='seeds')return;
+  meadowTool='seed';closeModal();effects.play('seed',{target:app.querySelector('[data-action="meadow-seed"]')});
+  if(point)await meadowPlant(point);
 }
 async function meadowPlant(point){if(meadowBusy||!meadowState.pendingSeed||!gardenIsActive())return;meadowBusy=true;try{if(await gardenChange(latest=>meadow.plantSeed(latest,point))){if(!gardenIsActive())return;meadowTool=null;gardenFeedback('planted',meadowState.plants[meadowState.plants.length-1].id);feedbackGuide('water');}}finally{meadowBusy=false;}}
 async function meadowWater(id){
@@ -728,16 +741,18 @@ function observation(attemptId=null){requireParent(()=>{const existing=attemptId
 async function submitObservation(result){const m=modal,s=session;if(m?.type!=='observe'||!m.event||m.saving)return;m.saving=true;const helped=m.helpedLocked||!!document.querySelector('#observed-help')?.checked,exact=!!document.querySelector('#exact-phrase')?.checked,phraseId=exact&&['independent','supported'].includes(result)?m.event.lessonId:null;
   const evidenceHelped=!!(helped||s?.retryAfterAttemptId||s?.priorChallengeHelp),evidenceResult=evidenceHelped&&result==='independent'?'supported':result;
   const next=m.attemptId?correctEvidence(state,m.attemptId,{correctionId:uid(),result,helped,phraseId,date:today()}):recordEvidence(state,{attemptId:uid(),eventId:m.event.id,contextId:s.context.id,kind:'speech',result:evidenceResult,source:'parent',helped:evidenceHelped,phraseId,date:today()});if(!save(next)){m.saving=false;return;}if(s&&!m.attemptId){s.attemptId=next.evidence[next.evidence.length-1].attemptId;if(s.challengeUnitId&&!await saveChallengeResult(s,{result,source:'parent',helped})){m.saving=false;return;}s.helped=helped;s.phase='resolved';}if(modal===m)modal=null;render();soundPlayer.play('settings-save');}
-function render(){meadowMotion.cancel();syncGardenMusic();cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='chapters'?chapterBoardView({progress:chaptersToday(),header:header(),balance:balance()}):page==='chapter'||page==='chapter-complete'?chapterView(page==='chapter-complete'):page==='event'?eventView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),receipt:meadowState.challengeRewards.find(r=>r.unitId===challengeReceipt),seed:meadowState.challengeSeeds.find(s=>s.unitId===challengeReceipt),primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='blindbox'?blindboxView({state:meadowState,header:header(),balance:balance(),selection:mysterySelection,busy:shopBusy}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;if(page==='blindbox'&&mysterySelection)mysterySelection.animate=false;renderModal();applyGuide();syncWelcomeGift();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();scheduleWelcomeGreeting();}
+function render(){meadowMotion.cancel();syncGardenMusic();cancelIdleHint();effects.setSilent(!!session?.waiting||!!session?.recording||['preparing','assessing'].includes(session?.assessment?.status)||speaking);const waterFocus=document.activeElement?.dataset.waterPlant;app.innerHTML=`<div class="app-shell ${session?.recording?'is-recording':session?.waiting?'is-mic-starting':''}">${page==='chapters'?chapterBoardView({progress:chaptersToday(),header:header(),balance:balance()}):page==='chapter'||page==='chapter-complete'?chapterView(page==='chapter-complete'):page==='event'?eventView():page==='reward'?rewardView():page==='challenges'?challengeBoard({summary:challengeSummary(),header:header(),balance:balance(),seedPending:meadow.pendingChallengeSeeds(meadowState).length>0}):page==='challenge-prize'?challengePrize({header:header(),unit:challengeSummary().units.find(u=>u.id===challengeReceipt),receipt:meadowState.challengeRewards.find(r=>r.unitId===challengeReceipt),seed:meadowState.challengeSeeds.find(s=>s.unitId===challengeReceipt),primary}):page==='shop'?seedShopView({state:meadowState,header:header(),balance:balance()}):page==='blindbox'?blindboxView({state:meadowState,header:header(),balance:balance(),selection:mysterySelection,busy:shopBusy}):page==='garden'?gardenView():page==='parent'?parentView():homeView()}</div><div id="modal-root"></div>`;if(page==='blindbox'&&mysterySelection)mysterySelection.animate=false;renderModal();cancelMeadowDrag?.sync?.();applyGuide();syncWelcomeGift();layoutMeadowWatering(app);if(waterFocus&&!modal){const target=app.querySelector(`[data-water-plant="${waterFocus}"]`)||app.querySelector('[data-action="meadow-can"]');target?.focus({preventScroll:true});}scheduleIdleHint();scheduleWelcomeGreeting();}
 function renderModal(){syncGardenMusic();const root=document.querySelector('#modal-root');if(!root)return;if(!modal){root.innerHTML='';return;}const m=modal;let html='';
   if(m.type==='audio'){const controls=audioControls(prefs.audioControls);html=`<h2>声音设置</h2><div class="audio-controls">${[['music','音乐和音效','背景音乐、点击和奖励的声音'],['reminders','自动人声提醒','小芽主动说出的操作提示和鼓励']].map(([key,label,detail])=>`<button class="audio-switch" data-action="toggle-${key}" role="switch" aria-checked="${controls[key]}" aria-label="${label}"><span><strong>${label}</strong><small>${detail}</small></span><span class="switch-track" aria-hidden="true"><i></i></span></button>`).join('')}</div><p class="audio-note">主动点“听一遍”或帮助，仍能听到声音。</p><button class="primary-button" data-action="close">完成</button>`;}
   if(m.type==='gate')html=`<h2>请交给陪伴的大人</h2><label for="parent-answer">${m.a} + ${m.b} =</label><input id="parent-answer" inputmode="numeric" autocomplete="off" aria-label="计算结果"><button class="primary-button" data-action="gate-submit">进入</button><button data-action="close">回到孩子的世界</button>`;
   if(m.type==='mic')html='<h2>录下这一次声音</h2><p>点话筒后，等它亮起来再说。停顿后自动结束，也可再次点击结束，最长 12 秒。</p><p>录音只在当前页面内存中临时回听，不上传。首次使用时浏览器还会询问麦克风权限。授权后，进入说话环节会提前打开话筒，点击后才开始录音；闲置 20 秒或离开环节会关闭话筒。</p><button class="primary-button" data-action="allow-mic">允许孩子使用本机麦克风</button><button data-action="disable-mic">暂不使用录音</button><button data-action="close">返回</button>';
   if(m.type==='observe')html=`<h2>${m.attemptId?'核对这次观察':'这一次，孩子怎样表达？'}</h2><p>${esc(m.event?.title)} · ${esc(m.event?.chinese)}</p><p>意思合适就算表达，不必强求完整长句。没听清时选“无法确定”。</p><label class="check-label"><input id="observed-help" type="checkbox" ${m.helped?'checked':''} ${m.helpedLocked?'disabled':''}> 这次听过示范、中文解释或成人提示</label><label class="check-label"><input id="exact-phrase" type="checkbox" ${m.existing?.phraseId?'checked':''}> 确实听到了原句：${esc(m.event?.english)}</label>${session?.hasClip?'<button data-action="replay">回听这次声音</button>':''}<div class="observation-options">${Object.entries(resultNames).filter(([key])=>key!=='device_error').map(([key,label])=>`<button data-observation="${key}">${label}</button>`).join('')}</div><button data-action="close">返回</button>`;
   if(m.type==='replace-seed'){const offer=meadowState.shop.offer;html=`<h2 class="sr-only">换成这包种子吗？</h2><div class="reservation-picture">${offer&&offer.id===m.offerId?offerPicture(offer):''}</div><div class="reservation-choices"><button data-action="close" aria-label="继续保留原来的种子">${icon('house',28)}</button><button data-action="replace-reservation" aria-label="换成这包种子">${icon('check',28)}</button></div>`;}
+  if(m.type==='seeds')html=meadowInventory(meadowState);
   if(m.type==='collection')html=`<h2 class="sr-only">我的花朵收藏</h2>${meadowCollection(meadowState)}<button data-action="close" aria-label="回到小花园">${icon('check',32)}</button>`;
   if(m.type==='error')html=`<h2>这一步还没保存</h2><p>${esc(m.message)}</p>${(hasPendingChallengeRecovery()||practice.entries.some(r=>r.rewardVariant==='b'&&!meadowState.rounds.some(done=>done.roundId===r.roundId)))?'<button data-action="retry-rewards">重试领取奖励</button>':''}<button data-action="close">知道了</button>`;
-  root.innerHTML=`<div class="modal-backdrop"><section class="modal-card" role="dialog" aria-modal="true" aria-label="${m.type==='gate'?'家长入口':m.type==='audio'?'声音设置':'小芽提示'}"><div class="modal-emblem" aria-hidden="true">${icon(m.type==='gate'?'parent':m.type==='collection'?'star':m.type==='mic'?'mic':'leaf')}</div>${html}</section></div>`;
+  const title={gate:'家长入口',audio:'声音设置',collection:'我的花朵收藏',seeds:'我的种子'}[m.type]||'小芽提示';
+  root.innerHTML=`<div class="modal-backdrop"><section class="modal-card modal-${esc(m.type)}" role="dialog" aria-modal="true" aria-label="${title}"><header class="modal-toolbar"><strong>${title}</strong><button class="modal-close" data-action="close" aria-label="关闭面板">×</button></header><div class="modal-body">${html}</div></section></div>`;
 }
 function toggleAudioControl(key){
   const controls=audioControls(prefs.audioControls),next={...controls,[key]:!controls[key]};
@@ -747,9 +762,12 @@ function toggleAudioControl(key){
 }
 function exportState(){const content=storageProblem?{problem:storageProblem,rawState:appStorage.getItem(STORAGE_KEY),rawGarden:appStorage.getItem(LEGACY_GARDEN_KEY),rawMeadow:appStorage.getItem(meadow.MEADOW_KEY),rawPractice:appStorage.getItem(PRACTICE_KEY),rawChallenges:appStorage.getItem(challenge.CHALLENGE_KEY)}:{product:'xiaoya-english',exported:today(),state,garden:gardenHistory.archive,rawGarden,meadow:meadowState,practice,challenges,gardenVariant:'b',preferences:prefs,voice:selectedVoice};if(GM_SANDBOX)content.testing={mode:'gm-simulation',realLearningEvidence:false};const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download=`${GM_SANDBOX?'GM模拟记录-':'小芽英语-'}${today()}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 async function recognition(){if(GM_SANDBOX)return toast('免录音测试不会下载识别模型；退出 GM 后可测试真实识别。');const target=document.querySelector('#model-status');if(target)target.textContent='准备本机识别资源，可以继续浏览，请保持本页打开。';try{await audio.prepareRecognition(value=>{const el=document.querySelector('#model-status');if(el)el.textContent=typeof value==='string'?value:'正在准备…';});toast('本机识别已准备好。');if(page==='parent')render();}catch{toast('识别资源没有准备完成，可以重试。');}}
-const actions={learning:()=>navigate('chapters'),'chapter-continue':continueChapter,'chapter-review':()=>reviewChapter(),'chapter-mixed':()=>reviewChapter(true),'chapter-back':()=>openChapter(selectedChapterId),'chapter-next':()=>{const c=selectedChapter();openChapter('chapter-'+(c.number+1));},'chapter-practiced':finishChapterParticipation,'chapter-after-reward':chapterAfterReward,'audio-settings':()=>openModal({type:'audio'}),'toggle-music':()=>toggleAudioControl('music'),'toggle-reminders':()=>toggleAudioControl('reminders'),'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro'),[],{manual:true}),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome'),[],{manual:true}),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':()=>blindboxVoice({manual:true}),'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>chooseReward('shells'),'choose-water':()=>chooseReward('water'),'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose'],{manual:true}),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose'],{manual:true}),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>{selectedChapterId=chaptersToday().currentChapterId;continueChapter();},'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':()=>gardenGuide({manual:true}),'reward-voice':()=>rewardVoice({manual:true}),'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&modal?.type==='collection'&&!document.hidden)sound(voice('meadow-collection'),[],{manual:true});});},'assessment-voice':()=>assessmentVoice({manual:true}),'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;visualHintClock.activity();syncGardenMusic();scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>session&&['story','request'].includes(session.phase)?teach():contextualReminder({manual:true}),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
+const actions={learning:()=>navigate('chapters'),'chapter-continue':continueChapter,'chapter-review':()=>reviewChapter(),'chapter-mixed':()=>reviewChapter(true),'chapter-back':()=>openChapter(selectedChapterId),'chapter-next':()=>{const c=selectedChapter();openChapter('chapter-'+(c.number+1));},'chapter-practiced':finishChapterParticipation,'chapter-after-reward':chapterAfterReward,'audio-settings':()=>openModal({type:'audio'}),'toggle-music':()=>toggleAudioControl('music'),'toggle-reminders':()=>toggleAudioControl('reminders'),'welcome-gift':openWelcomeGift,'open-welcome-gift':claimWelcomeGift,challenges:openChallenges,'challenge-guide':()=>sound(voice('challenge-intro'),[],{manual:true}),'challenge-seed':takeChallengeSeed,'challenge-practice':teach,'challenge-retry':retryChallengeStep,'learning-mode':()=>sound(voice(session?.recallMode?'flow-review-v13':'garden-welcome'),[],{manual:true}),'audio-pack-retry':retryAudioPack,'picture-retry':retryPictures,shop:openShop,'shop-pack':openBlindbox,'blindbox-back':openShop,'blindbox-voice':()=>blindboxVoice({manual:true}),'blindbox-plant':plantBlindboxSeed,'shop-back':enterGarden,'collect-reward':showPendingReward,'choose-shells':()=>chooseReward('shells'),'choose-water':()=>chooseReward('water'),'shell-purpose':()=>sound(voice('flow-shell-use'),['shell-purpose'],{manual:true}),'water-purpose':()=>sound(voice('flow-water-use'),['water-purpose'],{manual:true}),'replace-reservation':()=>reserveSeed(modal?.offerId,true),home:()=>navigate('home'),garden:enterGarden,'next-event':()=>{selectedChapterId=chaptersToday().currentChapterId;continueChapter();},'new-event':()=>{const id=practiceToday().unseenIds[0];if(id)startEvent(storyFor(id).event);},'story-replay':replayStory,'story-help':teach,'story-continue':storyContinue,sample,'context-help':teach,record,watch,finish,'garden-guide':()=>gardenGuide({manual:true}),'reward-voice':()=>rewardVoice({manual:true}),'meadow-inventory':()=>openModal({type:'seeds'}),'inventory-shop':()=>{closeModal();return openShop();},'meadow-seed':()=>selectMeadowTool('seed'),'meadow-can':()=>selectMeadowTool('can'),'meadow-collection':()=>{openModal({type:'collection'});const generation=uiGeneration;feedbackVoice(()=>{if(generation===uiGeneration&&modal?.type==='collection'&&!document.hidden)sound(voice('meadow-collection'),[],{manual:true});});},'assessment-voice':()=>assessmentVoice({manual:true}),'retry-assessment':retryAssessment,replay:async()=>{clearGuide();cancelIdleHint();const playback=++soundGeneration;speaking=true;try{return await audio.replayClip();}catch{toast('这段录音已释放，可以重新说一次。');}finally{if(playback===soundGeneration){speaking=false;visualHintClock.activity();syncGardenMusic();scheduleIdleHint();}}},observe:()=>observation(),parent:()=>requireParent(()=>navigate('parent')),help:()=>session&&['story','request'].includes(session.phase)?teach():contextualReminder({manual:true}),close:closeModal,'retry-rewards':async()=>{closeModal();await restorePracticeRewards();return restoreChallengeRewards();},
   'gate-submit':()=>{if(modal?.type!=='gate')return;if(Number(document.querySelector('#parent-answer')?.value)===modal.a+modal.b){const callback=modal.callback;parentUnlocked=true;closeModal({keepMicIntent:true});callback();}else toast('请由陪伴的大人填写计算结果。');},'mic-settings':()=>openModal({type:'mic'}),'allow-mic':()=>{if(savePrefs({...prefs,mic:true})){const s=session,resume=s?.pendingMicIntent;closeModal();if(resume&&session===s&&s.phase==='request')return record();}},'disable-mic':()=>{if(savePrefs({...prefs,mic:false})){if(session){session.pendingMicIntent=false;cancelAttempt(session);}closeModal();}},recognition,export:exportState};
-app.addEventListener('click',event=>{const summary=event.target.closest('summary');if(summary){soundPlayer.play(summary.parentElement?.open?'panel-close':'panel-open');return;}const b=event.target.closest('button');if(!b||b.disabled)return;try{
+let backdropPress=null;
+app.addEventListener('pointerdown',event=>{backdropPress=event.target.classList?.contains('modal-backdrop')?event.target:null;});
+app.addEventListener('pointercancel',()=>{backdropPress=null;});
+app.addEventListener('click',event=>{if(event.target.classList?.contains('modal-backdrop')){if(backdropPress===event.target)closeModal();backdropPress=null;return;}backdropPress=null;const summary=event.target.closest('summary');if(summary){soundPlayer.play(summary.parentElement?.open?'panel-close':'panel-open');return;}const b=event.target.closest('button');if(!b||b.disabled)return;try{
   cancelFeedbackVoice();if(gardenIsActive()){clearGuide();stopSpeech();scheduleGardenReminder();}
   if(!['meadow-seed','meadow-can'].includes(b.dataset.action))effects.tap(b,{silent:true});
   // Dedicated actions emit after their successful state change. Voice buttons
@@ -757,7 +775,8 @@ app.addEventListener('click',event=>{const summary=event.target.closest('summary
   const dedicated=new Set(['home','garden','parent','close','challenges','shop','shop-back','shop-pack','blindbox-back','blindbox-plant','meadow-seed','meadow-can','meadow-collection','next-event','new-event','record','story-continue','finish','audio-settings','toggle-music','toggle-reminders','choose-shells','choose-water','challenge-seed','collect-reward','replace-reservation','open-welcome-gift','mic-settings','allow-mic','disable-mic']);
   const voiceAction=new Set(['sample','help','story-replay','story-help','context-help','replay','watch','garden-guide','reward-voice','assessment-voice','challenge-guide','challenge-practice','learning-mode','blindbox-voice','shell-purpose','water-purpose']);
   if(b.dataset.action&&!dedicated.has(b.dataset.action)&&!voiceAction.has(b.dataset.action))queueMicrotask(()=>soundPlayer.play('tap'));
-  if(b.dataset.chapterPhrase)startChapterPhrase(b.dataset.chapter,b.dataset.chapterPhrase);
+  if(b.dataset.inventorySeed)chooseInventorySeed(b.dataset.inventorySeed).catch(error=>showError(error.message));
+  else if(b.dataset.chapterPhrase)startChapterPhrase(b.dataset.chapter,b.dataset.chapterPhrase);
   else if(b.dataset.chapter)openChapter(b.dataset.chapter);
   else if(b.dataset.challengeUnit)startChallenge(b.dataset.challengeUnit);
   else if(b.dataset.mysteryBag!==undefined)buyMystery(Number(b.dataset.mysteryBag)).catch(error=>showError(error.message));
@@ -780,8 +799,7 @@ function resume(){
   pageSuspended=false;syncGardenMusic();scheduleIdleHint();
   if(gmWorkbenchOpen)return;
   if(!modal){
-    if(page==='shop'&&meadowState.pendingSeed){navigate('garden');meadowTool='seed';render();}
-    else if(page==='shop'&&meadow.pendingRewards(meadowState).length)navigate('reward');
+    if(page==='shop'&&meadow.pendingRewards(meadowState).length)navigate('reward');
     else render();
   }
   scheduleGardenReminder();
@@ -795,7 +813,7 @@ function refreshTuning(){
 window.addEventListener('xiaoya:economy-settings-changed',refreshTuning);
 window.addEventListener('xiaoya:tuning-restored',refreshTuning);
 window.addEventListener('storage',event=>{if(GM_SANDBOX)return;if(event.key===PREFS){try{prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');if(!audioControls(prefs.audioControls).reminders&&automaticVoice)stopSpeech({fade:true});syncGardenMusic();if(modal?.type==='audio')renderModal();}catch{}return;}if(event.key===ECONOMY_SETTINGS_KEY){refreshTuning();return;}if(event.key===SOUND_SETTINGS_KEY||event.key===null){soundSettings.reload();if(event.key===SOUND_SETTINGS_KEY)return;}if(![LEGACY_GARDEN_KEY,meadow.MEADOW_KEY,STORAGE_KEY,PREFS,VOICE_KEY,PRACTICE_KEY,challenge.CHALLENGE_KEY].includes(event.key))return;stopSession();try{state=validateState(JSON.parse(appStorage.getItem(STORAGE_KEY)||JSON.stringify(createState())));rawGarden=appStorage.getItem(LEGACY_GARDEN_KEY);gardenHistory=readGardenHistory(rawGarden);meadowState=meadow.validateMeadow(JSON.parse(appStorage.getItem(meadow.MEADOW_KEY)||JSON.stringify(meadow.createMeadow())));practice=validatePracticePlan(JSON.parse(appStorage.getItem(PRACTICE_KEY)||JSON.stringify(createPracticePlan())));challenges=challenge.validateChallenges(JSON.parse(appStorage.getItem(challenge.CHALLENGE_KEY)||JSON.stringify(challenge.createChallenges())));prefs=JSON.parse(appStorage.getItem(PREFS)||'{}');selectedVoice=readVoice(appStorage);storageProblem=null;}catch(error){storageProblem=error.message;}page='home';modal=null;render();restorePracticeRewards();restoreChallengeRewards();});
-const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),state:meadowState,tool:meadowTool}),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{if(meadowBusy)return;cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event&&!(meadowTool==='can'&&target?.closest?.('[data-meadow-plant],[data-water-plant]'))){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
+const cancelMeadowDrag=bindMeadowInteractions(app,{read:()=>({active:gardenIsActive(),seedPicker:page==='garden'&&modal?.type==='seeds',state:meadowState,tool:meadowTool}),onChooseSeed:(key,point)=>chooseInventorySeed(key,point).catch(error=>showError(error.message)),onSelect:selectMeadowTool,onPlant:meadowPlant,onWater:meadowWater,onTouch:(event,target)=>{if(meadowBusy)return;cancelFeedbackVoice();clearGuide();stopSpeech();scheduleGardenReminder();if(event&&!(meadowTool==='can'&&target?.closest?.('[data-meadow-plant],[data-water-plant]'))){const pointer=event.detail>0||event.type.startsWith('pointer');effects.tap(target,pointer?{x:event.clientX,y:event.clientY}:{});}}});
 
 audio.onAudioActivity(value=>{const wasRecording=audioActivity.recording;audioActivity=value;syncGardenMusic();if(wasRecording&&!value.recording){guidanceClock.activity();visualHintClock.activity();}});
 app.addEventListener('change',event=>{if(event.target.matches('input[type=checkbox]'))soundPlayer.play('select');});

@@ -64,6 +64,7 @@ function fixture({storyId='',recognized=null,stored=new Map(),locks=null,failWri
       hasAttribute:name=>name in attrs,style:{setProperty(){}},focus(){}};
   });}
   const root={addEventListener(){},set innerHTML(value){html=value;nodes=parse(value);primaryWraps=nodes.filter(node=>node.inPrimaryWrap).map(button=>({classList:classList('primary-wrap'),querySelector:selector=>selector==='[data-primary]'&&button.hasAttribute('data-primary')?button:null}));renders++;},get innerHTML(){return html;}};
+  root.querySelector=selector=>document.querySelector(selector);
   const modalRoot={innerHTML:''};
   const document={baseURI:'http://127.0.0.1/xiaoya-test/',hidden:false,activeElement:null,
     querySelector(selector){if(selector==='#app')return root;if(selector==='#modal-root')return modalRoot;

@@ -81,7 +81,9 @@ test('sandbox purchases and every pour remain unlimited without fabricating lear
   for(let i=0;i<30;i++) {
     state=m.openSeedPack(state,(i%10)/10,i%2?0:.99);
     assert.equal(state.pendingSeed.id,`seed-${i+1}`);
-    assert.equal(m.openSeedPack(state,0),state,'a pending seed still prevents double purchase');
+    const stored=m.openSeedPack(state,0,.99);
+    assert.equal(m.ownedSeeds(stored).length,2,'sandbox seeds can accumulate without planting first');
+    assert.equal(stored.shells,0);
     state=m.plantSeed(state,{x:0.15+(i%5)*0.15,y:0.2+(i%4)*0.15});
     const plant=state.plants.at(-1),needed=m.flowerForSeed(plant).waterNeeded;
     assert.equal(m.nextAction(state),'water');

@@ -53,7 +53,7 @@ function versionThreeSave() {
 
 test('the welcome preview is one small stable gift and creates no reward or learning record',()=>{
   const state=freeze(createMeadow());
-  assert.equal(state.schemaVersion,5);
+  assert.equal(state.schemaVersion,6);
   assert.deepEqual(state.welcomeGifts,[]);
   const expected={date:'2026-10-21',kind:'shells',amount:1};
   assert.deepEqual(welcomeGift(state,'2026-10-21'),expected);
@@ -144,7 +144,7 @@ test('welcome shells and water reconcile with normal seed purchases and watering
 test('v1 migration preserves the validated old wallet, plants and reward history before adding welcome gifts',()=>{
   const source=freeze(legacySave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,5);
+  assert.equal(migrated.schemaVersion,6);
   assert.deepEqual(migrated.welcomeGifts,[]);
   for(const key of ['shells','water','plants','pendingSeed','seedPacksOpened']) assert.deepEqual(migrated[key],source[key],key);
   assert.deepEqual(migrated.legacy,source);
@@ -160,7 +160,7 @@ test('v1 migration preserves the validated old wallet, plants and reward history
 test('v2 migration preserves five-water pending gifts, shop reservations and plant positions',()=>{
   const source=freeze(versionTwoSave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,5);
+  assert.equal(migrated.schemaVersion,6);
   assert.deepEqual(migrated.welcomeGifts,[]);
   for(const key of ['shells','water','plants','pendingSeed','seedPacksOpened','purchases','shop','legacy'])
     assert.deepEqual(migrated[key],source[key],key);
@@ -174,7 +174,7 @@ test('v2 migration preserves five-water pending gifts, shop reservations and pla
 test('v3 migration preserves challenge seeds, old reward versions and every existing field without aliases',()=>{
   const source=freeze(versionThreeSave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,5);
+  assert.equal(migrated.schemaVersion,6);
   assert.deepEqual(migrated.welcomeGifts,[]);
   for(const key of Object.keys(source).filter((key)=>!['schemaVersion','challengeSeeds'].includes(key))) assert.deepEqual(migrated[key],source[key],key);
   assert.strictEqual(validateMeadow(migrated),migrated);
@@ -217,7 +217,7 @@ test('invalid, duplicate or reordered welcome receipts and forged balances fail 
     (s)=>s.welcomeGifts[1].kind='shells', (s)=>s.welcomeGifts[0].kind='seed',
     (s)=>{s.welcomeGifts.push({...s.welcomeGifts[0]});s.shells++;},
     (s)=>s.shells++, (s)=>s.water++, (s)=>s.welcomeGifts.pop(),
-    (s)=>s.schemaVersion=6,
+    (s)=>s.schemaVersion=7,
   ];
   for(const mutate of mutations) {
     const bad=clone(valid);mutate(bad);freeze(bad);

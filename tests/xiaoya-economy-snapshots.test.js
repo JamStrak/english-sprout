@@ -145,7 +145,7 @@ test('all 21 first clears assign distinct flowers and fix giant results before l
   for(let index=0;index<21;index++) {
     state=m.redeemChallengeSeed(state);
     assert.deepEqual(state.pendingSeed.growth,before.challengeSeeds[index].growth);
-    assert.strictEqual(m.redeemChallengeSeed(state),state,'held prize cannot be overwritten');
+    assert.strictEqual(m.redeemChallengeSeed(state,state.challengeSeeds[index].milestoneId),state,'the same entitlement cannot be redeemed twice');
     state=m.plantSeed(state,{x:.5,y:.5});
   }
   assert.deepEqual(wallet(state),wallet(before));
@@ -188,16 +188,20 @@ test('v4 migration backfills six flowers once while preserving old milestone gif
   assert.deepEqual(old,untouched,'migration never mutates the historical source');
 });
 
-test('old pending seed and historic pending milestone stay in order throughout backfill',async()=>{
+test('old pending seed stays available while new purchases and historic prizes can be selected',async()=>{
   const m=await isolatedModel();
   const old=historicalV4();
   old.pendingSeed={id:'seed-3',flowerId:'bow-rainbow'};
   old.plants.pop();old.water+=2;
   let state=m.validateMeadow(old);
   assert.deepEqual(state.pendingSeed,old.pendingSeed);
-  assert.strictEqual(m.redeemChallengeSeed(state),state);
-  assert.strictEqual(m.openSeedPack(state,0,0),state);
-  assert.strictEqual(m.buyOffer(state,state.shop.offer.id,'shop',0,0),state);
+  for(const acquired of [m.redeemChallengeSeed(state),m.openSeedPack(state,0,0),m.buyOffer(state,state.shop.offer.id,'shop',0,0)]) {
+    assert.equal(m.ownedSeeds(acquired).length,2);
+    assert.deepEqual(m.ownedSeeds(acquired)[0],old.pendingSeed);
+    assert.equal(acquired.pendingSeed.id,'seed-4');
+    const selected=m.selectSeed(acquired,old.pendingSeed.id);
+    assert.deepEqual(selected.pendingSeed,old.pendingSeed);
+  }
   state=m.plantSeed(state,{x:.25,y:.25});
   assert.equal(m.flowerForSeed(state.plants.at(-1)).waterNeeded,5);
   state=m.redeemChallengeSeed(state);

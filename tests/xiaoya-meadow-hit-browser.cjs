@@ -1,5 +1,6 @@
-// Regression for opaque flower pixels hidden behind a neighbour's transparent
-// image canvas. Expected hits come from shipped WebP alpha, never the hit paths.
+// Compatibility regression for already-owned historical flowers whose opaque
+// pixels sit behind a neighbour's transparent canvas. Expected hits come from
+// shipped WebP alpha, never the hit paths or today's random acquisition pool.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Jam/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -9,7 +10,7 @@ assert(['127.0.0.1','localhost','[::1]'].includes(new URL(origin).hostname));
 const out=path.resolve(process.env.XIAOYA_HIT_TEST_OUT||path.join(__dirname,'../test-results/xiaoya-meadow-hit'));
 const filter=process.env.XIAOYA_TEST_FILTER?new RegExp(process.env.XIAOYA_TEST_FILTER):null;
 const key='xiaoya-english:meadow:v1';
-const report={origin,scope:'Disposable Edge profiles; local shipped economy fixtures and actual raster alpha; native mouse/touch/keyboard, CSS animation and requestAnimationFrame. No user profile, microphone, child data, clock acceleration, external requests or uploads. Touch is browser emulation, not physical-device validation.',checks:[]};
+const report={origin,scope:'Disposable Edge profiles; strictly validated schema-4 historical owned-flower ledgers migrated to schema 6 and actual shipped raster alpha. Checks compatibility of existing flowers, not current random acquisition or current first-clear prizes. Native mouse/touch/keyboard, CSS animation and requestAnimationFrame. No user profile, microphone, child data, clock acceleration, external requests or uploads. Touch is browser emulation, not physical-device validation.',checks:[]};
 const sparse=[{flowerId:'daisy',waterings:0,x:.25,y:.43},{flowerId:'tulip',waterings:2,x:.75,y:.43},{flowerId:'sunflower',waterings:5,x:.25,y:.88},{flowerId:'giant-daisy',waterings:10,x:.75,y:.88}];
 const overlap=giant=>[{flowerId:'daisy',waterings:5,x:.5,y:.52},{flowerId:giant?'giant-daisy':'tulip',waterings:0,x:.5,y:giant?.7:.65}];
 const milestoneFlowers=[{flowerId:'bow-rainbow',waterings:5,x:.25,y:.52},{flowerId:'bow-starlight',waterings:5,x:.75,y:.52}];
@@ -19,6 +20,52 @@ const save=()=>fs.writeFileSync(path.join(out,filter?'results-filtered.json':'re
 const state=p=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
+function historicalMeadowFixture(plants,challengeUnitIds){
+  // These are genuine schema-4 receipt shapes and historical prices/rates. The
+  // legacy giants and 3/6-clear bows must not masquerade as current pack draws.
+  const date='2026-10-18',special=['bow-rainbow','bow-starlight'];
+  const milestone=plants.some(plant=>special.includes(plant.flowerId));
+  assert.equal(new Set(challengeUnitIds).size,6,'Historical milestones require six distinct first clears');
+  const rounds=[{roundId:'qa-hit-starter',eventId:'hello-everyone',date,
+    starter:true,reward:'starter',rewardVersion:3,amounts:{shells:2,water:3}}];
+  for(const reward of ['shells','water'])for(let i=0;i<12;i++)rounds.push({
+    roundId:`qa-hit-${reward}-${i}`,eventId:'food-water',date,starter:false,
+    reward,rewardVersion:3,amounts:{shells:2,water:2},
+  });
+  const challengeRewards=milestone?challengeUnitIds.map(unitId=>({
+    id:`challenge:first-clear:${unitId}`,unitId,date,shells:4,water:6,
+  })):[];
+  const offers=[];
+  const appendOffer=flowerId=>{
+    // All ordinary varieties used below historically cost 3; giant IDs cost 8.
+    assert(['daisy','tulip','sunflower','giant-daisy','giant-sunflower'].includes(flowerId));
+    const offer={id:`offer-${offers.length+1}`,flowerId,price:flowerId.startsWith('giant-')?8:3,date};
+    offers.push(offer);return offer;
+  };
+  const purchases=plants.map((plant,index)=>{
+    const id=`seed-${index+1}`;
+    if(special.includes(plant.flowerId))return {id,flowerId:plant.flowerId,source:'challenge',price:0,offerId:null};
+    const offer=appendOffer(plant.flowerId);
+    return {id,flowerId:plant.flowerId,source:'shop',price:offer.price,offerId:offer.id};
+  });
+  // Purchasing refreshes the shelf; the current offer must be unbought and
+  // differ from its predecessor even when no later purchase was made.
+  if(offers.length)appendOffer(offers.at(-1).flowerId==='daisy'?'tulip':'daisy');
+  const current=offers.at(-1),challengeSeeds=milestone?special.map((flowerId,index)=>({
+    milestoneId:`challenge-seed-${index===0?3:6}`,flowerId,
+    seedId:purchases.find(purchase=>purchase.flowerId===flowerId)?.id??null,
+  })):[];
+  return {schemaVersion:4,product:'xiaoya-english-meadow',
+    shells:2+12*2+challengeRewards.length*4-purchases.reduce((sum,purchase)=>sum+purchase.price,0),
+    water:3+12*2+challengeRewards.length*6-plants.reduce((sum,plant)=>sum+plant.waterings,0),
+    rounds,seedPacksOpened:purchases.length,pendingSeed:null,
+    plants:plants.map((plant,index)=>({id:`plant-${index+1}`,seedId:`seed-${index+1}`,...plant})),
+    purchases,legacy:null,shop:{date:current?date:null,
+      offer:current?{id:current.id,flowerId:current.flowerId,price:current.price}:null,reserved:null,offers},
+    previousRoundCount:0,challengeRewards,challengeSeeds,welcomeGifts:[],
+  };
+}
+
 async function fixture({touch=false,motion='no-preference',plants=sparse,fallback=false}={}){
   const c=await browser.newContext({viewport:touch?{width:390,height:844}:{width:1100,height:950},hasTouch:touch,isMobile:touch,reducedMotion:motion,timezoneId:'Asia/Shanghai',serviceWorkers:'block'});
   const requests=[],errors=[];c.on('request',r=>requests.push({url:r.url(),method:r.method()}));
@@ -26,6 +73,9 @@ async function fixture({touch=false,motion='no-preference',plants=sparse,fallbac
   if(fallback)await c.route(/\/xiaoya\/paper\/v[12]\//,r=>r.abort('failed'));
   await c.addInitScript(origin=>{
     if(location.origin!==origin)return;
+    // Hit geometry is not an audio test: keep the looping garden BGM and idle
+    // reminders off so settle() only waits for finite, deliberate feedback.
+    localStorage.setItem('xiaoya-english:preferences:v1',JSON.stringify({welcome:true,mic:false,guideStep:'done',audioControls:{music:false,reminders:false}}));
     const q=window.qaHit={rings:[],clicks:[],audios:[],active:new Set(),microphoneCalls:0};
     const NativeAudio=Audio;
     window.Audio=function(...args){const a=new NativeAudio(...args);a.playbackRate=4;q.audios.push(String(args[0]||''));a.addEventListener('playing',()=>q.active.add(a));a.addEventListener('ended',()=>q.active.delete(a));a.addEventListener('pause',()=>q.active.delete(a));return a;};window.Audio.prototype=NativeAudio.prototype;
@@ -46,28 +96,29 @@ async function fixture({touch=false,motion='no-preference',plants=sparse,fallbac
     await p.goto(origin+'/xiaoya/?garden=b');await p.locator('.home-view').waitFor();
     const meta=await p.evaluate(()=>({version:document.querySelector('meta[name=xiaoya-version]').content,build:document.querySelector('meta[name=xiaoya-build]').content})),expected=JSON.parse(fs.readFileSync(path.join(__dirname,'../dist/xiaoya/version.json'),'utf8'));
     assert.equal(meta.build,expected.build);assert.equal(meta.version,expected.version);if(report.build)assert.equal(meta.build,report.build,'Build does not change during QA');else Object.assign(report,meta);
-    const wallet=await p.evaluate(async({key,plants})=>{
+    const challengeUnitIds=await p.evaluate(async()=>{
+      const source=document.querySelector('script[type=module]').src;
+      const {CHALLENGE_UNITS}=await import(new URL('challenges.js',source));
+      return CHALLENGE_UNITS.slice(0,6).map(unit=>unit.id);
+    });
+    const historical=historicalMeadowFixture(plants,challengeUnitIds);
+    const wallet=await p.evaluate(async({key,historical})=>{
       const source=document.querySelector('script[type=module]').src,m=await import(new URL('garden-meadow.js',source));
-      const date='2026-10-18';let s=m.rewardRound(m.createMeadow(),{roundId:'qa-hit-starter',eventId:'hello-everyone',date});
-      for(let i=0;i<plants.length;i++){const roundId='qa-hit-shell-'+i;s=m.claimReward(m.rewardRound(s,{roundId,eventId:'food-water',date}),roundId,'shells');}
-      for(let i=0;i<9;i++){const roundId='qa-hit-water-'+i;s=m.claimReward(m.rewardRound(s,{roundId,eventId:'food-water',date}),roundId,'water');}
-      const milestone=plants.some(f=>m.SPECIAL_FLOWERS.some(x=>x.id===f.flowerId));
-      // Exercise the real first-clear entitlement chain; never forge a special
-      // purchase or put a milestone flower into a mystery pack.
-      if(milestone){const {CHALLENGE_UNITS}=await import(new URL('challenges.js',source));for(const unit of CHALLENGE_UNITS)s=m.rewardChallenge(s,{unitId:unit.id,date});}
-      for(let i=0;i<plants.length;i++){
-        const f=plants[i];
-        if(m.SPECIAL_FLOWERS.some(x=>x.id===f.flowerId))s=m.redeemChallengeSeed(s);
-        else if(milestone){const pool=m.FLOWERS.filter(x=>x.id!==s.shop.offer?.flowerId),shopDate='2026-11-'+String(i+1).padStart(2,'0');s=m.ensureShop(s,shopDate,(pool.findIndex(x=>x.id===f.flowerId)+.1)/pool.length);s=m.buyOffer(s,s.shop.offer.id,'shop',0);}
-        else s=m.openSeedPack(s,(m.FLOWERS.findIndex(x=>x.id===f.flowerId)+.1)/m.FLOWERS.length);
-        if(s.pendingSeed?.flowerId!==f.flowerId)throw Error(`Fixture expected ${f.flowerId}, got ${s.pendingSeed?.flowerId}`);
-        s=m.plantSeed(s,{x:f.x,y:f.y});
-      }
-      for(let i=0;i<plants.length;i++)for(let n=0;n<plants[i].waterings;n++)s=m.waterPlant(s,'plant-'+(i+1));
-      m.validateMeadow(s);localStorage.setItem(key,JSON.stringify(s));return s;
-    },{key,plants});
+      const before=JSON.stringify(historical),s=m.validateMeadow(historical);
+      if(JSON.stringify(historical)!==before)throw Error('Migration modified the historical fixture');
+      localStorage.setItem(key,JSON.stringify(s));return s;
+    },{key,historical});
+    assert.equal(wallet.schemaVersion,6,'The shipped validator strictly accepts and migrates the historical ledger');
+    for(const field of ['shells','water','rounds','plants','purchases','shop','challengeRewards'])
+      assert.deepEqual(wallet[field],historical[field],`Migration preserves historical ${field}`);
+    assert.deepEqual(wallet.challengeSeeds.slice(0,historical.challengeSeeds.length),historical.challengeSeeds,'Migration preserves already-owned milestone seeds');
     assert.deepEqual(wallet.plants.map(({flowerId,waterings,x,y})=>({flowerId,waterings,x,y})),plants,'Fixture uses the requested real seed varieties, progress and positions');
-    await p.reload();await p.locator('[data-action=garden]').click();await p.waitForFunction(({count,fallback})=>[...document.querySelectorAll('.meadow-plant [data-paper-art]')].length===count&&[...document.querySelectorAll('.meadow-plant [data-paper-art]')].every(n=>n.dataset.paperState===(fallback?'fallback':'ready')),{count:plants.length,fallback});await settle(p);
+    await p.reload();
+    // The historical ledger intentionally has no receipt for today. Claim the
+    // real isolated daily gift instead of letting its modal mask every hit test.
+    await p.locator('[data-action="open-welcome-gift"]').click();
+    await p.locator('.welcome-gift-overlay').waitFor({state:'hidden'});
+    await p.locator('[data-action=garden]').click();await p.waitForFunction(({count,fallback})=>[...document.querySelectorAll('.meadow-plant [data-paper-art]')].length===count&&[...document.querySelectorAll('.meadow-plant [data-paper-art]')].every(n=>n.dataset.paperState===(fallback?'error':'ready')),{count:plants.length,fallback});await settle(p);
     return {c,p,touch,motion,plants,requests,errors};
   }catch(e){await c.close();throw e;}
 }

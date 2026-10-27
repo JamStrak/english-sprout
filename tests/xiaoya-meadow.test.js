@@ -77,16 +77,14 @@ test('each content event records participation once and each later reward needs 
   assert.throws(()=>rewardRound(state,round('event-0',EVENTS[0].id,'2026-10-18')),/同一互动编号/);
 });
 
-test('a bought mystery is stable through reload and duplicate clicks until planted',()=>{
+test('a bought mystery keeps its outcome and growth snapshot through reload until planted',()=>{
   const before=freeze(reward(rewarded(),'second'));
   const purchased=openSeedPack(before,0,.99);
   assert.deepEqual([purchased.shells,purchased.water,purchased.seedPacksOpened],[2,3,1]);
   assert.deepEqual(purchased.pendingSeed,{id:'seed-1',flowerId:'daisy',growth:{giant:false,waterNeeded:5,scale:1}});
   assert.equal(before.shells,4);assert.equal(before.pendingSeed,null);
-  assert.strictEqual(openSeedPack(purchased,.99),purchased);
   const restored=freeze(clone(purchased));
   assert.strictEqual(validateMeadow(restored),restored);
-  assert.strictEqual(openSeedPack(restored,.99),restored);
   const point=freeze({x:.123456,y:.987654});
   const plantedState=plantSeed(restored,point);
   assert.deepEqual(plantedState.plants,[{id:'plant-1',seedId:'seed-1',flowerId:'daisy',waterings:0,...point,growth:{giant:false,waterNeeded:5,scale:1}}]);
@@ -184,7 +182,7 @@ test('next action prioritizes unclaimed rewards, pending seed, thirsty plant the
 test('validation rejects forged balances, purchases, plants and learning evidence everywhere',()=>{
   const valid=reward(planted(),'second');
   const mutations=[
-    (s)=>{s.schemaVersion=6;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
+    (s)=>{s.schemaVersion=7;},(s)=>{s.product='xiaoya-english-garden';},(s)=>{delete s.pendingSeed;},
     (s)=>{s.mastery=100;},(s)=>{s.shells++;},(s)=>{s.water++;},(s)=>{s.shells=-1;},
     (s)=>{s.water=Infinity;},(s)=>{s.seedPacksOpened=.5;},
     (s)=>{s.rounds.push({...s.rounds[0]});s.shells+=2;s.water+=5;},

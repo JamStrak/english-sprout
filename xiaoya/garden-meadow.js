@@ -145,7 +145,7 @@ const remainingBag = (opened) => SEED_CYCLE.slice(opened%SEED_CYCLE.length);
 
 function emptyMeadow() {
   return {
-    schemaVersion:5,product:PRODUCT,shells:0,water:0,rounds:[],
+    schemaVersion:6,product:PRODUCT,shells:0,water:0,rounds:[],
     seedPacksOpened:0,pendingSeed:null,plants:[],purchases:[],legacy:null,
     shop:{date:null,offer:null,reserved:null,offers:[]},
     previousRoundCount:0,challengeRewards:[],challengeSeeds:[],welcomeGifts:[],
@@ -229,7 +229,8 @@ function expectedRoundAmounts(version,starter) {
 }
 
 function validateEconomyState(state,modern) {
-  const snapshots=state.schemaVersion===5;
+  const snapshots=state.schemaVersion>=5;
+  const inventory=state.schemaVersion>=6;
   const hasWelcomeGifts=state.schemaVersion>=4;
   const unlimited=hasWelcomeGifts && hasUnlimitedResources(state);
   fields(state,['schemaVersion','product','shells','water','rounds','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop',
@@ -380,28 +381,34 @@ function validateEconomyState(state,modern) {
   whole(spentShells,'累计花费');
   if(state.shop.offer && boughtOffers.has(state.shop.offer.id)) fail('已购买商品不能继续展示');
   if(state.shop.reserved && boughtOffers.has(state.shop.reserved.id)) fail('已购买商品不能继续保留');
-  if(state.seedPacksOpened!==state.purchases.length || state.seedPacksOpened!==state.plants.length+(state.pendingSeed===null?0:1)) fail('购买、待播种与植物数量不符');
+  if(state.seedPacksOpened!==state.purchases.length || (inventory?state.plants.length>state.purchases.length:state.seedPacksOpened!==state.plants.length+(state.pendingSeed===null?0:1))) fail('购买、待播种与植物数量不符');
+  const plantedIds=new Set();
   let usedWater=0;
   for(const [index,plant] of state.plants.entries()) {
-    const savedGrowth=snapshots && index>=state.seedSnapshotStart;
+    const purchaseIndex=inventory && typeof plant?.seedId==='string' && /^seed-[1-9]\d*$/.test(plant.seedId)?Number(plant.seedId.slice(5))-1:index;
+    const purchase=state.purchases[purchaseIndex];
+    if(!purchase || plantedIds.has(plant?.seedId)) fail('植物、种子或购买品种不符');
+    const savedGrowth=snapshots && purchaseIndex>=state.seedSnapshotStart;
     fields(plant,['id','seedId','flowerId','waterings','x','y',...(savedGrowth?['growth']:[])]);
-    const purchase=state.purchases[index];
     if(savedGrowth && !sameGrowth(plant.growth,purchase.growth)) fail('植物成长参数与种子不符');
-    if(plant.id!==`plant-${index+1}` || plant.seedId!==purchase.id || plant.flowerId!==purchase.flowerId) fail('植物、种子或购买品种不符');
+    if(plant.id!==`plant-${purchaseIndex+1}` || plant.seedId!==purchase.id || plant.flowerId!==purchase.flowerId) fail('植物、种子或购买品种不符');
+    plantedIds.add(plant.seedId);
     whole(plant.waterings,'浇水次数');position({x:plant.x,y:plant.y});
     if(plant.waterings>flowerForSeed(plant).waterNeeded) fail('浇水次数超出开花所需');
-    const old=state.legacy?.plants[index];
+    const old=state.legacy?.plants[purchaseIndex];
     if(old && (plant.id!==old.id || plant.seedId!==old.seedId || plant.flowerId!==old.flowerId || plant.x!==old.x || plant.y!==old.y || plant.waterings<old.waterings)) fail('旧植物记录被改写');
     usedWater+=plant.waterings;
   }
   if(state.pendingSeed!==null) {
-    const savedGrowth=snapshots && state.purchases.length>state.seedSnapshotStart;
+    const purchaseIndex=inventory?state.purchases.findIndex((purchase)=>purchase.id===state.pendingSeed?.id):state.purchases.length-1;
+    const purchase=state.purchases[purchaseIndex];
+    if(!purchase || plantedIds.has(state.pendingSeed?.id)) fail('待播种的种子编号或品种不符');
+    const savedGrowth=snapshots && purchaseIndex>=state.seedSnapshotStart;
     fields(state.pendingSeed,['id','flowerId',...(savedGrowth?['growth']:[])]);
-    const purchase=state.purchases.at(-1);
     if(savedGrowth && !sameGrowth(state.pendingSeed.growth,purchase.growth)) fail('待播种成长参数与种子不符');
     if(!purchase || state.pendingSeed.id!==purchase.id || state.pendingSeed.flowerId!==purchase.flowerId) fail('待播种的种子编号或品种不符');
   }
-  if(state.legacy && state.plants.length<state.legacy.plants.length) fail('旧植物不能丢失');
+  if(state.legacy && state.legacy.plants.some((plant)=>!plantedIds.has(plant.seedId))) fail('旧植物不能丢失');
   whole(usedWater,'累计浇水');
   if(state.shells!==earnedShells-(unlimited?0:spentShells)) fail('贝壳余额与参与奖励、购买记录不符');
   if(state.water!==earnedWater-(unlimited?0:usedWater)) fail('水余额与参与奖励、浇水记录不符');
@@ -410,8 +417,13 @@ function validateEconomyState(state,modern) {
 
 /** Validate old ledgers before migration; no balance is recomputed at new rates. */
 export function validateMeadow(input) {
-  if(input?.product!==PRODUCT || ![1,2,3,4,5].includes(input?.schemaVersion)) fail('产品或版本不匹配');
-  if(input.schemaVersion===5) return validateEconomyState(input,true);
+  if(input?.product!==PRODUCT || ![1,2,3,4,5,6].includes(input?.schemaVersion)) fail('产品或版本不匹配');
+  if(input.schemaVersion===6) return validateEconomyState(input,true);
+  if(input.schemaVersion===5) {
+    // First apply v5's single-held-seed and sequential-plant rules unchanged.
+    validateEconomyState(input,true);
+    return validateEconomyState({...copy(input),schemaVersion:6},true);
+  }
   let previous=input;
   if(input.schemaVersion===1) previous=migrateLegacy(input);
   if(input.schemaVersion===2) {
@@ -430,9 +442,9 @@ export function validateMeadow(input) {
   // migration. Current GM settings cannot reroll or reprice previously earned gifts.
   const challengeSeeds=[...copy(previous.challengeSeeds),...previous.challengeRewards.map((receipt)=>
     challengeEntitlement(receipt.unitId,stableRandom(`${receipt.id}:${receipt.date}`),DEFAULT_ECONOMY_SETTINGS))];
-  return validateEconomyState({...copy(previous),schemaVersion:5,
+  return validateMeadow({...copy(previous),schemaVersion:5,
     economyStartRound:previous.rounds.length,seedSnapshotStart:previous.purchases.length,
-    legacyChallengeCount:previous.challengeRewards.length,challengeSeeds},true);
+    legacyChallengeCount:previous.challengeRewards.length,challengeSeeds});
 }
 
 /** The caller supplies its local calendar day. Opening this preview never pays. */
@@ -505,11 +517,29 @@ export function pendingChallengeSeeds(state) {
   return validateMeadow(state).challengeSeeds.filter((seed)=>seed.seedId===null).map(copy);
 }
 
-/** A saved entitlement waits safely while another seed is in the child's hands. */
-export function redeemChallengeSeed(state) {
+/** Inventory is derived from the purchase ledger; selection never creates assets. */
+export function ownedSeeds(state) {
   state=validateMeadow(state);
-  if(state.pendingSeed!==null) return state;
-  const next=state.challengeSeeds.find((seed)=>seed.seedId===null);
+  const plantedIds=new Set(state.plants.map((plant)=>plant.seedId));
+  return state.purchases.filter((purchase)=>!plantedIds.has(purchase.id)).map(seedFromPurchase);
+}
+
+function seedFromPurchase(purchase) {
+  return {id:purchase.id,flowerId:purchase.flowerId,...(purchase.growth?{growth:{...purchase.growth}}:{})};
+}
+
+/** A stale or already-planted choice cannot consume or replace anything. */
+export function selectSeed(state,seedId) {
+  state=validateMeadow(state);
+  if(state.pendingSeed?.id===seedId) return state;
+  const seed=ownedSeeds(state).find((entry)=>entry.id===seedId);
+  return seed?validateMeadow({...state,pendingSeed:seed}):state;
+}
+
+/** Any earned challenge seed can be selected while other seeds remain stored. */
+export function redeemChallengeSeed(state,milestoneId) {
+  state=validateMeadow(state);
+  const next=state.challengeSeeds.find((seed)=>seed.seedId===null && (milestoneId===undefined || seed.milestoneId===milestoneId));
   if(!next) return state;
   // Already-earned legacy milestone seeds keep their historical size and water cost.
   const growth=next.growth??baseGrowth(allFlowerById.get(next.flowerId));
@@ -529,11 +559,11 @@ function purchaseSeed(state,flowerId,source,price,offerId=null,growth) {
     pendingSeed:{id:`seed-${serial}`,flowerId,growth:{...growth}},purchases:[...state.purchases,{id:`seed-${serial}`,flowerId,source,price,offerId,growth:{...growth}}]};
 }
 
-/** Persist before revealing. One pending seed prevents duplicate charges and rerolls. */
+/** Persist before revealing; the caller guards a revealed blind-box transaction. */
 export function openSeedPack(state,randomValue=Math.random(),giantRandom=Math.random()) {
   state=validateMeadow(state);
   const settings=getEconomySettings();
-  if(state.pendingSeed!==null || !hasUnlimitedResources(state) && state.shells<settings.packPrice) return state;
+  if(!hasUnlimitedResources(state) && state.shells<settings.packPrice) return state;
   const first=newcomer(state) && !state.purchases.some((purchase)=>purchase.source==='mystery');
   const pool=first?[flowerById.get('daisy')]:NORMAL_FLOWERS;
   return validateMeadow(purchaseSeed(state,randomFlower(pool,randomValue),'mystery',settings.packPrice,null,rollGrowth(giantRandom,settings)));
@@ -567,7 +597,7 @@ export function buyOffer(state,expectedOfferId,source='shop',randomValue=Math.ra
   state=validateMeadow(state);
   if(!['shop','reserved'].includes(source)) fail('商店购买来源错误');
   const offer=source==='shop'?state.shop.offer:state.shop.reserved;
-  if(!offer || offer.id!==expectedOfferId || state.pendingSeed!==null || !hasUnlimitedResources(state) && state.shells<offer.price) return state;
+  if(!offer || offer.id!==expectedOfferId || !hasUnlimitedResources(state) && state.shells<offer.price) return state;
   const flower=allFlowerById.get(offer.flowerId);
   const growth=flower.giant?baseGrowth(flower):rollGrowth(giantRandom,getEconomySettings());
   let result=purchaseSeed(state,offer.flowerId,source,offer.price,offer.id,growth);
@@ -581,7 +611,7 @@ export function plantSeed(state,point) {
   state=validateMeadow(state);
   if(state.pendingSeed===null) return state;
   position(point);
-  const plant={id:`plant-${state.seedPacksOpened}`,seedId:state.pendingSeed.id,
+  const plant={id:`plant-${state.pendingSeed.id.slice(5)}`,seedId:state.pendingSeed.id,
     flowerId:state.pendingSeed.flowerId,waterings:0,x:point.x,y:point.y,
     ...(state.pendingSeed.growth?{growth:{...state.pendingSeed.growth}}:{})};
   return validateMeadow({...state,pendingSeed:null,plants:[...state.plants,plant]});
@@ -602,6 +632,7 @@ export function nextAction(state) {
   state=validateMeadow(state);
   if(pendingRewards(state).length>0) return 'reward';
   if(state.pendingSeed!==null) return 'plant';
+  if(ownedSeeds(state).length>0) return 'seeds';
   if(pendingChallengeSeeds(state).length>0) return 'challenge-seed';
   if((hasUnlimitedResources(state) || state.water>0) && state.plants.some((plant)=>plant.waterings<flowerForSeed(plant).waterNeeded)) return 'water';
   if(hasUnlimitedResources(state) || state.shells>=getEconomySettings().packPrice) return 'pack';

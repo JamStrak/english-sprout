@@ -32,7 +32,7 @@ function previousSave() {
 test('v2 migration preserves the exact wallet, positions, reservation and pending five-water entitlement',()=>{
   const source=freeze(previousSave());
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,5);
+  assert.equal(migrated.schemaVersion,6);
   for(const key of ['shells','water','seedPacksOpened','pendingSeed','plants','purchases','legacy','shop'])
     assert.deepEqual(migrated[key],source[key],key);
   assert.equal(migrated.previousRoundCount,4);
@@ -110,14 +110,13 @@ test('each different unit first clear pays both resources exactly once, includin
   for(const [index] of CHALLENGE_UNITS.entries())assert.strictEqual(clear(state,index),state);
 });
 
-test('every first clear saves its own flower until the held seed has been planted',()=>{
+test('every first clear saves its own flower until explicitly redeemed',()=>{
   let state=openSeedPack(rewardRound(createMeadow(),round('starter')),0,.99);
   const original=clone(state.pendingSeed);
   for(let i=0;i<6;i++) {
     state=clear(freeze(state),i);
     assert.deepEqual(state.pendingSeed,original,'a challenge never overwrites the held seed');
     assert.equal(pendingChallengeSeeds(state).length,i+1);
-    assert.strictEqual(redeemChallengeSeed(state),state);
   }
   state=plantSeed(freeze(clone(state)),{x:.1,y:.4});
   assert.equal(nextAction(state),'challenge-seed');
@@ -128,7 +127,7 @@ test('every first clear saves its own flower until the held seed has been plante
     assert.equal(state.pendingSeed.flowerId,getChallengeFlower(CHALLENGE_UNITS[i].id).id);
     assert.deepEqual(state.pendingSeed.growth,{giant:false,waterNeeded:5,scale:1});
     assert.equal(pendingChallengeSeeds(state).length,5-i);
-    assert.strictEqual(redeemChallengeSeed(state),state);
+    assert.strictEqual(redeemChallengeSeed(state,state.challengeSeeds[i].milestoneId),state,'the same entitlement cannot be redeemed twice');
     state=plantSeed(state,{x:.3,y:.6});
   }
   assert.deepEqual(pendingChallengeSeeds(state),[]);

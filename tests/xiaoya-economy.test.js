@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FLOWERS,NORMAL_FLOWERS,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,ensureShop,reserveOffer,buyOffer,nextAction} from '../xiaoya/garden-meadow.js';
+import {FLOWERS,NORMAL_FLOWERS,createMeadow,validateMeadow,rewardRound,claimReward,pendingRewards,openSeedPack,plantSeed,waterPlant,ensureShop,reserveOffer,buyOffer,nextAction,ownedSeeds} from '../xiaoya/garden-meadow.js';
 
 const clone=(value)=>JSON.parse(JSON.stringify(value));
 function freeze(value) {
@@ -27,7 +27,7 @@ function legacy() {
 test('schema1 migration preserves balances, planted positions, pending seed and consumed round IDs',()=>{
   const source=freeze(legacy()),before=clone(source);
   const migrated=validateMeadow(source);
-  assert.equal(migrated.schemaVersion,5);
+  assert.equal(migrated.schemaVersion,6);
   assert.deepEqual([migrated.shells,migrated.water],[3,11]);
   assert.deepEqual(migrated.plants,source.plants);assert.deepEqual(migrated.pendingSeed,source.pendingSeed);
   assert.deepEqual(migrated.legacy,source);assert.notStrictEqual(migrated.legacy,source);
@@ -54,7 +54,7 @@ test('all model actions accept legacy state and return a migrated value without 
   const source=freeze(legacy());
   for(const next of [rewardRound(source,round('old-1')),claimReward(source,'old-1','water'),openSeedPack(source),
     plantSeed(source,{x:.3,y:.5}),waterPlant(source,'plant-1'),ensureShop(source,'2026-10-18',0),
-    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,5);
+    reserveOffer(source,'missing'),buyOffer(source,'missing')]) assert.equal(next.schemaVersion,6);
   assert.deepEqual(source,legacy());
 });
 
@@ -62,7 +62,7 @@ test('an empty schema1 save still gets the complete first-participation daisy lo
   const empty=freeze({schemaVersion:1,product:'xiaoya-english-meadow',shells:0,water:0,rounds:[],
     seedPacksOpened:0,bag:[...oldCycle],pendingSeed:null,plants:[]});
   let state=validateMeadow(empty);
-  assert.equal(state.schemaVersion,5);assert.deepEqual(state.legacy,empty);
+  assert.equal(state.schemaVersion,6);assert.deepEqual(state.legacy,empty);
   state=rewardRound(freeze(state),round('first-real-participation'));
   assert.deepEqual([state.shells,state.water],[2,3]);
   assert.equal(state.rounds[0].starter,true);assert.equal(state.rounds[0].reward,'starter');
@@ -151,13 +151,16 @@ test('shop prices are fixed by ordinary, bow and giant variety instead of forged
   }
 });
 
-test('shop buying is idempotent and a pending seed prevents both purchase channels spending',()=>{
+test('shop buying guards stale offers while both purchase channels can accumulate stored seeds',()=>{
   const shown=freeze(ensureShop(fund(),'2026-10-18',0));
   const bought=buyOffer(shown,'offer-1','shop',.9);
   assert.equal(bought.shells,shown.shells-3);assert.equal(shown.pendingSeed,null);
   assert.strictEqual(buyOffer(bought,'offer-1','shop',0),bought);
-  assert.strictEqual(buyOffer(bought,bought.shop.offer.id,'shop',0),bought);
-  assert.strictEqual(openSeedPack(bought,.8),bought);
+  const second=buyOffer(bought,bought.shop.offer.id,'shop',0,.99);
+  const third=openSeedPack(second,.8,.99);
+  assert.equal(second.shells,bought.shells-bought.shop.offer.price);
+  assert.equal(third.shells,second.shells-2);
+  assert.deepEqual(ownedSeeds(third).map(seed=>seed.id),['seed-1','seed-2','seed-3']);
   const planted=plantSeed(bought,{x:.5,y:.5});
   assert.strictEqual(buyOffer(planted,'offer-1','shop',0),planted,'stale DOM callback remains harmless after planting');
   assert.strictEqual(buyOffer(planted,'missing','shop',0),planted);

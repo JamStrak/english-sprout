@@ -47,12 +47,12 @@ export function chapterBoardView({progress, header, balance}) {
     <div class="chapter-board-heading"><div><span class="chapter-eyebrow">一章，四个小故事</span><h1>小芽的故事书</h1></div>${balance}</div>
     <div class="chapter-map">${progress.chapters.map(chapter => {
       const current = chapter.id === progress.currentChapterId;
-      return `<button class="chapter-card ${chapter.unlocked ? 'is-open' : 'is-locked'} ${chapter.completed ? 'is-complete' : ''} ${current ? 'is-current' : ''}" data-chapter="${esc(chapter.id)}" ${chapter.unlocked ? '' : 'disabled'} ${current ? 'aria-current="step"' : ''} aria-label="第 ${chapter.number} 章，${esc(chapter.title)}，${chapter.unlocked ? `练过 ${chapter.completedCount} 句，共四句，点击进入` : '练完前一章就开放'}">
+      return `<button class="chapter-card ${chapter.unlocked ? 'is-open' : 'is-locked'} ${chapter.completed ? 'is-complete' : ''} ${current ? 'is-current' : ''}" data-chapter="${esc(chapter.id)}" ${chapter.unlocked ? '' : 'disabled'} ${current ? 'aria-current="step" data-chapter-focus' : ''} aria-label="${current ? '从这里继续，' : ''}第 ${chapter.number} 章，${esc(chapter.title)}，${chapter.unlocked ? `练过 ${chapter.completedCount} 句，共四句，点击进入` : '练完前一章就开放'}">
         ${thumbnail(chapter.eventIds[0])}
         <span class="chapter-number">${chapter.number}</span>
         ${!chapter.unlocked ? `<span class="chapter-lock" aria-hidden="true">${icon('lock', 25)}</span>` : chapter.completed ? `<span class="chapter-card-check" aria-hidden="true">${icon('check', 24)}</span>` : ''}
         <span class="chapter-card-copy"><strong>${esc(chapter.title)}</strong>${progressDots(chapter)}</span>
-        ${current ? '<span class="chapter-current-tag">从这里继续</span>' : ''}
+        ${current ? `<span class="chapter-current-tag"><span class="chapter-current-play" aria-hidden="true">${icon('play', 18)}</span><span>从这里继续</span></span>` : ''}
       </button>`;
     }).join('')}</div>
     <p class="chapter-map-note">练完这一章，下一章就亮起来</p>

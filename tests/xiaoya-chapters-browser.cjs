@@ -40,8 +40,8 @@ async function serve() {
   return `http://127.0.0.1:${server.address().port}`;
 }
 const snapshot=p=>p.evaluate(()=>Object.fromEntries(Object.keys(localStorage).sort().map(key=>[key,localStorage.getItem(key)])));
-async function fixture(width=1180){
-  const c=await browser.newContext({viewport:{width,height:900},timezoneId:'Asia/Shanghai',serviceWorkers:'block',reducedMotion:'reduce',hasTouch:width<600,isMobile:width<600});
+async function fixture(width=1180,reducedMotion='reduce'){
+  const c=await browser.newContext({viewport:{width,height:900},timezoneId:'Asia/Shanghai',serviceWorkers:'block',reducedMotion,hasTouch:width<600,isMobile:width<600});
   const requests=[],errors=[],access={microphone:0};
   await c.exposeBinding('qaChapterMicrophone',()=>access.microphone++);
   c.on('request',r=>requests.push(r.url()));
@@ -86,10 +86,10 @@ async function clean(f){
   assert.deepEqual(f.errors,[]);assert.deepEqual(await f.p.evaluate(()=>qaChapter.errors),[]);
   assert.deepEqual(await snapshot(f.p),f.child,'Sandbox changed the real child records');
 }
-async function check(name,run,width){
+async function check(name,run,width,reducedMotion='reduce'){
   if(filter&&!filter.test(name))return;
   let f;const start=Date.now();
-  try{f=await fixture(width);const detail=await run(f);await clean(f);report.checks.push({name,status:'PASS',ms:Date.now()-start,detail});console.log(`PASS ${name}`);}
+  try{f=await fixture(width,reducedMotion);const detail=await run(f);await clean(f);report.checks.push({name,status:'PASS',ms:Date.now()-start,detail});console.log(`PASS ${name}`);}
   catch(error){process.exitCode=1;report.checks.push({name,status:'FAIL',error:error.stack});console.error(`FAIL ${name}\n${error.stack}`);if(f)await f.p.screenshot({path:path.join(out,`${name.replace(/[^a-z0-9]+/gi,'-')}.png`),fullPage:true}).catch(()=>{});}
   finally{if(f)await f.c.close();}
 }
@@ -138,6 +138,28 @@ async function main(){
   await fsp.mkdir(out,{recursive:true});expected=JSON.parse(await fsp.readFile(path.join(dist,'xiaoya/version.json'),'utf8'));report.candidate=expected;
   assert.equal(expected.channel,'internal','Run npm run build:dev before this test');
   origin=await serve();browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server','--autoplay-policy=no-user-gesture-required']});
+  for(const width of [320,1180])for(const reducedMotion of ['no-preference','reduce'])await check(`one current chapter receives immediate visible focus at ${width} with ${reducedMotion}`,async f=>{
+    const p=f.p;
+    // Put the sole continuation below the initial viewport so navigation must
+    // reveal it rather than merely drawing an off-screen animation.
+    for(let number=1;number<=8;number++)await bridge(p,'prepareChallenge',`challenge-${number}`);
+    await bridge(p,'navigate','chapters');await p.locator('[data-chapter-board]').waitFor();
+    const focus=p.locator('[data-chapter-focus]');
+    assert.equal(await focus.count(),1);assert.equal(await p.locator('[aria-current="step"]').count(),1);
+    assert.equal(await focus.getAttribute('data-chapter'),'chapter-9');
+    await p.waitForFunction(()=>{const r=document.querySelector('[data-chapter-focus]').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;});
+    const state=await focus.evaluate(el=>{const tag=el.querySelector('.chapter-current-tag').getBoundingClientRect(),card=el.getBoundingClientRect();return{
+      ring:getComputedStyle(el,'::before').animationName,badge:getComputedStyle(el.querySelector('.chapter-current-play')).animationName,
+      pointer:getComputedStyle(el,'::before').pointerEvents,tagInside:tag.left>=card.left&&tag.right<=card.right,
+      overflow:document.documentElement.scrollWidth>innerWidth||document.body.scrollWidth>innerWidth};});
+    assert.equal(state.overflow,false);assert.equal(state.pointer,'none');assert.equal(state.tagInside,true);
+    assert.equal(state.ring,reducedMotion==='reduce'?'none':'chapter-continue-ripple');
+    assert.equal(state.badge,reducedMotion==='reduce'?'none':'chapter-continue-beckon');
+    await p.screenshot({path:path.join(out,`chapter-focus-${width}-${reducedMotion}.png`),fullPage:true});
+    await press(p,'.chapter-current-play');await p.locator('[data-chapter-detail="chapter-9"]').waitFor();
+    return {width,reducedMotion,current:'chapter-9',visible:true,...state};
+  },width,reducedMotion);
+
   for(const width of [1180,320])await check(`home and chapter cards decode and respond at ${width}`,async f=>{
     const p=f.p;assert.equal(await p.locator('.chapter-entry').count(),2);
     const images=await decode(p,'.chapter-entry img');assert(images.every(image=>image.width>=900&&image.height>=600));
